@@ -30,8 +30,9 @@ pub struct MoonTasks {
   pub config: BTreeMap<String, Value>,
 }
 
-#[derive(Debug, Template, Default)]
+#[derive(Debug, Template, Default, Serialize, Deserialize)]
 #[template(path = "moon/moon.yml.j2")]
+#[serde(default)]
 pub struct MoonDotYml {
   pub tasks: BTreeMap<String, Value>,
   pub config: BTreeMap<String, Value>,

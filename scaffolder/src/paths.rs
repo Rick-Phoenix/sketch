@@ -1,0 +1,42 @@
+use std::path::{Path, PathBuf};
+
+pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, String> {
+  let canonical_base = base.canonicalize().map_err(|e| {
+    format!(
+      "Failed to canonicalize base path '{}': {}",
+      base.display(),
+      e
+    )
+  })?;
+  let canonical_target = target.canonicalize().map_err(|e| {
+    format!(
+      "Failed to canonicalize target path '{}': {}",
+      target.display(),
+      e
+    )
+  })?;
+
+  let base_components: Vec<_> = canonical_base.components().collect();
+  let target_components: Vec<_> = canonical_target.components().collect();
+
+  let mut common_ancestor_len = 0;
+  for (a, b) in base_components.iter().zip(target_components.iter()) {
+    if a == b {
+      common_ancestor_len += 1;
+    } else {
+      break;
+    }
+  }
+
+  let mut relative_path = PathBuf::new();
+
+  for _ in common_ancestor_len..base_components.len() {
+    relative_path.push("..");
+  }
+
+  for component in target_components.iter().skip(common_ancestor_len) {
+    relative_path.push(component);
+  }
+
+  Ok(relative_path)
+}

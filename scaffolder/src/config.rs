@@ -8,14 +8,20 @@ use figment::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{moon::MoonConfig, rendering::render_json_val};
+use crate::{
+  json_files::PackageJson,
+  moon::MoonConfig,
+  package::{PackageConfig, PackageJsonData},
+};
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct Config {
   pub package_name: String,
   pub gitignore_additions: Vec<String>,
   pub gitignore_replacement: Option<String>,
-  pub package_json: PackageJson,
+  pub root_package_json: PackageJsonData,
+  pub package_json: BTreeMap<String, PackageJson>,
   pub root_tsconfig_name: String,
   pub project_tsconfig_name: String,
   pub package_manager: PackageManager,
@@ -23,11 +29,8 @@ pub struct Config {
   pub pre_commit: PreCommitConfig,
   pub root_dir: String,
   pub packages_dir: String,
+  pub package: BTreeMap<String, PackageConfig>,
 }
-
-#[derive(Debug, Template)]
-#[template(path = "tsconfig.options.json.j2")]
-pub struct RootTsConfig;
 
 #[derive(Debug, Template)]
 #[template(path = "oxlint.json.j2")]
@@ -37,12 +40,6 @@ pub struct OxlintConfig;
 #[template(path = "pnpm-workspace.yaml.j2")]
 pub struct PnpmWorkspace;
 
-#[derive(Debug, Template)]
-#[template(path = "tsconfig.json.j2")]
-pub struct TsConfig {
-  pub root_tsconfig_name: String,
-}
-
 impl Default for Config {
   fn default() -> Self {
     Self {
@@ -50,6 +47,7 @@ impl Default for Config {
       gitignore_additions: Default::default(),
       gitignore_replacement: Default::default(),
       package_json: Default::default(),
+      root_package_json: Default::default(),
       package_manager: Default::default(),
       root_tsconfig_name: "tsconfig.options".to_string(),
       project_tsconfig_name: "tsconfig.dev".to_string(),
@@ -57,6 +55,11 @@ impl Default for Config {
       pre_commit: Default::default(),
       root_dir: ".".to_string(),
       packages_dir: "packages".to_string(),
+      package: {
+        let mut map: BTreeMap<String, PackageConfig> = BTreeMap::new();
+        map.insert("default".to_string(), PackageConfig::default());
+        map
+      },
     }
   }
 }
@@ -95,17 +98,6 @@ impl Display for PackageManager {
 pub enum GitIgnore {
   Additions(Vec<String>),
   Replacement(String),
-}
-
-#[derive(Debug, Deserialize, Serialize, Default, Template)]
-#[template(path = "package.json.j2")]
-pub struct PackageJson {
-  pub package_name: String,
-  pub dependencies: BTreeMap<String, String>,
-  pub dev_dependencies: BTreeMap<String, String>,
-  pub scripts: BTreeMap<String, String>,
-  pub metadata: BTreeMap<String, Value>,
-  pub pnpm: Option<BTreeMap<String, Value>>,
 }
 
 #[derive(Debug, Template, Default, Serialize, Deserialize)]

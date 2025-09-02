@@ -1,19 +1,19 @@
 root_dir = "output"
 
-[package_json]
+[package_json.abc]
 package_name = "abc"
 
-[package_json.dependencies]
+[package_json.abc.dependencies]
 my-app = "^1.0.0"
 my-app2 = "^1.0.0"
 
-[package_json.dev_dependencies]
+[package_json.abc.dev_dependencies]
 my-app = "^1.0.0"
 
-[package_json.metadata]
+[package_json.abc.metadata]
 custom = { something = "abc", other = "abc" }
 
-[package_json.pnpm]
+[package_json.abc.pnpm]
 onlyBuildDependencies = ["esbuild"]
 
 [moonrepo.tasks]
@@ -37,3 +37,12 @@ entry = "oxlint"
 language = "system"
 files = '\.svelte$|\.js$|\.ts$'
 types = ["file"]
+
+[package.alt]
+name = "abc"
+
+
+[package.alt2]
+name = "abc2"
+package_json = "abc"
+moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }

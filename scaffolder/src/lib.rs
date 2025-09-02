@@ -1,9 +1,12 @@
 #![allow(dead_code)]
 #![allow(clippy::result_large_err)]
 
+#[macro_use]
 pub mod config;
+pub mod json_files;
 pub mod moon;
 pub mod package;
+pub(crate) mod paths;
 
 pub(crate) mod rendering;
 use std::{fs::create_dir_all, io, path::PathBuf};
@@ -14,9 +17,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum TemplateError {
-  #[error("Could not create the dir at {path}: {source}")]
+  #[error("Could not create the dir '{path}': {source}")]
   DirCreation { path: PathBuf, source: io::Error },
-  #[error("Could not create the file at {path}: {source}")]
+  #[error("Could not create the file '{path}': {source}")]
   FileCreation { path: PathBuf, source: io::Error },
 }
 
@@ -26,8 +29,9 @@ use askama::Template;
 use figment::providers::{Format, Toml};
 
 use crate::{
+  json_files::{RootTsConfig, TsConfig},
   moon::{MoonTasks, MoonToolchain},
-  Config, GitIgnore, OxlintConfig, PackageManager, PnpmWorkspace, RootTsConfig, TsConfig,
+  Config, GitIgnore, OxlintConfig, PackageManager, PnpmWorkspace,
 };
 
 pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
@@ -41,6 +45,7 @@ pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
     GitIgnore::Additions(config.gitignore_additions)
   };
 
+  let mut package_json_templates = config.package_json;
   let output = PathBuf::from(config.root_dir);
 
   create_dir_all(&output).map_err(|e| TemplateError::DirCreation {
@@ -60,14 +65,22 @@ pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
   }
 
   write_file!(gitignore_data, ".gitignore");
-  write_file!(config.package_json, "package.json");
+
+  let package_json_data = match config.root_package_json {
+    package::PackageJsonData::Named(name) => package_json_templates
+      .remove(&name)
+      .expect("Package json template not found"),
+    package::PackageJsonData::Definition(package_json) => package_json,
+  };
+
+  write_file!(package_json_data, "package.json");
   write_file!(
     RootTsConfig {},
     format!("{}.json", config.root_tsconfig_name)
   );
 
   let root_tsconfig = TsConfig {
-    root_tsconfig_name: config.root_tsconfig_name.clone(),
+    root_tsconfig_path: format!("{}.json", config.root_tsconfig_name),
   };
   write_file!(root_tsconfig, "tsconfig.json");
 
