@@ -1,0 +1,24 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.27.2
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: oxlint
+        name: oxlint
+        entry: oxlint
+        language: system
+        files: '\.svelte$|\.js$|\.ts$'
+        types: [file]
+  {% for repo in repos +%}
+  - repo: "{{ repo.path }}"
+    {% if let Some(rev) = repo.rev %}
+    rev: {{+ rev ~}}
+    {% endif +%}
+    hooks:
+    {% for hook in repo.hooks +%}
+    - {{+ crate::render_yaml_val(hook, 2) | trim }}
+    {% endfor +%}
+  {% endfor +%}
+

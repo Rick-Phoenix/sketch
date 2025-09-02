@@ -1,0 +1,12 @@
+$schema: "https://moonrepo.dev/schemas/toolchain.json"
+
+{%+ for (name, val) in config %}
+{{+ name }}: {{+ crate::render_yaml_val(val, 0) }}
+{% endfor +%}
+
+node:
+  packageManager: "{{ package_manager }}"
+
+typescript:
+  projectConfigFileName: "{{ project_tsconfig_name }}.json"
+  rootOptionsConfigFileName: "{{ root_tsconfig_name }}.json"

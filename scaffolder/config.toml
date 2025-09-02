@@ -1,0 +1,39 @@
+root_dir = "output"
+
+[package_json]
+package_name = "abc"
+
+[package_json.dependencies]
+my-app = "^1.0.0"
+my-app2 = "^1.0.0"
+
+[package_json.dev_dependencies]
+my-app = "^1.0.0"
+
+[package_json.metadata]
+custom = { something = "abc", other = "abc" }
+
+[package_json.pnpm]
+onlyBuildDependencies = ["esbuild"]
+
+[moonrepo.tasks]
+typecheck = { command = ["tsc", "--noEmit"], inputs = "@input(build)" }
+
+[moonrepo.toolchain]
+fileGroups = ["abc", "bcd"]
+
+[moonrepo.tasks_config]
+fileGroups = ["abc", "bcd"]
+
+[pre_commit]
+
+[[pre_commit.repos]]
+path = "local"
+
+[[pre_commit.repos.hooks]]
+id = "oxlint"
+name = "oxlint"
+entry = "oxlint"
+language = "system"
+files = '\.svelte$|\.js$|\.ts$'
+types = ["file"]

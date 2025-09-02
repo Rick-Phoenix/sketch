@@ -1,0 +1,33 @@
+{
+  "name": "{{ package_name }}",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+  {% for (name, script) in scripts +%}
+    "{{+ name +}}": "{{+ script +}}",
+  {% endfor +%}
+    "lint": "oxlint"
+  },
+  "dependencies": {
+  {% for (dep, version) in dependencies +%}
+    "{{+ dep +}}": "{{+ version +}}" {% if !loop.last %}, {%+ endif ~%}
+  {% endfor +%}
+  },
+  "devDependencies": {
+  {% for (dep, version) in dev_dependencies +%}
+    "{{+ dep +}}": "{{+ version +}}",
+  {% endfor +%}
+    "typescript": "^5.0.0"
+  }
+  {% if let Some(pnpm_vals) = pnpm %} {{ "," +}}
+  "pnpm": {
+    {% for (key, val) in pnpm_vals +%}
+    "{{+ key +}}": {{+ self::render_json_val(val, 2) }} {% if !loop.last %}, {%+ endif ~%}
+    {% endfor +%}
+  }
+  {% endif ~%}
+  {% for (name, data) in metadata %} {{ "," +}}
+  "{{ name }}": {{+ self::render_json_val(data, 1) }} {% if !loop.last %}, {%+ endif ~%}
+  {% endfor +%}
+}

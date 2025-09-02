@@ -1,0 +1,6 @@
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+tasks:
+  {% for (name, task) in tasks +%}
+  {{+ name }}: {{+ crate::render_yaml_val(task, 1) }}
+  {% endfor +%}
