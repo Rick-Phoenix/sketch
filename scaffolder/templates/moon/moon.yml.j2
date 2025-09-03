@@ -1,5 +1,9 @@
 $schema: 'https://moonrepo.dev/schemas/project.json'
 
+{%+ for (name, val) in config %}
+{{+ name }}: {{+ crate::render_yaml_val(val, 0) }}
+{% endfor +%}
+
 tasks:
   {% for (name, task) in tasks +%}
   {{+ name }}: {{+ crate::render_yaml_val(task, 1) }}

@@ -1,4 +1,5 @@
 root_dir = "output"
+repository = "myrepo"
 
 [package_json.abc]
 package_name = "abc"
@@ -13,16 +14,10 @@ my-app = "^1.0.0"
 [package_json.abc.metadata]
 custom = { something = "abc", other = "abc" }
 
-[package_json.abc.pnpm]
+[package_json.abc.metadata.pnpm]
 onlyBuildDependencies = ["esbuild"]
 
-[moonrepo.tasks]
-typecheck = { command = ["tsc", "--noEmit"], inputs = "@input(build)" }
-
 [moonrepo.toolchain]
-fileGroups = ["abc", "bcd"]
-
-[moonrepo.tasks_config]
 fileGroups = ["abc", "bcd"]
 
 [pre_commit]
@@ -38,11 +33,8 @@ language = "system"
 files = '\.svelte$|\.js$|\.ts$'
 types = ["file"]
 
-[package.alt]
-name = "abc"
-
-
-[package.alt2]
+[package_presets.alt2]
 name = "abc2"
 package_json = "abc"
+dir = "packages/mypkg"
 moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }

@@ -3,11 +3,11 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  {{+ self.repository +}}
   "scripts": {
   {% for (name, script) in scripts +%}
-    "{{+ name +}}": "{{+ script +}}",
+    "{{+ name +}}": "{{+ script +}}" {% if !loop.last %}, {%+ endif ~%}
   {% endfor +%}
-    "lint": "oxlint"
   },
   "dependencies": {
   {% for (dep, version) in dependencies +%}
@@ -16,18 +16,11 @@
   },
   "devDependencies": {
   {% for (dep, version) in dev_dependencies +%}
-    "{{+ dep +}}": "{{+ version +}}",
+    "{{+ dep +}}": "{{+ version +}}" {% if !loop.last %}, {%+ endif ~%}
   {% endfor +%}
-    "typescript": "^5.0.0"
   }
-  {% if let Some(pnpm_vals) = pnpm %} {{ "," +}}
-  "pnpm": {
-    {% for (key, val) in pnpm_vals +%}
-    "{{+ key +}}": {{+ self::render_json_val(val, 2) }} {% if !loop.last %}, {%+ endif ~%}
-    {% endfor +%}
-  }
-  {% endif ~%}
-  {% for (name, data) in metadata %} {{ "," +}}
+  {% if !metadata.is_empty() %} {{ "," }} {% endif +%}
+  {% for (name, data) in metadata +%} 
   "{{ name }}": {{+ self::render_json_val(data, 1) }} {% if !loop.last %}, {%+ endif ~%}
   {% endfor +%}
 }

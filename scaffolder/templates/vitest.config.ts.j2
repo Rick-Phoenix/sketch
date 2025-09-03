@@ -1,0 +1,39 @@
+{% for plugin in plugins %}
+import {{ self::to_camel_case(plugin) }} from "{{ plugin }}";
+{% endfor %}
+import { defineConfig } from "vitest/config";
+import { resolve, join } from "node:path";
+
+const j = join;
+const r = resolve;
+
+const dir = import.meta.dirname;
+const setupDir = r(dir, "{{ setup_dir }}");
+
+export default defineConfig({
+  plugins: [
+    {% for plugin in plugins %}
+    {{ self::to_camel_case(plugin) }}(),
+    {% endfor %}
+  ],
+  resolve: {
+    alias: {
+      '@': r(dir, "{{ src_rel_path }}"),
+    },
+  },
+
+  test: { 
+    setupFiles: [ 
+      j(setupDir, "tests_setup.ts"),
+      {% for file in setup_files %}
+      j(setupDir, "{{ file }}"),  
+      {% endfor %}
+    ], 
+    globals: true,
+    environment: "node",
+    silent: "passed-only",
+    sequence: {
+      setupFiles: "list",
+    },
+  },
+});

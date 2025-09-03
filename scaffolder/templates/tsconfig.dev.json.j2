@@ -1,0 +1,12 @@
+{
+  "extends": "./{{ project_tsconfig_name }}",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "tsBuildInfoFile": "{{ out_dir }}/.tsBuildInfoDev"
+  },
+  "references": [
+    { "path": "./{{ project_tsconfig_name }}" }
+  ],
+  "include": ["*.ts", "scripts", "tests", "src"]
+}

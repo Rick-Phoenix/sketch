@@ -1,0 +1,17 @@
+{% match self %}
+  {% when Self::Path(path) %}
+"repository": "{{ path }}",
+  {% when Self::Data { type_, url, directory } %}
+"repository": {
+{% if let Some(ty) = type_ %}
+"type": "{{ ty }}" {% if !(directory.is_none() && url.is_none()) %}, {% endif %}
+{% endif %}
+{% if let Some(url) = url %}
+"url": "{{ url }}" {% if !directory.is_none() %}, {% endif %}
+{% endif %}
+{% if let Some(directory) = directory %}
+"directory": "{{ directory }}"
+{% endif %}
+  {% when Self::Workspace %}
+},
+{% endmatch %}

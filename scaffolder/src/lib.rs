@@ -1,19 +1,80 @@
 #![allow(dead_code)]
 #![allow(clippy::result_large_err)]
 
+pub use package_json::*;
+use serde_json::Value;
+pub use ts_config::*;
+
+macro_rules! get_contributors {
+  ($data:ident, $config:ident, $list_name:ident) => {
+    if let Some($list_name) = $data.$list_name {
+      $data.$list_name = Some(
+        $list_name
+          .into_iter()
+          .map(|c| match c {
+            Contributor::Workspace(name) => Contributor::Data(
+              $config
+                .contributors
+                .as_ref()
+                .expect("Config has no list of contributors")
+                .get(&name)
+                .expect("Contributor not found")
+                .clone(),
+            ),
+            Contributor::Data(person) => Contributor::Data(person),
+          })
+          .collect(),
+      )
+    }
+  };
+}
+
+macro_rules! add_package_json_val {
+    ($config:ident, $package_json_data:ident, optional_in_config, optional_in_package_json, $name:ident) => {
+      paste::paste! {
+        if matches!($package_json_data.$name, Some([< $name:camel >]::Workspace)) && let Some(v) = $config.$name {
+          $package_json_data.$name = Some([< $name:camel >]::Data(v));
+        }
+      }
+    };
+
+    ($config:ident, $package_json_data:ident, $name:ident, no_data_wrapper) => {
+      paste::paste! {
+        if matches!($package_json_data.$name, [< $name:camel >]::Workspace) && let Some(v) = $config.$name {
+          $package_json_data.$name = v;
+        }
+      }
+    };
+
+
+    ($config:ident, $package_json_data:ident, $name:ident) => {
+      paste::paste! {
+        if matches!($package_json_data.$name, [< $name:camel >]::Workspace) && let Some(v) = $config.$name {
+          $package_json_data.$name = [< $name:camel >]::Data(v);
+        }
+      }
+    };
+  }
+
 #[macro_use]
 pub mod config;
-pub mod json_files;
 pub mod moon;
 pub mod package;
+pub mod package_json;
 pub(crate) mod paths;
+pub mod pnpm;
+pub mod ts_config;
+pub mod versions;
 
 pub(crate) mod rendering;
-use std::{fs::create_dir_all, io, path::PathBuf};
+use std::{collections::BTreeMap, fs::create_dir_all, io, path::PathBuf};
 
 pub(crate) use config::*;
 pub(crate) use rendering::*;
 use thiserror::Error;
+
+pub(crate) type StringKeyVal = BTreeMap<String, String>;
+pub(crate) type StringKeyValMap = BTreeMap<String, Value>;
 
 #[derive(Debug, Error)]
 pub enum TemplateError {
@@ -29,21 +90,18 @@ use askama::Template;
 use figment::providers::{Format, Toml};
 
 use crate::{
-  json_files::{RootTsConfig, TsConfig},
   moon::{MoonTasks, MoonToolchain},
-  Config, GitIgnore, OxlintConfig, PackageManager, PnpmWorkspace,
+  pnpm::PnpmWorkspaceTemplate,
+  versions::get_latest_version,
+  Config, OxlintConfig, PackageManager,
 };
 
-pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
+
+pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
   let config: Config = Config::figment()
     .merge(Toml::file("scaffolder/config.toml"))
     .extract()?;
-
-  let gitignore_data = if let Some(replacement) = config.gitignore_replacement {
-    GitIgnore::Replacement(replacement)
-  } else {
-    GitIgnore::Additions(config.gitignore_additions)
-  };
 
   let mut package_json_templates = config.package_json;
   let output = PathBuf::from(config.root_dir);
@@ -64,36 +122,79 @@ pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
     };
   }
 
-  write_file!(gitignore_data, ".gitignore");
+  write_file!(config.gitignore, ".gitignore");
 
-  let package_json_data = match config.root_package_json {
-    package::PackageJsonData::Named(name) => package_json_templates
+  let mut package_json_data = match config.root_package_json {
+    PackageJsonData::Named(name) => package_json_templates
       .remove(&name)
       .expect("Package json template not found"),
-    package::PackageJsonData::Definition(package_json) => package_json,
+    PackageJsonData::Definition(package_json) => package_json,
   };
 
+  if let Some(repo) = config.repository {
+    package_json_data.repository = repo;
+  }
+
+  macro_rules! add_root_package_json_val {
+    ($($tokens:tt)*) => {
+      add_package_json_val!(config, package_json_data, $($tokens)*)
+    };
+  }
+
+  add_root_package_json_val!(optional_in_config, optional_in_package_json, description);
+  add_root_package_json_val!(keywords);
+  add_root_package_json_val!(homepage);
+  add_root_package_json_val!(optional_in_config, optional_in_package_json, bugs);
+  add_root_package_json_val!(license);
+  add_root_package_json_val!(author);
+  add_root_package_json_val!(files);
+  add_root_package_json_val!(exports);
+  add_root_package_json_val!(engines);
+  add_root_package_json_val!(engine_strict);
+  add_root_package_json_val!(os);
+  add_root_package_json_val!(cpu);
+  add_root_package_json_val!(entry_point, no_data_wrapper);
+
+  get_contributors!(package_json_data, config, contributors);
+  get_contributors!(package_json_data, config, maintainers);
+
   write_file!(package_json_data, "package.json");
-  write_file!(
-    RootTsConfig {},
-    format!("{}.json", config.root_tsconfig_name)
-  );
+  write_file!(RootTsConfig {}, config.root_tsconfig_name.clone());
 
   let root_tsconfig = TsConfig {
-    root_tsconfig_path: format!("{}.json", config.root_tsconfig_name),
+    root_tsconfig_path: config.root_tsconfig_name.clone(),
+    references: Default::default(),
   };
   write_file!(root_tsconfig, "tsconfig.json");
 
   if matches!(config.package_manager, PackageManager::Pnpm) {
-    write_file!(PnpmWorkspace {}, "pnpm-workspace.yaml");
+    let mut catalog: BTreeMap<String, String> = BTreeMap::new();
+    if config.catalog {
+      for dep in DEFAULT_DEPS {
+        let version = get_latest_version(dep)
+          .await
+          .unwrap_or_else(|_| "latest".to_string());
+        let range = config.version_ranges.create(version);
+        catalog.insert(dep.to_string(), range);
+      }
+    }
+    write_file!(
+      PnpmWorkspaceTemplate {
+        catalog: Some(catalog),
+        packages: config.package_dirs,
+      },
+      "pnpm-workspace.yaml"
+    );
   }
 
   if let Some(moon_config) = config.moonrepo {
     let moon_dir = output.join(".moon");
+
     fs::create_dir_all(&moon_dir).map_err(|e| TemplateError::DirCreation {
       path: moon_dir.to_owned(),
       source: e,
     })?;
+
     write_file!(
       MoonToolchain {
         package_manager: config.package_manager.clone(),
@@ -104,24 +205,27 @@ pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
       ".moon/toolchain.yml"
     );
 
-    write_file!(
-      MoonTasks {
-        root_tsconfig_name: config.root_tsconfig_name.clone(),
-        tasks: moon_config.tasks.unwrap_or_default(),
-        config: moon_config.tasks_config.unwrap_or_default()
-      },
-      ".moon/tasks.yml"
-    );
+    let moon_tasks = MoonTasks {
+      tasks: moon_config.tasks.unwrap_or_default(),
+      config: moon_config.tasks_config.unwrap_or_default(),
+      project_tsconfig_name: config.project_tsconfig_name.clone(),
+      root_tsconfig_name: config.root_tsconfig_name.clone(),
+      out_dir: config.out_dir.clone(),
+    };
+
+    write_file!(moon_tasks, ".moon/tasks.yml");
   }
 
   write_file!(config.pre_commit, ".pre-commit-config.yaml");
 
   write_file!(OxlintConfig {}, ".oxlintrc.json");
 
-  fs::create_dir_all(output.join("packages")).map_err(|e| TemplateError::DirCreation {
+  create_dir_all(output.join("packages")).map_err(|e| TemplateError::DirCreation {
     path: output.to_owned(),
     source: e,
   })?;
+
+  create_dir_all(output.join(config.out_dir))?;
 
   Ok(())
 }
@@ -130,8 +234,8 @@ pub fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
 mod test {
   use crate::build_repo;
 
-  #[test]
-  fn main_test() -> Result<(), Box<dyn std::error::Error>> {
-    build_repo()
+  #[tokio::test]
+  async fn repo_test() -> Result<(), Box<dyn std::error::Error>> {
+    build_repo().await
   }
 }

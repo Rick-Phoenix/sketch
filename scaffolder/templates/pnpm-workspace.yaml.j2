@@ -1,6 +1,16 @@
+packages:
+  {% for name in packages +%}
+  - '{{ name }}'
+  {% endfor +%}
+
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
   - svelte-preprocess
 
+  {% if let Some(catalog) = self.catalog +%}
 catalog:
+  {% for (name, version) in catalog +%}
+  {{+ name }}: {{+ version }}
+  {%+ endfor %}
+  {% endif %}

@@ -25,9 +25,11 @@ pub struct MoonToolchain {
 #[derive(Debug, Template, Default)]
 #[template(path = "moon/tasks.yml.j2")]
 pub struct MoonTasks {
-  pub root_tsconfig_name: String,
   pub tasks: BTreeMap<String, Value>,
   pub config: BTreeMap<String, Value>,
+  pub root_tsconfig_name: String,
+  pub project_tsconfig_name: String,
+  pub out_dir: String,
 }
 
 #[derive(Debug, Template, Default, Serialize, Deserialize)]

@@ -1,5 +1,11 @@
 {
   "extends": "{{ root_tsconfig_path }}",
   "files": [],
-  "references": []
+  "references": [
+    {% for path in references +%}
+    {
+      "path": "{{ path }}"
+    }{% if !loop.last %},{% endif ~%}
+    {% endfor +%}
+  ]
 }
