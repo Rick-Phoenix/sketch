@@ -29,7 +29,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  {% if let Some(Description::Data(description)) = self.description +%}
+  {% if let Some(description) = self.description +%}
   "description": "{{ description }}",
   {% endif +%}
   {% if let Some(workspaces) = self.workspaces +%}
@@ -38,25 +38,27 @@
   "scripts": {
   {% call make_obj_list(self.scripts) +%}
   },
-  {% if let License::Data(license) = self.license +%}
+  {% if let Some(license) = self.license +%}
   "license": "{{ license }}",
   {% endif +%}
-  {% if let Homepage::Data(homepage) = self.homepage +%}
+  {% if let Some(homepage) = self.homepage +%}
   "homepage": "{{ homepage }}",
   {% endif +%}
-  {% if let Keywords::Data(keywords) = self.keywords +%}
+  {% if !self.keywords.is_empty() +%}
   {%+ call make_array("keywords", keywords) +%}
   {% endif +%}
-  {{+ self.repository +}}
-  {% if let Files::Data(files) = self.files +%}
+  {% if let Some(repository) = self.repository +%}
+  {{+ repository +}}
+  {% endif +%}
+  {% if !self.files.is_empty() +%}
   {%+ call make_array("files", files) +%}
   {% endif +%} 
-  {% if let Some(Browser::Data(browser)) = self.browser +%}
+  {% if let Some(browser) = self.browser +%}
   "browser": "{{+ browser }}",
-  {% else if let Main::Data(main) = self.main +%}
+  {% else if let Some(main) = self.main +%}
   "main": "{{+ main }}",
   {% endif +%}
-  {% if let Exports::Data(exports) = self.exports +%}
+  {% if !self.exports.is_empty() +%}
   "exports": {
     {% for (key, val) in exports %}
     {% filter indent(2) +%}
@@ -68,25 +70,25 @@
   {{+ man }}
   {% endif +%}
   {% endif +%}
-  {% if let Some(Bugs::Data(data)) = self.bugs +%}
+  {% if let Some(bugs) = self.bugs +%}
   "bugs": {
-    {% if let Some(url) = data.url +%}
-    "url": "{{ url }}" {% call optional_comma(data.email.is_some()) +%}
+    {% if let Some(url) = bugs.url +%}
+    "url": "{{ url }}" {% call optional_comma(bugs.email.is_some()) +%}
     {% endif +%}
-    {% if let Some(email) = data.email +%}
+    {% if let Some(email) = bugs.email +%}
     "email": "{{ email }}"
     {% endif +%}
   },
   {% endif +%}
-  {% if let Author::Data(author) = self.author +%}
+  {% if let Some(Person::Data(author)) = self.author +%}
   "author": {
     {{+ author | indent(2) +}}
   },
   {% endif +%}
-  {% if let Some(contributors) = self.contributors +%}
+  {% if !self.contributors.is_empty() +%}
   "contributors": [
     {% for contributor in contributors %}
-    {% if let Contributor::Data(person) = contributor +%}
+    {% if let Person::Data(person) = contributor +%}
     {
       {{+ person | indent(4) +}} 
     }{% call optional_comma(!loop.last) +%}
@@ -94,10 +96,10 @@
     {% endfor +%}
   ],
   {% endif +%}
-  {% if let Some(maintainers) = self.maintainers +%}
+  {% if !self.maintainers.is_empty() +%}
   "maintainers": [
     {% for maintainer in maintainers %}
-    {% if let Contributor::Data(person) = maintainer +%}
+    {% if let Person::Data(person) = maintainer +%}
     {
       {{+ person | indent(4) +}} 
     }{% call optional_comma(!loop.last) +%}
@@ -123,18 +125,18 @@
   {% for (name, data) in metadata +%} 
   "{{ name }}": {{+ self::render_json_val(data, 1) }},
   {% endfor +%}
-  {% if let Engines::Data(engines) = self.engines +%}
+  {% if !self.engines.is_empty() +%}
   "engines": {
     {% call make_obj_list(engines) +%}
   },
   {% endif +%}
-  {% if let Os::Data(os) = self.os +%}
+  {% if !self.os.is_empty() +%}
   {%+ call make_array("os", os) +%}
   {% endif +%}
-  {% if let Cpu::Data(cpu) = self.cpu +%}
+  {% if !self.cpu.is_empty() +%}
   {%+ call make_array("cpu", cpu) +%}
   {% endif +%}
-  {% if let PackageManagerJson::Data(package_manager) = self.package_manager +%}
+  {% if let Some(package_manager) = self.package_manager +%}
   "packageManager": "{{ package_manager }}",
   {% endif +%}
   "devDependencies": {

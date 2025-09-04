@@ -1,4 +1,14 @@
 root_dir = "output"
+
+package_dirs = ["packages", "apps"]
+pnpm_config = { onlyBuiltDependencies = [
+  "esbuild",
+  "rolldown",
+  "@tailwindcss/oxide",
+] }
+
+[package_json_presets.base]
+scripts = { abc = "abc", bcd = "bcd" }
 repository = "myrepo"
 license = "Apache 2.0"
 keywords = ["hobbits", "isengard"]
@@ -9,12 +19,6 @@ files = ["index.ts", "index2.ts"]
 engines = { node = "23.0.0", deno = "2.2" }
 os = ["darwin", "linux"]
 cpu = ["x64", "arm64"]
-package_dirs = ["packages", "apps"]
-pnpm_config = { onlyBuiltDependencies = [
-  "esbuild",
-  "rolldown",
-  "@tailwindcss/oxide",
-] }
 
 [package_json_presets.svelte.dev_dependencies]
 vite = "catalog:"
@@ -26,7 +30,7 @@ name = "abc"
 bugs = { workspace = true }
 workspaces = ["one", "two"]
 main = "dist/index.js"
-extends = ["svelte"]
+extends = ["svelte", "base"]
 contributors = [
   { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
   { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },

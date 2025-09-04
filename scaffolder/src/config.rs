@@ -5,15 +5,13 @@ use figment::{
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider,
 };
-use maplit::btreemap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
   moon::MoonConfig,
   package::{vitest::VitestConfigStruct, PackageConfig},
-  BugsData, Contributor, ExportPath, PackageJson, PackageJsonData, Person, Repository,
-  StringKeyVal,
+  PackageJson, PackageJsonData, Person, PersonData,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -35,12 +33,11 @@ impl VersionRange {
 }
 
 impl Config {
-  pub fn get_contributor(&self, name: &str) -> Option<Contributor> {
-    self.contributors.as_ref().map(|contributors_list| {
-      contributors_list
-        .get(name)
-        .map(|person| Contributor::Data(person.clone()))
-    })?
+  pub fn get_contributor(&self, name: &str) -> Option<Person> {
+    self
+      .people
+      .get(name)
+      .map(|person| Person::Data(person.clone()))
   }
 }
 
@@ -66,21 +63,7 @@ pub struct Config {
   pub version_ranges: VersionRange,
   pub tsconfig_presets: BTreeMap<String, String>,
   pub out_dir: String,
-  pub repository: Option<Repository>,
-  pub description: Option<String>,
-  pub keywords: Option<Vec<String>>,
-  pub homepage: Option<String>,
-  pub bugs: Option<BugsData>,
-  pub license: Option<String>,
-  pub author: Option<Person>,
-  pub contributors: Option<BTreeMap<String, Person>>,
-  pub files: Option<Vec<String>>,
-  pub exports: Option<BTreeMap<String, ExportPath>>,
-  pub engines: Option<StringKeyVal>,
-  pub os: Option<Vec<String>>,
-  pub cpu: Option<Vec<String>>,
-  pub main: Option<String>,
-  pub browser: Option<String>,
+  pub people: BTreeMap<String, PersonData>,
 }
 
 #[derive(Debug, Template)]
@@ -116,23 +99,7 @@ impl Default for Config {
       version_ranges: Default::default(),
       tsconfig_presets: Default::default(),
       out_dir: ".out".to_string(),
-      repository: None,
-      description: None,
-      engines: None,
-      exports: Some(
-        btreemap! { ".".to_string() => ExportPath::Data { types: Some("./dist/index.d.ts".to_string()), import: Some("./dist/index.js".to_string()), default: None, require: None, node: None, other: Default::default()} },
-      ),
-      files: Some(vec!["dist".to_string()]),
-      contributors: None,
-      author: None,
-      os: None,
-      license: None,
-      cpu: None,
-      bugs: None,
-      main: Some("dist/index.js".to_string()),
-      browser: None,
-      homepage: None,
-      keywords: None,
+      people: Default::default(),
       pnpm_config: Default::default(),
     }
   }

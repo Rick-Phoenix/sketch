@@ -129,37 +129,8 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
     package_json_data.merge(target_to_extend);
   }
 
-  if matches!(package_json_data.repository, Repository::Workspace { workspace: true }) && let Some(repo) = global_config.repository {
-    package_json_data.repository = repo;
-  }
-
-  macro_rules! add_package_json_val_to_data {
-    ($($tokens:tt)*) => {
-      add_package_json_val!(global_config, package_json_data, $($tokens)*)
-    };
-  }
-
-  add_package_json_val_to_data!(optional_in_config, optional_in_package_json, description);
-  add_package_json_val_to_data!(keywords);
-  add_package_json_val_to_data!(homepage);
-  add_package_json_val_to_data!(optional_in_config, optional_in_package_json, bugs);
-  add_package_json_val_to_data!(license);
-  add_package_json_val_to_data!(author);
-  add_package_json_val_to_data!(files);
-  add_package_json_val_to_data!(exports);
-  add_package_json_val_to_data!(engines);
-  add_package_json_val_to_data!(os);
-  add_package_json_val_to_data!(cpu);
-  add_package_json_val_to_data!(main);
-  add_package_json_val_to_data!(optional_in_config, optional_in_package_json, browser);
-
   get_contributors!(package_json_data, global_config, contributors);
   get_contributors!(package_json_data, global_config, maintainers);
-
-  if let PackageManagerJson::Workspace { workspace: true } = package_json_data.package_manager {
-    package_json_data.package_manager =
-      PackageManagerJson::Data(global_config.package_manager.to_string());
-  }
 
   if package_json_data.default_deps {
     for dep in DEFAULT_DEPS {

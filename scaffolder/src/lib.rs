@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(clippy::result_large_err)]
 
+use merge::Merge;
 pub use package_json::*;
 use serde_json::Value;
 pub use ts_config::*;
@@ -9,45 +10,22 @@ use crate::pnpm::PnpmWorkspace;
 
 macro_rules! get_contributors {
   ($data:ident, $config:ident, $list_name:ident) => {
-    if let Some($list_name) = $data.$list_name {
-      $data.$list_name = Some(
-        $list_name
-          .into_iter()
-          .map(|c| match c {
-            Contributor::Workspace(name) => Contributor::Data(
-              $config
-                .contributors
-                .as_ref()
-                .expect("Config has no list of contributors")
-                .get(&name)
-                .expect("Contributor not found")
-                .clone(),
-            ),
-            Contributor::Data(person) => Contributor::Data(person),
-          })
-          .collect(),
-      )
-    }
+    $data.$list_name = $data
+      .$list_name
+      .into_iter()
+      .map(|c| match c {
+        Person::Workspace(name) => Person::Data(
+          $config
+            .people
+            .get(&name)
+            .expect("Contributor not found")
+            .clone(),
+        ),
+        Person::Data(person) => Person::Data(person),
+      })
+      .collect()
   };
 }
-
-macro_rules! add_package_json_val {
-    ($config:ident, $package_json_data:ident, optional_in_config, optional_in_package_json, $name:ident) => {
-      paste::paste! {
-        if matches!($package_json_data.$name, Some([< $name:camel >]::Workspace { workspace: true })) && let Some(v) = $config.$name {
-          $package_json_data.$name = Some([< $name:camel >]::Data(v));
-        }
-      }
-    };
-
-    ($config:ident, $package_json_data:ident, $name:ident) => {
-      paste::paste! {
-        if matches!($package_json_data.$name, [< $name:camel >]::Workspace { workspace: true }) && let Some(v) = $config.$name {
-          $package_json_data.$name = [< $name:camel >]::Data(v);
-        }
-      }
-    };
-  }
 
 #[macro_use]
 pub mod config;
@@ -123,27 +101,14 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
     PackageJsonData::Definition(package_json) => package_json,
   };
 
-  if let Some(repo) = config.repository {
-    package_json_data.repository = repo;
-  }
+  for preset in package_json_data.extends.clone() {
+    let target = package_json_templates
+      .get(&preset)
+      .unwrap_or_else(|| panic!("Could not find package.json preset '{}'", preset))
+      .clone();
 
-  macro_rules! add_root_package_json_val {
-    ($($tokens:tt)*) => {
-      add_package_json_val!(config, package_json_data, $($tokens)*)
-    };
+    package_json_data.merge(target);
   }
-
-  add_root_package_json_val!(optional_in_config, optional_in_package_json, description);
-  add_root_package_json_val!(keywords);
-  add_root_package_json_val!(homepage);
-  add_root_package_json_val!(optional_in_config, optional_in_package_json, bugs);
-  add_root_package_json_val!(license);
-  add_root_package_json_val!(author);
-  add_root_package_json_val!(files);
-  add_root_package_json_val!(exports);
-  add_root_package_json_val!(engines);
-  add_root_package_json_val!(os);
-  add_root_package_json_val!(cpu);
 
   get_contributors!(package_json_data, config, contributors);
   get_contributors!(package_json_data, config, maintainers);
