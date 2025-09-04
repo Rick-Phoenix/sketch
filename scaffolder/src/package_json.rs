@@ -3,6 +3,7 @@
 use std::{collections::BTreeMap, fmt::Display};
 
 use askama::Template;
+use merge::Merge;
 use serde::{Deserialize, Serialize};
 
 use crate::{rendering::render_json_val, StringKeyVal, StringKeyValMap};
@@ -24,8 +25,9 @@ impl Default for PackageJson {
   fn default() -> Self {
     Self {
       package_name: "my-awesome-package".to_string(),
+      extends: Default::default(),
+      default_deps: true,
       dependencies: Default::default(),
-      dependencies_presets: Default::default(),
       dev_dependencies: Default::default(),
       scripts: Default::default(),
       metadata: Default::default(),
@@ -59,7 +61,7 @@ impl Default for PackageJson {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize, Template)]
+#[derive(Debug, Serialize, Deserialize, Template, Clone)]
 #[template(path = "repository.j2")]
 #[serde(untagged)]
 pub enum Repository {
@@ -80,7 +82,7 @@ pub enum Repository {
 macro_rules! impl_workspace_field {
   ($name:ident, $data_type:ty) => {
     paste::paste! {
-      #[derive(Debug, Serialize, Deserialize)]
+      #[derive(Debug, Serialize, Deserialize, Clone)]
       #[serde(untagged)]
       pub enum $name {
         Workspace { workspace: bool },
@@ -109,7 +111,7 @@ impl_workspace_field!(EngineStrict, bool);
 impl_workspace_field!(Os, Vec<String>);
 impl_workspace_field!(Cpu, Vec<String>);
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BugsData {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub url: Option<String>,
@@ -117,7 +119,7 @@ pub struct BugsData {
   pub email: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Bugs {
   Workspace { workspace: bool },
@@ -134,18 +136,14 @@ pub struct Person {
   pub email: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Author {
   Workspace { workspace: bool },
   Data(Person),
 }
 
-fn map_is_absent(map: &Option<StringKeyVal>) -> bool {
-  map.as_ref().is_none_or(|m| m.is_empty())
-}
-
-#[derive(Debug, Serialize, Deserialize, Template)]
+#[derive(Clone, Debug, Serialize, Deserialize, Template)]
 #[template(path = "export_path.j2")]
 #[serde(untagged)]
 pub enum ExportPath {
@@ -167,7 +165,7 @@ pub enum ExportPath {
   },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Exports {
   Workspace { workspace: bool },
@@ -187,6 +185,7 @@ pub struct Directories {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
+#[derive(Clone)]
 pub enum Contributor {
   Workspace(String),
   Data(Person),
@@ -195,12 +194,13 @@ pub enum Contributor {
 #[derive(Debug, Serialize, Deserialize, Template)]
 #[template(path = "man.j2")]
 #[serde(untagged)]
+#[derive(Clone)]
 pub enum Man {
   Path(String),
   List(Vec<String>),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum PublishConfigAccess {
   Public,
@@ -216,7 +216,7 @@ impl Display for PublishConfigAccess {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize, Template)]
+#[derive(Clone, Debug, Serialize, Deserialize, Template)]
 #[template(path = "publish_config.j2")]
 pub struct PublishConfig {
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -233,9 +233,9 @@ pub struct PublishConfig {
 #[serde(default)]
 pub struct DependenciesPreset {
   pub dependencies: StringKeyVal,
-  pub optional_dependencies: Option<StringKeyVal>,
-  pub peer_dependencies: Option<StringKeyVal>,
-  pub bundled_dependencies: Option<StringKeyVal>,
+  pub optional_dependencies: StringKeyVal,
+  pub peer_dependencies: StringKeyVal,
+  pub bundle_dependencies: StringKeyVal,
   pub dev_dependencies: StringKeyVal,
 }
 
@@ -243,51 +243,82 @@ impl PackageJson {
   pub fn merge_dependencies_preset(&mut self, preset: DependenciesPreset) {
     self.dependencies.extend(preset.dependencies);
     self.dev_dependencies.extend(preset.dev_dependencies);
-    if let Some(d) = self.peer_dependencies.as_mut() {
-      d.extend(preset.peer_dependencies.unwrap_or_default())
-    }
-    if let Some(d) = self.bundle_dependencies.as_mut() {
-      d.extend(preset.bundled_dependencies.unwrap_or_default())
-    }
-
-    if let Some(d) = self.optional_dependencies.as_mut() {
-      d.extend(preset.optional_dependencies.unwrap_or_default())
-    }
+    self.peer_dependencies.extend(preset.peer_dependencies);
+    self.bundle_dependencies.extend(preset.bundle_dependencies);
+    self
+      .optional_dependencies
+      .extend(preset.optional_dependencies);
   }
 }
 
-#[derive(Debug, Deserialize, Serialize, Template)]
+pub(crate) fn merge_maps(left: &mut StringKeyVal, right: StringKeyVal) {
+  left.extend(right)
+}
+
+#[derive(Debug, Deserialize, Serialize, Template, Merge, Clone)]
 #[template(path = "package.json.j2")]
 #[serde(default)]
 pub struct PackageJson {
+  #[merge(skip)]
   pub package_name: String,
+  #[merge(strategy = merge::vec::append)]
+  pub extends: Vec<String>,
+  #[merge(strategy = merge::bool::overwrite_false)]
+  pub default_deps: bool,
+  #[merge(strategy = merge_maps)]
   pub dependencies: StringKeyVal,
-  pub optional_dependencies: Option<StringKeyVal>,
-  pub peer_dependencies: Option<StringKeyVal>,
-  pub bundle_dependencies: Option<StringKeyVal>,
-  pub dependencies_presets: Vec<String>,
+  #[merge(strategy = merge_maps)]
+  pub optional_dependencies: StringKeyVal,
+  #[merge(strategy = merge_maps)]
+  pub peer_dependencies: StringKeyVal,
+  #[merge(strategy = merge_maps)]
+  pub bundle_dependencies: StringKeyVal,
+  #[merge(strategy = merge_maps)]
   pub dev_dependencies: StringKeyVal,
+  #[merge(strategy = merge_maps)]
   pub scripts: StringKeyVal,
+  #[merge(skip)]
   pub metadata: StringKeyValMap,
+  #[merge(skip)]
   pub repository: Repository,
+  #[merge(skip)]
   pub description: Option<Description>,
+  #[merge(skip)]
   pub keywords: Keywords,
+  #[merge(skip)]
   pub homepage: Homepage,
+  #[merge(skip)]
   pub bugs: Option<Bugs>,
+  #[merge(skip)]
   pub license: License,
+  #[merge(skip)]
   pub author: Author,
+  #[merge(skip)]
   pub contributors: Option<Vec<Contributor>>,
+  #[merge(skip)]
   pub maintainers: Option<Vec<Contributor>>,
+  #[merge(skip)]
   pub files: Files,
+  #[merge(skip)]
   pub exports: Exports,
+  #[merge(skip)]
   pub man: Option<Man>,
+  #[merge(skip)]
   pub config: Option<StringKeyValMap>,
+  #[merge(skip)]
   pub package_manager: PackageManagerJson,
+  #[merge(skip)]
   pub publish_config: Option<PublishConfig>,
+  #[merge(skip)]
   pub engines: Engines,
+  #[merge(skip)]
   pub os: Os,
+  #[merge(skip)]
   pub cpu: Cpu,
+  #[merge(skip)]
   pub main: Main,
+  #[merge(skip)]
   pub browser: Option<Browser>,
+  #[merge(skip)]
   pub workspaces: Option<Vec<String>>,
 }

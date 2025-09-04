@@ -16,7 +16,7 @@ pnpm_config = { onlyBuiltDependencies = [
   "@tailwindcss/oxide",
 ] }
 
-[dependencies_presets.svelte.dev_dependencies]
+[package_json_presets.svelte.dev_dependencies]
 vite = "catalog:"
 svelte = "catalog:svelte"
 tailwind = "catalog:tailwind"
@@ -26,7 +26,7 @@ name = "abc"
 bugs = { workspace = true }
 workspaces = ["one", "two"]
 main = "dist/index.js"
-dependencies_presets = ["svelte"]
+extends = ["svelte"]
 contributors = [
   { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
   { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },

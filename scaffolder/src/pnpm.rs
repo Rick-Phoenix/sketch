@@ -32,17 +32,15 @@ impl PnpmWorkspace {
       .add_to_catalog(range_kind, &package_json.dev_dependencies)
       .await;
 
-    if let Some(ref peer_dependencies) = package_json.peer_dependencies {
-      self.add_to_catalog(range_kind, peer_dependencies).await;
-    }
-
-    if let Some(ref optional_dependencies) = package_json.optional_dependencies {
-      self.add_to_catalog(range_kind, optional_dependencies).await;
-    }
-
-    if let Some(ref bundle_dependencies) = package_json.bundle_dependencies {
-      self.add_to_catalog(range_kind, bundle_dependencies).await;
-    }
+    self
+      .add_to_catalog(range_kind, &package_json.peer_dependencies)
+      .await;
+    self
+      .add_to_catalog(range_kind, &package_json.optional_dependencies)
+      .await;
+    self
+      .add_to_catalog(range_kind, &package_json.bundle_dependencies)
+      .await;
   }
 
   pub async fn add_to_catalog(

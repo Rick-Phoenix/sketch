@@ -11,6 +11,7 @@ use figment::{
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider,
 };
+use merge::Merge;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -85,7 +86,7 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
     .merge(Toml::file("scaffolder/config.toml"))
     .extract()?;
 
-  let mut package_json_templates = global_config.package_json_presets;
+  let mut package_json_presets = global_config.package_json_presets;
 
   let root_dir = PathBuf::from(global_config.root_dir);
 
@@ -113,11 +114,20 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
   }
 
   let mut package_json_data = match config.package_json {
-    PackageJsonData::Named(name) => package_json_templates
+    PackageJsonData::Named(name) => package_json_presets
       .remove(&name)
       .expect("Package json not found in store"),
     PackageJsonData::Definition(package_json) => package_json,
   };
+
+  for id in package_json_data.extends.clone() {
+    let target_to_extend = package_json_presets
+      .get(&id)
+      .unwrap_or_else(|| panic!("Could not find the package json preset for '{}'", id))
+      .clone();
+
+    package_json_data.merge(target_to_extend);
+  }
 
   if matches!(package_json_data.repository, Repository::Workspace { workspace: true }) && let Some(repo) = global_config.repository {
     package_json_data.repository = repo;
@@ -151,29 +161,25 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
       PackageManagerJson::Data(global_config.package_manager.to_string());
   }
 
-  for dep in DEFAULT_DEPS {
-    let version = if global_config.catalog {
-      "catalog:".to_string()
-    } else {
-      let version = get_latest_version(dep)
-        .await
-        .unwrap_or_else(|_| "latest".to_string());
-      global_config.version_ranges.create(version)
-    };
+  if package_json_data.default_deps {
+    for dep in DEFAULT_DEPS {
+      let version = if global_config.catalog {
+        "catalog:".to_string()
+      } else {
+        let version = get_latest_version(dep).await.unwrap_or_else(|_| {
+          println!(
+            "Could not get the latest valid version range for '{}'. Falling back to 'latest'...",
+            dep
+          );
+          "latest".to_string()
+        });
+        global_config.version_ranges.create(version)
+      };
 
-    package_json_data
-      .dev_dependencies
-      .insert(dep.to_string(), version);
-  }
-
-  for preset in package_json_data.dependencies_presets.clone() {
-    let preset_data = global_config
-      .dependencies_presets
-      .get(&preset)
-      .unwrap_or_else(|| panic!("Dependencies preset {} not found.", preset))
-      .clone();
-
-    package_json_data.merge_dependencies_preset(preset_data);
+      package_json_data
+        .dev_dependencies
+        .insert(dep.to_string(), version);
+    }
   }
 
   if global_config.catalog {

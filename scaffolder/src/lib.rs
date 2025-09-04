@@ -148,16 +148,6 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
   get_contributors!(package_json_data, config, contributors);
   get_contributors!(package_json_data, config, maintainers);
 
-  for preset in package_json_data.dependencies_presets.clone() {
-    let preset_data = config
-      .dependencies_presets
-      .get(&preset)
-      .unwrap_or_else(|| panic!("Dependencies preset {} not found.", preset))
-      .clone();
-
-    package_json_data.merge_dependencies_preset(preset_data);
-  }
-
   write_file!(package_json_data, "package.json");
 
   write_file!(RootTsConfig {}, config.root_tsconfig_name.clone());
@@ -168,20 +158,30 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
   };
   write_file!(root_tsconfig, "tsconfig.json");
 
-  if matches!(config.package_manager, PackageManager::Pnpm) {
-    let mut catalog: BTreeMap<String, String> = BTreeMap::new();
-    if config.catalog {
-      for dep in DEFAULT_DEPS {
-        let version = get_latest_version(dep)
-          .await
-          .unwrap_or_else(|_| "latest".to_string());
-        let range = config.version_ranges.create(version);
-        catalog.insert(dep.to_string(), range);
-      }
-    }
+  if package_json_data.default_deps {
+    for dep in DEFAULT_DEPS {
+      let version = if config.catalog {
+        "catalog:".to_string()
+      } else {
+        get_latest_version(dep).await.unwrap_or_else(|_| {
+          println!(
+            "Could not get the latest valid version range for '{}'. Falling back to 'latest'...",
+            dep
+          );
+          "latest".to_string()
+        })
+      };
 
+      let range = config.version_ranges.create(version);
+      package_json_data
+        .dev_dependencies
+        .insert(dep.to_string(), range);
+    }
+  }
+
+  if matches!(config.package_manager, PackageManager::Pnpm) {
     let mut pnpm_data = PnpmWorkspace {
-      catalog,
+      catalog: Default::default(),
       packages: config.package_dirs,
       extra: config.pnpm_config,
       catalogs: Default::default(),

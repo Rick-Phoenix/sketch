@@ -12,8 +12,8 @@ use serde_json::Value;
 use crate::{
   moon::MoonConfig,
   package::{vitest::VitestConfigStruct, PackageConfig},
-  BugsData, Contributor, DependenciesPreset, ExportPath, PackageJson, PackageJsonData, Person,
-  Repository, StringKeyVal,
+  BugsData, Contributor, ExportPath, PackageJson, PackageJsonData, Person, Repository,
+  StringKeyVal,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -64,7 +64,6 @@ pub struct Config {
   pub vitest_presets: BTreeMap<String, VitestConfigStruct>,
   pub catalog: bool,
   pub version_ranges: VersionRange,
-  pub dependencies_presets: BTreeMap<String, DependenciesPreset>,
   pub tsconfig_presets: BTreeMap<String, String>,
   pub out_dir: String,
   pub repository: Option<Repository>,
@@ -115,7 +114,6 @@ impl Default for Config {
       },
       catalog: true,
       version_ranges: Default::default(),
-      dependencies_presets: Default::default(),
       tsconfig_presets: Default::default(),
       out_dir: ".out".to_string(),
       repository: None,

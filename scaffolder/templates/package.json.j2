@@ -13,9 +13,9 @@
 {% endmacro %}
 
 {% macro make_optional_obj(name, optional_list) %}
-  {% if let Some(list) = optional_list +%}
+  {% if !optional_list.is_empty() +%}
   "{{ name }}": {
-    {% call make_obj_list(list) +%}
+    {% call make_obj_list(optional_list) +%}
   },
   {% endif +%}
 {% endmacro %}
