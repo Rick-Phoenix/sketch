@@ -12,8 +12,8 @@ use serde_json::Value;
 use crate::{
   moon::MoonConfig,
   package::{vitest::VitestConfigStruct, PackageConfig},
-  BugsData, Contributor, EntryPoint, ExportPath, PackageJson, PackageJsonData, Person, Repository,
-  StringKeyVal,
+  BugsData, Contributor, DependenciesPreset, ExportPath, PackageJson, PackageJsonData, Person,
+  Repository, StringKeyVal,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -49,8 +49,9 @@ impl Config {
 pub struct Config {
   pub package_name: String,
   pub gitignore: GitIgnore,
+  pub pnpm_config: BTreeMap<String, Value>,
   pub root_package_json: PackageJsonData,
-  pub package_json: BTreeMap<String, PackageJson>,
+  pub package_json_presets: BTreeMap<String, PackageJson>,
   pub root_tsconfig_name: String,
   pub project_tsconfig_name: String,
   pub dev_tsconfig_name: String,
@@ -63,8 +64,7 @@ pub struct Config {
   pub vitest_presets: BTreeMap<String, VitestConfigStruct>,
   pub catalog: bool,
   pub version_ranges: VersionRange,
-  pub dependencies_presets: BTreeMap<String, Vec<(String, String)>>,
-  pub dev_dependencies_presets: BTreeMap<String, Vec<(String, String)>>,
+  pub dependencies_presets: BTreeMap<String, DependenciesPreset>,
   pub tsconfig_presets: BTreeMap<String, String>,
   pub out_dir: String,
   pub repository: Option<Repository>,
@@ -78,11 +78,10 @@ pub struct Config {
   pub files: Option<Vec<String>>,
   pub exports: Option<BTreeMap<String, ExportPath>>,
   pub engines: Option<StringKeyVal>,
-  pub engine_strict: Option<bool>,
   pub os: Option<Vec<String>>,
   pub cpu: Option<Vec<String>>,
-  #[serde(flatten)]
-  pub entry_point: Option<EntryPoint>,
+  pub main: Option<String>,
+  pub browser: Option<String>,
 }
 
 #[derive(Debug, Template)]
@@ -94,7 +93,7 @@ impl Default for Config {
     Self {
       package_name: "my-awesome-package".to_string(),
       gitignore: Default::default(),
-      package_json: Default::default(),
+      package_json_presets: Default::default(),
       root_package_json: Default::default(),
       package_manager: Default::default(),
       root_tsconfig_name: "tsconfig.options.json".to_string(),
@@ -117,26 +116,26 @@ impl Default for Config {
       catalog: true,
       version_ranges: Default::default(),
       dependencies_presets: Default::default(),
-      dev_dependencies_presets: Default::default(),
       tsconfig_presets: Default::default(),
       out_dir: ".out".to_string(),
       repository: None,
       description: None,
       engines: None,
       exports: Some(
-        btreemap! { ".".to_string() => ExportPath::Data { types: Some("./dist/index.d.ts".to_string()), import: Some("./dist/index.js".to_string()), default: None, require: None, node: None, other: None} },
+        btreemap! { ".".to_string() => ExportPath::Data { types: Some("./dist/index.d.ts".to_string()), import: Some("./dist/index.js".to_string()), default: None, require: None, node: None, other: Default::default()} },
       ),
       files: Some(vec!["dist".to_string()]),
-      engine_strict: None,
       contributors: None,
       author: None,
       os: None,
       license: None,
       cpu: None,
       bugs: None,
-      entry_point: None,
+      main: Some("dist/index.js".to_string()),
+      browser: None,
       homepage: None,
       keywords: None,
+      pnpm_config: Default::default(),
     }
   }
 }

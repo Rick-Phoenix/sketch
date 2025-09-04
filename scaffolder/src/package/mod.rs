@@ -17,7 +17,7 @@ use crate::{
   moon::MoonDotYml,
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigStruct},
   paths::get_relative_path,
-  pnpm::PnpmWorkspaceStruct,
+  pnpm::PnpmWorkspace,
   versions::get_latest_version,
   DevTsConfig, PackageJsonData, SrcTsConfig, TsConfigData, *,
 };
@@ -85,7 +85,7 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
     .merge(Toml::file("scaffolder/config.toml"))
     .extract()?;
 
-  let mut package_json_templates = global_config.package_json;
+  let mut package_json_templates = global_config.package_json_presets;
 
   let root_dir = PathBuf::from(global_config.root_dir);
 
@@ -119,7 +119,7 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
     PackageJsonData::Definition(package_json) => package_json,
   };
 
-  if matches!(package_json_data.repository, Repository::Workspace) && let Some(repo) = global_config.repository {
+  if matches!(package_json_data.repository, Repository::Workspace { workspace: true }) && let Some(repo) = global_config.repository {
     package_json_data.repository = repo;
   }
 
@@ -138,17 +138,22 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
   add_package_json_val_to_data!(files);
   add_package_json_val_to_data!(exports);
   add_package_json_val_to_data!(engines);
-  add_package_json_val_to_data!(engine_strict);
   add_package_json_val_to_data!(os);
   add_package_json_val_to_data!(cpu);
-  add_package_json_val_to_data!(entry_point, no_data_wrapper);
+  add_package_json_val_to_data!(main);
+  add_package_json_val_to_data!(optional_in_config, optional_in_package_json, browser);
 
   get_contributors!(package_json_data, global_config, contributors);
   get_contributors!(package_json_data, global_config, maintainers);
 
+  if let PackageManagerJson::Workspace { workspace: true } = package_json_data.package_manager {
+    package_json_data.package_manager =
+      PackageManagerJson::Data(global_config.package_manager.to_string());
+  }
+
   for dep in DEFAULT_DEPS {
     let version = if global_config.catalog {
-      ":catalog".to_string()
+      "catalog:".to_string()
     } else {
       let version = get_latest_version(dep)
         .await
@@ -161,32 +166,28 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
       .insert(dep.to_string(), version);
   }
 
+  for preset in package_json_data.dependencies_presets.clone() {
+    let preset_data = global_config
+      .dependencies_presets
+      .get(&preset)
+      .unwrap_or_else(|| panic!("Dependencies preset {} not found.", preset))
+      .clone();
+
+    package_json_data.merge_dependencies_preset(preset_data);
+  }
+
   if global_config.catalog {
     let pnpm_workspace_file =
       File::open(root_dir.join("pnpm-workspace.yaml")).expect("pnpm-workspace not found");
 
-    let mut pnpm_workspace: PnpmWorkspaceStruct = serde_yaml_ng::from_reader(&pnpm_workspace_file)
+    let mut pnpm_workspace: PnpmWorkspace = serde_yaml_ng::from_reader(&pnpm_workspace_file)
       .expect("Could not deserialize pnpm-workspace");
 
     pnpm_workspace
-      .add_to_catalog(
-        global_config.version_ranges,
-        &package_json_data.dependencies,
-      )
+      .add_dependencies_to_catalog(global_config.version_ranges, &package_json_data)
       .await;
 
-    pnpm_workspace
-      .add_to_catalog(
-        global_config.version_ranges,
-        &package_json_data.dev_dependencies,
-      )
-      .await;
-
-    let writer = File::create(root_dir.join("pnpm-workspace.yaml"))
-      .expect("Could not write to pnpm-workspace.yaml.");
-
-    serde_yaml_ng::to_writer(&writer, &pnpm_workspace)
-      .expect("Could not write pnpm-workspace.yaml");
+    pnpm_workspace.write_into(&mut File::create(root_dir.join("pnpm-workspace.yaml"))?)?;
   }
 
   write_file!(package_json_data, "package.json");

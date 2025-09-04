@@ -1,16 +1,26 @@
 packages:
   {% for name in packages +%}
   - '{{ name }}'
-  {% endfor +%}
+  {% endfor %}
 
-onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - esbuild
-  - svelte-preprocess
+{%~ if !self.catalogs.is_empty() +%}
 
-  {% if let Some(catalog) = self.catalog +%}
+catalogs:
+  {% for (name, catalog) in catalogs +%}
+  {{+ name }}: 
+  {% for (name, val) in catalog +%}
+    {{+ name }}: {{+ val }}
+  {% endfor %}
+  {% endfor %}
+{% endif ~%}
+
+{%~ if !self.catalog.is_empty() ~%}
 catalog:
-  {% for (name, version) in catalog +%}
+  {% for (name, version) in self.catalog +%}
   {{+ name }}: {{+ version }}
-  {%+ endfor %}
-  {% endif %}
+  {% endfor %}
+{% endif ~%}
+
+{%~ for (name, val) in self.extra ~%}
+{{+ name }}: {{+ crate::render_yaml_val(val, 0) }}
+{% endfor %}

@@ -1,0 +1,32 @@
+{% macro optional_comma(condition) %}
+{% if condition %}, {% endif %}
+{% endmacro %}
+
+
+{% match self %}
+  {% when Self::Path(path) %}
+  "{{ path }}"
+  {% when Self::Data { require, import, node, default, types, other } %}
+  {
+    {% if let Some(require) = require +%}
+    "require": "{{ require }}" {% call optional_comma(import.is_some() || node.is_some() || default.is_some() || types.is_some() || !other.is_empty()) %}
+    {% endif +%}
+    {% if let Some(import) = import +%}
+    "import": "{{ import }}" {% call optional_comma(node.is_some() || default.is_some() || types.is_some() || !other.is_empty()) %}
+    {% endif +%}
+    {% if let Some(node) = node +%}
+    "node": "{{ node }}" {% call optional_comma(default.is_some() || types.is_some() || !other.is_empty()) %}
+    {% endif +%}
+    {% if let Some(default) = default +%}
+    "default": "{{ default }}" {% call optional_comma(types.is_some() || !other.is_empty()) %}
+    {% endif +%}
+    {% if let Some(types) = types +%}
+    "types": "{{ types }}" {% call optional_comma(!other.is_empty()) %}
+    {% endif +%}
+    {% if !other.is_empty() +%}
+    {% for (key, val) in other +%}
+       "{{ key }}": "{{+ val }}" {% call optional_comma(!loop.last) %}
+    {% endfor +%}
+    {% endif +%}
+  }
+{% endmatch %}

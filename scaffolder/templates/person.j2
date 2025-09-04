@@ -1,0 +1,11 @@
+{% macro optional_comma(condition) %}
+{% if condition %}, {% endif %}
+{% endmacro %}
+
+"name": "{{ self.name }}" {% call optional_comma(self.url.is_some() || self.email.is_some()) +%}
+{% if let Some(email) = self.email +%}
+  "email": "{{ email }}" {% call optional_comma(self.url.is_some()) +%}
+{% endif +%}
+{% if let Some(url) = self.url +%}
+  "url": "{{ url }}" 
+{% endif +%}

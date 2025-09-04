@@ -12,6 +12,6 @@
 {% if let Some(directory) = directory %}
 "directory": "{{ directory }}"
 {% endif %}
-  {% when Self::Workspace %}
+  {% when Self::Workspace { .. } %}
 },
 {% endmatch %}

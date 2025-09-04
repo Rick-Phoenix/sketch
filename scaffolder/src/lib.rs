@@ -5,6 +5,8 @@ pub use package_json::*;
 use serde_json::Value;
 pub use ts_config::*;
 
+use crate::pnpm::PnpmWorkspace;
+
 macro_rules! get_contributors {
   ($data:ident, $config:ident, $list_name:ident) => {
     if let Some($list_name) = $data.$list_name {
@@ -32,24 +34,15 @@ macro_rules! get_contributors {
 macro_rules! add_package_json_val {
     ($config:ident, $package_json_data:ident, optional_in_config, optional_in_package_json, $name:ident) => {
       paste::paste! {
-        if matches!($package_json_data.$name, Some([< $name:camel >]::Workspace)) && let Some(v) = $config.$name {
+        if matches!($package_json_data.$name, Some([< $name:camel >]::Workspace { workspace: true })) && let Some(v) = $config.$name {
           $package_json_data.$name = Some([< $name:camel >]::Data(v));
         }
       }
     };
 
-    ($config:ident, $package_json_data:ident, $name:ident, no_data_wrapper) => {
-      paste::paste! {
-        if matches!($package_json_data.$name, [< $name:camel >]::Workspace) && let Some(v) = $config.$name {
-          $package_json_data.$name = v;
-        }
-      }
-    };
-
-
     ($config:ident, $package_json_data:ident, $name:ident) => {
       paste::paste! {
-        if matches!($package_json_data.$name, [< $name:camel >]::Workspace) && let Some(v) = $config.$name {
+        if matches!($package_json_data.$name, [< $name:camel >]::Workspace { workspace: true }) && let Some(v) = $config.$name {
           $package_json_data.$name = [< $name:camel >]::Data(v);
         }
       }
@@ -91,7 +84,6 @@ use figment::providers::{Format, Toml};
 
 use crate::{
   moon::{MoonTasks, MoonToolchain},
-  pnpm::PnpmWorkspaceTemplate,
   versions::get_latest_version,
   Config, OxlintConfig, PackageManager,
 };
@@ -103,7 +95,7 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
     .merge(Toml::file("scaffolder/config.toml"))
     .extract()?;
 
-  let mut package_json_templates = config.package_json;
+  let mut package_json_templates = config.package_json_presets;
   let output = PathBuf::from(config.root_dir);
 
   create_dir_all(&output).map_err(|e| TemplateError::DirCreation {
@@ -150,15 +142,24 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
   add_root_package_json_val!(files);
   add_root_package_json_val!(exports);
   add_root_package_json_val!(engines);
-  add_root_package_json_val!(engine_strict);
   add_root_package_json_val!(os);
   add_root_package_json_val!(cpu);
-  add_root_package_json_val!(entry_point, no_data_wrapper);
 
   get_contributors!(package_json_data, config, contributors);
   get_contributors!(package_json_data, config, maintainers);
 
+  for preset in package_json_data.dependencies_presets.clone() {
+    let preset_data = config
+      .dependencies_presets
+      .get(&preset)
+      .unwrap_or_else(|| panic!("Dependencies preset {} not found.", preset))
+      .clone();
+
+    package_json_data.merge_dependencies_preset(preset_data);
+  }
+
   write_file!(package_json_data, "package.json");
+
   write_file!(RootTsConfig {}, config.root_tsconfig_name.clone());
 
   let root_tsconfig = TsConfig {
@@ -178,13 +179,19 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
         catalog.insert(dep.to_string(), range);
       }
     }
-    write_file!(
-      PnpmWorkspaceTemplate {
-        catalog: Some(catalog),
-        packages: config.package_dirs,
-      },
-      "pnpm-workspace.yaml"
-    );
+
+    let mut pnpm_data = PnpmWorkspace {
+      catalog,
+      packages: config.package_dirs,
+      extra: config.pnpm_config,
+      catalogs: Default::default(),
+    };
+
+    pnpm_data
+      .add_dependencies_to_catalog(config.version_ranges, &package_json_data)
+      .await;
+
+    write_file!(pnpm_data, "pnpm-workspace.yaml");
   }
 
   if let Some(moon_config) = config.moonrepo {

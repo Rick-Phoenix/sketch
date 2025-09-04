@@ -1,0 +1,14 @@
+{% macro optional_comma(condition) %}
+{% if condition %}, {% endif %}
+{% endmacro %}
+
+{% match self %}
+  {% when Self::Path(path) %}
+  "man": "{{ path }}",
+  {% when Self::List(list) %}
+  "man": [ 
+  {% for path in list +%}
+    "{{ path }}" {% call optional_comma(!loop.last) %}
+    {% endfor +%} 
+  ],
+{% endmatch %}

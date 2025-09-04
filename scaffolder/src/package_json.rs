@@ -1,6 +1,6 @@
 #![allow(clippy::large_enum_variant)]
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
 use askama::Template;
 use serde::{Deserialize, Serialize};
@@ -27,10 +27,9 @@ impl Default for PackageJson {
       dependencies: Default::default(),
       dependencies_presets: Default::default(),
       dev_dependencies: Default::default(),
-      dev_dependencies_presets: Default::default(),
       scripts: Default::default(),
       metadata: Default::default(),
-      repository: Default::default(),
+      repository: Repository::Workspace { workspace: true },
       description: Some(Description::Data(
         "A package that solves all of your problems...".to_string(),
       )),
@@ -38,21 +37,21 @@ impl Default for PackageJson {
       config: Default::default(),
       publish_config: Default::default(),
       man: Default::default(),
-      exports: Default::default(),
+      exports: Exports::Workspace { workspace: true },
       files: Default::default(),
       engines: Default::default(),
       maintainers: Default::default(),
       contributors: Default::default(),
-      author: Default::default(),
+      author: Author::Workspace { workspace: true },
       license: Default::default(),
-      engine_strict: Default::default(),
       bugs: Default::default(),
       os: Default::default(),
       cpu: Default::default(),
       keywords: Default::default(),
       homepage: Default::default(),
-      entry_point: Default::default(),
-      bundled_dependencies: Default::default(),
+      main: Default::default(),
+      browser: Default::default(),
+      bundle_dependencies: Default::default(),
       peer_dependencies: Default::default(),
       optional_dependencies: Default::default(),
       workspaces: Default::default(),
@@ -60,13 +59,13 @@ impl Default for PackageJson {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Template)]
+#[derive(Debug, Serialize, Deserialize, Template)]
 #[template(path = "repository.j2")]
 #[serde(untagged)]
 pub enum Repository {
-  #[serde(rename = "workspace")]
-  #[default]
-  Workspace,
+  Workspace {
+    workspace: bool,
+  },
   Path(String),
   Data {
     #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
@@ -80,18 +79,26 @@ pub enum Repository {
 
 macro_rules! impl_workspace_field {
   ($name:ident, $data_type:ty) => {
-    #[derive(Debug, Serialize, Deserialize, Default)]
-    #[serde(untagged)]
-    pub enum $name {
-      #[serde(rename = "workspace")]
-      #[default]
-      Workspace,
-      Data($data_type),
+    paste::paste! {
+      #[derive(Debug, Serialize, Deserialize)]
+      #[serde(untagged)]
+      pub enum $name {
+        Workspace { workspace: bool },
+        Data($data_type),
+      }
+
+      impl Default for $name {
+        fn default() -> Self {
+          Self::Workspace { workspace: true }
+        }
+      }
     }
   };
 }
 
 impl_workspace_field!(Description, String);
+impl_workspace_field!(Main, String);
+impl_workspace_field!(Browser, String);
 impl_workspace_field!(Keywords, Vec<String>);
 impl_workspace_field!(Homepage, String);
 impl_workspace_field!(License, String);
@@ -110,16 +117,15 @@ pub struct BugsData {
   pub email: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Bugs {
-  #[serde(rename = "workspace")]
-  #[default]
-  Workspace,
+  Workspace { workspace: bool },
   Data(BugsData),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, Template)]
+#[template(path = "person.j2")]
 pub struct Person {
   pub name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -128,15 +134,19 @@ pub struct Person {
   pub email: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Author {
-  #[default]
-  Workspace,
+  Workspace { workspace: bool },
   Data(Person),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+fn map_is_absent(map: &Option<StringKeyVal>) -> bool {
+  map.as_ref().is_none_or(|m| m.is_empty())
+}
+
+#[derive(Debug, Serialize, Deserialize, Template)]
+#[template(path = "export_path.j2")]
 #[serde(untagged)]
 pub enum ExportPath {
   Path(String),
@@ -151,18 +161,16 @@ pub enum ExportPath {
     default: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     types: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(flatten)]
-    other: Option<StringKeyVal>,
+    other: StringKeyVal,
   },
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Exports {
-  #[serde(rename = "workspace")]
-  #[default]
-  Workspace,
+  Workspace { workspace: bool },
   Data(BTreeMap<String, ExportPath>),
 }
 
@@ -184,30 +192,32 @@ pub enum Contributor {
   Data(Person),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Template)]
+#[template(path = "man.j2")]
 #[serde(untagged)]
 pub enum Man {
   Path(String),
   List(Vec<String>),
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
-#[serde(untagged)]
-pub enum EntryPoint {
-  #[serde(rename = "workspace")]
-  #[default]
-  Workspace,
-  Main(String),
-  Browser(String),
-}
-
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum PublishConfigAccess {
   Public,
   Restricted,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Display for PublishConfigAccess {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Self::Public => write!(f, "public"),
+      Self::Restricted => write!(f, "restricted"),
+    }
+  }
+}
+
+#[derive(Debug, Serialize, Deserialize, Template)]
+#[template(path = "publish_config.j2")]
 pub struct PublishConfig {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub access: Option<PublishConfigAccess>,
@@ -215,8 +225,35 @@ pub struct PublishConfig {
   pub tag: Option<String>,
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub registry: Option<String>,
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub other: Option<StringKeyVal>,
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  pub other: StringKeyVal,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct DependenciesPreset {
+  pub dependencies: StringKeyVal,
+  pub optional_dependencies: Option<StringKeyVal>,
+  pub peer_dependencies: Option<StringKeyVal>,
+  pub bundled_dependencies: Option<StringKeyVal>,
+  pub dev_dependencies: StringKeyVal,
+}
+
+impl PackageJson {
+  pub fn merge_dependencies_preset(&mut self, preset: DependenciesPreset) {
+    self.dependencies.extend(preset.dependencies);
+    self.dev_dependencies.extend(preset.dev_dependencies);
+    if let Some(d) = self.peer_dependencies.as_mut() {
+      d.extend(preset.peer_dependencies.unwrap_or_default())
+    }
+    if let Some(d) = self.bundle_dependencies.as_mut() {
+      d.extend(preset.bundled_dependencies.unwrap_or_default())
+    }
+
+    if let Some(d) = self.optional_dependencies.as_mut() {
+      d.extend(preset.optional_dependencies.unwrap_or_default())
+    }
+  }
 }
 
 #[derive(Debug, Deserialize, Serialize, Template)]
@@ -227,9 +264,8 @@ pub struct PackageJson {
   pub dependencies: StringKeyVal,
   pub optional_dependencies: Option<StringKeyVal>,
   pub peer_dependencies: Option<StringKeyVal>,
-  pub bundled_dependencies: Option<StringKeyVal>,
+  pub bundle_dependencies: Option<StringKeyVal>,
   pub dependencies_presets: Vec<String>,
-  pub dev_dependencies_presets: Vec<String>,
   pub dev_dependencies: StringKeyVal,
   pub scripts: StringKeyVal,
   pub metadata: StringKeyValMap,
@@ -249,10 +285,9 @@ pub struct PackageJson {
   pub package_manager: PackageManagerJson,
   pub publish_config: Option<PublishConfig>,
   pub engines: Engines,
-  pub engine_strict: EngineStrict,
   pub os: Os,
   pub cpu: Cpu,
-  #[serde(flatten)]
-  pub entry_point: EntryPoint,
+  pub main: Main,
+  pub browser: Option<Browser>,
   pub workspaces: Option<Vec<String>>,
 }
