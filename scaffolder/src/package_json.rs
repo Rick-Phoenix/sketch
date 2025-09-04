@@ -192,10 +192,6 @@ pub(crate) fn overwrite_option<T>(left: &mut Option<T>, right: Option<T>) {
   }
 }
 
-pub(crate) fn overwrite_always<T>(left: &mut T, right: T) {
-  *left = right
-}
-
 #[derive(Debug, Deserialize, Serialize, Template, Merge, Clone)]
 #[template(path = "package.json.j2")]
 #[serde(default)]
@@ -260,6 +256,6 @@ pub struct PackageJson {
   pub main: Option<String>,
   #[merge(strategy = overwrite_option)]
   pub browser: Option<String>,
-  #[merge(strategy = overwrite_always)]
+  #[merge(strategy = overwrite_option)]
   pub workspaces: Option<Vec<String>>,
 }

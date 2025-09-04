@@ -1,0 +1,41 @@
+{% macro render_optional_json_val(val, indent) %}
+{% if let Some(v) = val +%}
+{{ crate::render_json_val(v, indent) }}
+{% endif +%}
+{% endmacro %}
+
+{% macro render_optional_string(name, val, indent_val) %}
+{% if let Some(v) = val %}
+{% filter indent(indent_val) +%}
+"{{ name }}": "{{+ v }}",
+{% endfilter %}
+{% endif +%}
+{% endmacro %}
+
+{% macro render_optional_bool(name, val, indent_val) %}
+{% if let Some(v) = val %}
+{% filter indent(indent_val) +%}
+"{{ name }}": {{+ v }},
+{% endfilter %}
+{% endif +%}
+{% endmacro %}
+
+{% macro optional_comma(condition) %}
+{% if condition %}, {% endif %}
+{% endmacro %}
+
+{% macro render_optional_list(name, list, indent_val) %}
+{% if let Some(v) = list %}
+{% call render_list(name, v, indent_val) %}
+{% endif +%}
+{% endmacro %}
+
+{% macro render_list(name, list, indent_val) %}
+{% filter indent(indent_val) +%}
+"{{ name }}": [
+  {% for val in list +%}
+  "{{ val }}" {% call optional_comma(!loop.last) %}
+  {% endfor +%}
+],
+{% endfilter %}
+{% endmacro %}

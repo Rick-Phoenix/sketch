@@ -11,6 +11,7 @@ use figment::{
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider,
 };
+use maplit::hashmap;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +21,7 @@ use crate::{
   paths::get_relative_path,
   pnpm::PnpmWorkspace,
   versions::get_latest_version,
-  DevTsConfig, PackageJsonData, SrcTsConfig, TsConfigData, *,
+  PackageJsonData, *,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -40,6 +41,7 @@ pub struct PackageConfig {
   pub moonrepo: Option<MoonDotYml>,
   pub dir: String,
   pub vitest: VitestConfig,
+  pub ts_config: Vec<TsConfig>,
 }
 
 impl Default for PackageConfig {
@@ -51,6 +53,7 @@ impl Default for PackageConfig {
       moonrepo: None,
       dir: ".".to_string(),
       vitest: Default::default(),
+      ts_config: Default::default(),
     }
   }
 }
@@ -129,6 +132,10 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
     package_json_data.merge(target_to_extend);
   }
 
+  if package_json_data.package_manager.is_none() {
+    package_json_data.package_manager = Some(global_config.package_manager.to_string());
+  }
+
   get_contributors!(package_json_data, global_config, contributors);
   get_contributors!(package_json_data, global_config, maintainers);
 
@@ -175,72 +182,193 @@ pub async fn build_package(name: &str) -> Result<(), Box<dyn std::error::Error>>
 
   let is_app = matches!(config.kind, PackageKind::App);
   let rel_path_to_root_dir = get_relative_path(&output, &PathBuf::from(&root_dir))?;
-  write_file!(
-    TsConfig {
-      root_tsconfig_path: rel_path_to_root_dir
-        .join(global_config.root_tsconfig_name.clone())
-        .to_string_lossy()
-        .to_string(),
-      references: {
-        let mut refs = vec![global_config.project_tsconfig_name.clone()];
-        if !is_app {
-          refs.push(global_config.dev_tsconfig_name.clone());
-        }
-        refs
-      },
-    },
-    "tsconfig.json"
-  );
+  // write_file!(
+  //   TsConfig {
+  //     root_tsconfig_path: rel_path_to_root_dir
+  //       .join(global_config.root_tsconfig_name.clone())
+  //       .to_string_lossy()
+  //       .to_string(),
+  //     references: {
+  //       let mut refs = vec![global_config.project_tsconfig_name.clone()];
+  //       if !is_app {
+  //         refs.push(global_config.dev_tsconfig_name.clone());
+  //       }
+  //       refs
+  //     },
+  //   },
+  //   "tsconfig.json"
+  // );
 
   let root_tsconfig_path = PathBuf::from(&root_dir).join("tsconfig.json");
-  let root_tsconfig_file = File::open(&root_tsconfig_path)?;
+  // let root_tsconfig_file = File::open(&root_tsconfig_path)?;
 
-  let root_tsconfig: TsConfigData = serde_json::from_reader(root_tsconfig_file)?;
+  let ts_config = TsConfig {
+    compiler_options: Some(CompilerOptions {
+      out_dir: Some("out".to_string()),
+      allow_js: Some(true),
+      check_js: Some(true),
+      composite: Some(true),
+      declaration: Some(true),
+      declaration_map: Some(true),
+      downlevel_iteration: Some(true),
+      import_helpers: Some(true),
+      incremental: Some(true),
+      isolated_modules: Some(true),
+      no_emit: Some(true),
+      remove_comments: Some(true),
+      source_map: Some(true),
+      always_strict: Some(true),
+      no_implicit_any: Some(true),
+      no_implicit_this: Some(true),
+      strict_bind_call_apply: Some(true),
+      strict_function_types: Some(true),
+      strict: Some(true),
+      strict_null_checks: Some(true),
+      strict_property_initialization: Some(true),
+      allow_synthetic_default_imports: Some(true),
+      allow_umd_global_access: Some(true),
+      es_module_interop: Some(true),
+      preserve_symlinks: Some(true),
+      inline_source_map: Some(true),
+      inline_sources: Some(true),
+      no_fallthrough_cases_in_switch: Some(true),
+      no_implicit_returns: Some(true),
+      no_unchecked_indexed_access: Some(true),
+      no_unused_locals: Some(true),
+      emit_decorator_metadata: Some(true),
+      experimental_decorators: Some(true),
+      allow_unreachable_code: Some(true),
+      allow_unused_labels: Some(true),
+      assume_changes_only_affect_direct_dependencies: Some(true),
+      disable_referenced_project_load: Some(true),
+      disable_size_limit: Some(true),
+      max_node_module_js_depth: Some(15),
+      disable_solution_searching: Some(true),
+      disable_source_of_project_reference_redirect: Some(true),
+      emit_declaration_only: Some(true),
+      emit_bom: Some(true),
+      explain_files: Some(true),
+      extended_diagnostics: Some(true),
+      force_consistent_casing_in_file_names: Some(true),
+      keyof_strings_only: Some(true),
+      list_emitted_files: Some(true),
+      pretty: Some(true),
+      list_files: Some(true),
+      no_emit_helpers: Some(true),
+      no_emit_on_error: Some(true),
+      no_error_truncation: Some(true),
+      no_implicit_use_strict: Some(true),
+      no_lib: Some(true),
+      no_resolve: Some(true),
+      no_strict_generic_checks: Some(true),
+      preserve_const_enums: Some(true),
+      resolve_json_module: Some(true),
+      skip_default_lib_check: Some(true),
+      skip_lib_check: Some(true),
+      strip_internal: Some(true),
+      suppress_excess_property_errors: Some(true),
+      suppress_implicit_any_index_errors: Some(true),
+      trace_resolution: Some(true),
+      use_define_for_class_fields: Some(true),
+      preserve_watch_output: Some(true),
+      no_property_access_from_index_signature: Some(true),
+      map_root: Some("abc".to_string()),
+      source_root: Some("abc".to_string()),
+      declaration_dir: Some("abc".to_string()),
+      imports_not_used_as_values: Some("abc".to_string()),
+      jsx_factory: Some("abc".to_string()),
+      jsx_fragment_factory: Some("abc".to_string()),
+      jsx_import_source: Some("abc".to_string()),
+      react_namespace: Some("abc".to_string()),
+      out_file: Some("abc".to_string()),
+      root_dir: Some("abc".to_string()),
+      ts_build_info_file: Some("abc".to_string()),
+      base_url: Some("abc".to_string()),
+      fallback_polling: Some("abc".to_string()),
+      watch_directory: Some("abc".to_string()),
+      watch_file: Some("abc".to_string()),
+      target: Some(Target::EsNext),
+      module: Some(Module::EsNext),
+      jsx: Some(Jsx::React),
+      module_detection: Some(ModuleDetectionMode::Force),
+      module_resolution: Some(ModuleResolutionMode::NodeNext),
+      root_dirs: Some(vec!["abc".to_string(), "abc".to_string()]),
+      types: Some(vec!["abc".to_string(), "abc".to_string()]),
+      type_roots: Some(vec!["abc".to_string(), "abc".to_string()]),
+      lib: Some(vec![Lib::Dom, Lib::EsNext]),
+      paths: Some(
+        hashmap! { "@".to_string() => vec!["src/".to_string()], "@components".to_string() => vec!["src/components".to_string()] },
+      ),
+      ..Default::default()
+    }),
+    extends: Some(root_tsconfig_path.to_string_lossy().to_string()),
+    files: Some(vec!["*.ts".to_string(), "*.js".to_string()]),
+    include: Some(vec!["*.ts".to_string(), "*.js".to_string()]),
+    exclude: Some(vec!["*.ts".to_string(), "*.js".to_string()]),
+    references: Some(vec![
+      TsConfigReference {
+        path: "abc.json".to_string(),
+      },
+      TsConfigReference {
+        path: "abc.json".to_string(),
+      },
+    ]),
+    type_acquisition: Some(TypeAcquisition::Object {
+      enable: true,
+      include: Some(vec!["*.ts".to_string(), "*.js".to_string()]),
+      exclude: Some(vec!["*.ts".to_string(), "*.js".to_string()]),
+      disable_filename_based_type_acquisition: Some(true),
+    }),
+  };
+
+  write_file!(ts_config, "tsconfig.json");
+
+  // let root_tsconfig: TsConfigData = serde_json::from_reader(root_tsconfig_file)?;
 
   let path_to_new_tsconfig = output.join("tsconfig.json").to_string_lossy().to_string();
 
-  if !root_tsconfig
-    .references
-    .iter()
-    .any(|r| r.path == path_to_new_tsconfig)
-  {
-    let mut references: Vec<String> = root_tsconfig
-      .references
-      .into_iter()
-      .map(|r| r.path)
-      .collect();
-    references.push(path_to_new_tsconfig);
-
-    let new_root_tsconfig = TsConfig {
-      references,
-      root_tsconfig_path: global_config.root_tsconfig_name.clone(),
-    };
-
-    new_root_tsconfig.write_into(&mut File::create(root_tsconfig_path)?)?;
-  }
-
-  let out_dir = get_relative_path(&output, &root_dir.join(global_config.out_dir))?
-    .join(PathBuf::from(config.name))
-    .to_string_lossy()
-    .to_string();
-
-  write_file!(
-    SrcTsConfig {
-      kind: config.kind.into(),
-      out_dir: out_dir.clone(),
-    },
-    global_config.project_tsconfig_name.clone()
-  );
-
-  if !is_app {
-    write_file!(
-      DevTsConfig {
-        project_tsconfig_name: global_config.project_tsconfig_name,
-        out_dir: out_dir.clone(),
-      },
-      global_config.dev_tsconfig_name
-    );
-  }
+  // if !root_tsconfig
+  //   .references
+  //   .iter()
+  //   .any(|r| r.path == path_to_new_tsconfig)
+  // {
+  //   let mut references: Vec<String> = root_tsconfig
+  //     .references
+  //     .into_iter()
+  //     .map(|r| r.path)
+  //     .collect();
+  //   references.push(path_to_new_tsconfig);
+  //
+  //   let new_root_tsconfig = TsConfig {
+  //     references,
+  //     root_tsconfig_path: global_config.root_tsconfig_name.clone(),
+  //   };
+  //
+  //   new_root_tsconfig.write_into(&mut File::create(root_tsconfig_path)?)?;
+  // }
+  //
+  // let out_dir = get_relative_path(&output, &root_dir.join(global_config.out_dir))?
+  //   .join(PathBuf::from(config.name))
+  //   .to_string_lossy()
+  //   .to_string();
+  //
+  // write_file!(
+  //   SrcTsConfig {
+  //     kind: config.kind.into(),
+  //     out_dir: out_dir.clone(),
+  //   },
+  //   global_config.project_tsconfig_name.clone()
+  // );
+  //
+  // if !is_app {
+  //   write_file!(
+  //     DevTsConfig {
+  //       project_tsconfig_name: global_config.project_tsconfig_name,
+  //       out_dir: out_dir.clone(),
+  //     },
+  //     global_config.dev_tsconfig_name
+  //   );
+  // }
 
   create_dir_all(output.join("tests/setup"))?;
 

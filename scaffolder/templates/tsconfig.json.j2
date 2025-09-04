@@ -1,11 +1,130 @@
+{% import "utils.j2" as utils %}
+
 {
-  "extends": "{{ root_tsconfig_path }}",
-  "files": [],
+  {% call utils::render_optional_string("extends", self.extends, 2) +%}
+  {% call utils::render_optional_list("files", self.files, 2) +%}
+  {% call utils::render_optional_list("include", self.include, 2) +%}
+  {% call utils::render_optional_list("exclude", self.exclude, 2) +%}
+  {% if let Some(references) = self.references +%}
   "references": [
-    {% for path in references +%}
+  {% for reference in references +%}
     {
-      "path": "{{ path }}"
-    }{% if !loop.last %},{% endif ~%}
+      "path": "{{ reference.path }}"
+    } {% call utils::optional_comma(!loop.last) %}
+  {% endfor +%}
+  ],
+  {% endif +%}
+  {% if let Some(type_acquisition) = self.type_acquisition +%}
+  {{+ type_acquisition }},
+  {% endif +%}
+  {% if let Some(compiler_options) = self.compiler_options +%}
+  "compilerOptions": {
+  {% call utils::render_optional_bool("allowJs", compiler_options.allow_js, 4) +%}
+  {% call utils::render_optional_bool("checkJs", compiler_options.check_js, 4) +%}
+  {% call utils::render_optional_bool("composite", compiler_options.composite, 4) +%}
+  {% call utils::render_optional_bool("declaration", compiler_options.declaration, 4) +%}
+  {% call utils::render_optional_bool("declarationMap", compiler_options.declaration_map, 4) +%}
+  {% call utils::render_optional_bool("downlevelIteration", compiler_options.downlevel_iteration, 4) +%}
+  {% call utils::render_optional_bool("importHelpers", compiler_options.import_helpers, 4) +%}
+  {% call utils::render_optional_bool("incremental", compiler_options.incremental, 4) +%}
+  {% call utils::render_optional_bool("isolatedModules", compiler_options.isolated_modules, 4) +%}
+  {% call utils::render_optional_bool("noEmit", compiler_options.no_emit, 4) +%}
+  {% call utils::render_optional_bool("removeComments", compiler_options.remove_comments, 4) +%}
+  {% call utils::render_optional_bool("sourceMap", compiler_options.source_map, 4) +%}
+  {% call utils::render_optional_bool("alwaysStrict", compiler_options.always_strict, 4) +%}
+  {% call utils::render_optional_bool("noImplicitAny", compiler_options.no_implicit_any, 4) +%}
+  {% call utils::render_optional_bool("noImplicitThis", compiler_options.no_implicit_this, 4) +%}
+  {% call utils::render_optional_bool("strictBindCallApply", compiler_options.strict_bind_call_apply, 4) +%}
+  {% call utils::render_optional_bool("strictFunctionTypes", compiler_options.strict_function_types, 4) +%}
+  {% call utils::render_optional_bool("strict", compiler_options.strict, 4) +%}
+  {% call utils::render_optional_bool("strictNullChecks", compiler_options.strict_null_checks, 4) +%}
+  {% call utils::render_optional_bool("strictPropertyInitialization", compiler_options.strict_property_initialization, 4) +%}
+  {% call utils::render_optional_bool("allowSyntheticDefaultImports", compiler_options.allow_synthetic_default_imports, 4) +%}
+  {% call utils::render_optional_bool("allowUmdGlobalAccess", compiler_options.allow_umd_global_access, 4) +%}
+  {% call utils::render_optional_bool("esModuleInterop", compiler_options.es_module_interop, 4) +%}
+  {% call utils::render_optional_bool("preserveSymlinks", compiler_options.preserve_symlinks, 4) +%}
+  {% call utils::render_optional_bool("inlineSourceMap", compiler_options.inline_source_map, 4) +%}
+  {% call utils::render_optional_bool("inlineSources", compiler_options.inline_sources, 4) +%}
+  {% call utils::render_optional_bool("noFallThroughCasesInSwitch", compiler_options.no_fallthrough_cases_in_switch, 4) +%}
+  {% call utils::render_optional_bool("noImplicitReturns", compiler_options.no_implicit_returns, 4) +%}
+  {% call utils::render_optional_bool("noPropertyAccessFromIndexSignature", compiler_options.no_property_access_from_index_signature, 4) +%}
+  {% call utils::render_optional_bool("noUncheckedIndexedAccess", compiler_options.no_unchecked_indexed_access, 4) +%}
+  {% call utils::render_optional_bool("noUnusedLocals", compiler_options.no_unused_locals, 4) +%}
+  {% call utils::render_optional_bool("experimentalDecorators", compiler_options.experimental_decorators, 4) +%}
+  {% call utils::render_optional_bool("allowUnreachableCode", compiler_options.allow_unreachable_code, 4) +%}
+  {% call utils::render_optional_bool("emitDecoratorMetadata", compiler_options.emit_decorator_metadata, 4) +%}
+  {% call utils::render_optional_bool("allowUnusedLabels", compiler_options.allow_unused_labels, 4) +%}
+  {% call utils::render_optional_bool("assumeChangesOnlyAffectDirectDependencies", compiler_options.assume_changes_only_affect_direct_dependencies, 4) +%}
+  {% call utils::render_optional_bool("disableReferencedProjectLoad", compiler_options.disable_referenced_project_load, 4) +%}
+  {% call utils::render_optional_bool("disableSizeLimit", compiler_options.disable_size_limit, 4) +%}
+  {% call utils::render_optional_bool("disableSolutionSearching", compiler_options.disable_solution_searching, 4) +%}
+  {% call utils::render_optional_bool("disableSourceOfProjectReferenceRedirect", compiler_options.disable_source_of_project_reference_redirect, 4) +%}
+  {% call utils::render_optional_bool("emitDeclarationOnly", compiler_options.emit_declaration_only, 4) +%}
+  {% call utils::render_optional_bool("emitBOM", compiler_options.emit_bom, 4) +%}
+  {% call utils::render_optional_bool("explainFiles", compiler_options.explain_files, 4) +%}
+  {% call utils::render_optional_bool("extendedDiagnostics", compiler_options.extended_diagnostics, 4) +%}
+  {% call utils::render_optional_bool("forceConsistentCasingInFileNames", compiler_options.force_consistent_casing_in_file_names, 4) +%}
+  {% call utils::render_optional_bool("keyofStringsOnly", compiler_options.keyof_strings_only, 4) +%}
+  {% call utils::render_optional_bool("listEmittedFiles", compiler_options.list_emitted_files, 4) +%}
+  {% call utils::render_optional_bool("pretty", compiler_options.pretty, 4) +%}
+  {% call utils::render_optional_bool("listFiles", compiler_options.list_files, 4) +%}
+  {% call utils::render_optional_bool("noEmitHelpers", compiler_options.no_emit_helpers, 4) +%}
+  {% call utils::render_optional_bool("noEmitOnError", compiler_options.no_emit_on_error, 4) +%}
+  {% call utils::render_optional_bool("noErrorTruncation", compiler_options.no_error_truncation, 4) +%}
+  {% call utils::render_optional_bool("noImplicitUseStrict", compiler_options.no_implicit_use_strict, 4) +%}
+  {% call utils::render_optional_bool("noLib", compiler_options.no_lib, 4) +%}
+  {% call utils::render_optional_bool("noResolve", compiler_options.no_resolve, 4) +%}
+  {% call utils::render_optional_bool("noStrictGenericChecks", compiler_options.no_strict_generic_checks, 4) +%}
+  {% call utils::render_optional_bool("preserveConstEnums", compiler_options.preserve_const_enums, 4) +%}
+  {% call utils::render_optional_bool("resolveJsonModule", compiler_options.resolve_json_module, 4) +%}
+  {% call utils::render_optional_bool("skipDefaultLibCheck", compiler_options.skip_default_lib_check, 4) +%}
+  {% call utils::render_optional_bool("skipLibCheck", compiler_options.skip_lib_check, 4) +%}
+  {% call utils::render_optional_bool("stripInternal", compiler_options.strip_internal, 4) +%}
+  {% call utils::render_optional_bool("suppressExcessPropertyErrors", compiler_options.suppress_excess_property_errors, 4) +%}
+  {% call utils::render_optional_bool("suppressImplicitAnyIndexErrors", compiler_options.suppress_implicit_any_index_errors, 4) +%}
+  {% call utils::render_optional_bool("traceResolution", compiler_options.trace_resolution, 4) +%}
+  {% call utils::render_optional_bool("useDefineForClassFields", compiler_options.use_define_for_class_fields, 4) +%}
+  {% call utils::render_optional_bool("preserveWatchOutput", compiler_options.preserve_watch_output, 4) +%}
+  {% call utils::render_optional_string("mapRoot", compiler_options.map_root, 4) +%}
+  {% call utils::render_optional_string("sourceRoot", compiler_options.source_root, 4) +%}
+  {% call utils::render_optional_string("declarationDir", compiler_options.declaration_dir, 4) +%}
+  {% call utils::render_optional_string("importsNotUsedAsValues", compiler_options.imports_not_used_as_values, 4) +%}
+  {% call utils::render_optional_string("jsxFactory", compiler_options.jsx_factory, 4) +%}
+  {% call utils::render_optional_string("jsxFragmentFactory", compiler_options.jsx_fragment_factory, 4) +%}
+  {% call utils::render_optional_string("jsxImportSource", compiler_options.jsx_import_source, 4) +%}
+  {% call utils::render_optional_string("outDir", compiler_options.out_dir, 4) +%}
+  {% call utils::render_optional_string("reactNamespace", compiler_options.react_namespace, 4) +%}
+  {% call utils::render_optional_string("outFile", compiler_options.out_file, 4) +%}
+  {% call utils::render_optional_string("rootDir", compiler_options.root_dir, 4) +%}
+  {% call utils::render_optional_string("tsBuildInfoFile", compiler_options.ts_build_info_file, 4) +%}
+  {% call utils::render_optional_string("baseUrl", compiler_options.base_url, 4) +%}
+  {% call utils::render_optional_string("fallbackPolling", compiler_options.fallback_polling, 4) +%}
+  {% call utils::render_optional_string("watchDirectory", compiler_options.watch_directory, 4) +%}
+  {% call utils::render_optional_string("watchFile", compiler_options.watch_file, 4) +%}
+  {% call utils::render_optional_string("target", compiler_options.target, 4) +%}
+  {% call utils::render_optional_string("module", compiler_options.module, 4) +%}
+  {% call utils::render_optional_string("jsx", compiler_options.jsx, 4) +%}
+  {% call utils::render_optional_string("moduleDetection", compiler_options.module_detection, 4) +%}
+  {% call utils::render_optional_string("moduleResolution", compiler_options.module_resolution, 4) +%}
+  {% call utils::render_optional_list("rootDirs", compiler_options.root_dirs, 4) +%}
+  {% call utils::render_optional_list("typeRoots", compiler_options.type_roots, 4) +%}
+  {% call utils::render_optional_list("types", compiler_options.types, 4) +%}
+  {% call utils::render_optional_list("lib", compiler_options.lib, 4) +%}
+  {% if let Some(v) = compiler_options.max_node_module_js_depth %}
+  {% filter indent(2) +%}
+  "maxNodeModuleJsDepth": {{+ v }},
+  {% endfilter %}
+  {% endif +%}
+  {% if let Some(paths) = compiler_options.paths %}
+  {% filter indent(2) +%}
+  "paths": {
+    {% for (name, values) in paths %}
+    {%+ call utils::render_list(name, values, 4) +%}
     {% endfor +%}
-  ]
+  },
+  {% endfilter %}
+
+  {% endif +%}
+  }
+  {% endif +%}
 }

@@ -1,0 +1,13 @@
+{% import "utils.j2" as utils %}
+
+"typeAcquisition": {%+ match self %}
+  {% when Self::Bool(v) %}
+  {{ v }}
+  {% when Self::Object { enable, include, exclude, disable_filename_based_type_acquisition } %}
+  {
+    "enable": {{+ enable }},
+    {% call utils::render_optional_list("include", include, 4) +%}
+    {% call utils::render_optional_list("exclude", exclude, 4) +%}
+    {% call utils::render_optional_bool("disable_filename_based_type_acquisition", disable_filename_based_type_acquisition, 4) +%}
+  }
+{% endmatch %}

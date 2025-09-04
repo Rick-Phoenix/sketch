@@ -110,18 +110,12 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
     package_json_data.merge(target);
   }
 
+  if package_json_data.package_manager.is_none() {
+    package_json_data.package_manager = Some(config.package_manager.to_string());
+  }
+
   get_contributors!(package_json_data, config, contributors);
   get_contributors!(package_json_data, config, maintainers);
-
-  write_file!(package_json_data, "package.json");
-
-  write_file!(RootTsConfig {}, config.root_tsconfig_name.clone());
-
-  let root_tsconfig = TsConfig {
-    root_tsconfig_path: config.root_tsconfig_name.clone(),
-    references: Default::default(),
-  };
-  write_file!(root_tsconfig, "tsconfig.json");
 
   if package_json_data.default_deps {
     for dep in DEFAULT_DEPS {
@@ -143,6 +137,16 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
         .insert(dep.to_string(), range);
     }
   }
+
+  write_file!(package_json_data, "package.json");
+
+  // write_file!(RootTsConfig {}, config.root_tsconfig_name.clone());
+  //
+  // let root_tsconfig = TsConfig {
+  //   root_tsconfig_path: config.root_tsconfig_name.clone(),
+  //   references: Default::default(),
+  // };
+  // write_file!(root_tsconfig, "tsconfig.json");
 
   if matches!(config.package_manager, PackageManager::Pnpm) {
     let mut pnpm_data = PnpmWorkspace {
