@@ -140,13 +140,43 @@ pub async fn build_repo() -> Result<(), Box<dyn std::error::Error>> {
 
   write_file!(package_json_data, "package.json");
 
-  // write_file!(RootTsConfig {}, config.root_tsconfig_name.clone());
-  //
-  // let root_tsconfig = TsConfig {
-  //   root_tsconfig_path: config.root_tsconfig_name.clone(),
-  //   references: Default::default(),
-  // };
-  // write_file!(root_tsconfig, "tsconfig.json");
+  let tsconfig_options = TsConfig {
+    compiler_options: Some(CompilerOptions {
+      lib: Some(vec![Lib::EsNext, Lib::Dom]),
+      module_resolution: Some(ModuleResolutionMode::NodeNext),
+      module: Some(Module::EsNext),
+      target: Some(Target::EsNext),
+      module_detection: Some(ModuleDetectionMode::Force),
+      isolated_modules: Some(true),
+      es_module_interop: Some(true),
+      resolve_json_module: Some(true),
+      declaration: Some(true),
+      declaration_map: Some(true),
+      composite: Some(true),
+      no_emit_on_error: Some(true),
+      incremental: Some(true),
+      source_map: Some(true),
+      strict: Some(true),
+      strict_null_checks: Some(true),
+      skip_lib_check: Some(true),
+      force_consistent_casing_in_file_names: Some(true),
+      no_unchecked_indexed_access: Some(true),
+      allow_synthetic_default_imports: Some(true),
+      ..Default::default()
+    }),
+    ..Default::default()
+  };
+
+  write_file!(tsconfig_options, config.root_tsconfig_name.clone());
+
+  let root_tsconfig = TsConfig {
+    extends: Some(config.root_tsconfig_name.clone()),
+    files: Some(vec![]),
+    references: Some(vec![]),
+    ..Default::default()
+  };
+
+  write_file!(root_tsconfig, "tsconfig.json");
 
   if matches!(config.package_manager, PackageManager::Pnpm) {
     let mut pnpm_data = PnpmWorkspace {

@@ -5,7 +5,6 @@ use std::{
 
 use askama::Template;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::package::PackageKind;
 
@@ -245,7 +244,7 @@ pub struct CompilerOptions {
   pub base_url: Option<String>,
   pub es_module_interop: Option<bool>,
   pub module_resolution: Option<ModuleResolutionMode>,
-  pub paths: Option<HashMap<String, Vec<String>>>,
+  pub paths: Option<BTreeMap<String, Vec<String>>>,
   pub preserve_symlinks: Option<bool>,
   pub root_dirs: Option<Vec<String>>,
   pub type_roots: Option<Vec<String>>,
