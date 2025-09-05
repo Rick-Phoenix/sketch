@@ -1,0 +1,13 @@
+{% import "utils.j2" as utils %}
+
+"watchOptions": {
+    {% filter strip_trailing_comma +%}
+    {% call utils::render_optional_string("watchFile", self.watch_file, 4) +%}
+    {% call utils::render_optional_string("watchDirectory", self.watch_directory, 4) +%}
+    {% call utils::render_optional_string("fallbackPolling", self.fallback_polling, 4) +%}
+    {% call utils::render_optional_bool("synchronousWatchDirectory", self.synchronous_watch_directory, 4) +%}
+    {% call utils::render_optional_list("excludeFiles", self.exclude_files, 4) +%}
+    {% call utils::render_optional_list("excludeDirectories", self.exclude_directories, 4) +%}
+    {% endfilter +%}
+  }
+

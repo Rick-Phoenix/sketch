@@ -1,11 +1,26 @@
 root_dir = "output"
 
+templates = { abc = "{{ my_var }}" }
+
+generate_root_templates = [
+  { template = "abc", output = "abc.txt", context = { my_var = 15 } },
+]
+
 package_dirs = ["packages", "apps"]
 pnpm_config = { onlyBuiltDependencies = [
   "esbuild",
   "rolldown",
   "@tailwindcss/oxide",
 ] }
+
+[package_presets.alt2]
+name = "abc2"
+package_json = "abc"
+dir = "packages/mypkg"
+moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }
+generate_templates = [
+  { template = "abc", output = "abc.txt", context = { my_var = 15 } },
+]
 
 [package_json_presets.base]
 scripts = { abc = "abc", bcd = "bcd" }
@@ -77,9 +92,3 @@ entry = "oxlint"
 language = "system"
 files = '\.svelte$|\.js$|\.ts$'
 types = ["file"]
-
-[package_presets.alt2]
-name = "abc2"
-package_json = "abc"
-dir = "packages/mypkg"
-moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }

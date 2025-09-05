@@ -1,20 +1,20 @@
 use std::path::{Path, PathBuf};
 
-pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, String> {
-  let canonical_base = base.canonicalize().map_err(|e| {
-    format!(
-      "Failed to canonicalize base path '{}': {}",
-      base.display(),
-      e
-    )
-  })?;
-  let canonical_target = target.canonicalize().map_err(|e| {
-    format!(
-      "Failed to canonicalize target path '{}': {}",
-      target.display(),
-      e
-    )
-  })?;
+use crate::GenError;
+
+pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, GenError> {
+  let canonical_base = base
+    .canonicalize()
+    .map_err(|e| GenError::PathCanonicalization {
+      path: base.to_path_buf(),
+      source: e,
+    })?;
+  let canonical_target = target
+    .canonicalize()
+    .map_err(|e| GenError::PathCanonicalization {
+      path: base.to_path_buf(),
+      source: e,
+    })?;
 
   let base_components: Vec<_> = canonical_base.components().collect();
   let target_components: Vec<_> = canonical_target.components().collect();

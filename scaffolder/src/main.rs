@@ -1,6 +1,6 @@
-use scaffolder::build_repo;
+use scaffolder::{build_repo, GenError};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), GenError> {
   build_repo().await
 }

@@ -11,7 +11,8 @@ use serde_json::Value;
 use crate::{
   moon::MoonConfig,
   package::{vitest::VitestConfigStruct, PackageConfig},
-  PackageJson, PackageJsonData, Person, PersonData,
+  tera::TemplateOutput,
+  PackageJson, PackageJsonData, Person, PersonData, TsConfig,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -41,7 +42,7 @@ impl Config {
   }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct Config {
   pub package_name: String,
@@ -49,6 +50,7 @@ pub struct Config {
   pub pnpm_config: BTreeMap<String, Value>,
   pub root_package_json: PackageJsonData,
   pub package_json_presets: BTreeMap<String, PackageJson>,
+  pub tsconfig_presets: BTreeMap<String, TsConfig>,
   pub root_tsconfig_name: String,
   pub project_tsconfig_name: String,
   pub dev_tsconfig_name: String,
@@ -61,9 +63,12 @@ pub struct Config {
   pub vitest_presets: BTreeMap<String, VitestConfigStruct>,
   pub catalog: bool,
   pub version_ranges: VersionRange,
-  pub tsconfig_presets: BTreeMap<String, String>,
   pub out_dir: String,
   pub people: BTreeMap<String, PersonData>,
+  pub templates_dir: Option<String>,
+  pub templates: BTreeMap<String, String>,
+  pub global_templates_vars: BTreeMap<String, Value>,
+  pub generate_root_templates: Vec<TemplateOutput>,
 }
 
 #[derive(Debug, Template)]
@@ -101,6 +106,10 @@ impl Default for Config {
       out_dir: ".out".to_string(),
       people: Default::default(),
       pnpm_config: Default::default(),
+      templates_dir: Default::default(),
+      templates: Default::default(),
+      global_templates_vars: Default::default(),
+      generate_root_templates: Default::default(),
     }
   }
 }
@@ -138,7 +147,7 @@ impl Display for PackageManager {
   }
 }
 
-#[derive(Debug, Template, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize)]
 #[template(path = "gitignore.j2")]
 #[serde(untagged)]
 pub enum GitIgnore {
@@ -152,13 +161,13 @@ impl Default for GitIgnore {
   }
 }
 
-#[derive(Debug, Template, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Default, Serialize, Deserialize)]
 #[template(path = "pre-commit-config.yaml.j2")]
 pub struct PreCommitConfig {
   pub repos: Vec<PreCommitRepo>,
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct PreCommitRepo {
   pub path: String,
   pub rev: Option<String>,

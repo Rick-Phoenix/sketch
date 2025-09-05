@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{rendering::render_json_val, StringKeyVal, StringKeyValMap};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum PackageJsonData {
   Named(String),

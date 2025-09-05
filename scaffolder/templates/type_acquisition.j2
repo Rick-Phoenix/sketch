@@ -2,12 +2,14 @@
 
 "typeAcquisition": {%+ match self %}
   {% when Self::Bool(v) %}
-  {{ v }}
+  {{ v }},
   {% when Self::Object { enable, include, exclude, disable_filename_based_type_acquisition } %}
   {
+    {% filter strip_trailing_comma +%}
     "enable": {{+ enable }},
     {% call utils::render_optional_list("include", include, 4) +%}
     {% call utils::render_optional_list("exclude", exclude, 4) +%}
     {% call utils::render_optional_bool("disable_filename_based_type_acquisition", disable_filename_based_type_acquisition, 4) +%}
-  }
+    {% endfilter +%}
+  },
 {% endmatch %}

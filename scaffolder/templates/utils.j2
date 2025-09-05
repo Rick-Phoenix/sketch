@@ -31,11 +31,15 @@
 {% endmacro %}
 
 {% macro render_list(name, list, indent_val) %}
-{% filter indent(indent_val) +%}
+{% filter indent(indent_val) %}
+{% if list.is_empty() +%}
+"{{ name }}": [],
+{% else +%}
 "{{ name }}": [
   {% for val in list +%}
   "{{ val }}" {% call optional_comma(!loop.last) %}
   {% endfor +%}
 ],
+{% endif %}
 {% endfilter %}
 {% endmacro %}

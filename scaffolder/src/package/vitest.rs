@@ -2,7 +2,7 @@ use askama::Template;
 use convert_case::{Case, Casing};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum VitestConfig {
   Boolean(bool),
@@ -16,7 +16,7 @@ impl Default for VitestConfig {
   }
 }
 
-#[derive(Debug, Template, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize)]
 #[template(path = "vitest.config.ts.j2")]
 #[serde(default)]
 pub struct VitestConfigStruct {

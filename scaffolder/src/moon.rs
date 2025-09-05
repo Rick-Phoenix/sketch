@@ -6,14 +6,14 @@ use serde_json::Value;
 
 use crate::PackageManager;
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct MoonConfig {
   pub tasks: Option<BTreeMap<String, Value>>,
   pub toolchain: Option<BTreeMap<String, Value>>,
   pub tasks_config: Option<BTreeMap<String, Value>>,
 }
 
-#[derive(Debug, Template, Default)]
+#[derive(Clone, Debug, Template, Default)]
 #[template(path = "moon/toolchain.yml.j2")]
 pub struct MoonToolchain {
   pub root_tsconfig_name: String,
@@ -22,7 +22,7 @@ pub struct MoonToolchain {
   pub config: BTreeMap<String, Value>,
 }
 
-#[derive(Debug, Template, Default)]
+#[derive(Clone, Debug, Template, Default)]
 #[template(path = "moon/tasks.yml.j2")]
 pub struct MoonTasks {
   pub tasks: BTreeMap<String, Value>,
@@ -32,7 +32,7 @@ pub struct MoonTasks {
   pub out_dir: String,
 }
 
-#[derive(Debug, Template, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Default, Serialize, Deserialize)]
 #[template(path = "moon/moon.yml.j2")]
 #[serde(default)]
 pub struct MoonDotYml {
