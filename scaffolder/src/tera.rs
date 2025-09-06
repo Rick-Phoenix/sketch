@@ -1,6 +1,7 @@
 use std::{
   collections::BTreeMap,
   fs::{create_dir_all, File},
+  io::ErrorKind,
   path::PathBuf,
 };
 
@@ -17,6 +18,15 @@ pub enum TemplateData {
   Path(String),
 }
 
+impl TemplateData {
+  pub fn name(&self) -> &str {
+    match self {
+      TemplateData::Content { name, .. } => name,
+      TemplateData::Path(name) => name,
+    }
+  }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TemplateOutput {
   pub template: TemplateData,
@@ -27,11 +37,13 @@ pub struct TemplateOutput {
 
 impl Config {
   pub fn generate_templates(
-    &self,
+    mut self,
     output_root: &str,
     templates: Vec<TemplateOutput>,
   ) -> Result<(), GenError> {
-    let mut tera = if let Some(ref templates_dir) = self.templates_dir {
+    self.merge_configs()?;
+
+    let mut tera = if let Some(templates_dir) = self.templates_dir {
       Tera::new(&format!("{}/**/*", templates_dir))
         .map_err(|e| GenError::TemplateDirLoading { source: e })?
     } else {
@@ -47,23 +59,32 @@ impl Config {
         })?;
     }
 
-    let mut context = Context::new();
-
-    let global_context = Context::from_serialize(self.global_templates_vars.clone())
+    let global_context = Context::from_serialize(self.global_templates_vars)
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
-    context.extend(global_context);
 
     for template in templates {
-      let mut local_context = context.clone();
+      let mut local_context = global_context.clone();
       let added_context = Context::from_serialize(template.context)
         .map_err(|e| GenError::TemplateContextParsing { source: e })?;
       local_context.extend(added_context);
 
       let output_path = PathBuf::from(output_root).join(template.output);
-      let mut output_file = File::create(&output_path).map_err(|e| GenError::FileCreation {
-        path: output_path.clone(),
-        source: e,
-      })?;
+      let mut output_file = if self.overwrite {
+        File::create(&output_path).map_err(|e| GenError::FileCreation {
+          path: output_path.clone(),
+          source: e,
+        })?
+      } else {
+        File::create_new(&output_path).map_err(|e| match e.kind() {
+          ErrorKind::AlreadyExists => GenError::FileExists {
+            path: output_path.clone(),
+          },
+          _ => GenError::WriteError {
+            path: output_path.clone(),
+            source: e,
+          },
+        })?
+      };
 
       create_dir_all(output_path.parent().expect("Invalid file output path")).map_err(|e| {
         GenError::ParentDirCreation {
@@ -93,6 +114,59 @@ impl Config {
             template: path.to_string(),
             source: e,
           })?,
+      }
+    }
+
+    Ok(())
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use std::{fs::File, path::PathBuf};
+
+  use serde::{Deserialize, Serialize};
+
+  use crate::{config::Config, GenError};
+
+  #[derive(Debug, Serialize, Deserialize)]
+  struct CustomTemplateTest {
+    pub my_var: usize,
+  }
+
+  #[test]
+  fn custom_templates() -> Result<(), GenError> {
+    let config: Config = Config::figment()
+      .extract()
+      .map_err(|e| GenError::ConfigParsing { source: e })?;
+
+    let templates = config
+      .package_presets
+      .get("custom_templates_test")
+      .unwrap()
+      .generate_templates
+      .clone();
+
+    config.generate_templates("output/test", templates.clone())?;
+
+    for template in templates {
+      let output_path = PathBuf::from("output/test").join(template.output);
+      let output_file =
+        File::open(&output_path).expect("Could not open file in output/text for testing");
+
+      let output: CustomTemplateTest =
+        serde_yaml_ng::from_reader(&output_file).map_err(|e| GenError::YamlDeserialization {
+          path: output_path.clone(),
+          source: e,
+        })?;
+
+      if output_path
+        .to_string_lossy()
+        .ends_with("with_override.yaml")
+      {
+        assert_eq!(output.my_var, 20);
+      } else {
+        assert_eq!(output.my_var, 15);
       }
     }
 

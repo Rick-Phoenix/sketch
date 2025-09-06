@@ -1,10 +1,11 @@
 root_dir = "output"
 
-templates = { abc = "{{ my_var }}" }
+global_templates_vars = { my_var = 15 }
 
-generate_root_templates = [
-  { template = "abc", output = "abc.txt", context = { my_var = 15 } },
-]
+templates = { lit_template = "my_var: {{ my_var }}" }
+
+templates_dir = "output/templates"
+
 
 package_dirs = ["packages", "apps"]
 pnpm_config = { onlyBuiltDependencies = [
@@ -13,14 +14,20 @@ pnpm_config = { onlyBuiltDependencies = [
   "@tailwindcss/oxide",
 ] }
 
+[package_presets.custom_templates_test]
+generate_templates = [
+  { template = "subdir/nested.j2", output = "nested.yaml" },
+  { template = "abc.j2", output = "with_global_var.yaml" },
+  { template = "abc.j2", output = "with_override.yaml", context = { my_var = 20 } },
+  { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
+  { template = "lit_template", output = "literal_from_config.yaml" },
+]
+
 [package_presets.alt2]
 name = "abc2"
 package_json = "abc"
 dir = "packages/mypkg"
 moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }
-generate_templates = [
-  { template = "abc", output = "abc.txt", context = { my_var = 15 } },
-]
 
 [package_json_presets.base]
 scripts = { abc = "abc", bcd = "bcd" }

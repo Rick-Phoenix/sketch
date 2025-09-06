@@ -1,18 +1,24 @@
-use std::{collections::BTreeMap, fmt::Display};
+use std::{
+  collections::{BTreeMap, BTreeSet},
+  fmt::Display,
+};
 
 use askama::Template;
 use figment::{
+  providers::{Format, Toml, Yaml},
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider,
 };
+use merge::Merge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
+  merge_maps, merge_sets,
   moon::MoonConfig,
   package::{vitest::VitestConfigStruct, PackageConfig},
   tera::TemplateOutput,
-  PackageJson, PackageJsonData, Person, PersonData, TsConfig,
+  GenError, PackageJson, PackageJsonData, Person, PersonData, TsConfig,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -42,33 +48,115 @@ impl Config {
   }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge)]
 #[serde(default)]
 pub struct Config {
-  pub package_name: String,
-  pub gitignore: GitIgnore,
-  pub pnpm_config: BTreeMap<String, Value>,
+  #[merge(skip)]
   pub root_package_json: PackageJsonData,
+  #[merge(skip)]
+  pub gitignore: GitIgnore,
+  #[merge(strategy = merge_maps)]
+  pub pnpm_config: BTreeMap<String, Value>,
+  #[merge(strategy = merge_maps)]
   pub package_json_presets: BTreeMap<String, PackageJson>,
+  #[merge(strategy = merge_maps)]
   pub tsconfig_presets: BTreeMap<String, TsConfig>,
+  #[merge(skip)]
   pub root_tsconfig_name: String,
+  #[merge(skip)]
   pub project_tsconfig_name: String,
+  #[merge(skip)]
   pub dev_tsconfig_name: String,
+  #[merge(skip)]
   pub package_manager: PackageManager,
+  #[merge(strategy = merge::option::overwrite_none)]
   pub moonrepo: Option<MoonConfig>,
+  #[merge(skip)]
   pub pre_commit: PreCommitConfig,
+  #[merge(skip)]
   pub root_dir: String,
-  pub package_dirs: Vec<String>,
+  #[merge(skip)]
+  pub packages_dirs: Vec<String>,
+  #[merge(strategy = merge_maps)]
   pub package_presets: BTreeMap<String, PackageConfig>,
+  #[merge(strategy = merge_maps)]
   pub vitest_presets: BTreeMap<String, VitestConfigStruct>,
+  #[merge(skip)]
   pub catalog: bool,
+  #[merge(skip)]
   pub version_ranges: VersionRange,
-  pub out_dir: String,
+  #[merge(skip)]
+  pub shared_out_dir: SharedOutDir,
+  #[merge(strategy = merge_maps)]
   pub people: BTreeMap<String, PersonData>,
+  #[merge(strategy = merge::option::overwrite_none)]
   pub templates_dir: Option<String>,
+  #[merge(strategy = merge_maps)]
   pub templates: BTreeMap<String, String>,
+  #[merge(strategy = merge_maps)]
   pub global_templates_vars: BTreeMap<String, Value>,
+  #[merge(skip)]
   pub generate_root_templates: Vec<TemplateOutput>,
+  #[merge(strategy = merge_sets)]
+  pub extends: BTreeSet<String>,
+  #[merge(strategy = merge::bool::overwrite_true)]
+  pub overwrite: bool,
+}
+
+impl Config {
+  pub fn merge_configs(&mut self) -> Result<(), GenError> {
+    for path in self.extends.clone() {
+      let figment = Config::figment();
+
+      let extended = if path.ends_with(".toml") {
+        figment.merge(Toml::file(path))
+      } else if path.ends_with(".yaml") {
+        figment.merge(Yaml::file(path))
+      } else {
+        return Err(GenError::InvalidConfigFormat {
+          file: path.to_string(),
+        });
+      };
+
+      let extended_config: Config = extended
+        .extract()
+        .map_err(|e| GenError::ConfigParsing { source: e })?;
+
+      self.merge(extended_config);
+    }
+
+    self.extends.clear();
+
+    Ok(())
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SharedOutDir {
+  Bool(bool),
+  Name(String),
+}
+
+impl Default for SharedOutDir {
+  fn default() -> Self {
+    Self::Name(".out".to_string())
+  }
+}
+
+impl SharedOutDir {
+  pub fn get_name(&self) -> Option<String> {
+    match self {
+      Self::Bool(v) => {
+        if *v {
+          Some(".out".to_string())
+        } else {
+          None
+        }
+      }
+      Self::Name(v) => Some(v.clone()),
+    }
+  }
 }
 
 #[derive(Debug, Template)]
@@ -78,7 +166,6 @@ pub struct OxlintConfig;
 impl Default for Config {
   fn default() -> Self {
     Self {
-      package_name: "my-awesome-package".to_string(),
       gitignore: Default::default(),
       package_json_presets: Default::default(),
       root_package_json: Default::default(),
@@ -89,7 +176,7 @@ impl Default for Config {
       moonrepo: None,
       pre_commit: Default::default(),
       root_dir: ".".to_string(),
-      package_dirs: vec!["packages".to_string()],
+      packages_dirs: vec!["packages/*".to_string(), "apps/*".to_string()],
       package_presets: {
         let mut map: BTreeMap<String, PackageConfig> = BTreeMap::new();
         map.insert("default".to_string(), PackageConfig::default());
@@ -103,13 +190,15 @@ impl Default for Config {
       catalog: true,
       version_ranges: Default::default(),
       tsconfig_presets: Default::default(),
-      out_dir: ".out".to_string(),
+      shared_out_dir: SharedOutDir::Name(".out".to_string()),
       people: Default::default(),
       pnpm_config: Default::default(),
       templates_dir: Default::default(),
       templates: Default::default(),
       global_templates_vars: Default::default(),
       generate_root_templates: Default::default(),
+      extends: Default::default(),
+      overwrite: true,
     }
   }
 }
@@ -180,12 +269,10 @@ impl Config {
     Figment::from(provider).extract()
   }
 
-  // Provide a default provider, a `Figment`.
   pub fn figment() -> Figment {
-    use figment::providers::Env;
-
-    // In reality, whatever the library desires.
-    Figment::from(Config::default()).merge(Env::prefixed("APP_"))
+    Figment::from(Config::default())
+      .merge(Toml::file("scaffolder/config.toml"))
+      .merge(Yaml::file("scaffolder/config.yaml"))
   }
 }
 

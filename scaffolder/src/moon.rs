@@ -29,7 +29,7 @@ pub struct MoonTasks {
   pub config: BTreeMap<String, Value>,
   pub root_tsconfig_name: String,
   pub project_tsconfig_name: String,
-  pub out_dir: String,
+  pub out_dir: Option<String>,
 }
 
 #[derive(Clone, Debug, Template, Default, Serialize, Deserialize)]

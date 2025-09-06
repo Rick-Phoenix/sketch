@@ -26,6 +26,7 @@ tasks:
     command: "tsc --build"
     inputs:
       - "@group(build)"
+    {% if let Some(out_dir) = self.out_dir +%}
     outputs:
       - "{{ out_dir }}/**/*"
 
@@ -33,6 +34,7 @@ tasks:
     command: "rm -rf {{+ out_dir }}"
     inputs:
       - "{{ out_dir }}/**/*"
+    {% endif +%}
 
   lint:
     command: "oxlint -c '../../.oxlintrc.json'"
