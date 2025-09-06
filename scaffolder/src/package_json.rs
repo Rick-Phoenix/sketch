@@ -9,27 +9,14 @@ use askama::Template;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 
-use crate::{rendering::render_json_val, StringKeyVal, StringKeyValMap};
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(untagged)]
-pub enum PackageJsonData {
-  Named(String),
-  Definition(PackageJson),
-}
-
-impl Default for PackageJsonData {
-  fn default() -> Self {
-    Self::Definition(PackageJson::default())
-  }
-}
+use crate::{rendering::render_json_val, GenError, Preset, StringKeyVal, StringKeyValMap};
 
 impl Default for PackageJson {
   fn default() -> Self {
     Self {
       package_name: "my-awesome-package".to_string(),
       extends: Default::default(),
-      default_deps: true,
+      use_default_deps: true,
       dependencies: Default::default(),
       dev_dependencies: Default::default(),
       scripts: Default::default(),
@@ -201,7 +188,7 @@ pub struct PackageJson {
   #[merge(strategy = merge_sets)]
   pub extends: BTreeSet<String>,
   #[merge(strategy = merge::bool::overwrite_false)]
-  pub default_deps: bool,
+  pub use_default_deps: bool,
   #[merge(strategy = merge_maps)]
   pub dependencies: StringKeyVal,
   #[merge(strategy = merge_maps)]
@@ -258,4 +245,53 @@ pub struct PackageJson {
   pub browser: Option<String>,
   #[merge(strategy = overwrite_option)]
   pub workspaces: Option<Vec<String>>,
+}
+
+impl PackageJson {
+  fn merge_configs_recursive(
+    &mut self,
+    store: &BTreeMap<String, PackageJson>,
+    processed_ids: &mut Vec<String>,
+  ) -> Result<(), GenError> {
+    for id in self.extends.clone() {
+      let was_absent = !processed_ids.contains(&id);
+      processed_ids.push(id.clone());
+
+      if !was_absent {
+        return Err(GenError::CircularDependency(format!(
+          "Found circular dependency for package_json '{}'. The full processed chain is: {}",
+          id,
+          processed_ids.join(" -> ")
+        )));
+      }
+
+      let mut target = store
+        .get(id.as_str())
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::PackageJson,
+          name: id.to_string(),
+        })?
+        .clone();
+
+      target.merge_configs_recursive(store, processed_ids)?;
+
+      self.merge(target);
+    }
+
+    Ok(())
+  }
+
+  pub fn merge_configs(
+    mut self,
+    initial_id: &str,
+    store: &BTreeMap<String, PackageJson>,
+  ) -> Result<Self, GenError> {
+    let mut processed_ids: Vec<String> = Default::default();
+
+    processed_ids.push(initial_id.to_string());
+
+    self.merge_configs_recursive(store, &mut processed_ids)?;
+
+    Ok(self)
+  }
 }

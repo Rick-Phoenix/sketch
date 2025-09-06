@@ -1,64 +1,39 @@
-#![allow(dead_code)]
 #![allow(clippy::result_large_err)]
 
+use askama::Template;
+use figment::{
+  providers::{Format, Toml, Yaml},
+  Figment,
+};
 use merge::Merge;
 pub use package_json::*;
 use serde_json::Value;
 pub use ts_config::*;
 
+use crate::{
+  moon::{MoonTasks, MoonToolchain},
+  versions::get_latest_version,
+  Config, OxlintConfig, PackageManager,
+};
+
+pub(crate) mod rendering;
+use std::{
+  collections::BTreeMap,
+  fs::{create_dir_all, File},
+  path::{Path, PathBuf},
+};
+
+pub(crate) use config::*;
+pub use errors::GenError;
+pub(crate) use rendering::*;
+
 use crate::pnpm::PnpmWorkspace;
 
-macro_rules! get_contributors {
-  ($data:ident, $config:ident, $list_name:ident) => {
-    $data.$list_name = $data
-      .$list_name
-      .into_iter()
-      .map(|c| -> Result<Person, GenError> {
-        match c {
-          Person::Workspace(name) => Ok(Person::Data(
-            $config
-              .people
-              .get(&name)
-              .ok_or(GenError::PersonNotFound { name })?
-              .clone(),
-          )),
-          Person::Data(person) => Ok(Person::Data(person)),
-        }
-      })
-      .collect::<Result<std::collections::BTreeSet<Person>, GenError>>()?
-  };
-}
-
-macro_rules! write_file {
-  ($output:expr, $overwrite:expr, $data:expr, $suffix:expr) => {
-    let path = $output.join($suffix);
-    let mut file = if $overwrite {
-      File::create(&path).map_err(|e| GenError::FileCreation {
-        path: path.clone(),
-        source: e,
-      })?
-    } else {
-      File::create_new(&path).map_err(|e| match e.kind() {
-        std::io::ErrorKind::AlreadyExists => GenError::FileExists { path: path.clone() },
-        _ => GenError::WriteError {
-          path: path.clone(),
-          source: e,
-        },
-      })?
-    };
-
-    $data
-      .write_into(&mut file)
-      .map_err(|e| GenError::WriteError {
-        path: path.clone(),
-        source: e,
-      })?;
-  };
-}
-
 #[macro_use]
-pub mod config;
+mod macros;
 pub mod cli;
+pub mod config;
+pub mod errors;
 pub mod moon;
 pub mod package;
 pub mod package_json;
@@ -68,26 +43,10 @@ pub(crate) mod tera;
 pub mod ts_config;
 pub mod versions;
 
-use std::fs::File;
-
-use askama::Template;
-
-use crate::{
-  moon::{MoonTasks, MoonToolchain},
-  versions::get_latest_version,
-  Config, OxlintConfig, PackageManager,
-};
-
-pub(crate) mod rendering;
-use std::{collections::BTreeMap, fs::create_dir_all, io, path::PathBuf};
-
-pub(crate) use config::*;
-pub(crate) use rendering::*;
-use thiserror::Error;
-
 pub(crate) type StringKeyVal = BTreeMap<String, String>;
 pub(crate) type StringKeyValMap = BTreeMap<String, Value>;
 
+/// The kinds of presets that can be stored in the global config, along with a name key.
 #[derive(Debug, Clone, Copy)]
 pub enum Preset {
   Vitest,
@@ -96,63 +55,56 @@ pub enum Preset {
   TsConfig,
 }
 
-#[derive(Debug, Error)]
-pub enum GenError {
-  #[error("Could not create the dir '{path}': {source}")]
-  DirCreation { path: PathBuf, source: io::Error },
-  #[error("Could not create the file '{path}': {source}")]
-  FileCreation { path: PathBuf, source: io::Error },
-  #[error("Failed to parse the configuration: {source}")]
-  ConfigParsing { source: figment::Error },
-  #[error("{kind:?} preset '{name}' not found")]
-  PresetNotFound { kind: Preset, name: String },
-  #[error("Failed to parse the template '{template}': {source}")]
-  TemplateParsing {
-    template: String,
-    source: ::tera::Error,
-  },
-  #[error("Failed to read the templates directory: {source}")]
-  TemplateDirLoading { source: ::tera::Error },
-  #[error("Failed to parse the templating context: {source}")]
-  TemplateContextParsing { source: ::tera::Error },
-  #[error("Could not create the parent directory for '{path}': {source}")]
-  ParentDirCreation { path: PathBuf, source: io::Error },
-  #[error("Failed to render the template '{template}': {source}")]
-  TemplateRendering {
-    template: String,
-    source: ::tera::Error,
-  },
-  #[error("Failed to write to the file '{path}': {source}")]
-  WriteError { path: PathBuf, source: io::Error },
-  #[error("Person '{name}' not found")]
-  PersonNotFound { name: String },
-  #[error("Could not read the contents of '{path}': {source}")]
-  ReadError { path: PathBuf, source: io::Error },
-  #[error("Could not deserialize '{path}': {source}")]
-  YamlDeserialization {
-    path: PathBuf,
-    source: serde_yaml_ng::Error,
-  },
-  #[error("Could not deserialize '{path}': {source}")]
-  JsonDeserialization {
-    path: PathBuf,
-    source: serde_json::Error,
-  },
-  #[error("Failed to canonicalize the path '{path}': {source}")]
-  PathCanonicalization { path: PathBuf, source: io::Error },
-  #[error("Invalid config format for '{file}'. Allowed formats are: yaml, toml")]
-  InvalidConfigFormat { file: String },
-  #[error("The file '{path}' already exists. Set `overwrite` to true in the config to overwrite existing files.")]
-  FileExists { path: PathBuf },
+#[derive(Debug, Template)]
+#[template(ext = "txt", source = "{{ text }}")]
+pub(crate) struct GenericTemplate {
+  pub(crate) text: String,
 }
 
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
 
-impl Config {
-  pub async fn build_repo(mut self) -> Result<(), GenError> {
-    self.merge_configs()?;
+pub(crate) fn merge_path(mut figment: Figment, path: &Path) -> Result<Figment, GenError> {
+  let extension = path
+    .extension()
+    .unwrap_or_else(|| panic!("Config file '{}' has no extension.", path.display()));
 
-    let package_json_templates = &self.package_json_presets;
+  if extension == "yaml" || extension == "yml" {
+    figment = figment.merge(Yaml::file(path));
+  } else if extension == "toml" {
+    figment = figment.merge(Toml::file(path));
+  } else {
+    return Err(GenError::InvalidConfigFormat {
+      file: path.to_path_buf(),
+    });
+  }
+
+  Ok(figment)
+}
+
+impl Config {
+  pub fn init(config_file: PathBuf) -> Result<Self, GenError> {
+    let config_figment = merge_path(Config::figment(), &config_file)?;
+
+    let mut config: Config = config_figment
+      .extract()
+      .map_err(|e| GenError::ConfigParsing { source: e })?;
+
+    if !config.extends.is_empty() {
+      config = config.merge_configs(&config_file.canonicalize().map_err(|e| {
+        GenError::PathCanonicalization {
+          path: config_file,
+          source: e,
+        }
+      })?)?;
+    }
+
+    Ok(config)
+  }
+}
+
+impl Config {
+  pub async fn build_repo(self) -> Result<(), GenError> {
+    let package_json_presets = &self.package_json_presets;
     let output = PathBuf::from(&self.root_dir);
 
     create_dir_all(&output).map_err(|e| GenError::DirCreation {
@@ -162,25 +114,22 @@ impl Config {
 
     macro_rules! write_to_output {
     ($($tokens:tt)*) => {
-      write_file!(output, self.overwrite, $($tokens) *)
+      write_file!(output, self.overwrite, $($tokens)*)
     };
   }
 
     write_to_output!(self.gitignore, ".gitignore");
 
-    let mut package_json_data = match &self.root_package_json {
-      PackageJsonData::Named(name) => package_json_templates
-        .get(name)
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::PackageJson,
-          name: name.to_string(),
-        })?
-        .clone(),
-      PackageJsonData::Definition(package_json) => package_json.clone(),
-    };
+    let mut package_json_data = package_json_presets
+      .get("root")
+      .ok_or(GenError::PresetNotFound {
+        kind: Preset::PackageJson,
+        name: "root".to_string(),
+      })?
+      .clone();
 
     for preset in package_json_data.extends.clone() {
-      let target = package_json_templates
+      let target = package_json_presets
         .get(&preset)
         .ok_or(GenError::PresetNotFound {
           kind: Preset::PackageJson,
@@ -198,14 +147,15 @@ impl Config {
     get_contributors!(package_json_data, self, contributors);
     get_contributors!(package_json_data, self, maintainers);
 
-    if package_json_data.default_deps {
-      for dep in DEFAULT_DEPS {
+    if package_json_data.use_default_deps {
+      for dep in ["typescript", "oxlint"] {
         let version = if self.catalog {
           "catalog:".to_string()
         } else {
-          get_latest_version(dep).await.unwrap_or_else(|_| {
+          get_latest_version(dep).await.unwrap_or_else(|e| {
             println!(
-              "Could not get the latest valid version range for '{}'. Falling back to 'latest'...",
+              "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
+              e,
               dep
             );
             "latest".to_string()
@@ -221,45 +171,47 @@ impl Config {
 
     write_to_output!(package_json_data, "package.json");
 
-    let tsconfig_options = TsConfig {
-      compiler_options: Some(CompilerOptions {
-        lib: Some(vec![Lib::EsNext, Lib::Dom]),
-        module_resolution: Some(ModuleResolution::NodeNext),
-        module: Some(Module::NodeNext),
-        target: Some(Target::EsNext),
-        module_detection: Some(ModuleDetection::Force),
-        isolated_modules: Some(true),
-        es_module_interop: Some(true),
-        resolve_json_module: Some(true),
-        declaration: Some(true),
-        declaration_map: Some(true),
-        composite: Some(true),
-        no_emit_on_error: Some(true),
-        incremental: Some(true),
-        source_map: Some(true),
-        strict: Some(true),
-        strict_null_checks: Some(true),
-        skip_lib_check: Some(true),
-        force_consistent_casing_in_file_names: Some(true),
-        no_unchecked_indexed_access: Some(true),
-        allow_synthetic_default_imports: Some(true),
-        verbatim_module_syntax: Some(true),
-        no_unchecked_side_effects_imports: Some(true),
+    if self.root_use_default_tsconfigs {
+      let tsconfig_options = TsConfig {
+        compiler_options: Some(CompilerOptions {
+          lib: Some(vec![Lib::EsNext, Lib::Dom]),
+          module_resolution: Some(ModuleResolution::NodeNext),
+          module: Some(Module::NodeNext),
+          target: Some(Target::EsNext),
+          module_detection: Some(ModuleDetection::Force),
+          isolated_modules: Some(true),
+          es_module_interop: Some(true),
+          resolve_json_module: Some(true),
+          declaration: Some(true),
+          declaration_map: Some(true),
+          composite: Some(true),
+          no_emit_on_error: Some(true),
+          incremental: Some(true),
+          source_map: Some(true),
+          strict: Some(true),
+          strict_null_checks: Some(true),
+          skip_lib_check: Some(true),
+          force_consistent_casing_in_file_names: Some(true),
+          no_unchecked_indexed_access: Some(true),
+          allow_synthetic_default_imports: Some(true),
+          verbatim_module_syntax: Some(true),
+          no_unchecked_side_effects_imports: Some(true),
+          ..Default::default()
+        }),
         ..Default::default()
-      }),
-      ..Default::default()
-    };
+      };
 
-    write_to_output!(tsconfig_options, self.root_tsconfig_name.clone());
+      write_to_output!(tsconfig_options, &self.root_tsconfig_name);
 
-    let root_tsconfig = TsConfig {
-      extends: Some(self.root_tsconfig_name.clone()),
-      files: Some(vec![]),
-      references: Some(vec![]),
-      ..Default::default()
-    };
+      let root_tsconfig = TsConfig {
+        extends: Some(self.root_tsconfig_name.clone()),
+        files: Some(vec![]),
+        references: Some(vec![]),
+        ..Default::default()
+      };
 
-    write_to_output!(root_tsconfig, "tsconfig.json");
+      write_to_output!(root_tsconfig, "tsconfig.json");
+    }
 
     if matches!(self.package_manager, PackageManager::Pnpm) {
       let mut pnpm_data = PnpmWorkspace {
@@ -280,7 +232,7 @@ impl Config {
       let moon_dir = output.join(".moon");
 
       create_dir_all(&moon_dir).map_err(|e| GenError::DirCreation {
-        path: moon_dir.to_owned(),
+        path: moon_dir.to_path_buf(),
         source: e,
       })?;
 
@@ -305,24 +257,41 @@ impl Config {
       write_to_output!(moon_tasks, ".moon/tasks.yml");
     }
 
-    write_to_output!(self.pre_commit, ".pre-commit-config.yaml");
+    let pre_commit_config = match &self.pre_commit {
+      PreCommitSetting::Bool(val) => {
+        if *val {
+          Some(&PreCommitConfig::default())
+        } else {
+          None
+        }
+      }
+      PreCommitSetting::Config(conf) => Some(conf),
+    };
 
-    write_to_output!(OxlintConfig {}, ".oxlintrc.json");
+    if let Some(pre_commit) = pre_commit_config {
+      write_to_output!(pre_commit, ".pre-commit-config.yaml");
+    }
 
-    create_dir_all(output.join("packages")).map_err(|e| GenError::DirCreation {
-      path: output.to_owned(),
-      source: e,
-    })?;
+    if self.use_default_oxlint_config {
+      write_to_output!(OxlintConfig {}, ".oxlintrc.json");
+    }
 
-    if let Some(shared_out_dir) = self.shared_out_dir.get_name() {
-      create_dir_all(output.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
-        path: output.to_owned(),
+    for dir in &self.packages_dirs {
+      create_dir_all(output.join(dir)).map_err(|e| GenError::DirCreation {
+        path: output.to_path_buf(),
         source: e,
       })?;
     }
 
-    if !self.generate_root_templates.is_empty() {
-      let templates = self.generate_root_templates.clone();
+    if let Some(shared_out_dir) = self.shared_out_dir.get_name() {
+      create_dir_all(output.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
+        path: output.to_path_buf(),
+        source: e,
+      })?;
+    }
+
+    if !self.root_generate_templates.is_empty() {
+      let templates = self.root_generate_templates.clone();
       let base_path = self.root_dir.clone();
       self.generate_templates(&base_path, templates)?;
     }
@@ -331,21 +300,32 @@ impl Config {
   }
 }
 
-#[derive(Debug, Template)]
-#[template(ext = "txt", source = "{{ text }}")]
-pub(crate) struct GenericTemplate {
-  pub(crate) text: String,
-}
-
 #[cfg(test)]
 mod test {
+  use std::path::PathBuf;
+
   use crate::{config::Config, GenError};
 
   #[tokio::test]
   async fn repo_test() -> Result<(), GenError> {
-    let config: Config = Config::figment()
-      .extract()
-      .map_err(|e| GenError::ConfigParsing { source: e })?;
+    let config = Config::init(PathBuf::from("config.toml"))?;
+
     config.build_repo().await
+  }
+
+  #[tokio::test]
+  async fn circular_configs() -> Result<(), GenError> {
+    let config = Config::init(PathBuf::from("tests/circular_configs/config.toml"));
+
+    match config {
+      Ok(_) => panic!("Circular configs test did not fail as expected"),
+      Err(e) => {
+        if matches!(e, GenError::CircularDependency(_)) {
+          Ok(())
+        } else {
+          panic!("Circular configs test returned wrong kind of error")
+        }
+      }
+    }
   }
 }

@@ -37,12 +37,10 @@ pub struct TemplateOutput {
 
 impl Config {
   pub fn generate_templates(
-    mut self,
+    self,
     output_root: &str,
     templates: Vec<TemplateOutput>,
   ) -> Result<(), GenError> {
-    self.merge_configs()?;
-
     let mut tera = if let Some(templates_dir) = self.templates_dir {
       Tera::new(&format!("{}/**/*", templates_dir))
         .map_err(|e| GenError::TemplateDirLoading { source: e })?
@@ -63,10 +61,16 @@ impl Config {
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
 
     for template in templates {
-      let mut local_context = global_context.clone();
-      let added_context = Context::from_serialize(template.context)
+      let added_context_is_empty = template.context.is_empty();
+      let mut added_context = Context::from_serialize(template.context)
         .map_err(|e| GenError::TemplateContextParsing { source: e })?;
-      local_context.extend(added_context);
+
+      let local_context = if added_context_is_empty {
+        &global_context
+      } else {
+        added_context.extend(global_context.clone());
+        &added_context
+      };
 
       let output_path = PathBuf::from(output_root).join(template.output);
       let mut output_file = if self.overwrite {
@@ -86,11 +90,13 @@ impl Config {
         })?
       };
 
-      create_dir_all(output_path.parent().expect("Invalid file output path")).map_err(|e| {
-        GenError::ParentDirCreation {
-          path: output_path.clone(),
-          source: e,
-        }
+      create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
+        "Could not get the parent directory for '{}'",
+        output_path.display()
+      )))?)
+      .map_err(|e| GenError::ParentDirCreation {
+        path: output_path.clone(),
+        source: e,
       })?;
 
       match template.template {
@@ -102,14 +108,14 @@ impl Config {
               source: e,
             })?;
           tera
-            .render_to(&name, &local_context, &mut output_file)
+            .render_to(&name, local_context, &mut output_file)
             .map_err(|e| GenError::TemplateRendering {
               template: name.to_string(),
               source: e,
             })?
         }
         TemplateData::Path(path) => tera
-          .render_to(&path, &local_context, &mut output_file)
+          .render_to(&path, local_context, &mut output_file)
           .map_err(|e| GenError::TemplateRendering {
             template: path.to_string(),
             source: e,
@@ -136,7 +142,11 @@ mod test {
 
   #[test]
   fn custom_templates() -> Result<(), GenError> {
+    use figment::providers::{Format, Toml, Yaml};
+
     let config: Config = Config::figment()
+      .merge(Toml::file("scaffolder/config.toml"))
+      .merge(Yaml::file("scaffolder/config.yaml"))
       .extract()
       .map_err(|e| GenError::ConfigParsing { source: e })?;
 

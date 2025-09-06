@@ -1,0 +1,9 @@
+extends = ["config2.toml"]
+
+root_dir = "output"
+
+global_templates_vars = { my_var = 15 }
+
+templates = { lit_template = "my_var: {{ my_var }}" }
+
+templates_dir = "output/templates"

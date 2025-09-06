@@ -5,7 +5,56 @@ use merge::Merge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{overwrite_option, package::PackageKind};
+use crate::{overwrite_option, package::PackageKind, GenError, Preset};
+
+impl TsConfig {
+  fn merge_configs_recursive(
+    &mut self,
+    store: &BTreeMap<String, TsConfig>,
+    processed_ids: &mut Vec<String>,
+  ) -> Result<(), GenError> {
+    for id in self.extend_presets.clone() {
+      let was_absent = !processed_ids.contains(&id);
+      processed_ids.push(id.clone());
+
+      if !was_absent {
+        return Err(GenError::CircularDependency(format!(
+          "Found circular dependency for tsconfig '{}'. The full processed chain is: {}",
+          id,
+          processed_ids.join(" -> ")
+        )));
+      }
+
+      let mut target = store
+        .get(id.as_str())
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::TsConfig,
+          name: id.to_string(),
+        })?
+        .clone();
+
+      target.merge_configs_recursive(store, processed_ids)?;
+
+      self.merge(target);
+    }
+
+    Ok(())
+  }
+
+  pub fn merge_configs(
+    mut self,
+    initial_id: &str,
+    store: &BTreeMap<String, TsConfig>,
+  ) -> Result<TsConfig, GenError> {
+    let mut processed_ids: Vec<String> = Default::default();
+
+    processed_ids.push(initial_id.to_string());
+
+    self.merge_configs_recursive(store, &mut processed_ids)?;
+
+    Ok(self)
+  }
+}
 
 #[derive(Deserialize, Debug, Clone, Serialize, Template)]
 #[template(path = "watch_options.j2")]
@@ -129,46 +178,34 @@ mod filters {
 }
 
 #[derive(Deserialize, Debug, Clone, Serialize)]
-#[serde(untagged)]
-pub enum TsConfigDirective {
-  Preset {
-    file_name: String,
-    preset_id: String,
-  },
-  Definition {
-    file_name: String,
-    config: TsConfig,
-  },
-  Merged {
-    file_name: String,
-    extends: Vec<String>,
-    config: Option<TsConfig>,
-  },
-}
-
-impl TsConfigDirective {
-  pub fn get_file_name(&self) -> &str {
-    match self {
-      TsConfigDirective::Preset { file_name, .. } => file_name.as_str(),
-      TsConfigDirective::Definition { file_name, .. } => file_name.as_str(),
-      TsConfigDirective::Merged { file_name, .. } => file_name.as_str(),
-    }
-  }
+pub struct TsConfigDirective {
+  pub file_name: String,
+  pub id: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Serialize, Template, Default, Merge)]
 #[template(path = "tsconfig.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
-#[merge(strategy = overwrite_option)]
 pub struct TsConfig {
+  #[merge(strategy = merge::vec::append)]
+  #[serde(rename = "extend_presets")]
+  pub extend_presets: Vec<String>,
+  #[merge(strategy = overwrite_option)]
   pub extends: Option<String>,
+  #[merge(strategy = overwrite_option)]
   pub files: Option<Vec<String>>,
+  #[merge(strategy = overwrite_option)]
   pub exclude: Option<Vec<String>>,
+  #[merge(strategy = overwrite_option)]
   pub include: Option<Vec<String>>,
+  #[merge(strategy = overwrite_option)]
   pub references: Option<Vec<TsConfigReference>>,
+  #[merge(strategy = overwrite_option)]
   pub type_acquisition: Option<TypeAcquisition>,
+  #[merge(strategy = overwrite_option)]
   pub compiler_options: Option<CompilerOptions>,
+  #[merge(strategy = overwrite_option)]
   pub watch_options: Option<WatchOptions>,
 }
 
@@ -547,6 +584,7 @@ mod test {
   #[test]
   fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
     let ts_config = TsConfig {
+      extend_presets: Default::default(),
       compiler_options: Some(CompilerOptions {
         out_dir: Some("out".to_string()),
         allow_js: Some(true),

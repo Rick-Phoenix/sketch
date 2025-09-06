@@ -1,0 +1,18 @@
+root_dir = "output"
+
+[tsconfig_presets.one]
+extend_presets = ["two"]
+
+[tsconfig_presets.two]
+extend_presets = ["three"]
+
+[tsconfig_presets.three]
+extend_presets = ["one"]
+
+[package_presets.circular_tsconfigs]
+name = "circular_tsconfig"
+package_json = "one"
+dir = "packages/mypkg"
+ts_config = [{ file_name = "tsconfig.abc.json", id = "one" }]
+
+[package_json_presets.one]

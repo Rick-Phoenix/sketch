@@ -11,13 +11,13 @@ use crate::cli::Cli;
 async fn main() -> Result<(), GenError> {
   let cli = Cli::parse();
 
-  let mut config = Config::figment();
+  let mut config_figment = Config::figment();
 
   if let Some(config_path) = cli.config.as_deref() {
     if config_path.ends_with(".yaml") {
-      config = config.merge(Yaml::file(config_path));
+      config_figment = config_figment.merge(Yaml::file(config_path));
     } else if config_path.ends_with(".toml") {
-      config = config.merge(Toml::file(config_path));
+      config_figment = config_figment.merge(Toml::file(config_path));
     } else {
       let mut cmd = Cli::command();
       cmd
@@ -29,7 +29,7 @@ async fn main() -> Result<(), GenError> {
     }
   }
 
-  let config: Config = config
+  let config: Config = config_figment
     .extract()
     .map_err(|e| GenError::ConfigParsing { source: e })?;
 

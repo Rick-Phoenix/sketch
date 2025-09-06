@@ -62,7 +62,14 @@ impl PnpmWorkspace {
 
         let version = get_latest_version(name)
           .await
-          .unwrap_or_else(|_| "latest".to_string());
+          .unwrap_or_else(|e| {
+            println!(
+              "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
+              e,
+              name
+            );
+            "latest".to_string()
+          });
         let range = range_kind.create(version);
 
         target_catalog.insert(name.to_string(), range);

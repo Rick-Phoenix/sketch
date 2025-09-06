@@ -1,0 +1,21 @@
+root_dir = "output"
+
+global_templates_vars = { my_var = 15 }
+
+templates = { lit_template = "my_var: {{ my_var }}" }
+
+templates_dir = "output/templates"
+
+[package_presets.circular_package_json]
+name = "circular_package_json"
+package_json = "one"
+dir = "packages/mypkg"
+
+[package_json_presets.one]
+extends = ["two"]
+
+[package_json_presets.two]
+extends = ["three"]
+
+[package_json_presets.three]
+extends = ["one"]
