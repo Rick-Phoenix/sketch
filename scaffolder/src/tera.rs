@@ -1,5 +1,5 @@
 use std::{
-  collections::BTreeMap,
+  collections::HashMap,
   fs::{create_dir_all, File},
   io::ErrorKind,
   path::PathBuf,
@@ -37,7 +37,7 @@ pub struct TemplateOutput {
   pub template: TemplateData,
   pub output: String,
   #[serde(default)]
-  pub context: BTreeMap<String, Value>,
+  pub context: HashMap<String, Value>,
 }
 
 impl Config {

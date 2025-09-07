@@ -5,13 +5,14 @@ use figment::{
   providers::{Format, Toml, Yaml},
   Figment,
 };
+use indexmap::IndexMap;
 use merge::Merge;
 pub use package_json::*;
 use serde_json::Value;
 pub use ts_config::*;
 
 use crate::{
-  moon::{MoonTasks, MoonToolchain},
+  moon::{MoonConfig, MoonConfigKind},
   versions::get_latest_version,
   Config, OxlintConfig, PackageManager,
 };
@@ -43,8 +44,10 @@ pub(crate) mod tera;
 pub mod ts_config;
 pub mod versions;
 
-pub(crate) type StringKeyVal = BTreeMap<String, String>;
-pub(crate) type StringKeyValMap = BTreeMap<String, Value>;
+pub(crate) type StringBTreeMap = BTreeMap<String, String>;
+pub(crate) type JsonValueBTreeMap = BTreeMap<String, Value>;
+
+pub(crate) type OrderedMap = IndexMap<String, Value>;
 
 /// The kinds of presets that can be stored in the global config, along with a name key.
 #[derive(Debug, Clone, Copy)]
@@ -236,7 +239,12 @@ impl Config {
       write_to_output!(pnpm_data, "pnpm-workspace.yaml");
     }
 
-    if let Some(ref moon_config) = self.moonrepo {
+    if let Some(ref moon_config_kind) = self.moonrepo && !matches!(moon_config_kind, MoonConfigKind::Bool(false)) {
+      let moon_config = match moon_config_kind.clone() {
+        MoonConfigKind::Bool(_) => MoonConfig::default(),
+        MoonConfigKind::Config(c) => *c
+      };
+
       let moon_dir = output.join(".moon");
 
       create_dir_all(&moon_dir).map_err(|e| GenError::DirCreation {
@@ -244,23 +252,14 @@ impl Config {
         source: e,
       })?;
 
+      let moon_toolchain = moon_config.toolchain.unwrap_or_default();
+
       write_to_output!(
-        MoonToolchain {
-          package_manager: self.package_manager.clone(),
-          root_tsconfig_name: self.root_tsconfig_name.clone(),
-          project_tsconfig_name: self.project_tsconfig_name.clone(),
-          config: moon_config.toolchain.clone().unwrap_or_default(),
-        },
+        moon_toolchain,
         ".moon/toolchain.yml"
       );
 
-      let moon_tasks = MoonTasks {
-        tasks: moon_config.tasks.clone().unwrap_or_default(),
-        config: moon_config.tasks_config.clone().unwrap_or_default(),
-        project_tsconfig_name: self.project_tsconfig_name.clone(),
-        root_tsconfig_name: self.root_tsconfig_name.clone(),
-        out_dir: self.shared_out_dir.get_name(),
-      };
+      let moon_tasks = moon_config.tasks.unwrap_or_default();
 
       write_to_output!(moon_tasks, ".moon/tasks.yml");
     }

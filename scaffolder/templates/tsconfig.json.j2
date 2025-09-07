@@ -144,13 +144,8 @@
     {% for plugin in plugins +%}
     {
       {% filter strip_trailing_comma %}
-      {% if let Some(name) = plugin.get("name") +%}
-      "name": {{+ name }},
-      {% endif +%}
       {% for (key, val) in plugin %}
-      {% if key != "name" +%}
       "{{ key }}": {{+ crate::render_json_val(val, 4) }},
-      {% endif %}
       {% endfor %}
       {% endfilter +%}
     } {% call utils::optional_comma(!loop.last) %}

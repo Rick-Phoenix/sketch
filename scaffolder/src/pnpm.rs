@@ -4,20 +4,18 @@ use askama::Template;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-  versions::get_latest_version, PackageJson, StringKeyVal, StringKeyValMap, VersionRange,
-};
+use crate::{versions::get_latest_version, OrderedMap, PackageJson, StringBTreeMap, VersionRange};
 
 /// A struct representing a pnpm-workspace.yaml config. Some widely used fields such as catalog, catalogs and packages are included directly. Everything else is flattened in the `extra` field.
 #[derive(Debug, Template, Serialize, Deserialize, Default)]
 #[serde(default)]
 #[template(path = "pnpm-workspace.yaml.j2")]
 pub struct PnpmWorkspace {
-  pub catalog: StringKeyVal,
-  pub catalogs: BTreeMap<String, StringKeyVal>,
+  pub catalog: StringBTreeMap,
+  pub catalogs: BTreeMap<String, StringBTreeMap>,
   pub packages: Vec<String>,
   #[serde(flatten)]
-  pub extra: StringKeyValMap,
+  pub extra: OrderedMap,
 }
 
 static CATALOG_REGEX: LazyLock<Regex> = LazyLock::new(|| {

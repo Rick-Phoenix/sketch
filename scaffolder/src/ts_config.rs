@@ -1,11 +1,11 @@
-use std::{collections::BTreeMap, fmt::Display};
+use std::fmt::Display;
 
 use askama::Template;
+use indexmap::IndexMap;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-use crate::{overwrite_option, GenError, Preset};
+use crate::{overwrite_option, GenError, OrderedMap, Preset};
 
 pub(crate) fn get_default_root_tsconfig() -> TsConfig {
   TsConfig {
@@ -127,7 +127,7 @@ pub struct TsConfigDirective {
 impl TsConfig {
   fn merge_configs_recursive(
     &mut self,
-    store: &BTreeMap<String, TsConfig>,
+    store: &IndexMap<String, TsConfig>,
     processed_ids: &mut Vec<String>,
   ) -> Result<(), GenError> {
     for id in self.extend_presets.clone() {
@@ -161,7 +161,7 @@ impl TsConfig {
   pub fn merge_configs(
     mut self,
     initial_id: &str,
-    store: &BTreeMap<String, TsConfig>,
+    store: &IndexMap<String, TsConfig>,
   ) -> Result<TsConfig, GenError> {
     let mut processed_ids: Vec<String> = Default::default();
 
@@ -550,6 +550,8 @@ impl Display for Target {
 #[serde(default)]
 #[merge(strategy = overwrite_option)]
 pub struct CompilerOptions {
+  pub plugins: Option<Vec<OrderedMap>>,
+  pub paths: Option<IndexMap<String, Vec<String>>>,
   pub allow_js: Option<bool>,
   pub check_js: Option<bool>,
   pub composite: Option<bool>,
@@ -584,7 +586,6 @@ pub struct CompilerOptions {
   pub base_url: Option<String>,
   pub es_module_interop: Option<bool>,
   pub module_resolution: Option<ModuleResolution>,
-  pub paths: Option<BTreeMap<String, Vec<String>>>,
   pub preserve_symlinks: Option<bool>,
   pub root_dirs: Option<Vec<String>>,
   pub type_roots: Option<Vec<String>>,
@@ -639,7 +640,6 @@ pub struct CompilerOptions {
   pub use_define_for_class_fields: Option<bool>,
   pub preserve_watch_output: Option<bool>,
   pub pretty: Option<bool>,
-  pub plugins: Option<Vec<BTreeMap<String, Value>>>,
   pub verbatim_module_syntax: Option<bool>,
   pub exact_optional_property_types: Option<bool>,
   pub no_implicit_override: Option<bool>,
@@ -671,7 +671,8 @@ pub struct TsConfigReference {
 mod test {
   use std::{fs::File, path::PathBuf};
 
-  use maplit::btreemap;
+  use indexmap::indexmap;
+  use serde_json::Value;
 
   use super::*;
 
@@ -768,7 +769,7 @@ mod test {
         type_roots: Some(vec!["abc".to_string(), "abc".to_string()]),
         lib: Some(vec![Lib::Dom, Lib::EsNext]),
         paths: Some(
-          btreemap! { "@".to_string() => vec!["src/".to_string()], "@components".to_string() => vec!["src/components".to_string()] },
+          indexmap! { "@".to_string() => vec!["src/".to_string()], "@components".to_string() => vec!["src/components".to_string()] },
         ),
         verbatim_module_syntax: Some(true),
         new_line: Some(NewLine::Lf),
@@ -791,7 +792,7 @@ mod test {
         module_suffixes: Some(vec!["abc".to_string(), "abc".to_string()]),
         custom_conditions: Some(vec!["abc".to_string(), "abc".to_string()]),
         plugins: Some(vec![
-          btreemap! { "name".to_string() => Value::String("typescript-svelte-plugin".to_string()), "enabled".to_string() => Value::Bool(true), "assumeIsSvelteProject".to_string() => Value::Bool(true) },
+          indexmap! { "name".to_string() => Value::String("typescript-svelte-plugin".to_string()), "enabled".to_string() => Value::Bool(true), "assumeIsSvelteProject".to_string() => Value::Bool(true) },
         ]),
       }),
       extends: Some("tsconfig.options.json".to_string()),

@@ -12,7 +12,7 @@ use figment::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  moon::MoonDotYml,
+  moon::{MoonDotYml, MoonDotYmlKind},
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigStruct},
   paths::get_relative_path,
   pnpm::PnpmWorkspace,
@@ -40,7 +40,7 @@ pub struct PackageConfig {
   /// The key to the package.json preset to use.
   pub package_json: Option<PackageJsonKind>,
   /// The configuration for the moon.yml file that will be generated for this package.
-  pub moonrepo: Option<MoonDotYml>,
+  pub moonrepo: Option<MoonDotYmlKind>,
   /// The directory for this package. This path will be joined to the `root_dir` setting in the global config.
   pub dir: String,
   /// The configuration for this package's vitest setup.
@@ -213,7 +213,12 @@ impl Config {
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
     }
 
-    if let Some(ref moon_config) = config.moonrepo {
+    if let Some(ref moon_config_kind) = config.moonrepo && !matches!(moon_config_kind, MoonDotYmlKind::Bool(false)) {
+      let moon_config = match moon_config_kind {
+        MoonDotYmlKind::Bool(_) => MoonDotYml::default(),
+        MoonDotYmlKind::Config(moon_dot_yml) => moon_dot_yml.clone(),
+      };
+
       write_to_output!(moon_config, "moon.yml");
     }
 

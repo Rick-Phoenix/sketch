@@ -1,5 +1,4 @@
 use std::{
-  collections::{BTreeMap, BTreeSet},
   fmt::Display,
   path::{Path, PathBuf},
 };
@@ -9,14 +8,14 @@ use figment::{
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider, Source,
 };
-use maplit::btreemap;
+use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  merge_maps, merge_path, merge_sets,
-  moon::MoonConfig,
+  merge_index_maps, merge_index_sets, merge_path,
+  moon::MoonConfigKind,
   package::{vitest::VitestConfigStruct, PackageConfig},
   tera::TemplateOutput,
   GenError, PackageJson, PackageJsonKind, Person, PersonData, TsConfig, TsConfigDirective,
@@ -76,7 +75,6 @@ impl Default for RootPackage {
 pub struct Config {
   #[merge(skip)]
   pub root_package: RootPackage,
-
   /// The gitignore settings.
   #[merge(strategy = merge::bool::overwrite_true)]
   /// Whether the dependencies with 'latest' should be transformed in their actual latest version + the selected version range.
@@ -84,14 +82,14 @@ pub struct Config {
   #[merge(skip)]
   pub gitignore: GitIgnore,
   /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
-  #[merge(strategy = merge_maps)]
-  pub pnpm_config: BTreeMap<String, Value>,
+  #[merge(strategy = merge_index_maps)]
+  pub pnpm_config: IndexMap<String, Value>,
   /// A map containing package.json presets.
-  #[merge(strategy = merge_maps)]
-  pub package_json_presets: BTreeMap<String, PackageJson>,
+  #[merge(strategy = merge_index_maps)]
+  pub package_json_presets: IndexMap<String, PackageJson>,
   /// A map containing tsconfig.json presets.
-  #[merge(strategy = merge_maps)]
-  pub tsconfig_presets: BTreeMap<String, TsConfig>,
+  #[merge(strategy = merge_index_maps)]
+  pub tsconfig_presets: IndexMap<String, TsConfig>,
   /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
   /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
   /// It defaults to `tsconfig.options.json`.
@@ -110,7 +108,7 @@ pub struct Config {
   pub package_manager: PackageManager,
   /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
   #[merge(strategy = merge::option::overwrite_none)]
-  pub moonrepo: Option<MoonConfig>,
+  pub moonrepo: Option<MoonConfigKind>,
   /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
   #[merge(skip)]
   pub pre_commit: PreCommitSetting,
@@ -121,12 +119,12 @@ pub struct Config {
   /// They will be added to the pnpm-workspace.yaml config, and also generated automatically when the monorepo is generated.
   #[merge(skip)]
   pub packages_dirs: Vec<String>,
-  #[merge(strategy = merge_maps)]
+  #[merge(strategy = merge_index_maps)]
   /// A map of package presets.
-  pub package_presets: BTreeMap<String, PackageConfig>,
+  pub package_presets: IndexMap<String, PackageConfig>,
   /// A map of vitest config presets.
-  #[merge(strategy = merge_maps)]
-  pub vitest_presets: BTreeMap<String, VitestConfigStruct>,
+  #[merge(strategy = merge_index_maps)]
+  pub vitest_presets: IndexMap<String, VitestConfigStruct>,
   /// Whether to use the pnpm catalog for default dependencies.
   #[merge(skip)]
   pub catalog: bool,
@@ -137,22 +135,22 @@ pub struct Config {
   /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
   #[merge(skip)]
   pub shared_out_dir: SharedOutDir,
-  /// A map of individuals that can be referenced in the list of contributors or maintainers in a package.json file.
-  #[merge(strategy = merge_maps)]
-  pub people: BTreeMap<String, PersonData>,
+  /// A map of individuals btree_that can be referenced in the list of contributors or maintainers in a package.json file.
+  #[merge(strategy = merge_index_maps)]
+  pub people: IndexMap<String, PersonData>,
   /// The directory that contains the template files.
   #[merge(strategy = merge::option::overwrite_none)]
   pub templates_dir: Option<String>,
   /// A map that contains templates defined literally.
-  #[merge(strategy = merge_maps)]
-  pub templates: BTreeMap<String, String>,
+  #[merge(strategy = merge_index_maps)]
+  pub templates: IndexMap<String, String>,
   /// The global variables that will be available for every template being generated.
   /// They are overridden in case a template is rendered with a local context.
-  #[merge(strategy = merge_maps)]
-  pub global_templates_vars: BTreeMap<String, Value>,
+  #[merge(strategy = merge_index_maps)]
+  pub global_templates_vars: IndexMap<String, Value>,
   /// The list of configuration files to merge with the current one.
-  #[merge(strategy = merge_sets)]
-  pub extends: BTreeSet<PathBuf>,
+  #[merge(strategy = merge_index_sets)]
+  pub extends: IndexSet<PathBuf>,
   /// Whether file generation should always override existing files. Defaults to true.
   #[merge(strategy = merge::bool::overwrite_true)]
   pub overwrite: bool,
@@ -265,7 +263,7 @@ impl Default for Config {
     Self {
       get_latest_version_range: true,
       gitignore: Default::default(),
-      package_json_presets: btreemap! { "root".to_string() => PackageJson::default() },
+      package_json_presets: Default::default(),
       package_manager: Default::default(),
       root_tsconfig_name: "tsconfig.options.json".to_string(),
       project_tsconfig_name: "tsconfig.src.json".to_string(),
@@ -274,16 +272,8 @@ impl Default for Config {
       pre_commit: PreCommitSetting::Bool(true),
       root_dir: ".".to_string(),
       packages_dirs: vec!["packages/*".to_string(), "apps/*".to_string()],
-      package_presets: {
-        let mut map: BTreeMap<String, PackageConfig> = BTreeMap::new();
-        map.insert("default".to_string(), PackageConfig::default());
-        map
-      },
-      vitest_presets: {
-        let mut map: BTreeMap<String, VitestConfigStruct> = BTreeMap::new();
-        map.insert("default".to_string(), VitestConfigStruct::default());
-        map
-      },
+      package_presets: Default::default(),
+      vitest_presets: Default::default(),
       catalog: true,
       version_ranges: Default::default(),
       tsconfig_presets: Default::default(),

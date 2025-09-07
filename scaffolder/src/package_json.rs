@@ -1,16 +1,18 @@
 use std::{
   collections::{BTreeMap, BTreeSet},
   fmt::Display,
+  hash::Hash,
 };
 
 use askama::Template;
 use futures::future;
+use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  rendering::render_json_val, versions::get_latest_version, GenError, Preset, StringKeyVal,
-  StringKeyValMap, VersionRange,
+  rendering::render_json_val, versions::get_latest_version, GenError, JsonValueBTreeMap, Preset,
+  StringBTreeMap, VersionRange,
 };
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -125,7 +127,7 @@ pub enum Exports {
     types: Option<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(flatten)]
-    other: StringKeyVal,
+    other: StringBTreeMap,
   },
 }
 
@@ -138,7 +140,7 @@ pub struct Directories {
   pub lib: Option<String>,
   pub man: Option<String>,
   pub test: Option<String>,
-  pub other: Option<StringKeyVal>,
+  pub other: Option<StringBTreeMap>,
 }
 
 /// A struct that matches the possible values for the `man` field of a package.json file.
@@ -177,16 +179,27 @@ pub struct PublishConfig {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub registry: Option<String>,
   #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  pub other: StringKeyVal,
+  pub other: StringBTreeMap,
 }
 
-pub(crate) fn merge_maps<T>(left: &mut BTreeMap<String, T>, right: BTreeMap<String, T>) {
+pub(crate) fn merge_btree_maps<T>(left: &mut BTreeMap<String, T>, right: BTreeMap<String, T>) {
+  left.extend(right)
+}
+
+pub(crate) fn merge_index_maps<T>(left: &mut IndexMap<String, T>, right: IndexMap<String, T>) {
   left.extend(right)
 }
 
 pub(crate) fn merge_sets<T>(left: &mut BTreeSet<T>, right: BTreeSet<T>)
 where
   T: Ord,
+{
+  left.extend(right)
+}
+
+pub(crate) fn merge_index_sets<T>(left: &mut IndexSet<T>, right: IndexSet<T>)
+where
+  T: Eq + Hash,
 {
   left.extend(right)
 }
@@ -208,20 +221,18 @@ pub struct PackageJson {
   pub extends: BTreeSet<String>,
   #[merge(strategy = merge::bool::overwrite_false)]
   pub use_default_deps: bool,
-  #[merge(strategy = merge_maps)]
-  pub dependencies: StringKeyVal,
-  #[merge(strategy = merge_maps)]
-  pub optional_dependencies: StringKeyVal,
-  #[merge(strategy = merge_maps)]
-  pub peer_dependencies: StringKeyVal,
-  #[merge(strategy = merge_maps)]
-  pub bundle_dependencies: StringKeyVal,
-  #[merge(strategy = merge_maps)]
-  pub dev_dependencies: StringKeyVal,
-  #[merge(strategy = merge_maps)]
-  pub scripts: StringKeyVal,
-  #[merge(strategy = merge_maps)]
-  pub metadata: StringKeyValMap,
+  #[merge(strategy = merge_btree_maps)]
+  pub dependencies: StringBTreeMap,
+  #[merge(strategy = merge_btree_maps)]
+  pub optional_dependencies: StringBTreeMap,
+  #[merge(strategy = merge_btree_maps)]
+  pub peer_dependencies: StringBTreeMap,
+  #[merge(strategy = merge_btree_maps)]
+  pub bundle_dependencies: StringBTreeMap,
+  #[merge(strategy = merge_btree_maps)]
+  pub dev_dependencies: StringBTreeMap,
+  #[merge(strategy = merge_btree_maps)]
+  pub scripts: StringBTreeMap,
   #[merge(strategy = overwrite_option)]
   pub repository: Option<Repository>,
   #[merge(strategy = overwrite_option)]
@@ -242,18 +253,18 @@ pub struct PackageJson {
   pub maintainers: BTreeSet<Person>,
   #[merge(strategy = merge_sets)]
   pub files: BTreeSet<String>,
-  #[merge(strategy = merge_maps)]
+  #[merge(strategy = merge_btree_maps)]
   pub exports: BTreeMap<String, Exports>,
   #[merge(strategy = overwrite_option)]
   pub man: Option<Man>,
   #[merge(strategy = overwrite_option)]
-  pub config: Option<StringKeyValMap>,
+  pub config: Option<JsonValueBTreeMap>,
   #[merge(strategy = overwrite_option)]
   pub package_manager: Option<String>,
   #[merge(strategy = overwrite_option)]
   pub publish_config: Option<PublishConfig>,
-  #[merge(strategy = merge_maps)]
-  pub engines: StringKeyVal,
+  #[merge(strategy = merge_btree_maps)]
+  pub engines: StringBTreeMap,
   #[merge(strategy = merge_sets)]
   pub os: BTreeSet<String>,
   #[merge(strategy = merge_sets)]
@@ -264,6 +275,9 @@ pub struct PackageJson {
   pub browser: Option<String>,
   #[merge(strategy = overwrite_option)]
   pub workspaces: Option<Vec<String>>,
+  #[serde(flatten)]
+  #[merge(strategy = merge_btree_maps)]
+  pub metadata: JsonValueBTreeMap,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -352,7 +366,7 @@ impl PackageJson {
 
   fn merge_configs_recursive(
     &mut self,
-    store: &BTreeMap<String, PackageJson>,
+    store: &IndexMap<String, PackageJson>,
     processed_ids: &mut Vec<String>,
   ) -> Result<(), GenError> {
     for id in self.extends.clone() {
@@ -386,7 +400,7 @@ impl PackageJson {
   pub fn merge_configs(
     mut self,
     initial_id: &str,
-    store: &BTreeMap<String, PackageJson>,
+    store: &IndexMap<String, PackageJson>,
   ) -> Result<Self, GenError> {
     let mut processed_ids: Vec<String> = Default::default();
 
