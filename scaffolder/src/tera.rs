@@ -11,22 +11,27 @@ use tera::{Context, Tera};
 
 use crate::{config::Config, GenError};
 
+/// The types of configuration values for a template's data.
+/// It can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TemplateData {
   Content { name: String, content: String },
-  Path(String),
+  Id(String),
 }
 
 impl TemplateData {
   pub fn name(&self) -> &str {
     match self {
       TemplateData::Content { name, .. } => name,
-      TemplateData::Path(name) => name,
+      TemplateData::Id(name) => name,
     }
   }
 }
 
+/// The data for outputting a new template.
+/// The output directory will be joined to the root of the package being generated with this template.
+/// The context specified here will override the global context.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TemplateOutput {
   pub template: TemplateData,
@@ -36,6 +41,7 @@ pub struct TemplateOutput {
 }
 
 impl Config {
+  /// A helper to generate custom templates.
   pub fn generate_templates(
     self,
     output_root: &str,
@@ -114,7 +120,7 @@ impl Config {
               source: e,
             })?
         }
-        TemplateData::Path(path) => tera
+        TemplateData::Id(path) => tera
           .render_to(&path, local_context, &mut output_file)
           .map_err(|e| GenError::TemplateRendering {
             template: path.to_string(),

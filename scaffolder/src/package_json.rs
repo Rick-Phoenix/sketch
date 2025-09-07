@@ -49,6 +49,7 @@ impl Default for PackageJson {
   }
 }
 
+/// An enum representing valid formats for the `repository` field in a package.json file.
 #[derive(Debug, Serialize, Deserialize, Template, Clone)]
 #[template(path = "repository.j2")]
 #[serde(untagged)]
@@ -64,6 +65,7 @@ pub enum Repository {
   },
 }
 
+/// A struct representing the `bugs` field in a package.json file.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Bugs {
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -72,6 +74,8 @@ pub struct Bugs {
   pub email: Option<String>,
 }
 
+/// The possible values used for representing an individual in a package.json file, which can be used to populate the `contributors` and `maintainers` fields.
+/// If a plain string is used, it will be interpreted as an id for a [`Person`] that is stored in the global config.
 #[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
 #[serde(untagged)]
 #[derive(Clone)]
@@ -80,6 +84,7 @@ pub enum Person {
   Data(PersonData),
 }
 
+/// A struct that matches how an individual's information is represented in a package.json file in the author, maintainers and contributors fields.
 #[derive(
   Clone, Debug, Serialize, Deserialize, Default, Template, Ord, PartialEq, PartialOrd, Eq,
 )]
@@ -92,6 +97,7 @@ pub struct PersonData {
   pub email: Option<String>,
 }
 
+/// A struct matching a value in the `exports` object inside a package.json file.
 #[derive(Clone, Debug, Serialize, Deserialize, Template)]
 #[template(path = "export_path.j2")]
 #[serde(untagged)]
@@ -114,6 +120,7 @@ pub enum Exports {
   },
 }
 
+/// A struct that matches the value of the `directories` field in a package.json file.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Directories {
   pub bin: Option<String>,
@@ -125,6 +132,7 @@ pub struct Directories {
   pub other: Option<StringKeyVal>,
 }
 
+/// A struct that matches the possible values for the `man` field of a package.json file.
 #[derive(Clone, Debug, Serialize, Deserialize, Template)]
 #[template(path = "man.j2")]
 #[serde(untagged)]
@@ -149,6 +157,7 @@ impl Display for PublishConfigAccess {
   }
 }
 
+/// A struct that matches the `publishConfig` field in a package.json file.
 #[derive(Clone, Debug, Serialize, Deserialize, Template)]
 #[template(path = "publish_config.j2")]
 pub struct PublishConfig {
@@ -179,6 +188,7 @@ pub(crate) fn overwrite_option<T>(left: &mut Option<T>, right: Option<T>) {
   }
 }
 
+/// A struct representing the contents of a package.json file.
 #[derive(Debug, Deserialize, Serialize, Template, Merge, Clone)]
 #[template(path = "package.json.j2")]
 #[serde(default)]

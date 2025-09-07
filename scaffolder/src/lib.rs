@@ -120,13 +120,10 @@ impl Config {
 
     write_to_output!(self.gitignore, ".gitignore");
 
-    let mut package_json_data = package_json_presets
-      .get("root")
-      .ok_or(GenError::PresetNotFound {
-        kind: Preset::PackageJson,
-        name: "root".to_string(),
-      })?
-      .clone();
+    let mut package_json_data = match package_json_presets.get("root") {
+      Some(v) => v.clone(),
+      None => PackageJson::default(),
+    };
 
     for preset in package_json_data.extends.clone() {
       let target = package_json_presets

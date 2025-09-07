@@ -177,6 +177,8 @@ mod filters {
   }
 }
 
+/// A struct representing instructions for outputting a tsconfig file.
+/// The file name will be joined to the root directory of the package that the generated config will belong to.
 #[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct TsConfigDirective {
   pub file_name: String,

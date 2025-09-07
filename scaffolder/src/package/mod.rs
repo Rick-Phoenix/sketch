@@ -452,7 +452,6 @@ mod test {
     match result {
       Ok(_) => panic!("Circular tsconfig test did not fail as expected"),
       Err(e) => {
-        println!("{}", e);
         if matches!(e, GenError::CircularDependency(_)) {
           Ok(())
         } else {

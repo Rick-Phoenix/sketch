@@ -8,6 +8,7 @@ use crate::{
   versions::get_latest_version, PackageJson, StringKeyVal, StringKeyValMap, VersionRange,
 };
 
+/// A struct representing a pnpm-workspace.yaml config. Some widely used fields such as catalog, catalogs and packages are included directly. Everything else is flattened in the `extra` field.
 #[derive(Debug, Template, Serialize, Deserialize, Default)]
 #[serde(default)]
 #[template(path = "pnpm-workspace.yaml.j2")]
@@ -20,6 +21,7 @@ pub struct PnpmWorkspace {
 }
 
 impl PnpmWorkspace {
+  /// A helper to add all dependencies listed in a [`PackageJson`] (dev, optional, peer, etc) to a catalog in this configuration.
   pub async fn add_dependencies_to_catalog(
     &mut self,
     range_kind: VersionRange,
@@ -43,6 +45,7 @@ impl PnpmWorkspace {
       .await;
   }
 
+  /// A helper to add several dependencies to one of this config's catalog.
   pub async fn add_to_catalog(
     &mut self,
     range_kind: VersionRange,

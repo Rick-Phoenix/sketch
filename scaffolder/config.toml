@@ -1,4 +1,3 @@
-
 root_dir = "output"
 
 global_templates_vars = { my_var = 15 }

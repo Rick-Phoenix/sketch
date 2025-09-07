@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-pub fn render_yaml_val(val: &Value, indent: usize) -> String {
+pub(crate) fn render_yaml_val(val: &Value, indent: usize) -> String {
   let mut string = String::new();
 
   match val {
@@ -47,7 +47,7 @@ pub fn render_yaml_val(val: &Value, indent: usize) -> String {
   string
 }
 
-pub fn render_json_val(val: &Value, indent: usize) -> String {
+pub(crate) fn render_json_val(val: &Value, indent: usize) -> String {
   let mut string = String::new();
 
   match val {
