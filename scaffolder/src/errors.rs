@@ -2,11 +2,16 @@ use std::{io, path::PathBuf};
 
 use thiserror::Error;
 
-use crate::Preset;
+use crate::{versions::GetVersionError, Preset};
 
 /// The errors that can occur while generating new files.
 #[derive(Debug, Error)]
 pub enum GenError {
+  #[error("Could not get the latest version for '{package}': {source}")]
+  LatestVersionError {
+    package: String,
+    source: GetVersionError,
+  },
   #[error("Could not create the dir '{path}': {source}")]
   DirCreation { path: PathBuf, source: io::Error },
   #[error("Could not create the file '{path}': {source}")]
@@ -37,16 +42,10 @@ pub enum GenError {
   PersonNotFound { name: String },
   #[error("Could not read the contents of '{path}': {source}")]
   ReadError { path: PathBuf, source: io::Error },
-  #[error("Could not deserialize '{path}': {source}")]
-  YamlDeserialization {
-    path: PathBuf,
-    source: serde_yaml_ng::Error,
-  },
-  #[error("Could not deserialize '{path}': {source}")]
-  JsonDeserialization {
-    path: PathBuf,
-    source: serde_json::Error,
-  },
+  #[error("Could not update the tsconfig file in the root of the workspace: {0}")]
+  RootTsConfigUpdate(String),
+  #[error("Could not update the pnpm-workspace.yaml file: {0}")]
+  PnpmWorkspaceUpdate(String),
   #[error("Failed to canonicalize the path '{path}': {source}")]
   PathCanonicalization { path: PathBuf, source: io::Error },
   #[error("Invalid config format for '{file:?}'. Allowed formats are: yaml, toml")]

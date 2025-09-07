@@ -67,18 +67,26 @@ impl Config {
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
 
     for template in templates {
-      let added_context_is_empty = template.context.is_empty();
-      let mut added_context = Context::from_serialize(template.context)
-        .map_err(|e| GenError::TemplateContextParsing { source: e })?;
+      let mut local_context = global_context.clone();
 
-      let local_context = if added_context_is_empty {
-        &global_context
-      } else {
-        added_context.extend(global_context.clone());
-        &added_context
-      };
+      if !template.context.is_empty() {
+        let added_context = Context::from_serialize(template.context)
+          .map_err(|e| GenError::TemplateContextParsing { source: e })?;
+
+        local_context.extend(added_context);
+      }
 
       let output_path = PathBuf::from(output_root).join(template.output);
+
+      create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
+        "Could not get the parent directory for '{}'",
+        output_path.display()
+      )))?)
+      .map_err(|e| GenError::ParentDirCreation {
+        path: output_path.clone(),
+        source: e,
+      })?;
+
       let mut output_file = if self.overwrite {
         File::create(&output_path).map_err(|e| GenError::FileCreation {
           path: output_path.clone(),
@@ -96,15 +104,6 @@ impl Config {
         })?
       };
 
-      create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
-        "Could not get the parent directory for '{}'",
-        output_path.display()
-      )))?)
-      .map_err(|e| GenError::ParentDirCreation {
-        path: output_path.clone(),
-        source: e,
-      })?;
-
       match template.template {
         TemplateData::Content { name, content } => {
           tera
@@ -114,14 +113,14 @@ impl Config {
               source: e,
             })?;
           tera
-            .render_to(&name, local_context, &mut output_file)
+            .render_to(&name, &local_context, &mut output_file)
             .map_err(|e| GenError::TemplateRendering {
               template: name.to_string(),
               source: e,
             })?
         }
         TemplateData::Id(path) => tera
-          .render_to(&path, local_context, &mut output_file)
+          .render_to(&path, &local_context, &mut output_file)
           .map_err(|e| GenError::TemplateRendering {
             template: path.to_string(),
             source: e,
@@ -148,13 +147,9 @@ mod test {
 
   #[test]
   fn custom_templates() -> Result<(), GenError> {
-    use figment::providers::{Format, Toml, Yaml};
-
-    let config: Config = Config::figment()
-      .merge(Toml::file("scaffolder/config.toml"))
-      .merge(Yaml::file("scaffolder/config.yaml"))
-      .extract()
-      .map_err(|e| GenError::ConfigParsing { source: e })?;
+    let config = Config::init(PathBuf::from(
+      "tests/custom_templates/custom_templates.toml",
+    ))?;
 
     let templates = config
       .package_presets
@@ -163,18 +158,20 @@ mod test {
       .generate_templates
       .clone();
 
-    config.generate_templates("output/test", templates.clone())?;
+    config.generate_templates("output/custom_templates", templates.clone())?;
 
     for template in templates {
-      let output_path = PathBuf::from("output/test").join(template.output);
+      let output_path = PathBuf::from("output/custom_templates").join(template.output);
       let output_file =
         File::open(&output_path).expect("Could not open file in output/text for testing");
 
-      let output: CustomTemplateTest =
-        serde_yaml_ng::from_reader(&output_file).map_err(|e| GenError::YamlDeserialization {
-          path: output_path.clone(),
-          source: e,
-        })?;
+      let output: CustomTemplateTest = serde_yaml_ng::from_reader(&output_file).map_err(|e| {
+        GenError::Custom(format!(
+          "Could not read the output path {} in the custom_templates test: {}",
+          output_path.display(),
+          e
+        ))
+      })?;
 
       if output_path
         .to_string_lossy()

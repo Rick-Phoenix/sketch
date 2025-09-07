@@ -38,21 +38,20 @@ pub struct PackageConfig {
   /// The kind of package (i.e. library of app).
   pub kind: PackageKind,
   /// The key to the package.json preset to use.
-  pub package_json: String,
+  pub package_json: Option<PackageJsonKind>,
   /// The configuration for the moon.yml file that will be generated for this package.
   pub moonrepo: Option<MoonDotYml>,
   /// The directory for this package. This path will be joined to the `root_dir` setting in the global config.
   pub dir: String,
   /// The configuration for this package's vitest setup.
   pub vitest: VitestConfig,
+  pub oxlint: Option<OxlintConfig>,
   /// The keys for the tsconfig files to generate for this package. If `use_default_tsconfigs` is set to true, the defaults will be appended to this list.
-  pub ts_config: Vec<TsConfigDirective>,
+  pub ts_config: Option<Vec<TsConfigDirective>>,
   /// The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.
   /// If it's unset and the shared_out_dir is set for the global config, it will resolve to the shared_out_dir, joined with a directory with this package's name.
   /// So if the shared_out_dir is ".out" and the name of the package is "my_pkg", the out_dir's default value will be `.out/my_pkg`.
   pub ts_out_dir: Option<String>,
-  /// Use the default tsconfigs.
-  pub use_default_tsconfigs: bool,
   /// The templates to generate when this package is created.
   /// The paths specified for these templates' outputs will be joined to the package's directory.
   pub generate_templates: Vec<TemplateOutput>,
@@ -65,15 +64,15 @@ impl Default for PackageConfig {
     Self {
       name: "my-awesome-package".to_string(),
       kind: Default::default(),
-      package_json: Default::default(),
+      package_json: None,
       moonrepo: None,
       dir: ".".to_string(),
       vitest: Default::default(),
-      ts_config: Default::default(),
-      use_default_tsconfigs: true,
+      ts_config: None,
       generate_templates: Default::default(),
       ts_out_dir: None,
       update_root_tsconfig: true,
+      oxlint: None,
     }
   }
 }
@@ -132,16 +131,28 @@ impl Config {
     };
   }
 
-    let mut package_json_data = package_json_presets
-      .get(&config.package_json)
-      .ok_or(GenError::PresetNotFound {
-        kind: Preset::PackageJson,
-        name: config.package_json.clone(),
-      })?
-      .clone();
+    let (package_json_id, mut package_json_data) = if let Some(package_json_config) =
+      config.package_json.clone()
+    {
+      match package_json_config {
+        PackageJsonKind::Id(id) => {
+          let config = package_json_presets
+            .get(&id)
+            .ok_or(GenError::PresetNotFound {
+              kind: Preset::PackageJson,
+              name: id.clone(),
+            })?
+            .clone();
 
-    package_json_data =
-      package_json_data.merge_configs(&config.package_json, package_json_presets)?;
+          (id, config)
+        }
+        PackageJsonKind::Config(package_json_config) => (config.name.clone(), *package_json_config),
+      }
+    } else {
+      ("__default".to_string(), PackageJson::default())
+    };
+
+    package_json_data = package_json_data.merge_configs(&package_json_id, package_json_presets)?;
 
     if package_json_data.package_manager.is_none() {
       package_json_data.package_manager = Some(global_config.package_manager.to_string());
@@ -174,23 +185,21 @@ impl Config {
 
     package_json_data.package_name = config.name.clone();
 
+    if global_config.get_latest_version_range {
+      package_json_data
+        .get_latest_version_range(global_config.version_ranges)
+        .await?;
+    }
+
     write_to_output!(package_json_data, "package.json");
 
     if global_config.catalog && matches!(global_config.package_manager, PackageManager::Pnpm) {
-      println!("Detected catalog = true. Dependencies marked with 'catalog:' will be added to pnpm-workspace.yaml if they are not already listed in their target catalog");
-
       let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
-      let pnpm_workspace_file =
-        File::open(&pnpm_workspace_path).map_err(|e| GenError::ReadError {
-          path: pnpm_workspace_path.clone(),
-          source: e,
-        })?;
+      let pnpm_workspace_file = File::open(&pnpm_workspace_path)
+        .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
 
       let mut pnpm_workspace: PnpmWorkspace = serde_yaml_ng::from_reader(&pnpm_workspace_file)
-        .map_err(|e| GenError::YamlDeserialization {
-          path: pnpm_workspace_path.clone(),
-          source: e,
-        })?;
+        .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
 
       pnpm_workspace
         .add_dependencies_to_catalog(global_config.version_ranges, &package_json_data)
@@ -198,17 +207,10 @@ impl Config {
 
       pnpm_workspace
         .write_into(
-          &mut File::create(root_dir.join("pnpm-workspace.yaml")).map_err(|e| {
-            GenError::WriteError {
-              path: pnpm_workspace_path.clone(),
-              source: e,
-            }
-          })?,
+          &mut File::create(root_dir.join("pnpm-workspace.yaml"))
+            .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?,
         )
-        .map_err(|e| GenError::WriteError {
-          path: pnpm_workspace_path.clone(),
-          source: e,
-        })?;
+        .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
     }
 
     if let Some(ref moon_config) = config.moonrepo {
@@ -217,33 +219,33 @@ impl Config {
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
 
-    if config.use_default_tsconfigs {
-      let is_app = matches!(config.kind, PackageKind::App);
-      let rel_path_to_root_dir = get_relative_path(&output, &PathBuf::from(&root_dir))?;
-      let base_tsconfig = TsConfig {
-        extends: Some(
-          rel_path_to_root_dir
-            .join(&global_config.root_tsconfig_name)
-            .to_string_lossy()
-            .to_string(),
-        ),
-        files: Some(vec![]),
-        references: {
-          let mut references = vec![TsConfigReference {
-            path: global_config.project_tsconfig_name.clone(),
-          }];
-          if !is_app {
-            references.push(TsConfigReference {
-              path: global_config.dev_tsconfig_name.clone(),
-            });
+    let tsconfig_presets = &global_config.tsconfig_presets;
+
+    if let Some(tsconfig_directives) = config.ts_config.clone() {
+      for directive in tsconfig_directives {
+        let (id, mut tsconfig) = match directive.config {
+          TsConfigKind::Id(id) => {
+            let tsconfig = tsconfig_presets
+              .get(&id)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::TsConfig,
+                name: id.clone(),
+              })?
+              .clone();
+
+            (id, tsconfig)
           }
-          Some(references)
-        },
-        ..Default::default()
-      };
+          TsConfigKind::Config(ts_config) => (format!("__{}", config.name), *ts_config),
+        };
 
-      tsconfig_files.push(("tsconfig.json".to_string(), base_tsconfig));
+        if !tsconfig.extend_presets.is_empty() {
+          tsconfig = tsconfig.merge_configs(&id, tsconfig_presets)?;
+        }
 
+        tsconfig_files.push((directive.file_name, tsconfig));
+      }
+    } else {
+      let is_app = matches!(config.kind, PackageKind::App);
       let out_dir = if let Some(ref ts_out_dir) = config.ts_out_dir {
         get_relative_path(&output, &PathBuf::from(ts_out_dir))?
       } else {
@@ -257,76 +259,39 @@ impl Config {
           ),
         )?
         .join(&config.name)
-      };
+      }
+      .to_string_lossy()
+      .to_string();
 
-      let out_dir = out_dir.to_string_lossy().to_string();
+      let rel_path_to_root_dir = get_relative_path(&output, &PathBuf::from(&root_dir))?
+        .to_string_lossy()
+        .to_string();
+      let base_tsconfig = get_default_package_tsconfig(
+        rel_path_to_root_dir,
+        &global_config.project_tsconfig_name,
+        is_app.then_some(&global_config.dev_tsconfig_name),
+      );
 
-      let src_ts_config = TsConfig {
-        extends: Some("./tsconfig.json".to_string()),
-        references: Some(vec![]),
-        include: if is_app {
-          Some(vec![
-            "src".to_string(),
-            "*.ts".to_string(),
-            "tests".to_string(),
-            "scripts".to_string(),
-          ])
-        } else {
-          Some(vec!["src".to_string()])
-        },
-        compiler_options: Some(CompilerOptions {
-          root_dir: Some("src".to_string()),
-          out_dir: Some(out_dir.clone()),
-          ts_build_info_file: Some(format!("{}/.tsBuildInfoSrc", out_dir)),
-          no_emit: is_app.then_some(true),
-          emit_declaration_only: (!is_app).then_some(true),
-          ..Default::default()
-        }),
-        ..Default::default()
-      };
+      tsconfig_files.push(("tsconfig.json".to_string(), base_tsconfig));
 
-      tsconfig_files.push((global_config.project_tsconfig_name.clone(), src_ts_config));
+      let src_tsconfig = get_default_src_tsconfig(is_app, &out_dir);
+
+      tsconfig_files.push((global_config.project_tsconfig_name.clone(), src_tsconfig));
 
       if !is_app {
-        let dev_tsconfig = TsConfig {
-          extends: Some(global_config.project_tsconfig_name.clone()),
-          include: Some(vec![
-            "*.ts".to_string(),
-            "tests".to_string(),
-            "scripts".to_string(),
-            "src".to_string(),
-          ]),
-          references: Some(vec![TsConfigReference {
-            path: global_config.project_tsconfig_name.clone(),
-          }]),
-          compiler_options: Some(CompilerOptions {
-            root_dir: Some(".".to_string()),
-            no_emit: Some(true),
-            ts_build_info_file: Some(format!("{}/.tsBuildInfoDev", out_dir)),
-            ..Default::default()
-          }),
-          ..Default::default()
-        };
+        let dev_tsconfig = get_default_dev_tsconfig(&global_config.project_tsconfig_name, &out_dir);
 
         tsconfig_files.push((global_config.dev_tsconfig_name.clone(), dev_tsconfig));
       }
     }
 
     if config.update_root_tsconfig {
-      println!("Detected update_root_tsconfig = true. The new tsconfig will be added as a reference to the tsconfig file in the root of the monorepo.");
-
       let root_tsconfig_path = PathBuf::from(&root_dir).join("tsconfig.json");
       let root_tsconfig_file =
-        File::open(&root_tsconfig_path).map_err(|e| GenError::ReadError {
-          path: root_tsconfig_path.clone(),
-          source: e,
-        })?;
+        File::open(&root_tsconfig_path).map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
 
-      let mut root_tsconfig: TsConfig =
-        serde_json::from_reader(root_tsconfig_file).map_err(|e| GenError::JsonDeserialization {
-          path: root_tsconfig_path.clone(),
-          source: e,
-        })?;
+      let mut root_tsconfig: TsConfig = serde_json::from_reader(root_tsconfig_file)
+        .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
 
       let path_to_new_tsconfig = output.join("tsconfig.json").to_string_lossy().to_string();
 
@@ -335,27 +300,9 @@ impl Config {
       {
         root_tsconfig_references.push(ts_config::TsConfigReference { path: path_to_new_tsconfig });
         root_tsconfig.write_into(&mut File::create(&root_tsconfig_path)
-          .map_err(|e| GenError::WriteError { path: root_tsconfig_path.clone(), source: e })?)
-          .map_err(|e| GenError::WriteError { path: root_tsconfig_path.clone(), source: e })?;
+          .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?)
+          .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
       }
-    }
-
-    let tsconfig_presets = &global_config.tsconfig_presets;
-
-    for directive in config.ts_config.clone() {
-      let mut preset = tsconfig_presets
-        .get(&directive.id)
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::TsConfig,
-          name: directive.id.clone(),
-        })?
-        .clone();
-
-      if !preset.extend_presets.is_empty() {
-        preset = preset.merge_configs(&directive.id, tsconfig_presets)?;
-      }
-
-      tsconfig_files.push((directive.file_name, preset));
     }
 
     for (file, tsconfig) in tsconfig_files {
@@ -370,7 +317,7 @@ impl Config {
 
     let vitest_config = match config.vitest {
       VitestConfig::Boolean(v) => v.then(VitestConfigStruct::default),
-      VitestConfig::Named(n) => {
+      VitestConfig::Id(n) => {
         let vitest_presets = &global_config.vitest_presets;
         Some(
           vitest_presets
@@ -382,7 +329,7 @@ impl Config {
             .clone(),
         )
       }
-      VitestConfig::Definition(vitest_config_struct) => Some(vitest_config_struct),
+      VitestConfig::Config(vitest_config_struct) => Some(vitest_config_struct),
     };
 
     if let Some(vitest) = vitest_config {
@@ -402,6 +349,10 @@ impl Config {
       },
       "src/index.ts"
     );
+
+    if let Some(oxlint_config) = config.oxlint.clone() {
+      write_to_output!(oxlint_config, ".oxlintrc.json");
+    }
 
     if !config.generate_templates.is_empty() {
       global_config

@@ -19,7 +19,7 @@ use crate::{
   moon::MoonConfig,
   package::{vitest::VitestConfigStruct, PackageConfig},
   tera::TemplateOutput,
-  GenError, PackageJson, Person, PersonData, TsConfig,
+  GenError, PackageJson, PackageJsonKind, Person, PersonData, TsConfig, TsConfigDirective,
 };
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
@@ -49,21 +49,38 @@ impl Config {
   }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RootPackage {
+  pub name: String,
+  pub oxlint: OxlintConfig,
+  pub ts_configs: Option<Vec<TsConfigDirective>>,
+  pub generate_templates: Vec<TemplateOutput>,
+  pub package_json: Option<PackageJsonKind>,
+}
+
+impl Default for RootPackage {
+  fn default() -> Self {
+    Self {
+      name: "root".to_string(),
+      oxlint: OxlintConfig::Bool(true),
+      ts_configs: Default::default(),
+      generate_templates: Default::default(),
+      package_json: Default::default(),
+    }
+  }
+}
+
 /// The global configuration struct.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge)]
 #[serde(default)]
 pub struct Config {
-  /// Whether the default tsconfigs should be used for the root package.
   #[merge(skip)]
-  pub root_use_default_tsconfigs: bool,
-  /// The templates to generate when the root package is generated.
-  /// The output paths will be joined with the `root_dir`.
-  #[merge(skip)]
-  pub root_generate_templates: Vec<TemplateOutput>,
-  /// Whether to use the default oxlint configuration.
-  #[merge(skip)]
-  pub use_default_oxlint_config: bool,
+  pub root_package: RootPackage,
+
   /// The gitignore settings.
+  #[merge(strategy = merge::bool::overwrite_true)]
+  /// Whether the dependencies with 'latest' should be transformed in their actual latest version + the selected version range.
+  pub get_latest_version_range: bool,
   #[merge(skip)]
   pub gitignore: GitIgnore,
   /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
@@ -113,7 +130,8 @@ pub struct Config {
   /// Whether to use the pnpm catalog for default dependencies.
   #[merge(skip)]
   pub catalog: bool,
-  /// The kind of version ranges to use for dependencies.
+  /// The kind of version ranges to use for dependencies that are fetched automatically.
+  /// When a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, the crate will fetch the latest version using the Npm api, and use the selected version range with the latest version.
   #[merge(skip)]
   pub version_ranges: VersionRange,
   /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
@@ -171,7 +189,7 @@ impl Config {
             let chain: Vec<_> = processed_sources.iter().map(|source| source.to_string_lossy()).collect();
 
               return Err(GenError::CircularDependency(format!(
-                "Found circular dependency to the config file in '{}'. The full processed path is: {}",
+                "Found circular dependency to the config file {}. The full processed path is: {}",
                 extended_source.display(), chain.join(" -> ")
               )));
             }
@@ -234,13 +252,18 @@ impl SharedOutDir {
   }
 }
 
-#[derive(Debug, Template)]
+#[derive(Debug, Template, Serialize, Deserialize, Clone)]
 #[template(path = "oxlint.json.j2")]
-pub struct OxlintConfig;
+#[serde(untagged)]
+pub enum OxlintConfig {
+  Bool(bool),
+  Text(String),
+}
 
 impl Default for Config {
   fn default() -> Self {
     Self {
+      get_latest_version_range: true,
       gitignore: Default::default(),
       package_json_presets: btreemap! { "root".to_string() => PackageJson::default() },
       package_manager: Default::default(),
@@ -270,11 +293,9 @@ impl Default for Config {
       templates_dir: Default::default(),
       templates: Default::default(),
       global_templates_vars: Default::default(),
-      root_generate_templates: Default::default(),
       extends: Default::default(),
       overwrite: true,
-      root_use_default_tsconfigs: true,
-      use_default_oxlint_config: true,
+      root_package: Default::default(),
     }
   }
 }

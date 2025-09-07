@@ -166,39 +166,46 @@ impl Config {
       }
     }
 
+    if self.get_latest_version_range {
+      package_json_data
+        .get_latest_version_range(self.version_ranges)
+        .await?;
+    }
+
+    package_json_data.package_name = self.root_package.name.clone();
+
     write_to_output!(package_json_data, "package.json");
 
-    if self.root_use_default_tsconfigs {
-      let tsconfig_options = TsConfig {
-        compiler_options: Some(CompilerOptions {
-          lib: Some(vec![Lib::EsNext, Lib::Dom]),
-          module_resolution: Some(ModuleResolution::NodeNext),
-          module: Some(Module::NodeNext),
-          target: Some(Target::EsNext),
-          module_detection: Some(ModuleDetection::Force),
-          isolated_modules: Some(true),
-          es_module_interop: Some(true),
-          resolve_json_module: Some(true),
-          declaration: Some(true),
-          declaration_map: Some(true),
-          composite: Some(true),
-          no_emit_on_error: Some(true),
-          incremental: Some(true),
-          source_map: Some(true),
-          strict: Some(true),
-          strict_null_checks: Some(true),
-          skip_lib_check: Some(true),
-          force_consistent_casing_in_file_names: Some(true),
-          no_unchecked_indexed_access: Some(true),
-          allow_synthetic_default_imports: Some(true),
-          verbatim_module_syntax: Some(true),
-          no_unchecked_side_effects_imports: Some(true),
-          ..Default::default()
-        }),
-        ..Default::default()
-      };
+    let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
+    let tsconfig_presets = &self.tsconfig_presets;
 
-      write_to_output!(tsconfig_options, &self.root_tsconfig_name);
+    if let Some(root_tsconfigs) = self.root_package.ts_configs.clone() {
+      for directive in root_tsconfigs {
+        let (id, mut tsconfig) = match directive.config {
+          TsConfigKind::Id(id) => {
+            let tsconfig = tsconfig_presets
+              .get(&id)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::TsConfig,
+                name: id.clone(),
+              })?
+              .clone();
+
+            (id, tsconfig)
+          }
+          TsConfigKind::Config(ts_config) => ("__root".to_string(), *ts_config),
+        };
+
+        if !tsconfig.extend_presets.is_empty() {
+          tsconfig = tsconfig.merge_configs(&id, tsconfig_presets)?;
+        }
+
+        tsconfig_files.push((directive.file_name, tsconfig));
+      }
+    } else {
+      let tsconfig_options = get_default_root_tsconfig();
+
+      tsconfig_files.push((self.root_tsconfig_name.clone(), tsconfig_options));
 
       let root_tsconfig = TsConfig {
         extends: Some(self.root_tsconfig_name.clone()),
@@ -207,7 +214,11 @@ impl Config {
         ..Default::default()
       };
 
-      write_to_output!(root_tsconfig, "tsconfig.json");
+      tsconfig_files.push(("tsconfig.json".to_string(), root_tsconfig));
+    }
+
+    for (file, tsconfig) in tsconfig_files {
+      write_to_output!(tsconfig, file);
     }
 
     if matches!(self.package_manager, PackageManager::Pnpm) {
@@ -269,8 +280,8 @@ impl Config {
       write_to_output!(pre_commit, ".pre-commit-config.yaml");
     }
 
-    if self.use_default_oxlint_config {
-      write_to_output!(OxlintConfig {}, ".oxlintrc.json");
+    if !matches!(self.root_package.oxlint, OxlintConfig::Bool(false)) {
+      write_to_output!(self.root_package.oxlint, ".oxlintrc.json");
     }
 
     for dir in &self.packages_dirs {
@@ -287,8 +298,8 @@ impl Config {
       })?;
     }
 
-    if !self.root_generate_templates.is_empty() {
-      let templates = self.root_generate_templates.clone();
+    if !self.root_package.generate_templates.is_empty() {
+      let templates = self.root_package.generate_templates.clone();
       let base_path = self.root_dir.clone();
       self.generate_templates(&base_path, templates)?;
     }

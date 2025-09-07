@@ -5,7 +5,124 @@ use merge::Merge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{overwrite_option, package::PackageKind, GenError, Preset};
+use crate::{overwrite_option, GenError, Preset};
+
+pub(crate) fn get_default_root_tsconfig() -> TsConfig {
+  TsConfig {
+    compiler_options: Some(CompilerOptions {
+      lib: Some(vec![Lib::EsNext, Lib::Dom]),
+      module_resolution: Some(ModuleResolution::NodeNext),
+      module: Some(Module::NodeNext),
+      target: Some(Target::EsNext),
+      module_detection: Some(ModuleDetection::Force),
+      isolated_modules: Some(true),
+      es_module_interop: Some(true),
+      resolve_json_module: Some(true),
+      declaration: Some(true),
+      declaration_map: Some(true),
+      composite: Some(true),
+      no_emit_on_error: Some(true),
+      incremental: Some(true),
+      source_map: Some(true),
+      strict: Some(true),
+      strict_null_checks: Some(true),
+      skip_lib_check: Some(true),
+      force_consistent_casing_in_file_names: Some(true),
+      no_unchecked_indexed_access: Some(true),
+      allow_synthetic_default_imports: Some(true),
+      verbatim_module_syntax: Some(true),
+      no_unchecked_side_effects_imports: Some(true),
+      ..Default::default()
+    }),
+    ..Default::default()
+  }
+}
+
+pub(crate) fn get_default_package_tsconfig(
+  rel_path_to_root_dir: String,
+  project_tsconfig_name: &str,
+  dev_tsconfig_name: Option<&str>,
+) -> TsConfig {
+  TsConfig {
+    extends: Some(rel_path_to_root_dir),
+    files: Some(vec![]),
+    references: {
+      let mut references = vec![TsConfigReference {
+        path: project_tsconfig_name.to_string(),
+      }];
+      if let Some(dev_tsconfig_name) = dev_tsconfig_name {
+        references.push(TsConfigReference {
+          path: dev_tsconfig_name.to_string(),
+        });
+      }
+      Some(references)
+    },
+    ..Default::default()
+  }
+}
+
+pub(crate) fn get_default_dev_tsconfig(project_tsconfig_name: &str, out_dir: &str) -> TsConfig {
+  TsConfig {
+    extends: Some(project_tsconfig_name.to_string()),
+    include: Some(vec![
+      "*.ts".to_string(),
+      "tests".to_string(),
+      "scripts".to_string(),
+      "src".to_string(),
+    ]),
+    references: Some(vec![TsConfigReference {
+      path: project_tsconfig_name.to_string(),
+    }]),
+    compiler_options: Some(CompilerOptions {
+      root_dir: Some(".".to_string()),
+      no_emit: Some(true),
+      ts_build_info_file: Some(format!("{}/.tsBuildInfoDev", out_dir)),
+      ..Default::default()
+    }),
+    ..Default::default()
+  }
+}
+
+pub(crate) fn get_default_src_tsconfig(is_app: bool, out_dir: &str) -> TsConfig {
+  TsConfig {
+    extends: Some("./tsconfig.json".to_string()),
+    references: Some(vec![]),
+    include: if is_app {
+      Some(vec![
+        "src".to_string(),
+        "*.ts".to_string(),
+        "tests".to_string(),
+        "scripts".to_string(),
+      ])
+    } else {
+      Some(vec!["src".to_string()])
+    },
+    compiler_options: Some(CompilerOptions {
+      root_dir: Some("src".to_string()),
+      out_dir: Some(out_dir.to_string()),
+      ts_build_info_file: Some(format!("{}/.tsBuildInfoSrc", out_dir)),
+      no_emit: is_app.then_some(true),
+      emit_declaration_only: (!is_app).then_some(true),
+      ..Default::default()
+    }),
+    ..Default::default()
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum TsConfigKind {
+  Id(String),
+  Config(Box<TsConfig>),
+}
+
+/// A struct representing instructions for outputting a tsconfig file.
+/// The file name will be joined to the root directory of the package that the generated config will belong to.
+#[derive(Deserialize, Debug, Clone, Serialize)]
+pub struct TsConfigDirective {
+  pub file_name: String,
+  pub config: TsConfigKind,
+}
 
 impl TsConfig {
   fn merge_configs_recursive(
@@ -175,14 +292,6 @@ mod filters {
 
     Ok(s)
   }
-}
-
-/// A struct representing instructions for outputting a tsconfig file.
-/// The file name will be joined to the root directory of the package that the generated config will belong to.
-#[derive(Deserialize, Debug, Clone, Serialize)]
-pub struct TsConfigDirective {
-  pub file_name: String,
-  pub id: String,
 }
 
 #[derive(Deserialize, Debug, Clone, Serialize, Template, Default, Merge)]
@@ -556,23 +665,6 @@ pub struct CompilerOptions {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TsConfigReference {
   pub path: String,
-}
-
-impl From<PackageKind> for TsConfigKind {
-  fn from(value: PackageKind) -> Self {
-    match value {
-      PackageKind::Library => Self::Library,
-      PackageKind::App => Self::App,
-    }
-  }
-}
-
-#[derive(Debug, Default, Copy, Clone)]
-pub enum TsConfigKind {
-  Root,
-  App,
-  #[default]
-  Library,
 }
 
 #[cfg(test)]

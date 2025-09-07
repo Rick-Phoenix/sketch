@@ -1,3 +1,7 @@
+{% match self %}
+  {% when Self::Text(text) %}
+{{ text }}
+  {% when Self::Bool(_) %}
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["node", "jsdoc", "import", "unicorn", "promise"],
@@ -246,4 +250,5 @@
       }
     }
   ]
-}
+} 
+{% endmatch %}

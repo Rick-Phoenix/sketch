@@ -1,15 +1,24 @@
-#![allow(clippy::large_enum_variant)]
-
 use std::{
   collections::{BTreeMap, BTreeSet},
   fmt::Display,
 };
 
 use askama::Template;
+use futures::future;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 
-use crate::{rendering::render_json_val, GenError, Preset, StringKeyVal, StringKeyValMap};
+use crate::{
+  rendering::render_json_val, versions::get_latest_version, GenError, Preset, StringKeyVal,
+  StringKeyValMap, VersionRange,
+};
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum PackageJsonKind {
+  Id(String),
+  Config(Box<PackageJson>),
+}
 
 impl Default for PackageJson {
   fn default() -> Self {
@@ -257,7 +266,90 @@ pub struct PackageJson {
   pub workspaces: Option<Vec<String>>,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum DepKind {
+  Dependency,
+  DevDependency,
+  OptionalDependency,
+  PeerDependency,
+  BundleDependency,
+}
+
 impl PackageJson {
+  #[allow(clippy::filter_map_bool_then)]
+  /// Turns 'latest' into the actual latest version for a package, pinned to the selected version range.
+  pub async fn get_latest_version_range(
+    &mut self,
+    range_kind: VersionRange,
+  ) -> Result<(), GenError> {
+    #[allow(clippy::type_complexity)]
+    let mut handles: Vec<tokio::task::JoinHandle<Result<(DepKind, String, String), GenError>>> =
+      Vec::new();
+
+    let mut names_to_update: Vec<(DepKind, String)> = Vec::new();
+
+    macro_rules! get_latest {
+      ($list:ident, $kind:ident) => {
+        for (name, version) in &self.$list {
+          if version == "latest" {
+            names_to_update.push((DepKind::$kind, name.clone()));
+          }
+        }
+      };
+    }
+
+    get_latest!(dependencies, Dependency);
+    get_latest!(dev_dependencies, DevDependency);
+    get_latest!(optional_dependencies, OptionalDependency);
+    get_latest!(bundle_dependencies, BundleDependency);
+    get_latest!(peer_dependencies, PeerDependency);
+
+    for (kind, name) in names_to_update {
+      let handle = tokio::spawn(async move {
+        let actual_latest =
+          get_latest_version(&name)
+            .await
+            .map_err(|e| GenError::LatestVersionError {
+              package: name.clone(),
+              source: e,
+            })?;
+
+        Ok((kind, name, actual_latest))
+      });
+
+      handles.push(handle);
+    }
+
+    let results = future::join_all(handles).await;
+
+    for result in results {
+      match result {
+        Ok(Ok((kind, name, actual_latest))) => {
+          let new_version_range = range_kind.create(actual_latest);
+
+          match kind {
+            DepKind::Dependency => self.dependencies.insert(name, new_version_range),
+            DepKind::DevDependency => self.dev_dependencies.insert(name, new_version_range),
+            DepKind::OptionalDependency => {
+              self.optional_dependencies.insert(name, new_version_range)
+            }
+            DepKind::PeerDependency => self.peer_dependencies.insert(name, new_version_range),
+            DepKind::BundleDependency => self.bundle_dependencies.insert(name, new_version_range),
+          }
+        }
+        Ok(Err(task_error)) => return Err(task_error),
+        Err(join_error) => {
+          return Err(GenError::Custom(format!(
+            "An async task failed unexpectedly: {}",
+            join_error
+          )))
+        }
+      };
+    }
+
+    Ok(())
+  }
+
   fn merge_configs_recursive(
     &mut self,
     store: &BTreeMap<String, PackageJson>,

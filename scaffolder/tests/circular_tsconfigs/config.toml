@@ -13,6 +13,6 @@ extend_presets = ["one"]
 name = "circular_tsconfig"
 package_json = "one"
 dir = "packages/mypkg"
-ts_config = [{ file_name = "tsconfig.abc.json", id = "one" }]
+ts_config = [{ file_name = "tsconfig.abc.json", config = "one" }]
 
 [package_json_presets.one]

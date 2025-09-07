@@ -11,13 +11,13 @@ use serde::{Deserialize, Serialize};
 #[serde(untagged)]
 pub enum VitestConfig {
   Boolean(bool),
-  Named(String),
-  Definition(VitestConfigStruct),
+  Id(String),
+  Config(VitestConfigStruct),
 }
 
 impl Default for VitestConfig {
   fn default() -> Self {
-    Self::Definition(Default::default())
+    Self::Config(Default::default())
   }
 }
 
