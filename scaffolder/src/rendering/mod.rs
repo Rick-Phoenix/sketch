@@ -1,5 +1,8 @@
 use serde_json::Value;
 
+pub(crate) mod filters;
+pub(crate) mod tera;
+
 pub(crate) fn render_yaml_val(val: &Value, indent: usize) -> String {
   let mut string = String::new();
 

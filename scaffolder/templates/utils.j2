@@ -1,6 +1,28 @@
-{% macro render_optional_json_val(val, indent) %}
-{% if let Some(v) = val +%}
-{{ crate::render_json_val(v, indent) }}
+{% macro render_string_object(name, val, indent_val) %}
+{% filter indent(indent_val) +%}
+"{{ name }}": {
+{% for (key, val) in val +%}
+  "{{+ key +}}": "{{+ val +}}" {% if !loop.last %}, {%+ endif ~%}
+{% endfor +%}
+},
+{% endfilter %}
+{% endmacro %}
+
+{% macro render_string_object_if_not_empty(name, val, indent_val) %}
+{% if !val.is_empty() %}
+{% call render_string_object(name, val, indent_val) +%}
+{% endif %}
+{% endmacro %}
+
+{% macro render_list_if_not_empty(name, val, indent_val) %}
+{% if !val.is_empty() %}
+{% call render_list(name, val, indent_val) +%}
+{% endif %}
+{% endmacro %}
+
+{% macro render_optional_string_object(name, val, indent_val) %}
+{% if let Some(v) = val %}
+{%  call render_string_object(name, val, indent_val) %}
 {% endif +%}
 {% endmacro %}
 
@@ -42,4 +64,14 @@
 ],
 {% endif %}
 {% endfilter %}
+{% endmacro %}
+
+{% macro render_optional_literal(name, literal, indent_val) %}
+{% filter indent(indent_val) %}
+  
+{% if let Some(val) = literal +%}
+"{{ name }}": {{+ val }},
+{% endif %}
+{% endfilter %}
+
 {% endmacro %}

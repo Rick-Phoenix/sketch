@@ -6,13 +6,15 @@ use figment::{
   Figment,
 };
 use indexmap::IndexMap;
+use maplit::btreeset;
 use merge::Merge;
-pub use package_json::*;
+pub(crate) use package_json::*;
 use serde_json::Value;
-pub use ts_config::*;
+pub(crate) use ts_config::*;
 
 use crate::{
   moon::{MoonConfig, MoonConfigKind},
+  tsconfig_defaults::get_default_root_tsconfig,
   versions::get_latest_version,
   Config, OxlintConfig, PackageManager,
 };
@@ -26,6 +28,7 @@ use std::{
 
 pub(crate) use config::*;
 pub use errors::GenError;
+pub(crate) use merging_strategies::*;
 pub(crate) use rendering::*;
 
 use crate::pnpm::PnpmWorkspace;
@@ -35,12 +38,12 @@ mod macros;
 pub mod cli;
 pub mod config;
 pub mod errors;
+pub(crate) mod merging_strategies;
 pub mod moon;
 pub mod package;
 pub mod package_json;
 pub(crate) mod paths;
 pub mod pnpm;
-pub(crate) mod tera;
 pub mod ts_config;
 pub mod versions;
 
@@ -62,6 +65,13 @@ pub enum Preset {
 #[template(ext = "txt", source = "{{ text }}")]
 pub(crate) struct GenericTemplate {
   pub(crate) text: String,
+}
+
+pub(crate) fn convert_btreemap_to_json<T>(map: BTreeMap<String, T>) -> Value
+where
+  T: Into<Value>,
+{
+  map.into_iter().collect()
 }
 
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
@@ -175,7 +185,7 @@ impl Config {
         .await?;
     }
 
-    package_json_data.package_name = self.root_package.name.clone();
+    package_json_data.name = self.root_package.name.clone();
 
     write_to_output!(package_json_data, "package.json");
 
@@ -211,9 +221,8 @@ impl Config {
       tsconfig_files.push((self.root_tsconfig_name.clone(), tsconfig_options));
 
       let root_tsconfig = TsConfig {
-        extends: Some(self.root_tsconfig_name.clone()),
-        files: Some(vec![]),
-        references: Some(vec![]),
+        files: Some(btreeset![]),
+        references: Some(btreeset![]),
         ..Default::default()
       };
 

@@ -17,6 +17,7 @@ use crate::{
   paths::get_relative_path,
   pnpm::PnpmWorkspace,
   tera::TemplateOutput,
+  tsconfig_defaults::*,
   versions::get_latest_version,
   *,
 };
@@ -183,7 +184,7 @@ impl Config {
       }
     }
 
-    package_json_data.package_name = config.name.clone();
+    package_json_data.name = config.name.clone();
 
     if global_config.get_latest_version_range {
       package_json_data
@@ -303,7 +304,7 @@ impl Config {
       if let Some(root_tsconfig_references) = root_tsconfig.references.as_mut()
          && !root_tsconfig_references.iter().any(|p| p.path == path_to_new_tsconfig)
       {
-        root_tsconfig_references.push(ts_config::TsConfigReference { path: path_to_new_tsconfig });
+        root_tsconfig_references.insert(ts_config::TsConfigReference { path: path_to_new_tsconfig });
         root_tsconfig.write_into(&mut File::create(&root_tsconfig_path)
           .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?)
           .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;

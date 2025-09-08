@@ -1,85 +1,31 @@
-{% macro make_obj_list(list) %}
-  {% for (key, val) in list +%}
-    "{{+ key +}}": "{{+ val +}}" {% if !loop.last %}, {%+ endif ~%}
-  {% endfor +%}
-{% endmacro %}
-
-{% macro make_array(name, list) %}
-  "{{ name }}": [
-  {% for val in list +%}
-    "{{+ val +}}" {% if !loop.last %}, {%+ endif ~%}
-  {% endfor +%}
-  ],
-{% endmacro %}
-
-{% macro make_optional_obj(name, optional_list) %}
-  {% if !optional_list.is_empty() +%}
-  "{{ name }}": {
-    {% call make_obj_list(optional_list) +%}
-  },
-  {% endif +%}
-{% endmacro %}
-
-{% macro optional_comma(condition) %}
-{% if condition %}, {% endif %}
-{% endmacro %}
+{% import "utils.j2" as utils %}
 
 {
-  "name": "{{ package_name }}",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  {% if let Some(description) = self.description +%}
-  "description": "{{ description }}",
-  {% endif +%}
-  {% if let Some(workspaces) = self.workspaces +%}
-  {%+ call make_array("workspaces", workspaces) +%}
-  {% endif +%}
-  "scripts": {
-  {% call make_obj_list(self.scripts) +%}
-  },
-  {% if let Some(license) = self.license +%}
-  "license": "{{ license }}",
-  {% endif +%}
-  {% if let Some(homepage) = self.homepage +%}
-  "homepage": "{{ homepage }}",
-  {% endif +%}
-  {% if !self.keywords.is_empty() +%}
-  {%+ call make_array("keywords", keywords) +%}
-  {% endif +%}
-  {% if let Some(repository) = self.repository +%}
-  {{+ repository +}}
-  {% endif +%}
-  {% if !self.files.is_empty() +%}
-  {%+ call make_array("files", files) +%}
-  {% endif +%} 
-  {% if let Some(browser) = self.browser +%}
-  "browser": "{{+ browser }}",
-  {% else if let Some(main) = self.main +%}
-  "main": "{{+ main }}",
-  {% endif +%}
+  "name": "{{ name }}",
+  "private": {{ self.private }},
+  "version": "{{ self.version }}",
+  "type": "{{ self.type_ }}",
+  {% call utils::render_optional_string("description", self.description, 2) +%}
+  {% call utils::render_optional_string("license", self.license, 2) +%}
+  {% call utils::render_optional_string("homepage", self.homepage, 2) +%}
+  {% call utils::render_optional_string("main", self.main, 2) +%}
+  {% call utils::render_optional_string("browser", self.browser, 2) +%}
+  {% call utils::render_optional_string("packageManager", self.package_manager, 2) +%}
+  {% call utils::render_list_if_not_empty("workspaces", self.workspaces, 2) +%}
+  {% call utils::render_string_object("scripts", self.scripts, 2) +%}
+  {% call utils::render_list_if_not_empty("keywords", self.keywords, 2) +%}
+  {% call utils::render_list_if_not_empty("files", self.files, 2) +%}
+  {% call utils::render_optional_literal("repository", self.repository, 2) +%}
   {% if !self.exports.is_empty() +%}
   "exports": {
-    {% for (key, val) in exports %}
-    {% filter indent(2) +%}
-  "{{ key }}": {{+ val.render()? }}
-    {% endfilter %}
+    {% for (key, val) in exports +%}
+    "{{ key }}": {{+ val }} {% call utils::optional_comma(!loop.last) %}
     {% endfor +%}
   },
-  {% if let Some(man) = self.man +%}
-  {{+ man }}
   {% endif +%}
-  {% endif +%}
-  {% if let Some(bugs) = self.bugs +%}
-  "bugs": {
-    {% if let Some(url) = bugs.url +%}
-    "url": "{{ url }}" {% call optional_comma(bugs.email.is_some()) +%}
-    {% endif +%}
-    {% if let Some(email) = bugs.email +%}
-    "email": "{{ email }}"
-    {% endif +%}
-  },
-  {% endif +%}
+  {% call utils::render_optional_literal("man", self.man, 2) +%}
+  {% call utils::render_optional_literal("directories", self.directories, 2) +%}
+  {% call utils::render_optional_literal("bugs", self.bugs, 2) +%}
   {% if let Some(Person::Data(author)) = self.author +%}
   "author": {
     {{+ author | indent(2) +}}
@@ -91,7 +37,7 @@
     {% if let Person::Data(person) = contributor +%}
     {
       {{+ person | indent(4) +}} 
-    }{% call optional_comma(!loop.last) +%}
+    }{% call utils::optional_comma(!loop.last) +%}
     {% endif %}
     {% endfor +%}
   ],
@@ -102,7 +48,7 @@
     {% if let Person::Data(person) = maintainer +%}
     {
       {{+ person | indent(4) +}} 
-    }{% call optional_comma(!loop.last) +%}
+    }{% call utils::optional_comma(!loop.last) +%}
     {% endif %}
     {% endfor +%}
   ],
@@ -110,13 +56,13 @@
   {% if let Some(config) = self.config +%}
   "config": {
   {% for (key, val) in config +%}
-    "{{ key }}": {{+ crate::render_json_val(val, 2) }} {% call optional_comma(!loop.last) %}
+    "{{ key }}": {{+ crate::render_json_val(val, 2) }} {% call utils::optional_comma(!loop.last) %}
   {% endfor +%}
   },
   {% endif +%}
-  {% call make_optional_obj("peerDependencies", self.peer_dependencies ) +%}
-  {% call make_optional_obj("optionalDependencies", self.optional_dependencies ) +%}
-  {% call make_optional_obj("bundleDependencies", self.bundle_dependencies ) +%}
+  {% call utils::render_string_object_if_not_empty("peerDependencies", self.peer_dependencies, 2) +%}
+  {% call utils::render_string_object_if_not_empty("optionalDependencies", self.optional_dependencies, 2) +%}
+  {% call utils::render_string_object_if_not_empty("bundleDependencies", self.bundle_dependencies, 2) +%}
   {% if let Some(publish_config) = self.publish_config +%}
   "publishConfig": {
     {{+ publish_config | indent(4) +}}
@@ -125,24 +71,14 @@
   {% for (name, data) in metadata +%} 
   "{{ name }}": {{+ self::render_json_val(data, 1) }},
   {% endfor +%}
-  {% if !self.engines.is_empty() +%}
-  "engines": {
-    {% call make_obj_list(engines) +%}
-  },
-  {% endif +%}
-  {% if !self.os.is_empty() +%}
-  {%+ call make_array("os", os) +%}
-  {% endif +%}
-  {% if !self.cpu.is_empty() +%}
-  {%+ call make_array("cpu", cpu) +%}
-  {% endif +%}
-  {% if let Some(package_manager) = self.package_manager +%}
-  "packageManager": "{{ package_manager }}",
-  {% endif +%}
-  "devDependencies": {
-  {% call make_obj_list(self.dev_dependencies) +%}
-  },
+
+  {% call utils::render_string_object_if_not_empty("engines", self.engines, 2) +%}
+  {% call utils::render_list_if_not_empty("os", self.os, 2) +%}
+  {% call utils::render_list_if_not_empty("cpu", self.cpu, 2) +%}
+  {% call utils::render_string_object_if_not_empty("devDependencies", self.dev_dependencies, 2) +%}
   "dependencies": {
-  {% call make_obj_list(self.dependencies) +%}
+    {% for (name, version) in self.dependencies +%}
+    "{{ name }}": "{{ version }}" {% call utils::optional_comma(!loop.last) %}
+    {% endfor +%}
   }
 }

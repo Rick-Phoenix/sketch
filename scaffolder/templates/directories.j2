@@ -1,0 +1,15 @@
+{% import "utils.j2" as utils %}
+
+{
+  {% filter strip_trailing_comma +%}
+  {% call utils::render_optional_string("bin", self.bin, 2) +%}
+  {% call utils::render_optional_string("doc", self.doc, 2) +%}
+  {% call utils::render_optional_string("example", self.example, 2) +%}
+  {% call utils::render_optional_string("lib", self.lib, 2) +%}
+  {% call utils::render_optional_string("man", self.man, 2) +%}
+  {% call utils::render_optional_string("test", self.test, 2) +%}
+  {% for (name, val) in self.other +%}
+  "{{ name }}": "{{+ val }}",
+  {% endfor +%}
+  {% endfilter +%}
+}

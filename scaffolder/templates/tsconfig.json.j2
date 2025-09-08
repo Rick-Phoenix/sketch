@@ -20,9 +20,8 @@
   ],
   {% endif %}
   {% endif +%}
-  {% if let Some(type_acquisition) = self.type_acquisition +%}
-  {{+ type_acquisition }}
-  {% endif +%}
+  {% call utils::render_optional_literal("typeAcquisition", self.type_acquisition, 2) +%}
+  {% call utils::render_optional_literal("watchOptions", self.watch_options, 2) +%}
   {% if let Some(compiler_options) = self.compiler_options +%}
   "compilerOptions": {
   {% filter strip_trailing_comma ~%}
@@ -52,7 +51,7 @@
   {% call utils::render_optional_bool("preserveSymlinks", compiler_options.preserve_symlinks, 4) +%}
   {% call utils::render_optional_bool("inlineSourceMap", compiler_options.inline_source_map, 4) +%}
   {% call utils::render_optional_bool("inlineSources", compiler_options.inline_sources, 4) +%}
-  {% call utils::render_optional_bool("noFallThroughCasesInSwitch", compiler_options.no_fallthrough_cases_in_switch, 4) +%}
+  {% call utils::render_optional_bool("noFallthroughCasesInSwitch", compiler_options.no_fallthrough_cases_in_switch, 4) +%}
   {% call utils::render_optional_bool("noImplicitReturns", compiler_options.no_implicit_returns, 4) +%}
   {% call utils::render_optional_bool("noPropertyAccessFromIndexSignature", compiler_options.no_property_access_from_index_signature, 4) +%}
   {% call utils::render_optional_bool("noUncheckedIndexedAccess", compiler_options.no_unchecked_indexed_access, 4) +%}
@@ -144,7 +143,7 @@
     {% for plugin in plugins +%}
     {
       {% filter strip_trailing_comma %}
-      {% for (key, val) in plugin %}
+      {% for (key, val) in plugin +%}
       "{{ key }}": {{+ crate::render_json_val(val, 4) }},
       {% endfor %}
       {% endfilter +%}
@@ -170,8 +169,5 @@
   },
   {% endif %}
 
-  {% if let Some(watch_options) = self.watch_options +%}
-  {{+ watch_options }}
-  {% endif %}
-  {%~ endfilter %}
+  {% endfilter +%}
 }

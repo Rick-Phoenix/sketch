@@ -1,14 +1,12 @@
-{% macro optional_comma(condition) %}
-{% if condition %}, {% endif %}
-{% endmacro %}
+{% import "utils.j2" as utils %}
 
 {% match self %}
   {% when Self::Path(path) %}
-  "man": "{{ path }}",
+  "{{ path }}"
   {% when Self::List(list) %}
-  "man": [ 
+[ 
   {% for path in list +%}
-    "{{ path }}" {% call optional_comma(!loop.last) %}
-    {% endfor +%} 
-  ],
+  "{{ path }}" {% call utils::optional_comma(!loop.last) %}
+  {% endfor +%} 
+]
 {% endmatch %}

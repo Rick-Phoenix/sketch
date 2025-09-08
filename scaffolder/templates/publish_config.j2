@@ -1,18 +1,18 @@
-{% macro optional_comma(condition) %}
-{% if condition %}, {% endif %}
-{% endmacro %}
-
+{% filter strip_trailing_comma +%}
+  
 {% if let Some(access) = self.access %}
-"access": "{{ access }}" {% call optional_comma(self.tag.is_some() || self.registry.is_some() || !self.other.is_empty()) %}
+"access": "{{ access }}",
 {% endif +%}
 {% if let Some(tag) = self.tag +%}
-"tag": "{{ tag }}" {% call optional_comma(self.registry.is_some() || !self.other.is_empty()) %}
+"tag": "{{ tag }}",
 {% endif +%}
 {% if let Some(registry) = self.registry +%}
-"registry": "{{ registry }}" {% call optional_comma(!self.other.is_empty()) %}
+"registry": "{{ registry }}",
 {% endif +%}
 {% if !other.is_empty() +%}
 {% for (key, val) in other +%}
-"{{ key }}": "{{+ val }}" {% call optional_comma(!loop.last) %}
+"{{ key }}": "{{+ val }}",
 {% endfor +%}
-{% endif +%}
+{% endif %}
+
+{% endfilter %}

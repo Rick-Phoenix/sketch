@@ -1,16 +1,15 @@
+{% import "utils.j2" as utils %}
+
 {% match self %}
   {% when Self::Path(path) %}
-"repository": "{{ path }}",
+  "{{ path }}"
   {% when Self::Data { type_, url, directory } %}
-"repository": {
-{% if let Some(ty) = type_ %}
-"type": "{{ ty }}" {% if !(directory.is_none() && url.is_none()) %}, {% endif %}
-{% endif %}
-{% if let Some(url) = url %}
-"url": "{{ url }}" {% if !directory.is_none() %}, {% endif %}
-{% endif %}
-{% if let Some(directory) = directory %}
-"directory": "{{ directory }}"
-{% endif %}
-},
+  
+  {
+  {% filter strip_trailing_comma +%}
+  {% call utils::render_optional_string("type", type_, 4) +%}
+  {% call utils::render_optional_string("url", url, 4) +%}
+  {% call utils::render_optional_string("directory", directory, 4) +%}
+  {% endfilter +%}
+  }
 {% endmatch %}
