@@ -14,10 +14,11 @@ use serde::{Deserialize, Serialize};
 use crate::{
   moon::{MoonDotYml, MoonDotYmlKind},
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigStruct},
+  package_json::{PackageJson, PackageJsonKind},
   paths::get_relative_path,
   pnpm::PnpmWorkspace,
   tera::TemplateOutput,
-  tsconfig_defaults::*,
+  ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
   versions::get_latest_version,
   *,
 };

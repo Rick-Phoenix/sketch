@@ -1,6 +1,6 @@
 use maplit::btreeset;
 
-use crate::{
+use super::{
   CompilerOptions, Lib, Module, ModuleDetection, ModuleResolution, Target, TsConfig,
   TsConfigReference,
 };

@@ -8,15 +8,19 @@ use figment::{
 use indexmap::IndexMap;
 use maplit::btreeset;
 use merge::Merge;
-pub(crate) use package_json::*;
 use serde_json::Value;
-pub(crate) use ts_config::*;
+
+use crate::package_json::Person;
+pub mod config_elements;
+pub use config_elements::*;
+pub use errors::*;
 
 use crate::{
   moon::{MoonConfig, MoonConfigKind},
-  tsconfig_defaults::get_default_root_tsconfig,
+  package_json::PackageJson,
+  ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
   versions::get_latest_version,
-  Config, OxlintConfig, PackageManager,
+  Config,
 };
 
 pub(crate) mod rendering;
@@ -27,7 +31,6 @@ use std::{
 };
 
 pub(crate) use config::*;
-pub use errors::GenError;
 pub(crate) use merging_strategies::*;
 pub(crate) use rendering::*;
 
@@ -59,19 +62,6 @@ pub enum Preset {
   PackageJson,
   Package,
   TsConfig,
-}
-
-#[derive(Debug, Template)]
-#[template(ext = "txt", source = "{{ text }}")]
-pub(crate) struct GenericTemplate {
-  pub(crate) text: String,
-}
-
-pub(crate) fn convert_btreemap_to_json<T>(map: BTreeMap<String, T>) -> Value
-where
-  T: Into<Value>,
-{
-  map.into_iter().collect()
 }
 
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];

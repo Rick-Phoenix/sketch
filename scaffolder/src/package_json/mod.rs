@@ -271,10 +271,11 @@ mod test {
   use askama::Template;
   use maplit::{btreemap, btreeset};
 
-  use crate::{
-    convert_btreemap_to_json, Bugs, Directories, Exports, GenError, JsModuleType, Man, PackageJson,
-    Person, PersonData, PublishConfig, PublishConfigAccess, Repository,
+  use super::{
+    Bugs, Directories, Exports, JsModuleType, Man, PackageJson, Person, PersonData, PublishConfig,
+    PublishConfigAccess, Repository,
   };
+  use crate::{convert_btreemap_to_json, GenError};
 
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
