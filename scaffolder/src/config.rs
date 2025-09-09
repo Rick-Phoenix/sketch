@@ -16,13 +16,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
+  cli::parsers::parse_btreeset_from_csv,
   config_elements::*,
   merge_config_file, merge_index_maps, merge_index_sets,
   moon::MoonConfigKind,
   overwrite_option,
   package::{vitest::VitestConfigStruct, PackageConfig},
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
-  parsers::parse_btreeset_from_csv,
   tera::TemplateOutput,
   ts_config::{TsConfig, TsConfigDirective},
   GenError, SharedOutDir, VersionRange,
@@ -44,9 +44,9 @@ pub struct RootPackage {
   pub name: Option<String>,
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
-  #[arg(long, value_parser = TsConfigDirective::multiple_from_cli)]
-  pub ts_configs: Option<Vec<TsConfigDirective>>,
-  #[arg(long, value_parser = TemplateOutput::multiple_from_cli)]
+  #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
+  pub ts_config: Option<Vec<TsConfigDirective>>,
+  #[arg(skip)]
   pub generate_templates: Option<Vec<TemplateOutput>>,
   #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
   pub package_json: Option<PackageJsonKind>,
@@ -57,7 +57,7 @@ impl Default for RootPackage {
     Self {
       name: None,
       oxlint: Some(Default::default()),
-      ts_configs: Default::default(),
+      ts_config: Default::default(),
       generate_templates: Default::default(),
       package_json: Default::default(),
     }
@@ -292,7 +292,6 @@ impl Default for Config {
 }
 
 impl Config {
-  // Allow the configuration to be extracted from any `Provider`.
   pub fn from<T: Provider>(provider: T) -> Result<Config, Error> {
     Figment::from(provider).extract()
   }
@@ -305,7 +304,6 @@ impl Config {
   }
 }
 
-// Make `Config` a provider itself for composability.
 impl Provider for Config {
   fn metadata(&self) -> Metadata {
     Metadata::named("Config Struct")

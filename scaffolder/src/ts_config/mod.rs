@@ -6,7 +6,7 @@ use merge::Merge;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  merge_sets, overwrite_option, parsers::parse_key_value_pairs, rendering::filters, GenError,
+  cli::parsers::parse_key_value_pairs, merge_sets, overwrite_option, rendering::filters, GenError,
   OrderedMap, Preset,
 };
 
@@ -46,18 +46,6 @@ impl Default for TsConfigDirective {
 }
 
 impl TsConfigDirective {
-  pub(crate) fn multiple_from_cli(s: &str) -> Result<Vec<TsConfigDirective>, String> {
-    let mut directives: Vec<TsConfigDirective> = Default::default();
-
-    let groups: Vec<&str> = s.split(',').collect();
-
-    for group in groups {
-      directives.push(Self::from_cli(group)?);
-    }
-
-    Ok(directives)
-  }
-
   pub(crate) fn from_cli(s: &str) -> Result<TsConfigDirective, String> {
     let mut directive: TsConfigDirective = Default::default();
 
@@ -72,7 +60,7 @@ impl TsConfigDirective {
             Some(val.to_string())
           }
         }
-        "config" => {
+        "id" => {
           directive.config = if val.is_empty() {
             None
           } else {

@@ -1,15 +1,15 @@
 use std::{
-  collections::HashMap,
   fs::{create_dir_all, File},
   io::ErrorKind,
   path::PathBuf,
 };
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tera::{Context, Tera};
 
-use crate::{config::Config, parsers::parse_key_value_pairs, GenError};
+use crate::{config::Config, GenError};
 
 /// The types of configuration values for a template's data.
 /// It can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)
@@ -37,42 +37,7 @@ pub struct TemplateOutput {
   pub template: TemplateData,
   pub output: String,
   #[serde(default)]
-  pub context: HashMap<String, Value>,
-}
-
-impl TemplateOutput {
-  pub(crate) fn multiple_from_cli(s: &str) -> Result<Vec<TemplateOutput>, String> {
-    let mut templates: Vec<TemplateOutput> = Vec::new();
-
-    let groups: Vec<&str> = s.split(',').collect();
-
-    for group in groups {
-      templates.push(Self::from_cli(group)?);
-    }
-
-    Ok(templates)
-  }
-
-  pub(crate) fn from_cli(s: &str) -> Result<TemplateOutput, String> {
-    let key_value_pairs = parse_key_value_pairs("TemplateOutput", s)?;
-    let mut output: Option<String> = Default::default();
-    let mut template: Option<TemplateData> = Default::default();
-    let context: HashMap<String, Value> = Default::default();
-
-    for (key, val) in key_value_pairs {
-      match key {
-        "output" => output = Some(val.to_string()),
-        "template" => template = Some(TemplateData::Id(val.to_string())),
-        _ => return Err(format!("Invalid key for TemplateOutput: {}", key)),
-      };
-    }
-
-    Ok(TemplateOutput {
-      output: output.ok_or("Missing output".to_string())?,
-      template: template.ok_or("Missing template id".to_string())?,
-      context,
-    })
-  }
+  pub context: IndexMap<String, Value>,
 }
 
 impl Config {

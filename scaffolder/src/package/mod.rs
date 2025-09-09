@@ -6,10 +6,6 @@ use std::{
 };
 
 use clap::{Parser, ValueEnum};
-use figment::{
-  value::{Dict, Map},
-  Error, Figment, Metadata, Profile, Provider,
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -39,35 +35,45 @@ pub struct PackageConfig {
   /// The name of the package. It will be set as the name field in its package.json file.
   #[arg(skip)]
   pub name: String,
-  /// The kind of package (i.e. library of app).
-  #[arg(skip)]
-  pub kind: Option<PackageKind>,
-  /// The key to the package.json preset to use.
-  #[arg(long, value_parser = PackageJsonKind::from_cli)]
-  pub package_json: Option<PackageJsonKind>,
-  /// The configuration for the moon.yml file that will be generated for this package.
-  #[arg(skip)]
-  pub moonrepo: Option<MoonDotYmlKind>,
+
   /// The directory for this package. This path will be joined to the `root_dir` setting in the global config.
-  #[arg(long)]
+  #[arg(short, long)]
   pub dir: Option<String>,
-  /// The configuration for this package's vitest setup.
-  #[arg(skip)]
-  pub vitest: Option<VitestConfig>,
-  #[arg(skip)]
-  pub oxlint: Option<OxlintConfig>,
+
   /// The keys for the tsconfig files to generate for this package. If `use_default_tsconfigs` is set to true, the defaults will be appended to this list.
-  #[arg(long, value_parser = TsConfigDirective::multiple_from_cli)]
+  #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
   pub ts_config: Option<Vec<TsConfigDirective>>,
+
   /// The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.
   /// If it's unset and the shared_out_dir is set for the global config, it will resolve to the shared_out_dir, joined with a directory with this package's name.
   /// So if the shared_out_dir is ".out" and the name of the package is "my_pkg", the out_dir's default value will be `.out/my_pkg`.
   #[arg(long)]
   pub ts_out_dir: Option<String>,
+
+  /// The key to the package.json preset to use.
+  #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
+  pub package_json: Option<PackageJsonKind>,
+
   /// The templates to generate when this package is created.
   /// The paths specified for these templates' outputs will be joined to the package's directory.
-  #[arg(long = "template", value_parser = TemplateOutput::multiple_from_cli)]
+  #[arg(skip)]
   pub generate_templates: Option<Vec<TemplateOutput>>,
+
+  /// The kind of package (i.e. library of app).
+  #[arg(skip)]
+  pub kind: Option<PackageKind>,
+
+  /// The configuration for the moon.yml file that will be generated for this package.
+  #[arg(skip)]
+  pub moonrepo: Option<MoonDotYmlKind>,
+
+  /// The configuration for this package's vitest setup.
+  #[arg(skip)]
+  pub vitest: Option<VitestConfig>,
+
+  #[arg(skip)]
+  pub oxlint: Option<OxlintConfig>,
+
   /// If true, the root tsconfig.json file will be updated when this package is created, by adding the new tsconfig file to its list of references.
   #[arg(skip)]
   pub update_root_tsconfig: bool,
@@ -88,29 +94,6 @@ impl Default for PackageConfig {
       update_root_tsconfig: true,
       oxlint: None,
     }
-  }
-}
-
-impl PackageConfig {
-  // Allow the configuration to be extracted from any `Provider`.
-  pub fn from<T: Provider>(provider: T) -> Result<PackageConfig, Error> {
-    Figment::from(provider).extract()
-  }
-
-  // Provide a default provider, a `Figment`.
-  pub fn figment() -> Figment {
-    Figment::from(PackageConfig::default())
-  }
-}
-
-// Make `Config` a provider itself for composability.
-impl Provider for PackageConfig {
-  fn metadata(&self) -> Metadata {
-    Metadata::named("Package Generation Config")
-  }
-
-  fn data(&self) -> Result<Map<Profile, Dict>, Error> {
-    figment::providers::Serialized::defaults(PackageConfig::default()).data()
   }
 }
 

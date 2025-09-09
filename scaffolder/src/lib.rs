@@ -16,7 +16,6 @@ pub use config::*;
 pub use config_elements::*;
 pub use errors::*;
 pub mod commands;
-pub(crate) mod parsers;
 
 use crate::{
   moon::{MoonConfig, MoonConfigKind},
@@ -216,7 +215,7 @@ impl Config {
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
     let tsconfig_presets = &self.tsconfig_presets;
 
-    if let Some(root_tsconfigs) = self.root_package.ts_configs.clone() {
+    if let Some(root_tsconfigs) = self.root_package.ts_config.clone() {
       for directive in root_tsconfigs {
         let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
