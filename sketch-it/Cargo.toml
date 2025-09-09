@@ -1,6 +1,6 @@
 [package]
 name = "sketch-it"
-version = "0.0.1"
+version = "0.1.0-beta.1"
 description = "A rapid templating and generation CLI tool"
 categories = ["command-line-utilities"]
 repository = "https://github.com/Rick-Phoenix/sketch-it"
@@ -19,7 +19,7 @@ path = "src/main.rs"
 pre-release-hook = [
   "sh",
   "-c",
-  "cd .. ; cargo test --all-features; git cliff --unreleased --prepend CHANGELOG.md --tag \"{{version}}\";",
+  "cd .. ; cargo test --all-features; git cliff --latest --prepend CHANGELOG.md --tag \"{{version}}\";",
 ]
 
 [dependencies]
