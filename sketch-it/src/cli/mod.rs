@@ -3,7 +3,10 @@ use std::{fs::read_to_string, path::PathBuf};
 
 use Commands::*;
 
-use crate::tera::{TemplateData, TemplateOutput};
+use crate::{
+  commands::launch_command,
+  tera::{TemplateData, TemplateOutput},
+};
 
 pub(crate) mod parsers;
 
@@ -39,6 +42,10 @@ pub async fn start_cli() -> Result<(), GenError> {
     config.merge(overrides);
   }
 
+  if let Some(vars) = cli.templates_vars {
+    config.global_templates_vars.extend(vars);
+  }
+
   macro_rules! exit_if_dry_run {
     () => {
       if cli.dry_run {
@@ -62,6 +69,7 @@ pub async fn start_cli() -> Result<(), GenError> {
       }
 
       let RepoBooleanFlags {
+        no_git,
         no_pre_commit,
         no_convert_latest,
         no_oxlint,
@@ -105,6 +113,36 @@ pub async fn start_cli() -> Result<(), GenError> {
       }
 
       exit_if_dry_run!();
+
+      if !no_git {
+        let cwd = config.root_dir.as_deref().unwrap_or(".");
+        let shell = config.shell.as_deref();
+
+        launch_command(
+          shell,
+          &["git", "init"],
+          cwd,
+          Some("Failed to initialize a new git repo"),
+        )?;
+
+        if let Some(remote) = config.remote {
+          launch_command(
+            shell,
+            &["git", "remote", "add", "origin", remote.as_str()],
+            cwd,
+            Some("Failed to add the remote to the git repo"),
+          )?;
+        }
+
+        if !no_pre_commit {
+          launch_command(
+            shell,
+            &["pre-commit", "install"],
+            cwd,
+            Some("Failed to install the pre-commit hooks"),
+          )?;
+        }
+      }
     }
     Package {
       config: package_config,
@@ -149,17 +187,18 @@ pub async fn start_cli() -> Result<(), GenError> {
         new_id
       };
 
+      if config.debug {
+        println!("DEBUG: {:#?}", config);
+      }
+
       exit_if_dry_run!();
     }
     Render {
       content,
       output,
       id,
-      context,
       ..
     } => {
-      println!("{:?}", context);
-
       let template_data = if let Some(id) = id {
         TemplateData::Id(id)
       } else if let Some(content) = content {
@@ -173,9 +212,13 @@ pub async fn start_cli() -> Result<(), GenError> {
 
       let template = TemplateOutput {
         output,
-        context: context.unwrap_or_default().into_iter().collect(),
+        context: Default::default(),
         template: template_data,
       };
+
+      if config.debug {
+        println!("DEBUG: {:#?}", template);
+      }
 
       exit_if_dry_run!();
 
@@ -187,7 +230,7 @@ pub async fn start_cli() -> Result<(), GenError> {
       )?;
     }
     Init => {}
-    Command { command, shell } => {
+    Command { command, cwd } => {
       let command = if let Some(literal) = command.command {
         literal
       } else if let Some(file_path) = command.file {
@@ -201,7 +244,8 @@ pub async fn start_cli() -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.execute_command(shell.as_deref(), &command)?;
+      let shell = config.shell.clone();
+      config.execute_command(shell.as_deref(), cwd, &command)?;
     }
   };
 
@@ -223,6 +267,9 @@ struct Cli {
 
   #[arg(long)]
   pub dry_run: bool,
+
+  #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair)]
+  pub templates_vars: Option<Vec<(String, Value)>>,
 }
 
 #[derive(Args, Debug)]
@@ -263,6 +310,8 @@ struct RepoBooleanFlags {
   pub(crate) shared_out_dir: Option<String>,
   #[arg(long, default_value_t = false)]
   pub(crate) no_shared_out_dir: bool,
+  #[arg(long)]
+  pub(crate) no_git: bool,
 }
 
 #[derive(Subcommand)]
@@ -304,15 +353,13 @@ enum Commands {
     id: Option<String>,
     #[arg(short, long, group = "input")]
     content: Option<String>,
-    #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair)]
-    context: Option<Vec<(String, Value)>>,
   },
 
   Command {
     #[command(flatten)]
     command: CommandContent,
-    #[arg(short, long)]
-    shell: Option<String>,
+    #[arg(long)]
+    cwd: Option<PathBuf>,
   },
 }
 

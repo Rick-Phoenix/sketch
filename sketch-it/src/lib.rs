@@ -1,5 +1,6 @@
 #![allow(clippy::result_large_err)]
 
+#[doc = include_str!("../README.md")]
 use askama::Template;
 use figment::{
   providers::{Format, Json, Toml, Yaml},

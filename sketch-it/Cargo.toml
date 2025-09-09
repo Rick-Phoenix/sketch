@@ -1,9 +1,26 @@
 [package]
-name = "scaffolder"
-version = "0.1.0"
+name = "sketch-it"
+version = "0.0.1"
+description = "A rapid templating and generation CLI tool"
+categories = ["command-line-utilities"]
+repository = "https://github.com/Rick-Phoenix/sketch-it"
+
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+
+readme = true
+
+[[bin]]
+name = "sketch"
+path = "src/main.rs"
+
+[package.metadata.release]
+pre-release-hook = [
+  "sh",
+  "-c",
+  "cd .. ; cargo test --all-features; git cliff --unreleased --prepend CHANGELOG.md --tag \"{{version}}\";",
+]
 
 [dependencies]
 askama = { workspace = true }
@@ -24,6 +41,10 @@ paste = { workspace = true }
 merge = "0.2.0"
 tera = "1.20.0"
 indexmap = { version = "2.11.0", features = ["serde"] }
+uuid = { version = "1.18.1", features = ["v4"], optional = true }
+
+[features]
+uuid = ["dep:uuid"]
 
 [package.metadata.docs.rs]
 all-features = true

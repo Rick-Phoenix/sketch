@@ -5,7 +5,7 @@ use std::{
 
 use clap::Parser;
 use figment::{
-  providers::{Format, Json, Toml, Yaml},
+  providers::{Env, Format, Json, Toml, Yaml},
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider, Source,
 };
@@ -68,9 +68,21 @@ impl Default for RootPackage {
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
 pub struct Config {
+  #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(long)]
+  pub remote: Option<String>,
+
+  #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(long)]
+  pub shell: Option<String>,
+
   #[merge(skip)]
   #[arg(skip)]
   pub root_package: RootPackage,
+
+  #[merge(strategy = merge::bool::overwrite_false)]
+  #[arg(long)]
+  pub debug: bool,
 
   /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
   /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
@@ -262,6 +274,9 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      shell: None,
+      remote: None,
+      debug: false,
       convert_latest_to_range: true,
       gitignore: Default::default(),
       package_json_presets: Default::default(),
@@ -301,6 +316,7 @@ impl Config {
       .merge(Yaml::file("sketcher.yaml"))
       .merge(Toml::file("sketcher.toml"))
       .merge(Json::file("sketcher.json"))
+      .merge(Env::prefixed("SKETCH_"))
   }
 }
 

@@ -1,10 +1,10 @@
 #![allow(clippy::result_large_err)]
 
-use scaffolder::GenError;
+use sketch_it::GenError;
 
 #[tokio::main]
 async fn main() -> Result<(), GenError> {
-  scaffolder::cli::start_cli().await?;
+  sketch_it::cli::start_cli().await?;
 
   Ok(())
 }

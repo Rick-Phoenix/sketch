@@ -1,4 +1,5 @@
 use std::{
+  env::{self, current_dir},
   fs::{create_dir_all, File},
   io::ErrorKind,
   path::PathBuf,
@@ -40,19 +41,66 @@ pub struct TemplateOutput {
   pub context: IndexMap<String, Value>,
 }
 
+pub(crate) fn get_default_context() -> Context {
+  let mut context = Context::default();
+
+  context.insert("__cwd", &current_dir().expect("Could not get the cwd"));
+
+  macro_rules! add_env_to_context {
+    ($name:ident, $env_name:ident) => {
+      paste::paste! {
+        if let Ok($name) = env::var(stringify!($env_name)) {
+          context.insert(concat!("__", stringify!($name)), &$name);
+        }
+      }
+    };
+
+    ($name:ident) => {
+      paste::paste! {
+        if let Ok($name) = env::var(stringify!([< $name:upper >])) {
+          context.insert(concat!("__", stringify!($name)), &$name);
+        }
+      }
+    };
+  }
+
+  add_env_to_context!(os);
+  add_env_to_context!(user);
+  add_env_to_context!(home);
+  add_env_to_context!(hostname);
+  add_env_to_context!(arch, HOSTTYPE);
+  add_env_to_context!(xdg_config, XDG_CONFIG_HOME);
+  add_env_to_context!(xdg_data, XDG_DATA_HOME);
+  add_env_to_context!(xdg_cache, XDG_CACHE_HOME);
+  add_env_to_context!(xdg_state, XDG_STATE_HOME);
+
+  context.insert("__tmp_dir", &env::temp_dir());
+
+  context
+}
+
+#[cfg(feature = "uuid")]
+fn tera_uuid(
+  _: &std::collections::HashMap<String, tera::Value>,
+) -> Result<tera::Value, tera::Error> {
+  Ok(uuid::Uuid::new_v4().to_string().into())
+}
+
 impl Config {
-  /// A helper to generate custom templates.
-  pub fn generate_templates(
-    self,
-    output_root: &str,
-    templates: Vec<TemplateOutput>,
-  ) -> Result<(), GenError> {
-    let mut tera = if let Some(templates_dir) = self.templates_dir {
+  pub fn initialize_tera(&self) -> Result<Tera, GenError> {
+    let mut tera = if let Some(templates_dir) = &self.templates_dir {
       Tera::new(&format!("{}/**/*", templates_dir))
         .map_err(|e| GenError::TemplateDirLoading { source: e })?
     } else {
       Tera::default()
     };
+
+    tera.autoescape_on(vec![]);
+
+    #[cfg(feature = "uuid")]
+    {
+      tera.register_function("uuid", tera_uuid);
+    }
 
     for (name, template) in &self.templates {
       tera
@@ -63,8 +111,21 @@ impl Config {
         })?;
     }
 
-    let global_context = Context::from_serialize(self.global_templates_vars)
+    Ok(tera)
+  }
+
+  /// A helper to generate custom templates.
+  pub fn generate_templates(
+    self,
+    output_root: &str,
+    templates: Vec<TemplateOutput>,
+  ) -> Result<(), GenError> {
+    let mut tera = self.initialize_tera()?;
+
+    let mut global_context = Context::from_serialize(self.global_templates_vars)
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
+
+    global_context.extend(get_default_context());
 
     for template in templates {
       let mut local_context = global_context.clone();
