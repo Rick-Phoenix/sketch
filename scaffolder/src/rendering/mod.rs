@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use askama::Template;
+use indexmap::IndexMap;
 use serde_json::Value;
 
 pub(crate) mod filters;
@@ -17,6 +18,14 @@ where
   T: Into<Value>,
 {
   map.into_iter().collect()
+}
+
+pub(crate) fn convert_map_to_value<T>(map: IndexMap<String, T>) -> Value
+where
+  T: Into<Value>,
+{
+  let x: Value = map.into_iter().collect();
+  x
 }
 
 pub(crate) fn render_yaml_val(val: &Value, indent: usize) -> String {

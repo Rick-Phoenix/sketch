@@ -5,7 +5,10 @@ use indexmap::IndexMap;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 
-use crate::{merge_sets, overwrite_option, rendering::filters, GenError, OrderedMap, Preset};
+use crate::{
+  merge_sets, overwrite_option, parsers::parse_key_value_pairs, rendering::filters, GenError,
+  OrderedMap, Preset,
+};
 
 pub(crate) mod tsconfig_defaults;
 pub(crate) mod tsconfig_elements;
@@ -19,12 +22,69 @@ pub enum TsConfigKind {
   Config(Box<TsConfig>),
 }
 
+impl Default for TsConfigKind {
+  fn default() -> Self {
+    Self::Config(TsConfig::default().into())
+  }
+}
+
 /// A struct representing instructions for outputting a tsconfig file.
 /// The file name will be joined to the root directory of the package that the generated config will belong to.
 #[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct TsConfigDirective {
-  pub file_name: String,
-  pub config: TsConfigKind,
+  pub output: Option<String>,
+  pub config: Option<TsConfigKind>,
+}
+
+impl Default for TsConfigDirective {
+  fn default() -> Self {
+    Self {
+      output: Some("tsconfig.json".to_string()),
+      config: Some(TsConfigKind::default()),
+    }
+  }
+}
+
+impl TsConfigDirective {
+  pub(crate) fn multiple_from_cli(s: &str) -> Result<Vec<TsConfigDirective>, String> {
+    let mut directives: Vec<TsConfigDirective> = Default::default();
+
+    let groups: Vec<&str> = s.split(',').collect();
+
+    for group in groups {
+      directives.push(Self::from_cli(group)?);
+    }
+
+    Ok(directives)
+  }
+
+  pub(crate) fn from_cli(s: &str) -> Result<TsConfigDirective, String> {
+    let mut directive: TsConfigDirective = Default::default();
+
+    let pairs = parse_key_value_pairs("TsConfigDirective", s)?;
+
+    for (key, val) in pairs {
+      match key {
+        "output" => {
+          directive.output = if val.is_empty() {
+            None
+          } else {
+            Some(val.to_string())
+          }
+        }
+        "config" => {
+          directive.config = if val.is_empty() {
+            None
+          } else {
+            Some(TsConfigKind::Id(val.to_string()))
+          }
+        }
+        _ => return Err(format!("Invalid key for TsConfigDirective: {}", key)),
+      };
+    }
+
+    Ok(directive)
+  }
 }
 
 impl TsConfig {

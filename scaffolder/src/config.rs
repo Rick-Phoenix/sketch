@@ -1,20 +1,28 @@
-use std::path::{Path, PathBuf};
+use std::{
+  collections::BTreeSet,
+  path::{Path, PathBuf},
+};
 
+use clap::Parser;
 use figment::{
+  providers::{Format, Json, Toml, Yaml},
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider, Source,
 };
 use indexmap::{IndexMap, IndexSet};
+use maplit::btreeset;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
   config_elements::*,
-  merge_index_maps, merge_index_sets, merge_path,
+  merge_config_file, merge_index_maps, merge_index_sets,
   moon::MoonConfigKind,
+  overwrite_option,
   package::{vitest::VitestConfigStruct, PackageConfig},
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
+  parsers::parse_btreeset_from_csv,
   tera::TemplateOutput,
   ts_config::{TsConfig, TsConfigDirective},
   GenError, SharedOutDir, VersionRange,
@@ -29,20 +37,26 @@ impl Config {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge)]
+#[merge(strategy = overwrite_option)]
 pub struct RootPackage {
-  pub name: String,
-  pub oxlint: OxlintConfig,
+  #[arg(short, long)]
+  pub name: Option<String>,
+  #[arg(skip)]
+  pub oxlint: Option<OxlintConfig>,
+  #[arg(long, value_parser = TsConfigDirective::multiple_from_cli)]
   pub ts_configs: Option<Vec<TsConfigDirective>>,
-  pub generate_templates: Vec<TemplateOutput>,
+  #[arg(long, value_parser = TemplateOutput::multiple_from_cli)]
+  pub generate_templates: Option<Vec<TemplateOutput>>,
+  #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
   pub package_json: Option<PackageJsonKind>,
 }
 
 impl Default for RootPackage {
   fn default() -> Self {
     Self {
-      name: "root".to_string(),
-      oxlint: OxlintConfig::Bool(true),
+      name: None,
+      oxlint: Some(Default::default()),
       ts_configs: Default::default(),
       generate_templates: Default::default(),
       package_json: Default::default(),
@@ -51,94 +65,143 @@ impl Default for RootPackage {
 }
 
 /// The global configuration struct.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
 pub struct Config {
   #[merge(skip)]
+  #[arg(skip)]
   pub root_package: RootPackage,
-  /// The gitignore settings.
-  #[merge(strategy = merge::bool::overwrite_true)]
-  /// Whether the dependencies with 'latest' should be transformed in their actual latest version + the selected version range.
-  pub get_latest_version_range: bool,
-  #[merge(skip)]
-  pub gitignore: GitIgnore,
-  /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
-  #[merge(strategy = merge_index_maps)]
-  pub pnpm_config: IndexMap<String, Value>,
-  /// A map containing package.json presets.
-  #[merge(strategy = merge_index_maps)]
-  pub package_json_presets: IndexMap<String, PackageJson>,
-  /// A map containing tsconfig.json presets.
-  #[merge(strategy = merge_index_maps)]
-  pub tsconfig_presets: IndexMap<String, TsConfig>,
+
   /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
   /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
   /// It defaults to `tsconfig.options.json`.
-  #[merge(skip)]
-  pub root_tsconfig_name: String,
+  #[merge(strategy = overwrite_option)]
+  #[arg(long)]
+  pub root_tsconfig_name: Option<String>,
+
   /// The name of the tsconfig file to use inside the individual packages, alongside the default tsconfig.json file.
   /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  #[merge(skip)]
-  pub project_tsconfig_name: String,
+  #[merge(strategy = overwrite_option)]
+  #[arg(long)]
+  pub project_tsconfig_name: Option<String>,
+
   /// The name of the development tsconfig file (which will only typecheck scripts and tests and configs and generate no files) to use inside the individual packages, alongside the default tsconfig.json file.
   /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  #[merge(skip)]
-  pub dev_tsconfig_name: String,
+  #[merge(strategy = overwrite_option)]
+  #[arg(long)]
+  pub dev_tsconfig_name: Option<String>,
+
   /// The package manager being used. It defaults to pnpm.
-  #[merge(skip)]
-  pub package_manager: PackageManager,
-  /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
-  #[merge(strategy = merge::option::overwrite_none)]
-  pub moonrepo: Option<MoonConfigKind>,
-  /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
-  #[merge(skip)]
-  pub pre_commit: PreCommitSetting,
+  #[merge(strategy = overwrite_option)]
+  #[arg(value_enum, long)]
+  pub package_manager: Option<PackageManager>,
+
   /// The root directory for the monorepo. Defaults to the current working directory.
-  #[merge(skip)]
-  pub root_dir: String,
+  #[merge(strategy = overwrite_option)]
+  #[arg(long)]
+  pub root_dir: Option<String>,
+
   /// The directories where packages will be located.
   /// They will be added to the pnpm-workspace.yaml config, and also generated automatically when the monorepo is generated.
-  #[merge(skip)]
-  pub packages_dirs: Vec<String>,
-  #[merge(strategy = merge_index_maps)]
-  /// A map of package presets.
-  pub package_presets: IndexMap<String, PackageConfig>,
-  /// A map of vitest config presets.
-  #[merge(strategy = merge_index_maps)]
-  pub vitest_presets: IndexMap<String, VitestConfigStruct>,
-  /// Whether to use the pnpm catalog for default dependencies.
-  #[merge(skip)]
-  pub catalog: bool,
+  #[merge(strategy = overwrite_option)]
+  #[arg(long, value_parser = parse_btreeset_from_csv)]
+  pub packages_dirs: Option<BTreeSet<String>>,
+
   /// The kind of version ranges to use for dependencies that are fetched automatically.
   /// When a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, the crate will fetch the latest version using the Npm api, and use the selected version range with the latest version.
-  #[merge(skip)]
-  pub version_ranges: VersionRange,
-  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
-  #[merge(skip)]
-  pub shared_out_dir: SharedOutDir,
-  /// A map of individuals btree_that can be referenced in the list of contributors or maintainers in a package.json file.
-  #[merge(strategy = merge_index_maps)]
-  pub people: IndexMap<String, PersonData>,
+  #[merge(strategy = overwrite_option)]
+  #[arg(value_enum)]
+  #[arg(long)]
+  pub version_ranges: Option<VersionRange>,
+
   /// The directory that contains the template files.
   #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(long)]
   pub templates_dir: Option<String>,
+
+  /// Whether to use the pnpm catalog for default dependencies.
+  #[merge(strategy = merge::bool::overwrite_true)]
+  #[arg(skip)]
+  pub catalog: bool,
+
+  /// Whether the dependencies with 'latest' should be transformed in their actual latest version + the selected version range.
+  #[merge(strategy = merge::bool::overwrite_true)]
+  #[arg(skip)]
+  pub convert_latest_to_range: bool,
+
+  /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
+  #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(skip)]
+  pub moonrepo: Option<MoonConfigKind>,
+
+  /// Whether file generation should always override existing files. Defaults to true.
+  #[merge(strategy = merge::bool::overwrite_true)]
+  #[arg(skip)]
+  pub overwrite: bool,
+
+  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
+  #[merge(skip)]
+  #[arg(skip)]
+  pub shared_out_dir: SharedOutDir,
+
+  /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
+  #[merge(skip)]
+  #[arg(skip)]
+  pub pre_commit: PreCommitSetting,
+
+  #[merge(skip)]
+  #[arg(skip)]
+  pub gitignore: GitIgnore,
+
+  /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub pnpm_config: IndexMap<String, Value>,
+
+  /// The list of configuration files to merge with the current one.
+  #[merge(strategy = merge_index_sets)]
+  #[arg(skip)]
+  pub extends: IndexSet<PathBuf>,
+
+  /// A map of individuals btree_that can be referenced in the list of contributors or maintainers in a package.json file.
+  #[arg(skip)]
+  #[merge(strategy = merge_index_maps)]
+  pub people: IndexMap<String, PersonData>,
+
+  /// A map containing package.json presets.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub package_json_presets: IndexMap<String, PackageJson>,
+
+  /// A map containing tsconfig.json presets.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub tsconfig_presets: IndexMap<String, TsConfig>,
+
+  /// A map of package presets.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub package_presets: IndexMap<String, PackageConfig>,
+
+  /// A map of vitest config presets.
+  #[arg(skip)]
+  #[merge(strategy = merge_index_maps)]
+  pub vitest_presets: IndexMap<String, VitestConfigStruct>,
+
   /// A map that contains templates defined literally.
   #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
   pub templates: IndexMap<String, String>,
+
   /// The global variables that will be available for every template being generated.
   /// They are overridden in case a template is rendered with a local context.
   #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
   pub global_templates_vars: IndexMap<String, Value>,
-  /// The list of configuration files to merge with the current one.
-  #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<PathBuf>,
-  /// Whether file generation should always override existing files. Defaults to true.
-  #[merge(strategy = merge::bool::overwrite_true)]
-  pub overwrite: bool,
 }
 
 impl Config {
-  pub fn get_extended_configs(
+  fn merge_configs_recursive(
     &mut self,
     base_path: &Path,
     current_path: &Path,
@@ -156,7 +219,7 @@ impl Config {
             source: e,
           })?;
 
-      let extended_figment = merge_path(Config::figment(), &path)?;
+      let extended_figment = merge_config_file(Config::figment(), &path)?;
 
       for data in extended_figment.metadata() {
         if let Some(Source::File(extended_source)) = &data.source
@@ -179,7 +242,7 @@ impl Config {
         .extract()
         .map_err(|e| GenError::ConfigParsing { source: e })?;
 
-      extended_config.get_extended_configs(base_path, &path, processed_sources)?;
+      extended_config.merge_configs_recursive(base_path, &path, processed_sources)?;
 
       self.merge(extended_config);
     }
@@ -187,17 +250,10 @@ impl Config {
     Ok(())
   }
 
-  pub fn merge_configs(mut self, initial_config_file: &Path) -> Result<Self, GenError> {
+  pub fn merge_configs(mut self, base_path: &Path) -> Result<Self, GenError> {
     let mut processed_sources: Vec<PathBuf> = Default::default();
 
-    let base_path = initial_config_file
-      .parent()
-      .ok_or(GenError::Custom(format!(
-        "Could not get the parent directory of file '{}' to get the extended configs.",
-        initial_config_file.display()
-      )))?;
-
-    self.get_extended_configs(base_path, initial_config_file, &mut processed_sources)?;
+    self.merge_configs_recursive(base_path, base_path, &mut processed_sources)?;
 
     Ok(self)
   }
@@ -206,17 +262,17 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
-      get_latest_version_range: true,
+      convert_latest_to_range: true,
       gitignore: Default::default(),
       package_json_presets: Default::default(),
       package_manager: Default::default(),
-      root_tsconfig_name: "tsconfig.options.json".to_string(),
-      project_tsconfig_name: "tsconfig.src.json".to_string(),
-      dev_tsconfig_name: "tsconfig.dev.json".to_string(),
+      root_tsconfig_name: None,
+      project_tsconfig_name: None,
+      dev_tsconfig_name: None,
       moonrepo: None,
       pre_commit: PreCommitSetting::Bool(true),
-      root_dir: ".".to_string(),
-      packages_dirs: vec!["packages/*".to_string(), "apps/*".to_string()],
+      root_dir: None,
+      packages_dirs: Some(btreeset!["packages/*".to_string(), "apps/*".to_string()]),
       package_presets: Default::default(),
       vitest_presets: Default::default(),
       catalog: true,
@@ -243,6 +299,9 @@ impl Config {
 
   pub fn figment() -> Figment {
     Figment::from(Config::default())
+      .merge(Yaml::file("sketcher.yaml"))
+      .merge(Toml::file("sketcher.toml"))
+      .merge(Json::file("sketcher.json"))
   }
 }
 

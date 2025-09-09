@@ -5,6 +5,7 @@ use std::{
   path::PathBuf,
 };
 
+use clap::{Parser, ValueEnum};
 use figment::{
   value::{Dict, Map},
   Error, Figment, Metadata, Profile, Provider,
@@ -23,7 +24,7 @@ use crate::{
   *,
 };
 
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageKind {
   #[default]
@@ -32,32 +33,43 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Parser)]
 #[serde(default)]
 pub struct PackageConfig {
   /// The name of the package. It will be set as the name field in its package.json file.
+  #[arg(skip)]
   pub name: String,
   /// The kind of package (i.e. library of app).
-  pub kind: PackageKind,
+  #[arg(skip)]
+  pub kind: Option<PackageKind>,
   /// The key to the package.json preset to use.
+  #[arg(long, value_parser = PackageJsonKind::from_cli)]
   pub package_json: Option<PackageJsonKind>,
   /// The configuration for the moon.yml file that will be generated for this package.
+  #[arg(skip)]
   pub moonrepo: Option<MoonDotYmlKind>,
   /// The directory for this package. This path will be joined to the `root_dir` setting in the global config.
-  pub dir: String,
+  #[arg(long)]
+  pub dir: Option<String>,
   /// The configuration for this package's vitest setup.
-  pub vitest: VitestConfig,
+  #[arg(skip)]
+  pub vitest: Option<VitestConfig>,
+  #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
   /// The keys for the tsconfig files to generate for this package. If `use_default_tsconfigs` is set to true, the defaults will be appended to this list.
+  #[arg(long, value_parser = TsConfigDirective::multiple_from_cli)]
   pub ts_config: Option<Vec<TsConfigDirective>>,
   /// The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.
   /// If it's unset and the shared_out_dir is set for the global config, it will resolve to the shared_out_dir, joined with a directory with this package's name.
   /// So if the shared_out_dir is ".out" and the name of the package is "my_pkg", the out_dir's default value will be `.out/my_pkg`.
+  #[arg(long)]
   pub ts_out_dir: Option<String>,
   /// The templates to generate when this package is created.
   /// The paths specified for these templates' outputs will be joined to the package's directory.
-  pub generate_templates: Vec<TemplateOutput>,
+  #[arg(long = "template", value_parser = TemplateOutput::multiple_from_cli)]
+  pub generate_templates: Option<Vec<TemplateOutput>>,
   /// If true, the root tsconfig.json file will be updated when this package is created, by adding the new tsconfig file to its list of references.
+  #[arg(skip)]
   pub update_root_tsconfig: bool,
 }
 
@@ -68,7 +80,7 @@ impl Default for PackageConfig {
       kind: Default::default(),
       package_json: None,
       moonrepo: None,
-      dir: ".".to_string(),
+      dir: Default::default(),
       vitest: Default::default(),
       ts_config: None,
       generate_templates: Default::default(),
@@ -109,7 +121,9 @@ impl Config {
 
     let package_json_presets = &global_config.package_json_presets;
 
-    let root_dir = PathBuf::from(&global_config.root_dir);
+    let root_dir = PathBuf::from(global_config.root_dir.as_ref().map_or(".", |v| v));
+    let package_manager = global_config.package_manager.unwrap_or_default();
+    let version_ranges = global_config.version_ranges.unwrap_or_default();
 
     let config = global_config
       .package_presets
@@ -120,7 +134,7 @@ impl Config {
       })?
       .clone();
 
-    let output = root_dir.join(&config.dir);
+    let output = root_dir.join(config.dir.unwrap_or(config.name.clone()));
 
     create_dir_all(&output).map_err(|e| GenError::DirCreation {
       path: output.to_owned(),
@@ -157,7 +171,7 @@ impl Config {
     package_json_data = package_json_data.merge_configs(&package_json_id, package_json_presets)?;
 
     if package_json_data.package_manager.is_none() {
-      package_json_data.package_manager = Some(global_config.package_manager.to_string());
+      package_json_data.package_manager = Some(package_manager.to_string());
     }
 
     get_contributors!(package_json_data, global_config, contributors);
@@ -176,7 +190,7 @@ impl Config {
             );
             "latest".to_string()
           });
-          global_config.version_ranges.create(version)
+          version_ranges.create(version)
         };
 
         package_json_data
@@ -187,15 +201,15 @@ impl Config {
 
     package_json_data.name = config.name.clone();
 
-    if global_config.get_latest_version_range {
+    if global_config.convert_latest_to_range {
       package_json_data
-        .get_latest_version_range(global_config.version_ranges)
+        .get_latest_version_range(version_ranges)
         .await?;
     }
 
     write_to_output!(package_json_data, "package.json");
 
-    if global_config.catalog && matches!(global_config.package_manager, PackageManager::Pnpm) {
+    if global_config.catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
       let pnpm_workspace_file = File::open(&pnpm_workspace_path)
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
@@ -204,7 +218,7 @@ impl Config {
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
 
       pnpm_workspace
-        .add_dependencies_to_catalog(global_config.version_ranges, &package_json_data)
+        .add_dependencies_to_catalog(version_ranges, &package_json_data)
         .await;
 
       pnpm_workspace
@@ -230,7 +244,7 @@ impl Config {
 
     if let Some(tsconfig_directives) = config.ts_config.clone() {
       for directive in tsconfig_directives {
-        let (id, mut tsconfig) = match directive.config {
+        let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
             let tsconfig = tsconfig_presets
               .get(&id)
@@ -249,10 +263,15 @@ impl Config {
           tsconfig = tsconfig.merge_configs(&id, tsconfig_presets)?;
         }
 
-        tsconfig_files.push((directive.file_name, tsconfig));
+        tsconfig_files.push((
+          directive
+            .output
+            .unwrap_or_else(|| "tsconfig.json".to_string()),
+          tsconfig,
+        ));
       }
     } else {
-      let is_app = matches!(config.kind, PackageKind::App);
+      let is_app = matches!(config.kind.unwrap_or_default(), PackageKind::App);
       let out_dir = if let Some(ref ts_out_dir) = config.ts_out_dir {
         get_relative_path(&output, &PathBuf::from(ts_out_dir))?
       } else {
@@ -270,30 +289,56 @@ impl Config {
       .to_string_lossy()
       .to_string();
 
-      let rel_path_to_root_dir = get_relative_path(&output, &PathBuf::from(&root_dir))?
+      let rel_path_to_root_dir = get_relative_path(&output, &root_dir)?
         .to_string_lossy()
         .to_string();
       let base_tsconfig = get_default_package_tsconfig(
         rel_path_to_root_dir,
-        &global_config.project_tsconfig_name,
-        is_app.then_some(&global_config.dev_tsconfig_name),
+        global_config
+          .project_tsconfig_name
+          .as_ref()
+          .map_or("tsconfig.src.json", |v| v),
+        is_app.then_some(
+          global_config
+            .dev_tsconfig_name
+            .as_ref()
+            .map_or("tsconfig.dev.json", |v| v),
+        ),
       );
 
       tsconfig_files.push(("tsconfig.json".to_string(), base_tsconfig));
 
       let src_tsconfig = get_default_src_tsconfig(is_app, &out_dir);
 
-      tsconfig_files.push((global_config.project_tsconfig_name.clone(), src_tsconfig));
+      tsconfig_files.push((
+        global_config
+          .project_tsconfig_name
+          .clone()
+          .unwrap_or_else(|| "tsconfig.options.json".to_string()),
+        src_tsconfig,
+      ));
 
       if !is_app {
-        let dev_tsconfig = get_default_dev_tsconfig(&global_config.project_tsconfig_name, &out_dir);
+        let dev_tsconfig = get_default_dev_tsconfig(
+          global_config
+            .project_tsconfig_name
+            .as_ref()
+            .map_or("tsconfig.src.json", |v| v),
+          &out_dir,
+        );
 
-        tsconfig_files.push((global_config.dev_tsconfig_name.clone(), dev_tsconfig));
+        tsconfig_files.push((
+          global_config
+            .dev_tsconfig_name
+            .clone()
+            .unwrap_or_else(|| "tsconfig.dev.json".to_string()),
+          dev_tsconfig,
+        ));
       }
     }
 
     if config.update_root_tsconfig {
-      let root_tsconfig_path = PathBuf::from(&root_dir).join("tsconfig.json");
+      let root_tsconfig_path = root_dir.join("tsconfig.json");
       let root_tsconfig_file =
         File::open(&root_tsconfig_path).map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
 
@@ -322,7 +367,7 @@ impl Config {
       source: e,
     })?;
 
-    let vitest_config = match config.vitest {
+    let vitest_config = match config.vitest.unwrap_or_default() {
       VitestConfig::Boolean(v) => v.then(VitestConfigStruct::default),
       VitestConfig::Id(n) => {
         let vitest_presets = &global_config.vitest_presets;
@@ -361,9 +406,9 @@ impl Config {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
-    if !config.generate_templates.is_empty() {
+    if let Some(templates) = config.generate_templates && !templates.is_empty() {
       global_config
-        .generate_templates(&output.to_string_lossy(), config.generate_templates.clone())?;
+        .generate_templates(&output.to_string_lossy(), templates)?;
     }
 
     Ok(())
@@ -378,14 +423,14 @@ mod test {
 
   #[tokio::test]
   async fn package_test() -> Result<(), GenError> {
-    let config = Config::init(PathBuf::from("config.toml"))?;
+    let config = Config::from_file(PathBuf::from("config.toml"))?;
 
     config.build_package("alt2").await
   }
 
   #[tokio::test]
   async fn circular_package_json() -> Result<(), GenError> {
-    let config = Config::init(PathBuf::from("tests/circular_package_json/config.toml"))?;
+    let config = Config::from_file(PathBuf::from("tests/circular_package_json/config.toml"))?;
 
     let result = config.build_package("circular_package_json").await;
 
@@ -403,7 +448,7 @@ mod test {
 
   #[tokio::test]
   async fn circular_tsconfig() -> Result<(), GenError> {
-    let config = Config::init(PathBuf::from("tests/circular_tsconfigs/config.toml"))?;
+    let config = Config::from_file(PathBuf::from("tests/circular_tsconfigs/config.toml"))?;
 
     let result = config.build_package("circular_tsconfigs").await;
 

@@ -20,6 +20,18 @@ pub enum PackageJsonKind {
   Config(Box<PackageJson>),
 }
 
+impl Default for PackageJsonKind {
+  fn default() -> Self {
+    Self::Config(PackageJson::default().into())
+  }
+}
+
+impl PackageJsonKind {
+  pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
+    Ok(Self::Id(s.trim().to_string()))
+  }
+}
+
 /// A struct representing the contents of a package.json file.
 #[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq)]
 #[template(path = "package.json.j2")]

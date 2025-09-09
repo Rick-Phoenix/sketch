@@ -1,4 +1,7 @@
-use std::{collections::BTreeMap, sync::LazyLock};
+use std::{
+  collections::{BTreeMap, BTreeSet},
+  sync::LazyLock,
+};
 
 use askama::Template;
 use regex::Regex;
@@ -13,7 +16,7 @@ use crate::{versions::get_latest_version, OrderedMap, PackageJson, StringBTreeMa
 pub struct PnpmWorkspace {
   pub catalog: StringBTreeMap,
   pub catalogs: BTreeMap<String, StringBTreeMap>,
-  pub packages: Vec<String>,
+  pub packages: BTreeSet<String>,
   #[serde(flatten)]
   pub extra: OrderedMap,
 }

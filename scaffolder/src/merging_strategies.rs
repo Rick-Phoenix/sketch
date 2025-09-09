@@ -5,6 +5,10 @@ use std::{
 
 use indexmap::{IndexMap, IndexSet};
 
+pub(crate) fn overwrite_always<T>(left: &mut T, right: T) {
+  *left = right
+}
+
 pub(crate) fn merge_btree_maps<T>(left: &mut BTreeMap<String, T>, right: BTreeMap<String, T>) {
   left.extend(right)
 }

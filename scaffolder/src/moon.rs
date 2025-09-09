@@ -1,7 +1,5 @@
 use askama::Template;
-use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{OrderedMap, PackageManager};
 
@@ -64,14 +62,6 @@ pub struct MoonTasks {
   pub out_dir: Option<String>,
   #[serde(flatten)]
   pub config: OrderedMap,
-}
-
-pub(crate) fn convert_map_to_value<T>(map: IndexMap<String, T>) -> Value
-where
-  T: Into<Value>,
-{
-  let x: Value = map.into_iter().collect();
-  x
 }
 
 impl Default for MoonTasks {

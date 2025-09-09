@@ -1,10 +1,11 @@
 use std::fmt::Display;
 
 use askama::Template;
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum)]
 pub enum VersionRange {
   Patch,
   #[default]
@@ -58,6 +59,12 @@ pub enum OxlintConfig {
   Text(String),
 }
 
+impl Default for OxlintConfig {
+  fn default() -> Self {
+    Self::Bool(true)
+  }
+}
+
 #[derive(Clone, Debug, Template, Serialize, Deserialize)]
 #[template(path = "gitignore.j2")]
 #[serde(untagged)]
@@ -79,6 +86,12 @@ pub enum PreCommitSetting {
   Config(PreCommitConfig),
 }
 
+impl Default for PreCommitSetting {
+  fn default() -> Self {
+    Self::Bool(true)
+  }
+}
+
 #[derive(Clone, Debug, Template, Default, Serialize, Deserialize)]
 #[template(path = "pre-commit-config.yaml.j2")]
 pub struct PreCommitConfig {
@@ -92,7 +105,7 @@ pub struct PreCommitRepo {
   pub hooks: Vec<Value>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default, ValueEnum, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageManager {
   #[default]
