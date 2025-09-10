@@ -176,6 +176,7 @@ pub struct TypescriptConfig {
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
 pub struct Config {
+  /// The configuration for typescript packages.
   #[merge(strategy = merge_optional_nested)]
   #[arg(skip)]
   pub typescript: Option<TypescriptConfig>,

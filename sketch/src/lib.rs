@@ -1,6 +1,9 @@
 #![allow(clippy::result_large_err)]
 
 #[doc = include_str!("../README.md")]
+#[macro_use]
+mod macros;
+
 use askama::Template;
 use figment::{
   providers::{Format, Json, Toml, Yaml},
@@ -17,6 +20,7 @@ pub use config::*;
 pub use config_elements::*;
 pub use errors::*;
 pub mod commands;
+pub(crate) mod init_repo;
 pub(crate) mod serde_strategies;
 
 use crate::{
@@ -38,8 +42,6 @@ pub(crate) use rendering::*;
 
 use crate::pnpm::PnpmWorkspace;
 
-#[macro_use]
-mod macros;
 pub mod cli;
 pub mod config;
 pub mod errors;
@@ -151,8 +153,6 @@ impl Config {
       write_file!(output, self.overwrite, $($tokens)*)
     };
   }
-
-    write_to_output!(self.gitignore, ".gitignore");
 
     let mut package_json_data = match root_package.package_json.unwrap_or_default() {
       PackageJsonKind::Id(id) => package_json_presets
@@ -312,21 +312,6 @@ impl Config {
       let moon_tasks = moon_config.tasks.unwrap_or_default();
 
       write_to_output!(moon_tasks, ".moon/tasks.yml");
-    }
-
-    let pre_commit_config = match &self.pre_commit {
-      PreCommitSetting::Bool(val) => {
-        if *val {
-          Some(&PreCommitConfig::default())
-        } else {
-          None
-        }
-      }
-      PreCommitSetting::Config(conf) => Some(conf),
-    };
-
-    if let Some(pre_commit) = pre_commit_config {
-      write_to_output!(pre_commit, ".pre-commit-config.yaml");
     }
 
     if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfig::Bool(false)) {

@@ -72,33 +72,11 @@ pub async fn start_cli() -> Result<(), GenError> {
       no_pre_commit,
       remote,
     } => {
-      let cwd = config.root_dir.as_deref().unwrap_or(".");
-      let shell = config.shell.as_deref();
-
-      launch_command(
-        shell,
-        &["git", "init"],
-        cwd,
-        Some("Failed to initialize a new git repo"),
-      )?;
-
-      if let Some(remote) = remote {
-        launch_command(
-          shell,
-          &["git", "remote", "add", "origin", remote.as_str()],
-          cwd,
-          Some("Failed to add the remote to the git repo"),
-        )?;
+      if no_pre_commit {
+        config.pre_commit = PreCommitSetting::Bool(false);
       }
 
-      if !no_pre_commit {
-        launch_command(
-          shell,
-          &["pre-commit", "install"],
-          cwd,
-          Some("Failed to install the pre-commit hooks"),
-        )?;
-      }
+      config.init_repo(remote.as_deref())?;
     }
 
     Render {
