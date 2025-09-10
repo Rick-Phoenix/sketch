@@ -8,7 +8,7 @@ pub use package_json_elements::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  merging_strategies::*, rendering::render_json_val, versions::get_latest_version, GenError,
+  merging_strategies::*, templating::render_json_val, versions::get_latest_version, GenError,
   JsonValueBTreeMap, Preset, StringBTreeMap, VersionRange,
 };
 pub mod package_json_elements;

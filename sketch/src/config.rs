@@ -1,7 +1,4 @@
-use std::{
-  collections::BTreeSet,
-  path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use clap::Parser;
 use figment::{
@@ -10,19 +7,18 @@ use figment::{
   Error, Figment, Metadata, Profile, Provider, Source,
 };
 use indexmap::{IndexMap, IndexSet};
-use maplit::btreeset;
 use merge::Merge;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  cli::parsers::parse_btreeset_from_csv,
   config_elements::*,
   merge_config_file, merge_index_maps, merge_index_sets, merge_optional_nested,
   moon::MoonConfigKind,
   overwrite_option,
-  package::{vitest::VitestConfigStruct, PackageConfig},
+  package::{vitest::VitestConfig, PackageConfig},
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
+  pnpm::PnpmWorkspace,
   tera::TemplateOutput,
   ts_config::{TsConfig, TsConfigDirective},
   GenError, SharedOutDir, VersionRange,
@@ -41,25 +37,35 @@ impl TypescriptConfig {
 #[merge(strategy = overwrite_option)]
 #[serde(default)]
 pub struct RootPackage {
+  /// The name of the root package [default: "root"].
   #[arg(short, long)]
   pub name: Option<String>,
 
+  /// Oxlint configuration for the root package.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
 
-  #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
+  /// A list of [`TsConfigDirective`]s for the root package. They can be preset ids or literal configurations. If unset, defaults are used.
+  #[arg(help = "One or many tsconfig files for the root package. If unset, defaults are used")]
+  #[arg(short, long, value_parser = TsConfigDirective::from_cli, value_name = "output=PATH,id=ID")]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
-  #[arg(skip)]
-  pub generate_templates: Option<Vec<TemplateOutput>>,
-
+  /// The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition.
   #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
+  #[arg(
+    help = "The id of the package.json preset to use for the root package",
+    value_name = "ID"
+  )]
   pub package_json: Option<PackageJsonKind>,
 
   /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(skip)]
   pub moonrepo: Option<MoonConfigKind>,
+
+  /// The templates to generate when the root package is generated.
+  #[arg(skip)]
+  pub generate_templates: Option<Vec<TemplateOutput>>,
 }
 
 impl Default for RootPackage {
@@ -78,98 +84,108 @@ impl Default for RootPackage {
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
 pub struct TypescriptConfig {
-  /// The configuration for the root typescript package
+  /// The configuration for the root typescript package.
   #[merge(skip)]
   #[arg(skip)]
   pub root_package: Option<RootPackage>,
 
   /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
   /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// Defaults to "tsconfig.options.json".
+  /// [default: "tsconfig.options.json"]
   #[merge(strategy = overwrite_option)]
-  #[arg(long)]
+  #[arg(
+    help = "The name of the tsconfig file to use at the root [default: 'tsconfig.options.json']",
+    value_name = "NAME"
+  )]
+  #[arg(long = "root-tsconfig")]
   pub root_tsconfig_name: Option<String>,
 
   /// The name of the tsconfig file to use inside the individual packages, alongside the default tsconfig.json file.
   /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// Defaults to "tsconfig.src.json"
+  /// [default: "tsconfig.src.json"]
   #[merge(strategy = overwrite_option)]
-  #[arg(long)]
+  #[arg(
+    help = "The name of the tsconfig file for individual packages [default: 'tsconfig.src.json']",
+    value_name = "NAME"
+  )]
+  #[arg(long = "project-tsconfig")]
   pub project_tsconfig_name: Option<String>,
 
   /// The name of the development tsconfig file (which will only typecheck scripts and tests and configs and generate no files) to use inside the individual packages, alongside the default tsconfig.json file.
   /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// Defaults to "tsconfig.dev.json".
+  /// [default: "tsconfig.dev.json"]
   #[merge(strategy = overwrite_option)]
-  #[arg(long)]
+  #[arg(
+    help = "The name of the development tsconfig file [default: 'tsconfig.dev.json']",
+    value_name = "NAME"
+  )]
+  #[arg(long = "dev-tsconfig")]
   pub dev_tsconfig_name: Option<String>,
 
-  /// The package manager being used. Defaults to pnpm.
+  /// The package manager being used. [default: pnpm].
   #[merge(strategy = overwrite_option)]
-  #[arg(value_enum, long)]
+  #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
-  /// The root directory for the project. Defaults to the current working directory.
+  /// The root directory for the project [default: "."].
   #[merge(strategy = overwrite_option)]
-  #[arg(long)]
+  #[arg(long, value_name = "DIR")]
   pub root_dir: Option<String>,
 
-  /// The directories where packages will be located.
-  /// They will be added to the pnpm-workspace.yaml config, and also generated automatically when the monorepo is generated.
-  #[merge(strategy = overwrite_option)]
-  #[arg(long, value_parser = parse_btreeset_from_csv)]
-  pub packages_dirs: Option<BTreeSet<String>>,
-
-  /// The kind of version ranges to use for dependencies that are fetched automatically.
-  /// When a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, the crate will fetch the latest version using the Npm api, and use the selected version range with the latest version.
+  /// The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).
   #[merge(strategy = overwrite_option)]
   #[arg(value_enum)]
-  #[arg(long)]
-  pub version_ranges: Option<VersionRange>,
+  #[arg(long, value_name = "KIND")]
+  #[arg(
+    help = "The kind of version range to use for dependencies added automatically [default: minor]"
+  )]
+  pub version_range: Option<VersionRange>,
 
-  /// Whether to use the pnpm catalog for default dependencies.
+  /// Whether to use the pnpm catalog for default dependencies [default: true].
   #[merge(strategy = merge::bool::overwrite_true)]
   #[arg(skip)]
   pub catalog: bool,
 
-  /// Whether the dependencies with 'latest' should be transformed in their actual latest version + the selected version range.
+  /// Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package.
   #[merge(strategy = merge::bool::overwrite_true)]
   #[arg(skip)]
   pub convert_latest_to_range: bool,
 
-  /// A map of individuals btree_that can be referenced in the list of contributors or maintainers in a package.json file.
+  /// A map of individual [`PersonData`] that can be referenced in [`PackageJson::contributors`] or [`PackageJson::maintainers`].
   #[arg(skip)]
   #[merge(strategy = merge_index_maps)]
   pub people: IndexMap<String, PersonData>,
 
-  /// A map containing package.json presets.
+  /// A map containing [`PackageJson`] presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub package_json_presets: IndexMap<String, PackageJson>,
 
-  /// A map containing tsconfig.json presets.
+  /// A map containing [`TsConfig`] presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub tsconfig_presets: IndexMap<String, TsConfig>,
 
-  /// A map of package presets.
+  /// A map of [`PackageConfig`] presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub package_presets: IndexMap<String, PackageConfig>,
 
-  /// A map of vitest config presets.
+  /// A map of [`VitestConfig`] presets.
   #[arg(skip)]
   #[merge(strategy = merge_index_maps)]
-  pub vitest_presets: IndexMap<String, VitestConfigStruct>,
+  pub vitest_presets: IndexMap<String, VitestConfig>,
 
-  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
+  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory with this name (or the default '.out') in the root of the monorepo, with subdirectories for each package.
+  /// So if for example we have package1 and package2 and shared_out_dir is set to 'tsc-out', the tsc output for package1 will go to tsc-out/package1.
   #[merge(skip)]
   #[arg(skip)]
   pub shared_out_dir: SharedOutDir,
-  /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
-  #[merge(strategy = merge_index_maps)]
+
+  /// The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
+  #[merge(skip)]
   #[arg(skip)]
-  pub pnpm_config: IndexMap<String, Value>,
+  pub pnpm_config: Option<PnpmWorkspace>,
 }
 
 /// The global configuration struct.
@@ -181,7 +197,7 @@ pub struct Config {
   #[arg(skip)]
   pub typescript: Option<TypescriptConfig>,
 
-  /// The shell to use for commands. Defaults to 'cmd.exe' on windows and 'sh' elsewhere.
+  /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(long)]
   pub shell: Option<String>,
@@ -191,14 +207,14 @@ pub struct Config {
   #[arg(long)]
   pub debug: bool,
 
-  /// The root directory for the project. Defaults to the current working directory.
+  /// The root directory for the project [default: "."].
   #[merge(strategy = overwrite_option)]
-  #[arg(long)]
+  #[arg(long, value_name = "DIR")]
   pub root_dir: Option<String>,
 
-  /// The directory that contains the template files.
+  /// The path to the directory with the template files.
   #[merge(strategy = merge::option::overwrite_none)]
-  #[arg(long)]
+  #[arg(long, value_name = "DIR")]
   pub templates_dir: Option<String>,
 
   /// Whether file generation should always override existing files. Defaults to true.
@@ -211,11 +227,12 @@ pub struct Config {
   #[arg(skip)]
   pub pre_commit: PreCommitSetting,
 
+  /// Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.
   #[merge(skip)]
   #[arg(skip)]
   pub gitignore: GitIgnore,
 
-  /// The list of configuration files to merge with the current one.
+  /// The relative paths, from the current file, to the other config files to merge with the current one.
   #[merge(strategy = merge_index_sets)]
   #[arg(skip)]
   pub extends: IndexSet<PathBuf>,
@@ -225,8 +242,13 @@ pub struct Config {
   #[arg(skip)]
   pub templates: IndexMap<String, String>,
 
+  /// A map that contains templating presets.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub templating_presets: IndexMap<String, Vec<TemplateOutput>>,
+
   /// The global variables that will be available for every template being generated.
-  /// They are overridden in case a template is rendered with a local context.
+  /// They are overridden by vars set as a template's local context or via a cli command.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub global_templates_vars: IndexMap<String, Value>,
@@ -300,11 +322,10 @@ impl Default for TypescriptConfig {
       root_tsconfig_name: None,
       project_tsconfig_name: None,
       dev_tsconfig_name: None,
-      packages_dirs: Some(btreeset!["packages/*".to_string(), "apps/*".to_string()]),
       package_presets: Default::default(),
       vitest_presets: Default::default(),
       catalog: true,
-      version_ranges: Default::default(),
+      version_range: Default::default(),
       tsconfig_presets: Default::default(),
       shared_out_dir: SharedOutDir::Name(".out".to_string()),
       people: Default::default(),
@@ -318,6 +339,7 @@ impl Default for TypescriptConfig {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      templating_presets: Default::default(),
       typescript: None,
       shell: None,
       debug: false,

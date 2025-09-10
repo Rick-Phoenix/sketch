@@ -6,7 +6,7 @@ use merge::Merge;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  cli::parsers::parse_key_value_pairs, merge_sets, overwrite_option, rendering::filters, GenError,
+  cli::parsers::parse_key_value_pairs, merge_sets, overwrite_option, templating::filters, GenError,
   OrderedMap, Preset,
 };
 

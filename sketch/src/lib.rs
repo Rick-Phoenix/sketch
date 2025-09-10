@@ -30,7 +30,7 @@ use crate::{
   versions::get_latest_version,
 };
 
-pub(crate) mod rendering;
+pub(crate) mod templating;
 use std::{
   collections::BTreeMap,
   fs::{create_dir_all, File},
@@ -38,9 +38,7 @@ use std::{
 };
 
 pub(crate) use merging_strategies::*;
-pub(crate) use rendering::*;
-
-use crate::pnpm::PnpmWorkspace;
+pub(crate) use templating::*;
 
 pub mod cli;
 pub mod config;
@@ -66,6 +64,7 @@ pub enum Preset {
   PackageJson,
   Package,
   TsConfig,
+  Templating,
 }
 
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
@@ -124,7 +123,7 @@ impl Config {
 }
 
 impl Config {
-  pub async fn build_repo(self) -> Result<(), GenError> {
+  pub async fn create_ts_monorepo(self) -> Result<(), GenError> {
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
@@ -135,10 +134,7 @@ impl Config {
       .unwrap_or_else(|| self.root_dir.as_ref().map_or(".", |v| v));
 
     let package_manager = typescript.package_manager.unwrap_or_default();
-    let version_ranges = typescript.version_ranges.unwrap_or_default();
-    let packages_dirs = typescript
-      .packages_dirs
-      .unwrap_or_else(|| btreeset! { "packages/*".to_string(), "apps/*".to_string() });
+    let version_ranges = typescript.version_range.unwrap_or_default();
     let root_package = typescript.root_package.unwrap_or_default();
 
     let output = PathBuf::from(root_dir);
@@ -275,12 +271,14 @@ impl Config {
     }
 
     if matches!(package_manager, PackageManager::Pnpm) {
-      let mut pnpm_data = PnpmWorkspace {
-        catalog: Default::default(),
-        packages: packages_dirs.clone(),
-        extra: typescript.pnpm_config,
-        catalogs: Default::default(),
-      };
+      let mut pnpm_data = typescript.pnpm_config.unwrap_or_default();
+
+      for dir in &pnpm_data.packages {
+        create_dir_all(output.join(dir)).map_err(|e| GenError::DirCreation {
+          path: output.to_path_buf(),
+          source: e,
+        })?;
+      }
 
       pnpm_data
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
@@ -318,13 +316,6 @@ impl Config {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
-    for dir in packages_dirs {
-      create_dir_all(output.join(dir)).map_err(|e| GenError::DirCreation {
-        path: output.to_path_buf(),
-        source: e,
-      })?;
-    }
-
     if let Some(shared_out_dir) = typescript.shared_out_dir.get_name() {
       create_dir_all(output.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
         path: output.to_path_buf(),
@@ -351,7 +342,7 @@ mod test {
   async fn repo_test() -> Result<(), GenError> {
     let config = Config::from_file(PathBuf::from("sketch.toml"))?;
 
-    config.build_repo().await
+    config.create_ts_monorepo().await
   }
 
   #[tokio::test]

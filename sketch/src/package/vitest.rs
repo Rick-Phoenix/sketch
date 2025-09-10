@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 /// - A object, with a literal definition
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(untagged)]
-pub enum VitestConfig {
+pub enum VitestConfigKind {
   Boolean(bool),
   Id(String),
-  Config(VitestConfigStruct),
+  Config(VitestConfig),
 }
 
-impl Default for VitestConfig {
+impl Default for VitestConfigKind {
   fn default() -> Self {
     Self::Config(Default::default())
   }
@@ -25,7 +25,7 @@ impl Default for VitestConfig {
 #[derive(Clone, Debug, Template, Serialize, Deserialize)]
 #[template(path = "vitest.config.ts.j2")]
 #[serde(default)]
-pub struct VitestConfigStruct {
+pub struct VitestConfig {
   pub plugins: Vec<String>,
   pub setup_dir: String,
   pub setup_files: Vec<String>,
@@ -36,7 +36,7 @@ pub struct VitestConfigStruct {
 #[template(path = "tests_setup.ts.j2")]
 pub(crate) struct TestsSetupFile;
 
-impl Default for VitestConfigStruct {
+impl Default for VitestConfig {
   fn default() -> Self {
     Self {
       plugins: vec![],

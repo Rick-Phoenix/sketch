@@ -13,7 +13,6 @@ askama = { version = "0.14.0", default-features = false, features = [
   "config",
   "derive",
   "std",
-  "serde_json",
 ] }
 maplit = "1.0.2"
 regex = "1.11.1"

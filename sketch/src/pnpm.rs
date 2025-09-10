@@ -4,13 +4,14 @@ use std::{
 };
 
 use askama::Template;
+use maplit::btreeset;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::{versions::get_latest_version, OrderedMap, PackageJson, StringBTreeMap, VersionRange};
 
 /// A struct representing a pnpm-workspace.yaml config. Some widely used fields such as catalog, catalogs and packages are included directly. Everything else is flattened in the `extra` field.
-#[derive(Debug, Template, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize)]
 #[serde(default)]
 #[template(path = "pnpm-workspace.yaml.j2")]
 pub struct PnpmWorkspace {
@@ -19,6 +20,17 @@ pub struct PnpmWorkspace {
   pub packages: BTreeSet<String>,
   #[serde(flatten)]
   pub extra: OrderedMap,
+}
+
+impl Default for PnpmWorkspace {
+  fn default() -> Self {
+    Self {
+      catalog: Default::default(),
+      catalogs: Default::default(),
+      packages: btreeset! { "packages/*".to_string(), "apps/*".to_string() },
+      extra: Default::default(),
+    }
+  }
 }
 
 static CATALOG_REGEX: LazyLock<Regex> = LazyLock::new(|| {

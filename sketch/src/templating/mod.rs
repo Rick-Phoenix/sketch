@@ -5,6 +5,7 @@ use indexmap::IndexMap;
 use serde_json::Value;
 
 pub(crate) mod filters;
+pub mod templating_presets;
 pub(crate) mod tera;
 
 #[derive(Debug, Template)]

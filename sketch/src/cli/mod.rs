@@ -13,6 +13,7 @@ use Commands::*;
 
 use crate::{
   commands::launch_command,
+  package::PackageDataKind,
   tera::{TemplateData, TemplateOutput},
 };
 
@@ -27,7 +28,7 @@ use serde_json::Value;
 
 use crate::{
   moon::{MoonConfigKind, MoonDotYmlKind},
-  package::{vitest::VitestConfig, PackageConfig},
+  package::{vitest::VitestConfigKind, PackageConfig},
   Config, *,
 };
 
@@ -77,6 +78,20 @@ pub async fn start_cli() -> Result<(), GenError> {
       }
 
       config.init_repo(remote.as_deref())?;
+    }
+
+    RenderPreset { id } => {
+      let preset = config
+        .templating_presets
+        .get(&id)
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::Templating,
+          name: id.clone(),
+        })?
+        .clone();
+
+      let base_path = config.root_dir.clone();
+      config.generate_templates(base_path.as_deref().unwrap_or("."), preset)?;
     }
 
     Render {
@@ -149,10 +164,8 @@ pub async fn start_cli() -> Result<(), GenError> {
         })?
       };
 
-      let base_config = Config::default();
-
       match format {
-        ConfigFormat::Yaml => serde_yaml_ng::to_writer(output_file, &base_config).map_err(|e| {
+        ConfigFormat::Yaml => serde_yaml_ng::to_writer(output_file, &config).map_err(|e| {
           GenError::SerializationError {
             target: "the new config file".to_string(),
             error: e.to_string(),
@@ -160,7 +173,7 @@ pub async fn start_cli() -> Result<(), GenError> {
         })?,
         ConfigFormat::Toml => {
           let content =
-            toml::to_string_pretty(&base_config).map_err(|e| GenError::SerializationError {
+            toml::to_string_pretty(&config).map_err(|e| GenError::SerializationError {
               target: "the new config file".to_string(),
               error: e.to_string(),
             })?;
@@ -172,14 +185,12 @@ pub async fn start_cli() -> Result<(), GenError> {
               source: e,
             })?;
         }
-        ConfigFormat::Json => {
-          serde_json::to_writer_pretty(output_file, &base_config).map_err(|e| {
-            GenError::SerializationError {
-              target: "the new config file".to_string(),
-              error: e.to_string(),
-            }
-          })?
-        }
+        ConfigFormat::Json => serde_json::to_writer_pretty(output_file, &config).map_err(|e| {
+          GenError::SerializationError {
+            target: "the new config file".to_string(),
+            error: e.to_string(),
+          }
+        })?,
       };
     }
     Command { command, file, cwd } => {
@@ -199,126 +210,133 @@ pub async fn start_cli() -> Result<(), GenError> {
       let shell = config.shell.clone();
       config.execute_command(shell.as_deref(), cwd, &command)?;
     }
-    Ts { command } => match command {
-      TsCommands::Monorepo {
-        typescript_overrides,
-        shared_out_dir,
-        moonrepo,
-        no_convert_latest,
-        no_oxlint,
-        no_catalog,
-        no_shared_out_dir,
-        root_package_overrides,
-        ..
-      } => {
-        let typescript = config.typescript.get_or_insert_default();
+    Ts {
+      command,
+      typescript_overrides,
+      shared_out_dir,
+      no_shared_out_dir,
+      no_convert_latest,
+      no_catalog,
+    } => {
+      let typescript = config.typescript.get_or_insert_default();
 
-        if let Some(typescript_overrides) = typescript_overrides {
-          typescript.merge(typescript_overrides);
-        }
-
-        let root_package = typescript.root_package.get_or_insert_default();
-
-        if let Some(root_package_overrides) = root_package_overrides {
-          root_package.merge(root_package_overrides);
-        }
-
-        if no_convert_latest {
-          typescript.convert_latest_to_range = false;
-        }
-
-        if no_oxlint {
-          root_package.oxlint = Some(OxlintConfig::Bool(false));
-        }
-
-        if no_catalog {
-          typescript.catalog = false;
-        }
-
-        if moonrepo {
-          root_package.moonrepo = Some(MoonConfigKind::Bool(true));
-        }
-
-        if no_shared_out_dir {
-          typescript.shared_out_dir = SharedOutDir::Bool(false);
-        }
-
-        if let Some(shared_out_dir) = shared_out_dir {
-          typescript.shared_out_dir = SharedOutDir::Name(shared_out_dir);
-        }
-
-        exit_if_dry_run!();
+      if let Some(typescript_overrides) = typescript_overrides {
+        typescript.merge(typescript_overrides);
       }
-      TsCommands::Package {
-        package_config,
-        kind,
-        preset,
-        name,
-        moonrepo,
-        no_vitest,
-        oxlint,
-        no_update_root_tsconfig,
-        install,
-        typescript_config,
-        ..
-      } => {
-        let typescript = config.typescript.get_or_insert_default();
-        let package_manager = typescript.package_manager.unwrap_or_default();
 
-        if let Some(ts_overrides) = typescript_config {
-          typescript.merge(ts_overrides);
+      if no_convert_latest {
+        typescript.convert_latest_to_range = false;
+      }
+
+      if no_catalog {
+        typescript.catalog = false;
+      }
+
+      if no_shared_out_dir {
+        typescript.shared_out_dir = SharedOutDir::Bool(false);
+      }
+
+      if let Some(shared_out_dir) = shared_out_dir {
+        typescript.shared_out_dir = SharedOutDir::Name(shared_out_dir);
+      }
+
+      match command {
+        TsCommands::Monorepo {
+          moonrepo,
+          no_oxlint,
+          root_package_overrides,
+          ..
+        } => {
+          let root_package = typescript.root_package.get_or_insert_default();
+
+          if let Some(root_package_overrides) = root_package_overrides {
+            root_package.merge(root_package_overrides);
+          }
+
+          if no_oxlint {
+            root_package.oxlint = Some(OxlintConfig::Bool(false));
+          }
+
+          if moonrepo {
+            root_package.moonrepo = Some(MoonConfigKind::Bool(true));
+          }
+
+          exit_if_dry_run!();
         }
+        TsCommands::Package {
+          package_config,
+          kind,
+          preset,
+          moonrepo,
+          no_vitest,
+          oxlint,
+          no_update_root_tsconfig,
+          install,
+          name,
+        } => {
+          let package_manager = typescript.package_manager.unwrap_or_default();
 
-        let mut package = package_config.unwrap_or_default();
+          let package = if let Some(preset) = preset {
+            typescript
+              .package_presets
+              .get_mut(&preset)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::Package,
+                name: preset.clone(),
+              })?
+          } else {
+            &mut package_config.unwrap_or_default()
+          };
 
-        let package_dir = package.dir.clone();
+          let package_dir = package.dir.clone();
 
-        package.name = name.clone();
+          if let Some(kind) = kind {
+            package.kind = Some(kind.into());
+          }
 
-        if let Some(kind) = kind {
-          package.kind = Some(kind.into());
-        }
+          if moonrepo {
+            package.moonrepo = Some(MoonDotYmlKind::Bool(true));
+          }
 
-        if moonrepo {
-          package.moonrepo = Some(MoonDotYmlKind::Bool(true));
-        }
+          if no_vitest {
+            package.vitest = VitestConfigKind::Boolean(false);
+          }
 
-        if no_vitest {
-          package.vitest = Some(VitestConfig::Boolean(false));
-        }
+          if oxlint {
+            package.oxlint = Some(OxlintConfig::Bool(true));
+          }
 
-        if oxlint {
-          package.oxlint = Some(OxlintConfig::Bool(true));
-        }
+          if no_update_root_tsconfig {
+            package.update_root_tsconfig = false;
+          }
 
-        if no_update_root_tsconfig {
-          package.update_root_tsconfig = false;
-        }
+          let package = package.clone();
 
-        let _id = if let Some(preset) = preset {
-          preset
-        } else {
-          let new_id = format!("__{}", name);
-          typescript.package_presets.insert(new_id.clone(), package);
-          new_id
-        };
+          if config.debug {
+            println!("DEBUG: Config {:#?}", config);
+            println!("DEBUG: Package {:#?}", package);
+          }
 
-        if config.debug {
-          println!("DEBUG: {:#?}", config);
-        }
+          exit_if_dry_run!();
 
-        exit_if_dry_run!();
+          if install {
+            launch_command(
+              None,
+              &[package_manager.to_string().as_str(), "install"],
+              package_dir.as_deref().unwrap_or("."),
+              Some("Could not install dependencies"),
+            )?;
+          }
 
-        if install {
-          launch_command(
-            None,
-            &[package_manager.to_string().as_str(), "install"],
-            package_dir.as_deref().unwrap_or("."),
-            Some("Could not install dependencies"),
-          )?;
+          config
+            .build_package(package::PackageData {
+              name,
+              kind: PackageDataKind::Config(package),
+            })
+            .await?;
         }
       }
-    },
+    }
   };
 
   Ok(())
@@ -328,7 +346,7 @@ pub async fn start_cli() -> Result<(), GenError> {
 #[command(name = "sketch")]
 #[command(version, about, long_about = None)]
 struct Cli {
-  /// Sets a custom config file
+  /// Sets a custom config file.
   #[arg(short, long, value_name = "FILE")]
   pub config: Option<PathBuf>,
 
@@ -342,25 +360,45 @@ struct Cli {
   #[arg(long)]
   pub dry_run: bool,
 
-  /// Do not overwrite files.
+  /// Exits with error if a file being created already exists.
   #[arg(long)]
   pub(crate) no_overwrite: bool,
 
-  /// Set variables to use in templates. It overrides previously set variables with the same names.
-  #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair)]
+  /// Set a variable (as key=value) to use in templates. Overrides global and local variables.
+  #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-  /// The typescript-specific commands
+  /// Launches typescript-specific commands.
   Ts {
+    #[command(flatten)]
+    typescript_overrides: Option<TypescriptConfig>,
+
     #[command(subcommand)]
     command: TsCommands,
+
+    /// The path to the shared out_dir for TS packages.
+    #[arg(long, conflicts_with = "no_shared_out_dir")]
+    shared_out_dir: Option<String>,
+
+    /// Does not use a shared out_dir for TS packages.
+    #[arg(long, default_value_t = false)]
+    no_shared_out_dir: bool,
+
+    /// Does not convert 'latest' to a version range.
+    #[arg(long)]
+    no_convert_latest: bool,
+
+    /// Does not use the catalog for default dependencies.
+    #[arg(long)]
+    no_catalog: bool,
   },
 
+  /// Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config.
   Init {
-    /// Do not generate a pre-commit config.
+    /// Does not generate a pre-commit config.
     #[arg(long)]
     no_pre_commit: bool,
 
@@ -369,23 +407,41 @@ enum Commands {
     remote: Option<String>,
   },
 
-  /// Generates a new config file
-  New { output: Option<PathBuf> },
+  /// Generates a new config file with some optional initial values defined via the cli flags.
+  New {
+    /// The output file [default: sketch.yaml]
+    output: Option<PathBuf>,
+  },
 
-  /// Generates a file from a template
+  /// Generates a single file from a template.
   Render {
+    /// The output file (relative from the cwd)
     #[arg(requires = "input")]
     output: String,
+    /// The id of the preset to select (cannot be used with the --content flag)
     #[arg(short, long, group = "input")]
     id: Option<String>,
+    /// The literal definition for the template (cannot be used with the --id flag)
     #[arg(short, long, group = "input")]
     content: Option<String>,
   },
 
+  /// Generates content from a templating preset, with predefined content, output and context.
+  RenderPreset {
+    /// The id of the preset.
+    id: String,
+  },
+
+  /// Renders a template (from text or file) and launches it as a command
   Command {
+    /// The literal definition for the command's template (cannot be used with the --file flag)
     command: Option<String>,
+
+    /// The path to the command's template file
     #[arg(short, long, conflicts_with = "command")]
     file: Option<PathBuf>,
+
+    /// The cwd for the command to execute
     #[arg(long)]
     cwd: Option<PathBuf>,
   },
@@ -396,57 +452,50 @@ enum TsCommands {
   /// Generates a new typescript monorepo
   Monorepo {
     #[command(flatten)]
-    typescript_overrides: Option<TypescriptConfig>,
-
-    #[command(flatten)]
     root_package_overrides: Option<RootPackage>,
 
-    /// Do not convert 'latest' to a version range.
-    #[arg(long)]
-    no_convert_latest: bool,
-
-    /// Do not generate an oxlint config.
+    /// Does not generate an oxlint config at the root.
     #[arg(long)]
     no_oxlint: bool,
-
-    /// Do not use the catalog for dependencies.
-    #[arg(long)]
-    no_catalog: bool,
 
     /// Generate setup for moonrepo
     #[arg(long)]
     moonrepo: bool,
-
-    /// The path to the shared out_dir for TS packages.
-    #[arg(long, conflicts_with = "no_shared_out_dir")]
-    shared_out_dir: Option<String>,
-
-    /// Do not use a shared out_dir for TS packages.
-    #[arg(long, default_value_t = false)]
-    no_shared_out_dir: bool,
   },
 
   /// Generates a new typescript package
   Package {
-    name: String,
-    #[arg(long, conflicts_with = "PackageConfig")]
+    /// The name of the new package
+    name: Option<String>,
+    /// The package preset to use
+    #[arg(long)]
     preset: Option<String>,
-    #[command(flatten)]
-    kind: Option<PackageKindFlag>,
-    #[command(flatten)]
-    package_config: Option<PackageConfig>,
-    #[command(flatten)]
-    typescript_config: Option<TypescriptConfig>,
+
+    /// Sets up a basic moon.yml file
     #[arg(long)]
     moonrepo: bool,
+
+    /// Does not set up vitest for this package
     #[arg(long)]
     no_vitest: bool,
+
+    /// Sets up an oxlint config file for this package
     #[arg(long)]
     oxlint: bool,
+
+    /// Does not update the root tsconfig with a reference to the new tsconfig file
     #[arg(long)]
     no_update_root_tsconfig: bool,
+
+    /// Installs the dependencies with the chosen package manager
     #[arg(short, long)]
     install: bool,
+
+    #[command(flatten)]
+    kind: Option<PackageKindFlag>,
+
+    #[command(flatten)]
+    package_config: Option<PackageConfig>,
   },
 }
 
