@@ -5,7 +5,7 @@ use std::{
   path::PathBuf,
 };
 
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -20,7 +20,7 @@ use crate::{
   *,
 };
 
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageKind {
   #[default]
@@ -406,14 +406,14 @@ mod test {
 
   #[tokio::test]
   async fn package_test() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("config.toml"))?;
+    let config = Config::from_file(PathBuf::from("sketch.toml"))?;
 
     config.build_package("alt2").await
   }
 
   #[tokio::test]
   async fn circular_package_json() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("tests/circular_package_json/config.toml"))?;
+    let config = Config::from_file(PathBuf::from("tests/circular_package_json/sketch.toml"))?;
 
     let result = config.build_package("circular_package_json").await;
 
@@ -431,7 +431,7 @@ mod test {
 
   #[tokio::test]
   async fn circular_tsconfig() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("tests/circular_tsconfigs/config.toml"))?;
+    let config = Config::from_file(PathBuf::from("tests/circular_tsconfigs/sketch.toml"))?;
 
     let result = config.build_package("circular_tsconfigs").await;
 

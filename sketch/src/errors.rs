@@ -54,6 +54,10 @@ pub enum GenError {
   FileExists { path: PathBuf },
   #[error("{0}")]
   CircularDependency(String),
+  #[error("Error while serializing the content for {target}: {error}")]
+  SerializationError { target: String, error: String },
+  #[error("Error while deserializing the contents of {file:?}: {error}")]
+  DeserializationError { file: PathBuf, error: String },
   #[error("{0}")]
   Custom(String),
 }

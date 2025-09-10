@@ -17,6 +17,7 @@ pub use config::*;
 pub use config_elements::*;
 pub use errors::*;
 pub mod commands;
+pub(crate) mod serde_strategies;
 
 use crate::{
   moon::{MoonConfig, MoonConfigKind},
@@ -131,6 +132,7 @@ impl Config {
       .packages_dirs
       .clone()
       .unwrap_or_else(|| btreeset! { "packages/*".to_string(), "apps/*".to_string() });
+    let root_package = self.root_package.clone().unwrap_or_default();
 
     let output = PathBuf::from(root_dir);
 
@@ -147,7 +149,7 @@ impl Config {
 
     write_to_output!(self.gitignore, ".gitignore");
 
-    let mut package_json_data = match self.root_package.package_json.clone().unwrap_or_default() {
+    let mut package_json_data = match root_package.package_json.clone().unwrap_or_default() {
       PackageJsonKind::Id(id) => package_json_presets
         .get(&id)
         .ok_or(GenError::PresetNotFound {
@@ -205,8 +207,7 @@ impl Config {
         .await?;
     }
 
-    package_json_data.name = self
-      .root_package
+    package_json_data.name = root_package
       .name
       .clone()
       .unwrap_or_else(|| "root".to_string());
@@ -216,7 +217,7 @@ impl Config {
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
     let tsconfig_presets = &self.tsconfig_presets;
 
-    if let Some(root_tsconfigs) = self.root_package.ts_config.clone() {
+    if let Some(root_tsconfigs) = root_package.ts_config.clone() {
       for directive in root_tsconfigs {
         let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
@@ -323,7 +324,7 @@ impl Config {
       write_to_output!(pre_commit, ".pre-commit-config.yaml");
     }
 
-    if let Some(oxlint_config) = self.root_package.oxlint.clone() && !matches!(oxlint_config, OxlintConfig::Bool(false)) {
+    if let Some(oxlint_config) = root_package.oxlint.clone() && !matches!(oxlint_config, OxlintConfig::Bool(false)) {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
@@ -341,7 +342,7 @@ impl Config {
       })?;
     }
 
-    if let Some(templates) = self.root_package.generate_templates.clone() && !templates.is_empty() {
+    if let Some(templates) = root_package.generate_templates.clone() && !templates.is_empty() {
       let root_dir = root_dir.to_string();
       self.generate_templates(&root_dir, templates)?;
     }
@@ -358,14 +359,14 @@ mod test {
 
   #[tokio::test]
   async fn repo_test() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("config.toml"))?;
+    let config = Config::from_file(PathBuf::from("sketch.toml"))?;
 
     config.build_repo().await
   }
 
   #[tokio::test]
   async fn circular_configs() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("tests/circular_configs/config.toml"));
+    let config = Config::from_file(PathBuf::from("tests/circular_configs/sketch.toml"));
 
     match config {
       Ok(_) => panic!("Circular configs test did not fail as expected"),

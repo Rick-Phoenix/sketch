@@ -5,7 +5,7 @@ macro_rules! get_contributors {
       .into_iter()
       .map(|c| -> Result<Person, GenError> {
         match c {
-          Person::Workspace(name) => Ok(Person::Data(
+          Person::Id(name) => Ok(Person::Data(
             $config
               .people
               .get(&name)

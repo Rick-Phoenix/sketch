@@ -37,7 +37,7 @@ pub struct Bugs {
 #[serde(untagged)]
 #[derive(Clone)]
 pub enum Person {
-  Workspace(String),
+  Id(String),
   Data(PersonData),
 }
 
@@ -82,11 +82,17 @@ pub enum Exports {
 #[serde(default)]
 #[template(path = "directories.j2")]
 pub struct Directories {
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub bin: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub doc: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub example: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub lib: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub man: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub test: Option<String>,
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[serde(flatten)]
@@ -134,7 +140,7 @@ pub struct PublishConfig {
   pub other: StringBTreeMap,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
 pub enum JsModuleType {
   #[serde(rename = "module")]
   #[default]

@@ -1,8 +1,10 @@
 [package]
 name = "sketch-it"
 version = "0.1.0-beta.1"
+
 description = "A rapid templating and generation CLI tool"
 categories = ["command-line-utilities"]
+keywords = ["boilerplate", "generation", "templating"]
 repository = "https://github.com/Rick-Phoenix/sketch-it"
 
 edition.workspace = true
@@ -24,6 +26,7 @@ pre-release-hook = [
 
 [dependencies]
 askama = { workspace = true }
+toml = { version = "0.9.5", features = ["serde"] }
 figment = { version = "0.10.19", features = ["toml", "env", "yaml", "json"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1"

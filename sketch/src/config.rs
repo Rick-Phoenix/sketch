@@ -68,47 +68,53 @@ impl Default for RootPackage {
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
 pub struct Config {
+  /// The link to the git remote for this project. Gets added automatically when the initial git repo is created.
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(long)]
   pub remote: Option<String>,
 
+  /// The shell to use for commands. Defaults to 'cmd.exe' on windows and 'sh' elsewhere.
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(long)]
   pub shell: Option<String>,
 
+  /// The configuration for the root typescript package
   #[merge(skip)]
   #[arg(skip)]
-  pub root_package: RootPackage,
+  pub root_package: Option<RootPackage>,
 
+  /// Activates debugging mode.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub debug: bool,
 
   /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
-  /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// It defaults to `tsconfig.options.json`.
+  /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
+  /// Defaults to "tsconfig.options.json".
   #[merge(strategy = overwrite_option)]
   #[arg(long)]
   pub root_tsconfig_name: Option<String>,
 
   /// The name of the tsconfig file to use inside the individual packages, alongside the default tsconfig.json file.
-  /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
+  /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
+  /// Defaults to "tsconfig.src.json"
   #[merge(strategy = overwrite_option)]
   #[arg(long)]
   pub project_tsconfig_name: Option<String>,
 
   /// The name of the development tsconfig file (which will only typecheck scripts and tests and configs and generate no files) to use inside the individual packages, alongside the default tsconfig.json file.
-  /// It will be ignored if moonrepo is not used and if the default tsconfig presets are not used.
+  /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
+  /// Defaults to "tsconfig.dev.json".
   #[merge(strategy = overwrite_option)]
   #[arg(long)]
   pub dev_tsconfig_name: Option<String>,
 
-  /// The package manager being used. It defaults to pnpm.
+  /// The package manager being used. Defaults to pnpm.
   #[merge(strategy = overwrite_option)]
   #[arg(value_enum, long)]
   pub package_manager: Option<PackageManager>,
 
-  /// The root directory for the monorepo. Defaults to the current working directory.
+  /// The root directory for the project. Defaults to the current working directory.
   #[merge(strategy = overwrite_option)]
   #[arg(long)]
   pub root_dir: Option<String>,
@@ -313,9 +319,9 @@ impl Config {
 
   pub fn figment() -> Figment {
     Figment::from(Config::default())
-      .merge(Yaml::file("sketcher.yaml"))
-      .merge(Toml::file("sketcher.toml"))
-      .merge(Json::file("sketcher.json"))
+      .merge(Yaml::file("sketch.yaml"))
+      .merge(Toml::file("sketch.toml"))
+      .merge(Json::file("sketch.json"))
       .merge(Env::prefixed("SKETCH_"))
   }
 }

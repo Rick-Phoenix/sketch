@@ -40,72 +40,133 @@ impl PackageJsonKind {
 pub struct PackageJson {
   #[merge(skip)]
   pub name: String,
+
   #[merge(strategy = merge::bool::overwrite_true)]
   pub private: bool,
+
   #[merge(skip)]
   pub type_: JsModuleType,
+
   #[merge(skip)]
   pub version: String,
-  #[merge(strategy = merge_sets)]
-  pub extends: BTreeSet<String>,
-  #[merge(strategy = merge::bool::overwrite_false)]
-  pub use_default_deps: bool,
+
   #[merge(strategy = merge_btree_maps)]
   pub dependencies: StringBTreeMap,
-  #[merge(strategy = merge_btree_maps)]
-  pub optional_dependencies: StringBTreeMap,
-  #[merge(strategy = merge_btree_maps)]
-  pub peer_dependencies: StringBTreeMap,
-  #[merge(strategy = merge_btree_maps)]
-  pub bundle_dependencies: StringBTreeMap,
+
   #[merge(strategy = merge_btree_maps)]
   pub dev_dependencies: StringBTreeMap,
+
   #[merge(strategy = merge_btree_maps)]
   pub scripts: StringBTreeMap,
-  #[merge(strategy = overwrite_option)]
-  pub repository: Option<Repository>,
+
   #[merge(strategy = overwrite_option)]
   pub description: Option<String>,
+
+  #[serde(skip_serializing)]
+  #[merge(strategy = merge_sets)]
+  pub extends: BTreeSet<String>,
+
+  #[serde(skip_serializing)]
+  #[merge(strategy = merge::bool::overwrite_false)]
+  pub use_default_deps: bool,
+
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub optional_dependencies: StringBTreeMap,
+
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub peer_dependencies: StringBTreeMap,
+
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub bundle_dependencies: StringBTreeMap,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_option)]
+  pub repository: Option<Repository>,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_sets)]
   pub keywords: BTreeSet<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub homepage: Option<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub bugs: Option<Bugs>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub license: Option<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub author: Option<Person>,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_sets)]
   pub contributors: BTreeSet<Person>,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_sets)]
   pub maintainers: BTreeSet<Person>,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_sets)]
   pub files: BTreeSet<String>,
+
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub exports: BTreeMap<String, Exports>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub man: Option<Man>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub config: Option<JsonValueBTreeMap>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub package_manager: Option<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub publish_config: Option<PublishConfig>,
+
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub engines: StringBTreeMap,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_sets)]
   pub os: BTreeSet<String>,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_sets)]
   pub cpu: BTreeSet<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub main: Option<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub browser: Option<String>,
+
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(skip)]
   pub workspaces: BTreeSet<String>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(skip)]
   pub directories: Option<Directories>,
+
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[serde(flatten)]
   #[merge(strategy = merge_btree_maps)]
   pub metadata: JsonValueBTreeMap,

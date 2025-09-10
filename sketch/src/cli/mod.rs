@@ -1,5 +1,11 @@
 #![allow(clippy::large_enum_variant)]
-use std::{fs::read_to_string, path::PathBuf};
+use std::{
+  fmt::Display,
+  fs::read_to_string,
+  io::{self, Write},
+  path::PathBuf,
+  str::FromStr,
+};
 
 use Commands::*;
 
@@ -12,7 +18,7 @@ pub(crate) mod parsers;
 
 use std::env::current_dir;
 
-use clap::{error::ErrorKind, Args, CommandFactory, Parser, Subcommand};
+use clap::{error::ErrorKind, Args, CommandFactory, Parser, Subcommand, ValueEnum};
 use merge::Merge;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
@@ -56,16 +62,14 @@ pub async fn start_cli() -> Result<(), GenError> {
   }
 
   match cli.command {
-    Repo {
-      root_package,
+    TsMonorepo {
+      root_package: root_package_overrides,
       boolean_flags,
       ..
     } => {
-      println!("{:#?}", root_package);
-      println!("{:?}", boolean_flags);
-
-      if let Some(root_package) = root_package {
-        config.root_package.merge(root_package);
+      let root_package = &mut config.root_package.unwrap_or_default();
+      if let Some(root_package_overrides) = root_package_overrides {
+        root_package.merge(root_package_overrides);
       }
 
       let RepoBooleanFlags {
@@ -89,7 +93,7 @@ pub async fn start_cli() -> Result<(), GenError> {
       }
 
       if no_oxlint {
-        config.root_package.oxlint = Some(OxlintConfig::Bool(false));
+        root_package.oxlint = Some(OxlintConfig::Bool(false));
       }
 
       if no_catalog {
@@ -144,7 +148,7 @@ pub async fn start_cli() -> Result<(), GenError> {
         }
       }
     }
-    Package {
+    TsPackage {
       config: package_config,
       kind,
       preset,
@@ -153,9 +157,11 @@ pub async fn start_cli() -> Result<(), GenError> {
       no_vitest,
       oxlint,
       no_update_root_tsconfig,
+      install,
       ..
     } => {
       let mut package = package_config.unwrap_or_default();
+      let package_dir = package.dir.clone();
 
       package.name = name.clone();
 
@@ -192,6 +198,22 @@ pub async fn start_cli() -> Result<(), GenError> {
       }
 
       exit_if_dry_run!();
+
+      if install {
+        launch_command(
+          None,
+          &[
+            config
+              .package_manager
+              .unwrap_or_default()
+              .to_string()
+              .as_str(),
+            "install",
+          ],
+          package_dir.as_deref().unwrap_or("."),
+          Some("Could not install dependencies"),
+        )?;
+      }
     }
     Render {
       content,
@@ -229,7 +251,73 @@ pub async fn start_cli() -> Result<(), GenError> {
         vec![template],
       )?;
     }
-    Init => {}
+    Init { output } => {
+      let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
+
+      if let Some(parent_dir) = output_path.parent() {
+        create_dir_all(parent_dir).map_err(|e| GenError::DirCreation {
+          path: parent_dir.to_path_buf(),
+          source: e,
+        })?;
+      }
+
+      let format = <ConfigFormat as FromStr>::from_str(
+        &output_path
+          .extension()
+          .unwrap_or_else(|| panic!("File {} has no extension.", output_path.display()))
+          .to_string_lossy(),
+      )?;
+
+      let mut output_file = if config.overwrite {
+        File::create(&output_path).map_err(|e| GenError::FileCreation {
+          path: output_path.clone(),
+          source: e,
+        })?
+      } else {
+        File::create_new(&output_path).map_err(|e| match e.kind() {
+          io::ErrorKind::AlreadyExists => GenError::FileExists {
+            path: output_path.clone(),
+          },
+          _ => GenError::WriteError {
+            path: output_path.clone(),
+            source: e,
+          },
+        })?
+      };
+
+      let base_config = Config::default();
+
+      match format {
+        ConfigFormat::Yaml => serde_yaml_ng::to_writer(output_file, &base_config).map_err(|e| {
+          GenError::SerializationError {
+            target: "the new config file".to_string(),
+            error: e.to_string(),
+          }
+        })?,
+        ConfigFormat::Toml => {
+          let content =
+            toml::to_string_pretty(&base_config).map_err(|e| GenError::SerializationError {
+              target: "the new config file".to_string(),
+              error: e.to_string(),
+            })?;
+
+          output_file
+            .write_all(&content.into_bytes())
+            .map_err(|e| GenError::WriteError {
+              path: output_path.clone(),
+              source: e,
+            })?;
+        }
+        ConfigFormat::Json => {
+          serde_json::to_writer_pretty(output_file, &base_config).map_err(|e| {
+            GenError::SerializationError {
+              target: "the new config file".to_string(),
+              error: e.to_string(),
+            }
+          })?
+        }
+      };
+    }
     Command { command, cwd } => {
       let command = if let Some(literal) = command.command {
         literal
@@ -239,7 +327,7 @@ pub async fn start_cli() -> Result<(), GenError> {
           source: e,
         })?
       } else {
-        panic!("At least one between --command and --file must be set.")
+        panic!("At least one between command and file must be set.")
       };
 
       exit_if_dry_run!();
@@ -253,6 +341,7 @@ pub async fn start_cli() -> Result<(), GenError> {
 }
 
 #[derive(Parser)]
+#[command(name = "sketch")]
 #[command(version, about, long_about = None)]
 struct Cli {
   /// Sets a custom config file
@@ -265,9 +354,11 @@ struct Cli {
   #[command(flatten)]
   pub overrides: Option<Config>,
 
+  /// Aborts before writing any content to disk.
   #[arg(long)]
   pub dry_run: bool,
 
+  /// Set variables to use in templates. It overrides previously set variables with the same names.
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair)]
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
@@ -275,9 +366,11 @@ struct Cli {
 #[derive(Args, Debug)]
 #[group(multiple = false)]
 struct PackageKindFlag {
+  /// Marks the package as an application.
   #[arg(long)]
   app: bool,
 
+  /// Marks the package as a library.
   #[arg(long)]
   library: bool,
 }
@@ -294,42 +387,92 @@ impl From<PackageKindFlag> for PackageKind {
 
 #[derive(Args, Debug)]
 struct RepoBooleanFlags {
+  /// Do not convert 'latest' to a version range.
   #[arg(long)]
   pub(crate) no_convert_latest: bool,
+
+  /// Do not generate an oxlint config.
   #[arg(long)]
   pub(crate) no_oxlint: bool,
+
+  /// Do not use the catalog for dependencies.
   #[arg(long)]
   pub(crate) no_catalog: bool,
+
+  /// Do not overwrite files.
   #[arg(long)]
   pub(crate) no_overwrite: bool,
+
+  /// Do not generate a pre-commit config.
   #[arg(long)]
   pub(crate) no_pre_commit: bool,
+
+  /// Generate setup for moonrepo
   #[arg(long)]
   pub(crate) moonrepo: bool,
+
+  /// The path to the shared out_dir for TS packages.
   #[arg(long, conflicts_with = "no_shared_out_dir")]
   pub(crate) shared_out_dir: Option<String>,
+
+  /// Do not use a shared out_dir for TS packages.
   #[arg(long, default_value_t = false)]
   pub(crate) no_shared_out_dir: bool,
+
+  /// Do not create a new git repo.
   #[arg(long)]
   pub(crate) no_git: bool,
+}
+
+#[derive(Clone, Debug, ValueEnum, Default)]
+enum ConfigFormat {
+  #[default]
+  Yaml,
+  Toml,
+  Json,
+}
+
+impl FromStr for ConfigFormat {
+  type Err = GenError;
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    match s {
+      "yaml" => Ok(Self::Yaml),
+      "toml" => Ok(Self::Toml),
+      "json" => Ok(Self::Json),
+      _ => Err(GenError::Custom(format!(
+        "Invalid configuration format '{}'. Allowed formats are: yaml, toml, json",
+        s
+      ))),
+    }
+  }
+}
+
+impl Display for ConfigFormat {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      ConfigFormat::Yaml => write!(f, "yaml"),
+      ConfigFormat::Toml => write!(f, "toml"),
+      ConfigFormat::Json => write!(f, "json"),
+    }
+  }
 }
 
 #[derive(Subcommand)]
 enum Commands {
   /// Generates a new config file
-  Init,
-  /// Generates a new monorepo
-  Repo {
+  Init { output: Option<PathBuf> },
+  /// Generates a new typescript monorepo
+  TsMonorepo {
     #[command(flatten)]
     root_package: Option<RootPackage>,
     #[command(flatten)]
     boolean_flags: RepoBooleanFlags,
   },
 
-  /// Generates a new package
-  Package {
+  /// Generates a new typescript package
+  TsPackage {
     name: String,
-    #[arg(short, long, conflicts_with = "PackageConfig")]
+    #[arg(long, conflicts_with = "PackageConfig")]
     preset: Option<String>,
     #[command(flatten)]
     kind: Option<PackageKindFlag>,
@@ -343,6 +486,8 @@ enum Commands {
     oxlint: bool,
     #[arg(long)]
     no_update_root_tsconfig: bool,
+    #[arg(short, long)]
+    install: bool,
   },
 
   /// Generates a file from a template
@@ -369,4 +514,10 @@ struct CommandContent {
   command: Option<String>,
   #[arg(short, long)]
   file: Option<PathBuf>,
+}
+
+#[test]
+fn verify_cli() {
+  use clap::CommandFactory;
+  Cli::command().debug_assert();
 }
