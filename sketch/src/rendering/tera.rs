@@ -212,12 +212,13 @@ mod test {
       "tests/custom_templates/custom_templates.toml",
     ))?;
 
-    let templates = config
-      .package_presets
+    let presets = config.typescript.clone().unwrap().package_presets.clone();
+
+    let templates = presets
       .get("custom_templates_test")
       .unwrap()
-      .generate_templates
       .clone()
+      .generate_templates
       .unwrap();
 
     config.generate_templates("output/custom_templates", templates.clone())?;

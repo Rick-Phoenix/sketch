@@ -123,16 +123,21 @@ impl Config {
 
 impl Config {
   pub async fn build_repo(self) -> Result<(), GenError> {
-    let package_json_presets = &self.package_json_presets;
+    let typescript = self.typescript.clone().unwrap_or_default();
 
-    let root_dir = self.root_dir.as_ref().map_or(".", |v| v);
-    let package_manager = self.package_manager.unwrap_or_default();
-    let version_ranges = self.version_ranges.unwrap_or_default();
-    let packages_dirs = self
+    let package_json_presets = &typescript.package_json_presets;
+
+    let root_dir = typescript
+      .root_dir
+      .as_deref()
+      .unwrap_or_else(|| self.root_dir.as_ref().map_or(".", |v| v));
+
+    let package_manager = typescript.package_manager.unwrap_or_default();
+    let version_ranges = typescript.version_ranges.unwrap_or_default();
+    let packages_dirs = typescript
       .packages_dirs
-      .clone()
       .unwrap_or_else(|| btreeset! { "packages/*".to_string(), "apps/*".to_string() });
-    let root_package = self.root_package.clone().unwrap_or_default();
+    let root_package = typescript.root_package.unwrap_or_default();
 
     let output = PathBuf::from(root_dir);
 
@@ -149,7 +154,7 @@ impl Config {
 
     write_to_output!(self.gitignore, ".gitignore");
 
-    let mut package_json_data = match root_package.package_json.clone().unwrap_or_default() {
+    let mut package_json_data = match root_package.package_json.unwrap_or_default() {
       PackageJsonKind::Id(id) => package_json_presets
         .get(&id)
         .ok_or(GenError::PresetNotFound {
@@ -157,7 +162,7 @@ impl Config {
           name: id,
         })?
         .clone(),
-      PackageJsonKind::Config(package_json) => *package_json.clone(),
+      PackageJsonKind::Config(package_json) => *package_json,
     };
 
     for preset in package_json_data.extends.clone() {
@@ -176,19 +181,19 @@ impl Config {
       package_json_data.package_manager = Some(package_manager.to_string());
     }
 
-    get_contributors!(package_json_data, self, contributors);
-    get_contributors!(package_json_data, self, maintainers);
+    get_contributors!(package_json_data, typescript, contributors);
+    get_contributors!(package_json_data, typescript, maintainers);
 
     if package_json_data.use_default_deps {
       for dep in ["typescript", "oxlint"] {
-        let version = if self.catalog {
+        let version = if typescript.catalog {
           "catalog:".to_string()
         } else {
           get_latest_version(dep).await.unwrap_or_else(|e| {
             println!(
               "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
+              dep,
               e,
-              dep
             );
             "latest".to_string()
           })
@@ -201,7 +206,7 @@ impl Config {
       }
     }
 
-    if self.convert_latest_to_range {
+    if typescript.convert_latest_to_range {
       package_json_data
         .get_latest_version_range(version_ranges)
         .await?;
@@ -215,9 +220,9 @@ impl Config {
     write_to_output!(package_json_data, "package.json");
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
-    let tsconfig_presets = &self.tsconfig_presets;
+    let tsconfig_presets = &typescript.tsconfig_presets;
 
-    if let Some(root_tsconfigs) = root_package.ts_config.clone() {
+    if let Some(root_tsconfigs) = root_package.ts_config {
       for directive in root_tsconfigs {
         let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
@@ -249,7 +254,7 @@ impl Config {
       let tsconfig_options = get_default_root_tsconfig();
 
       tsconfig_files.push((
-        self
+        typescript
           .root_tsconfig_name
           .clone()
           .unwrap_or_else(|| "tsconfig.options.json".to_string()),
@@ -273,7 +278,7 @@ impl Config {
       let mut pnpm_data = PnpmWorkspace {
         catalog: Default::default(),
         packages: packages_dirs.clone(),
-        extra: self.pnpm_config.clone(),
+        extra: typescript.pnpm_config,
         catalogs: Default::default(),
       };
 
@@ -284,8 +289,8 @@ impl Config {
       write_to_output!(pnpm_data, "pnpm-workspace.yaml");
     }
 
-    if let Some(ref moon_config_kind) = self.moonrepo && !matches!(moon_config_kind, MoonConfigKind::Bool(false)) {
-      let moon_config = match moon_config_kind.clone() {
+    if let Some(moon_config_kind) = root_package.moonrepo && !matches!(moon_config_kind, MoonConfigKind::Bool(false)) {
+      let moon_config = match moon_config_kind {
         MoonConfigKind::Bool(_) => MoonConfig::default(),
         MoonConfigKind::Config(c) => *c
       };
@@ -324,7 +329,7 @@ impl Config {
       write_to_output!(pre_commit, ".pre-commit-config.yaml");
     }
 
-    if let Some(oxlint_config) = root_package.oxlint.clone() && !matches!(oxlint_config, OxlintConfig::Bool(false)) {
+    if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfig::Bool(false)) {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
@@ -335,14 +340,14 @@ impl Config {
       })?;
     }
 
-    if let Some(shared_out_dir) = self.shared_out_dir.get_name() {
+    if let Some(shared_out_dir) = typescript.shared_out_dir.get_name() {
       create_dir_all(output.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
         path: output.to_path_buf(),
         source: e,
       })?;
     }
 
-    if let Some(templates) = root_package.generate_templates.clone() && !templates.is_empty() {
+    if let Some(templates) = root_package.generate_templates && !templates.is_empty() {
       let root_dir = root_dir.to_string();
       self.generate_templates(&root_dir, templates)?;
     }

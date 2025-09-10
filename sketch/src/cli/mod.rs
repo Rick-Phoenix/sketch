@@ -1,12 +1,14 @@
 #![allow(clippy::large_enum_variant)]
 use std::{
-  fmt::Display,
   fs::read_to_string,
   io::{self, Write},
   path::PathBuf,
   str::FromStr,
 };
 
+mod cli_elements;
+
+use cli_elements::*;
 use Commands::*;
 
 use crate::{
@@ -18,15 +20,15 @@ pub(crate) mod parsers;
 
 use std::env::current_dir;
 
-use clap::{error::ErrorKind, Args, CommandFactory, Parser, Subcommand, ValueEnum};
+use clap::{error::ErrorKind, CommandFactory, Parser, Subcommand};
 use merge::Merge;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
 
 use crate::{
   moon::{MoonConfigKind, MoonDotYmlKind},
-  package::{vitest::VitestConfig, PackageConfig, PackageKind},
-  Config, RootPackage, *,
+  package::{vitest::VitestConfig, PackageConfig},
+  Config, *,
 };
 
 pub async fn start_cli() -> Result<(), GenError> {
@@ -61,160 +63,44 @@ pub async fn start_cli() -> Result<(), GenError> {
     };
   }
 
+  if cli.no_overwrite {
+    config.overwrite = false;
+  }
+
   match cli.command {
-    TsMonorepo {
-      root_package: root_package_overrides,
-      boolean_flags,
-      ..
+    Init {
+      no_pre_commit,
+      remote,
     } => {
-      let root_package = &mut config.root_package.unwrap_or_default();
-      if let Some(root_package_overrides) = root_package_overrides {
-        root_package.merge(root_package_overrides);
-      }
+      let cwd = config.root_dir.as_deref().unwrap_or(".");
+      let shell = config.shell.as_deref();
 
-      let RepoBooleanFlags {
-        no_git,
-        no_pre_commit,
-        no_convert_latest,
-        no_oxlint,
-        no_catalog,
-        no_overwrite,
-        moonrepo,
-        shared_out_dir,
-        no_shared_out_dir,
-      } = boolean_flags;
+      launch_command(
+        shell,
+        &["git", "init"],
+        cwd,
+        Some("Failed to initialize a new git repo"),
+      )?;
 
-      if no_convert_latest {
-        config.convert_latest_to_range = false;
-      }
-
-      if no_pre_commit {
-        config.pre_commit = PreCommitSetting::Bool(false);
-      }
-
-      if no_oxlint {
-        root_package.oxlint = Some(OxlintConfig::Bool(false));
-      }
-
-      if no_catalog {
-        config.catalog = false;
-      }
-
-      if no_overwrite {
-        config.overwrite = false;
-      }
-
-      if moonrepo {
-        config.moonrepo = Some(MoonConfigKind::Bool(true));
-      }
-
-      if no_shared_out_dir {
-        config.shared_out_dir = SharedOutDir::Bool(false);
-      }
-
-      if let Some(shared_out_dir) = shared_out_dir {
-        config.shared_out_dir = SharedOutDir::Name(shared_out_dir);
-      }
-
-      exit_if_dry_run!();
-
-      if !no_git {
-        let cwd = config.root_dir.as_deref().unwrap_or(".");
-        let shell = config.shell.as_deref();
-
+      if let Some(remote) = remote {
         launch_command(
           shell,
-          &["git", "init"],
+          &["git", "remote", "add", "origin", remote.as_str()],
           cwd,
-          Some("Failed to initialize a new git repo"),
+          Some("Failed to add the remote to the git repo"),
         )?;
-
-        if let Some(remote) = config.remote {
-          launch_command(
-            shell,
-            &["git", "remote", "add", "origin", remote.as_str()],
-            cwd,
-            Some("Failed to add the remote to the git repo"),
-          )?;
-        }
-
-        if !no_pre_commit {
-          launch_command(
-            shell,
-            &["pre-commit", "install"],
-            cwd,
-            Some("Failed to install the pre-commit hooks"),
-          )?;
-        }
-      }
-    }
-    TsPackage {
-      config: package_config,
-      kind,
-      preset,
-      name,
-      moonrepo,
-      no_vitest,
-      oxlint,
-      no_update_root_tsconfig,
-      install,
-      ..
-    } => {
-      let mut package = package_config.unwrap_or_default();
-      let package_dir = package.dir.clone();
-
-      package.name = name.clone();
-
-      if let Some(kind) = kind {
-        package.kind = Some(kind.into());
       }
 
-      if moonrepo {
-        package.moonrepo = Some(MoonDotYmlKind::Bool(true));
-      }
-
-      if no_vitest {
-        package.vitest = Some(VitestConfig::Boolean(false));
-      }
-
-      if oxlint {
-        package.oxlint = Some(OxlintConfig::Bool(true));
-      }
-
-      if no_update_root_tsconfig {
-        package.update_root_tsconfig = false;
-      }
-
-      let _id = if let Some(preset) = preset {
-        preset
-      } else {
-        let new_id = format!("__{}", name);
-        config.package_presets.insert(new_id.clone(), package);
-        new_id
-      };
-
-      if config.debug {
-        println!("DEBUG: {:#?}", config);
-      }
-
-      exit_if_dry_run!();
-
-      if install {
+      if !no_pre_commit {
         launch_command(
-          None,
-          &[
-            config
-              .package_manager
-              .unwrap_or_default()
-              .to_string()
-              .as_str(),
-            "install",
-          ],
-          package_dir.as_deref().unwrap_or("."),
-          Some("Could not install dependencies"),
+          shell,
+          &["pre-commit", "install"],
+          cwd,
+          Some("Failed to install the pre-commit hooks"),
         )?;
       }
     }
+
     Render {
       content,
       output,
@@ -251,7 +137,7 @@ pub async fn start_cli() -> Result<(), GenError> {
         vec![template],
       )?;
     }
-    Init { output } => {
+    New { output } => {
       let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
 
       if let Some(parent_dir) = output_path.parent() {
@@ -318,10 +204,10 @@ pub async fn start_cli() -> Result<(), GenError> {
         }
       };
     }
-    Command { command, cwd } => {
-      let command = if let Some(literal) = command.command {
+    Command { command, file, cwd } => {
+      let command = if let Some(literal) = command {
         literal
-      } else if let Some(file_path) = command.file {
+      } else if let Some(file_path) = file {
         read_to_string(&file_path).map_err(|e| GenError::ReadError {
           path: file_path,
           source: e,
@@ -335,6 +221,126 @@ pub async fn start_cli() -> Result<(), GenError> {
       let shell = config.shell.clone();
       config.execute_command(shell.as_deref(), cwd, &command)?;
     }
+    Ts { command } => match command {
+      TsCommands::Monorepo {
+        typescript_overrides,
+        shared_out_dir,
+        moonrepo,
+        no_convert_latest,
+        no_oxlint,
+        no_catalog,
+        no_shared_out_dir,
+        root_package_overrides,
+        ..
+      } => {
+        let typescript = config.typescript.get_or_insert_default();
+
+        if let Some(typescript_overrides) = typescript_overrides {
+          typescript.merge(typescript_overrides);
+        }
+
+        let root_package = typescript.root_package.get_or_insert_default();
+
+        if let Some(root_package_overrides) = root_package_overrides {
+          root_package.merge(root_package_overrides);
+        }
+
+        if no_convert_latest {
+          typescript.convert_latest_to_range = false;
+        }
+
+        if no_oxlint {
+          root_package.oxlint = Some(OxlintConfig::Bool(false));
+        }
+
+        if no_catalog {
+          typescript.catalog = false;
+        }
+
+        if moonrepo {
+          root_package.moonrepo = Some(MoonConfigKind::Bool(true));
+        }
+
+        if no_shared_out_dir {
+          typescript.shared_out_dir = SharedOutDir::Bool(false);
+        }
+
+        if let Some(shared_out_dir) = shared_out_dir {
+          typescript.shared_out_dir = SharedOutDir::Name(shared_out_dir);
+        }
+
+        exit_if_dry_run!();
+      }
+      TsCommands::Package {
+        package_config,
+        kind,
+        preset,
+        name,
+        moonrepo,
+        no_vitest,
+        oxlint,
+        no_update_root_tsconfig,
+        install,
+        typescript_config,
+        ..
+      } => {
+        let typescript = config.typescript.get_or_insert_default();
+        let package_manager = typescript.package_manager.unwrap_or_default();
+
+        if let Some(ts_overrides) = typescript_config {
+          typescript.merge(ts_overrides);
+        }
+
+        let mut package = package_config.unwrap_or_default();
+
+        let package_dir = package.dir.clone();
+
+        package.name = name.clone();
+
+        if let Some(kind) = kind {
+          package.kind = Some(kind.into());
+        }
+
+        if moonrepo {
+          package.moonrepo = Some(MoonDotYmlKind::Bool(true));
+        }
+
+        if no_vitest {
+          package.vitest = Some(VitestConfig::Boolean(false));
+        }
+
+        if oxlint {
+          package.oxlint = Some(OxlintConfig::Bool(true));
+        }
+
+        if no_update_root_tsconfig {
+          package.update_root_tsconfig = false;
+        }
+
+        let _id = if let Some(preset) = preset {
+          preset
+        } else {
+          let new_id = format!("__{}", name);
+          typescript.package_presets.insert(new_id.clone(), package);
+          new_id
+        };
+
+        if config.debug {
+          println!("DEBUG: {:#?}", config);
+        }
+
+        exit_if_dry_run!();
+
+        if install {
+          launch_command(
+            None,
+            &[package_manager.to_string().as_str(), "install"],
+            package_dir.as_deref().unwrap_or("."),
+            Some("Could not install dependencies"),
+          )?;
+        }
+      }
+    },
   };
 
   Ok(())
@@ -358,137 +364,35 @@ struct Cli {
   #[arg(long)]
   pub dry_run: bool,
 
+  /// Do not overwrite files.
+  #[arg(long)]
+  pub(crate) no_overwrite: bool,
+
   /// Set variables to use in templates. It overrides previously set variables with the same names.
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair)]
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
 
-#[derive(Args, Debug)]
-#[group(multiple = false)]
-struct PackageKindFlag {
-  /// Marks the package as an application.
-  #[arg(long)]
-  app: bool,
-
-  /// Marks the package as a library.
-  #[arg(long)]
-  library: bool,
-}
-
-impl From<PackageKindFlag> for PackageKind {
-  fn from(value: PackageKindFlag) -> Self {
-    if value.app {
-      Self::App
-    } else {
-      Self::Library
-    }
-  }
-}
-
-#[derive(Args, Debug)]
-struct RepoBooleanFlags {
-  /// Do not convert 'latest' to a version range.
-  #[arg(long)]
-  pub(crate) no_convert_latest: bool,
-
-  /// Do not generate an oxlint config.
-  #[arg(long)]
-  pub(crate) no_oxlint: bool,
-
-  /// Do not use the catalog for dependencies.
-  #[arg(long)]
-  pub(crate) no_catalog: bool,
-
-  /// Do not overwrite files.
-  #[arg(long)]
-  pub(crate) no_overwrite: bool,
-
-  /// Do not generate a pre-commit config.
-  #[arg(long)]
-  pub(crate) no_pre_commit: bool,
-
-  /// Generate setup for moonrepo
-  #[arg(long)]
-  pub(crate) moonrepo: bool,
-
-  /// The path to the shared out_dir for TS packages.
-  #[arg(long, conflicts_with = "no_shared_out_dir")]
-  pub(crate) shared_out_dir: Option<String>,
-
-  /// Do not use a shared out_dir for TS packages.
-  #[arg(long, default_value_t = false)]
-  pub(crate) no_shared_out_dir: bool,
-
-  /// Do not create a new git repo.
-  #[arg(long)]
-  pub(crate) no_git: bool,
-}
-
-#[derive(Clone, Debug, ValueEnum, Default)]
-enum ConfigFormat {
-  #[default]
-  Yaml,
-  Toml,
-  Json,
-}
-
-impl FromStr for ConfigFormat {
-  type Err = GenError;
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
-    match s {
-      "yaml" => Ok(Self::Yaml),
-      "toml" => Ok(Self::Toml),
-      "json" => Ok(Self::Json),
-      _ => Err(GenError::Custom(format!(
-        "Invalid configuration format '{}'. Allowed formats are: yaml, toml, json",
-        s
-      ))),
-    }
-  }
-}
-
-impl Display for ConfigFormat {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    match self {
-      ConfigFormat::Yaml => write!(f, "yaml"),
-      ConfigFormat::Toml => write!(f, "toml"),
-      ConfigFormat::Json => write!(f, "json"),
-    }
-  }
-}
-
 #[derive(Subcommand)]
 enum Commands {
-  /// Generates a new config file
-  Init { output: Option<PathBuf> },
-  /// Generates a new typescript monorepo
-  TsMonorepo {
-    #[command(flatten)]
-    root_package: Option<RootPackage>,
-    #[command(flatten)]
-    boolean_flags: RepoBooleanFlags,
+  /// The typescript-specific commands
+  Ts {
+    #[command(subcommand)]
+    command: TsCommands,
   },
 
-  /// Generates a new typescript package
-  TsPackage {
-    name: String,
-    #[arg(long, conflicts_with = "PackageConfig")]
-    preset: Option<String>,
-    #[command(flatten)]
-    kind: Option<PackageKindFlag>,
-    #[command(flatten)]
-    config: Option<PackageConfig>,
+  Init {
+    /// Do not generate a pre-commit config.
     #[arg(long)]
-    moonrepo: bool,
+    no_pre_commit: bool,
+
+    /// The link to the git remote to use.
     #[arg(long)]
-    no_vitest: bool,
-    #[arg(long)]
-    oxlint: bool,
-    #[arg(long)]
-    no_update_root_tsconfig: bool,
-    #[arg(short, long)]
-    install: bool,
+    remote: Option<String>,
   },
+
+  /// Generates a new config file
+  New { output: Option<PathBuf> },
 
   /// Generates a file from a template
   Render {
@@ -501,19 +405,71 @@ enum Commands {
   },
 
   Command {
-    #[command(flatten)]
-    command: CommandContent,
+    command: Option<String>,
+    #[arg(short, long, conflicts_with = "command")]
+    file: Option<PathBuf>,
     #[arg(long)]
     cwd: Option<PathBuf>,
   },
 }
 
-#[derive(Args)]
-#[group(required = true, multiple = false)]
-struct CommandContent {
-  command: Option<String>,
-  #[arg(short, long)]
-  file: Option<PathBuf>,
+#[derive(Subcommand)]
+enum TsCommands {
+  /// Generates a new typescript monorepo
+  Monorepo {
+    #[command(flatten)]
+    typescript_overrides: Option<TypescriptConfig>,
+
+    #[command(flatten)]
+    root_package_overrides: Option<RootPackage>,
+
+    /// Do not convert 'latest' to a version range.
+    #[arg(long)]
+    no_convert_latest: bool,
+
+    /// Do not generate an oxlint config.
+    #[arg(long)]
+    no_oxlint: bool,
+
+    /// Do not use the catalog for dependencies.
+    #[arg(long)]
+    no_catalog: bool,
+
+    /// Generate setup for moonrepo
+    #[arg(long)]
+    moonrepo: bool,
+
+    /// The path to the shared out_dir for TS packages.
+    #[arg(long, conflicts_with = "no_shared_out_dir")]
+    shared_out_dir: Option<String>,
+
+    /// Do not use a shared out_dir for TS packages.
+    #[arg(long, default_value_t = false)]
+    no_shared_out_dir: bool,
+  },
+
+  /// Generates a new typescript package
+  Package {
+    name: String,
+    #[arg(long, conflicts_with = "PackageConfig")]
+    preset: Option<String>,
+    #[command(flatten)]
+    kind: Option<PackageKindFlag>,
+    #[command(flatten)]
+    package_config: Option<PackageConfig>,
+    #[command(flatten)]
+    typescript_config: Option<TypescriptConfig>,
+    #[arg(long)]
+    moonrepo: bool,
+    #[arg(long)]
+    no_vitest: bool,
+    #[arg(long)]
+    oxlint: bool,
+    #[arg(long)]
+    no_update_root_tsconfig: bool,
+    #[arg(short, long)]
+    install: bool,
+  },
 }
 
 #[test]

@@ -18,7 +18,7 @@ use serde_json::Value;
 use crate::{
   cli::parsers::parse_btreeset_from_csv,
   config_elements::*,
-  merge_config_file, merge_index_maps, merge_index_sets,
+  merge_config_file, merge_index_maps, merge_index_sets, merge_optional_nested,
   moon::MoonConfigKind,
   overwrite_option,
   package::{vitest::VitestConfigStruct, PackageConfig},
@@ -28,7 +28,7 @@ use crate::{
   GenError, SharedOutDir, VersionRange,
 };
 
-impl Config {
+impl TypescriptConfig {
   pub fn get_contributor(&self, name: &str) -> Option<Person> {
     self
       .people
@@ -39,17 +39,27 @@ impl Config {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge)]
 #[merge(strategy = overwrite_option)]
+#[serde(default)]
 pub struct RootPackage {
   #[arg(short, long)]
   pub name: Option<String>,
+
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
+
   #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
   pub ts_config: Option<Vec<TsConfigDirective>>,
+
   #[arg(skip)]
   pub generate_templates: Option<Vec<TemplateOutput>>,
+
   #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
   pub package_json: Option<PackageJsonKind>,
+
+  /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
+  #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(skip)]
+  pub moonrepo: Option<MoonConfigKind>,
 }
 
 impl Default for RootPackage {
@@ -60,33 +70,18 @@ impl Default for RootPackage {
       ts_config: Default::default(),
       generate_templates: Default::default(),
       package_json: Default::default(),
+      moonrepo: None,
     }
   }
 }
 
-/// The global configuration struct.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
-pub struct Config {
-  /// The link to the git remote for this project. Gets added automatically when the initial git repo is created.
-  #[merge(strategy = merge::option::overwrite_none)]
-  #[arg(long)]
-  pub remote: Option<String>,
-
-  /// The shell to use for commands. Defaults to 'cmd.exe' on windows and 'sh' elsewhere.
-  #[merge(strategy = merge::option::overwrite_none)]
-  #[arg(long)]
-  pub shell: Option<String>,
-
+pub struct TypescriptConfig {
   /// The configuration for the root typescript package
   #[merge(skip)]
   #[arg(skip)]
   pub root_package: Option<RootPackage>,
-
-  /// Activates debugging mode.
-  #[merge(strategy = merge::bool::overwrite_false)]
-  #[arg(long)]
-  pub debug: bool,
 
   /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
   /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
@@ -132,11 +127,6 @@ pub struct Config {
   #[arg(long)]
   pub version_ranges: Option<VersionRange>,
 
-  /// The directory that contains the template files.
-  #[merge(strategy = merge::option::overwrite_none)]
-  #[arg(long)]
-  pub templates_dir: Option<String>,
-
   /// Whether to use the pnpm catalog for default dependencies.
   #[merge(strategy = merge::bool::overwrite_true)]
   #[arg(skip)]
@@ -146,40 +136,6 @@ pub struct Config {
   #[merge(strategy = merge::bool::overwrite_true)]
   #[arg(skip)]
   pub convert_latest_to_range: bool,
-
-  /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
-  #[merge(strategy = merge::option::overwrite_none)]
-  #[arg(skip)]
-  pub moonrepo: Option<MoonConfigKind>,
-
-  /// Whether file generation should always override existing files. Defaults to true.
-  #[merge(strategy = merge::bool::overwrite_true)]
-  #[arg(skip)]
-  pub overwrite: bool,
-
-  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
-  #[merge(skip)]
-  #[arg(skip)]
-  pub shared_out_dir: SharedOutDir,
-
-  /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
-  #[merge(skip)]
-  #[arg(skip)]
-  pub pre_commit: PreCommitSetting,
-
-  #[merge(skip)]
-  #[arg(skip)]
-  pub gitignore: GitIgnore,
-
-  /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
-  #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
-  pub pnpm_config: IndexMap<String, Value>,
-
-  /// The list of configuration files to merge with the current one.
-  #[merge(strategy = merge_index_sets)]
-  #[arg(skip)]
-  pub extends: IndexSet<PathBuf>,
 
   /// A map of individuals btree_that can be referenced in the list of contributors or maintainers in a package.json file.
   #[arg(skip)]
@@ -205,6 +161,63 @@ pub struct Config {
   #[arg(skip)]
   #[merge(strategy = merge_index_maps)]
   pub vitest_presets: IndexMap<String, VitestConfigStruct>,
+
+  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory in the root of the monorepo, with subdirectories for each package.
+  #[merge(skip)]
+  #[arg(skip)]
+  pub shared_out_dir: SharedOutDir,
+  /// The extra settings to render in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub pnpm_config: IndexMap<String, Value>,
+}
+
+/// The global configuration struct.
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
+#[serde(default)]
+pub struct Config {
+  #[merge(strategy = merge_optional_nested)]
+  #[arg(skip)]
+  pub typescript: Option<TypescriptConfig>,
+
+  /// The shell to use for commands. Defaults to 'cmd.exe' on windows and 'sh' elsewhere.
+  #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(long)]
+  pub shell: Option<String>,
+
+  /// Activates debugging mode.
+  #[merge(strategy = merge::bool::overwrite_false)]
+  #[arg(long)]
+  pub debug: bool,
+
+  /// The root directory for the project. Defaults to the current working directory.
+  #[merge(strategy = overwrite_option)]
+  #[arg(long)]
+  pub root_dir: Option<String>,
+
+  /// The directory that contains the template files.
+  #[merge(strategy = merge::option::overwrite_none)]
+  #[arg(long)]
+  pub templates_dir: Option<String>,
+
+  /// Whether file generation should always override existing files. Defaults to true.
+  #[merge(strategy = merge::bool::overwrite_true)]
+  #[arg(skip)]
+  pub overwrite: bool,
+
+  /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
+  #[merge(skip)]
+  #[arg(skip)]
+  pub pre_commit: PreCommitSetting,
+
+  #[merge(skip)]
+  #[arg(skip)]
+  pub gitignore: GitIgnore,
+
+  /// The list of configuration files to merge with the current one.
+  #[merge(strategy = merge_index_sets)]
+  #[arg(skip)]
+  pub extends: IndexSet<PathBuf>,
 
   /// A map that contains templates defined literally.
   #[merge(strategy = merge_index_maps)]
@@ -277,22 +290,15 @@ impl Config {
   }
 }
 
-impl Default for Config {
+impl Default for TypescriptConfig {
   fn default() -> Self {
     Self {
-      shell: None,
-      remote: None,
-      debug: false,
       convert_latest_to_range: true,
-      gitignore: Default::default(),
       package_json_presets: Default::default(),
       package_manager: Default::default(),
       root_tsconfig_name: None,
       project_tsconfig_name: None,
       dev_tsconfig_name: None,
-      moonrepo: None,
-      pre_commit: PreCommitSetting::Bool(true),
-      root_dir: None,
       packages_dirs: Some(btreeset!["packages/*".to_string(), "apps/*".to_string()]),
       package_presets: Default::default(),
       vitest_presets: Default::default(),
@@ -302,12 +308,26 @@ impl Default for Config {
       shared_out_dir: SharedOutDir::Name(".out".to_string()),
       people: Default::default(),
       pnpm_config: Default::default(),
+      root_package: Default::default(),
+      root_dir: None,
+    }
+  }
+}
+
+impl Default for Config {
+  fn default() -> Self {
+    Self {
+      typescript: None,
+      shell: None,
+      debug: false,
+      gitignore: Default::default(),
+      pre_commit: PreCommitSetting::Bool(true),
+      root_dir: None,
       templates_dir: Default::default(),
       templates: Default::default(),
       global_templates_vars: Default::default(),
       extends: Default::default(),
       overwrite: true,
-      root_package: Default::default(),
     }
   }
 }

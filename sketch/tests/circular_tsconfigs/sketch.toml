@@ -1,18 +1,18 @@
 root_dir = "output"
 
-[tsconfig_presets.one]
+[typescript.tsconfig_presets.one]
 extend_presets = ["two"]
 
-[tsconfig_presets.two]
+[typescript.tsconfig_presets.two]
 extend_presets = ["three"]
 
-[tsconfig_presets.three]
+[typescript.tsconfig_presets.three]
 extend_presets = ["one"]
 
-[package_presets.circular_tsconfigs]
+[typescript.package_presets.circular_tsconfigs]
 name = "circular_tsconfig"
 package_json = "one"
 dir = "packages/mypkg"
 ts_config = [{ output = "tsconfig.abc.json", config = "one" }]
 
-[package_json_presets.one]
+[typescript.package_json_presets.one]

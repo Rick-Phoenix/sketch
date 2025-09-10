@@ -100,15 +100,20 @@ impl Default for PackageConfig {
 impl Config {
   /// Generate a new typescript package.
   pub async fn build_package(self, name: &str) -> Result<(), GenError> {
-    let global_config = self;
+    let typescript = self.typescript.clone().unwrap_or_default();
 
-    let package_json_presets = &global_config.package_json_presets;
+    let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = PathBuf::from(global_config.root_dir.as_ref().map_or(".", |v| v));
-    let package_manager = global_config.package_manager.unwrap_or_default();
-    let version_ranges = global_config.version_ranges.unwrap_or_default();
+    let root_dir = PathBuf::from(
+      typescript
+        .root_dir
+        .as_deref()
+        .unwrap_or_else(|| self.root_dir.as_ref().map_or(".", |v| v)),
+    );
+    let package_manager = typescript.package_manager.unwrap_or_default();
+    let version_ranges = typescript.version_ranges.unwrap_or_default();
 
-    let config = global_config
+    let config = typescript
       .package_presets
       .get(name)
       .ok_or(GenError::PresetNotFound {
@@ -126,12 +131,12 @@ impl Config {
 
     macro_rules! write_to_output {
     ($($tokens:tt)*) => {
-      write_file!(output, global_config.overwrite, $($tokens) *)
+      write_file!(output, self.overwrite, $($tokens) *)
     };
   }
 
     let (package_json_id, mut package_json_data) = if let Some(package_json_config) =
-      config.package_json.clone()
+      config.package_json
     {
       match package_json_config {
         PackageJsonKind::Id(id) => {
@@ -157,19 +162,19 @@ impl Config {
       package_json_data.package_manager = Some(package_manager.to_string());
     }
 
-    get_contributors!(package_json_data, global_config, contributors);
-    get_contributors!(package_json_data, global_config, maintainers);
+    get_contributors!(package_json_data, typescript, contributors);
+    get_contributors!(package_json_data, typescript, maintainers);
 
     if package_json_data.use_default_deps {
       for dep in DEFAULT_DEPS {
-        let version = if global_config.catalog {
+        let version = if typescript.catalog {
           "catalog:".to_string()
         } else {
           let version = get_latest_version(dep).await.unwrap_or_else(|e| {
             println!(
               "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
+              dep,
               e,
-              dep
             );
             "latest".to_string()
           });
@@ -184,7 +189,7 @@ impl Config {
 
     package_json_data.name = config.name.clone();
 
-    if global_config.convert_latest_to_range {
+    if typescript.convert_latest_to_range {
       package_json_data
         .get_latest_version_range(version_ranges)
         .await?;
@@ -192,7 +197,7 @@ impl Config {
 
     write_to_output!(package_json_data, "package.json");
 
-    if global_config.catalog && matches!(package_manager, PackageManager::Pnpm) {
+    if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
       let pnpm_workspace_file = File::open(&pnpm_workspace_path)
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
@@ -212,10 +217,10 @@ impl Config {
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
     }
 
-    if let Some(ref moon_config_kind) = config.moonrepo && !matches!(moon_config_kind, MoonDotYmlKind::Bool(false)) {
+    if let Some(moon_config_kind) = config.moonrepo && !matches!(moon_config_kind, MoonDotYmlKind::Bool(false)) {
       let moon_config = match moon_config_kind {
         MoonDotYmlKind::Bool(_) => MoonDotYml::default(),
-        MoonDotYmlKind::Config(moon_dot_yml) => moon_dot_yml.clone(),
+        MoonDotYmlKind::Config(moon_dot_yml) => moon_dot_yml,
       };
 
       write_to_output!(moon_config, "moon.yml");
@@ -223,9 +228,9 @@ impl Config {
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
 
-    let tsconfig_presets = &global_config.tsconfig_presets;
+    let tsconfig_presets = &typescript.tsconfig_presets;
 
-    if let Some(tsconfig_directives) = config.ts_config.clone() {
+    if let Some(tsconfig_directives) = config.ts_config {
       for directive in tsconfig_directives {
         let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
@@ -261,7 +266,7 @@ impl Config {
         get_relative_path(
           &output,
           &root_dir.join(
-            global_config
+            typescript
               .shared_out_dir
               .get_name()
               .unwrap_or(".out".to_string()),
@@ -277,12 +282,12 @@ impl Config {
         .to_string();
       let base_tsconfig = get_default_package_tsconfig(
         rel_path_to_root_dir,
-        global_config
+        typescript
           .project_tsconfig_name
           .as_ref()
           .map_or("tsconfig.src.json", |v| v),
         is_app.then_some(
-          global_config
+          typescript
             .dev_tsconfig_name
             .as_ref()
             .map_or("tsconfig.dev.json", |v| v),
@@ -294,7 +299,7 @@ impl Config {
       let src_tsconfig = get_default_src_tsconfig(is_app, &out_dir);
 
       tsconfig_files.push((
-        global_config
+        typescript
           .project_tsconfig_name
           .clone()
           .unwrap_or_else(|| "tsconfig.options.json".to_string()),
@@ -303,7 +308,7 @@ impl Config {
 
       if !is_app {
         let dev_tsconfig = get_default_dev_tsconfig(
-          global_config
+          typescript
             .project_tsconfig_name
             .as_ref()
             .map_or("tsconfig.src.json", |v| v),
@@ -311,9 +316,8 @@ impl Config {
         );
 
         tsconfig_files.push((
-          global_config
+          typescript
             .dev_tsconfig_name
-            .clone()
             .unwrap_or_else(|| "tsconfig.dev.json".to_string()),
           dev_tsconfig,
         ));
@@ -344,16 +348,10 @@ impl Config {
       write_to_output!(tsconfig, file);
     }
 
-    let tests_setup_dir = output.join("tests/setup");
-    create_dir_all(&tests_setup_dir).map_err(|e| GenError::DirCreation {
-      path: tests_setup_dir,
-      source: e,
-    })?;
-
     let vitest_config = match config.vitest.unwrap_or_default() {
       VitestConfig::Boolean(v) => v.then(VitestConfigStruct::default),
       VitestConfig::Id(n) => {
-        let vitest_presets = &global_config.vitest_presets;
+        let vitest_presets = &typescript.vitest_presets;
         Some(
           vitest_presets
             .get(&n)
@@ -368,6 +366,12 @@ impl Config {
     };
 
     if let Some(vitest) = vitest_config {
+      let tests_setup_dir = output.join("tests/setup");
+      create_dir_all(&tests_setup_dir).map_err(|e| GenError::DirCreation {
+        path: tests_setup_dir,
+        source: e,
+      })?;
+
       write_to_output!(vitest, "tests/vitest.config.ts");
       write_to_output!(TestsSetupFile {}, "tests/setup/tests_setup.ts");
     }
@@ -390,7 +394,7 @@ impl Config {
     }
 
     if let Some(templates) = config.generate_templates && !templates.is_empty() {
-      global_config
+      self
         .generate_templates(&output.to_string_lossy(), templates)?;
     }
 

@@ -7,7 +7,7 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 
 templates_dir = "output/templates"
 
-[package_presets.custom_templates_test]
+[typescript.package_presets.custom_templates_test]
 generate_templates = [
   { template = "subdir/nested.j2", output = "nested.yaml" },
   { template = "abc.j2", output = "with_global_var.yaml" },

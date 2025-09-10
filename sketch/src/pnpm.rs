@@ -69,8 +69,8 @@ impl PnpmWorkspace {
           .unwrap_or_else(|e| {
             println!(
               "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
+              name,
               e,
-              name
             );
             "latest".to_string()
           });
@@ -101,8 +101,8 @@ impl PnpmWorkspace {
           .unwrap_or_else(|e| {
             println!(
               "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
+              name,
               e,
-              name
             );
             "latest".to_string()
           });

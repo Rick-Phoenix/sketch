@@ -4,6 +4,21 @@ use std::{
 };
 
 use indexmap::{IndexMap, IndexSet};
+use merge::Merge;
+
+pub(crate) fn merge_optional_nested<T: Merge>(left: &mut Option<T>, right: Option<T>) {
+  if let Some(right_data) = right {
+    if let Some(left_data) = left {
+      left_data.merge(right_data);
+    } else {
+      *left = Some(right_data);
+    }
+  }
+}
+
+pub(crate) fn merge_nested<T: Merge>(left: &mut T, right: T) {
+  left.merge(right);
+}
 
 pub(crate) fn overwrite_always<T>(left: &mut T, right: T) {
   *left = right

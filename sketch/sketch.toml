@@ -6,7 +6,7 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 
 templates_dir = "output/templates"
 
-
+[typescript]
 package_dirs = ["packages", "apps"]
 pnpm_config = { onlyBuiltDependencies = [
   "esbuild",
@@ -14,7 +14,7 @@ pnpm_config = { onlyBuiltDependencies = [
   "@tailwindcss/oxide",
 ] }
 
-[package_presets.custom_templates_test]
+[typescript.package_presets.custom_templates_test]
 generate_templates = [
   { template = "subdir/nested.j2", output = "nested.yaml" },
   { template = "abc.j2", output = "with_global_var.yaml" },
@@ -23,13 +23,13 @@ generate_templates = [
   { template = "lit_template", output = "literal_from_config.yaml" },
 ]
 
-[package_presets.alt2]
+[typescript.package_presets.alt2]
 name = "abc2"
 package_json = "abc"
 dir = "packages/mypkg"
 moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }
 
-[package_json_presets.base]
+[typescript.package_json_presets.base]
 scripts = { abc = "abc", bcd = "bcd" }
 repository = "myrepo"
 license = "Apache 2.0"
@@ -42,17 +42,13 @@ engines = { node = "23.0.0", deno = "2.2" }
 os = ["darwin", "linux"]
 cpu = ["x64", "arm64"]
 
-[package_json_presets.svelte.dev_dependencies]
-vite = "catalog:"
-svelte = "catalog:svelte"
-tailwind = "catalog:tailwind"
 
-[package_json_presets.abc]
+[typescript.package_json_presets.abc]
 name = "abc"
 bugs = { workspace = true }
 workspaces = ["one", "two"]
 main = "dist/index.js"
-extends = ["svelte", "base"]
+extends = ["base"]
 contributors = [
   { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
   { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
@@ -71,20 +67,20 @@ config = { something = { setting = true, other = "something" }, otherThing = "so
 publish_config = { access = "public", tag = "mytag", registry = "hobbits.com", something = { setting = true, other = "something" }, otherThing = "some_setting" }
 
 
-[package_json_presets.abc.dependencies]
+[typescript.package_json_presets.abc.dependencies]
 my-app = "^1.0.0"
 my-app2 = "^1.0.0"
 
-[package_json_presets.abc.dev_dependencies]
+[typescript.package_json_presets.abc.dev_dependencies]
 my-app = "^1.0.0"
 
-[package_json_presets.abc.metadata]
+[typescript.package_json_presets.abc.metadata]
 custom = { something = "abc", other = "abc" }
 
-[package_json_presets.abc.metadata.pnpm]
+[typescript.package_json_presets.abc.metadata.pnpm]
 onlyBuildDependencies = ["esbuild"]
 
-[moonrepo.toolchain]
+[typescript.root_package.moonrepo.toolchain]
 fileGroups = ["abc", "bcd"]
 
 [pre_commit]
