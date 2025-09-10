@@ -1,6 +1,19 @@
-use std::path::{Path, PathBuf};
+use std::{
+  env::current_dir,
+  path::{Path, PathBuf},
+};
 
 use crate::GenError;
+
+pub(crate) fn get_parent_dir(path: &Path) -> &Path {
+  path
+    .parent()
+    .unwrap_or_else(|| panic!("Could not get the parent directory of '{}'", path.display()))
+}
+
+pub(crate) fn get_cwd() -> PathBuf {
+  current_dir().expect("Could not get the cwd")
+}
 
 pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, GenError> {
   let canonical_base = base

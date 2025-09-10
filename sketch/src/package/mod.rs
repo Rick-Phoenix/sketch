@@ -12,7 +12,7 @@ use crate::{
   moon::{MoonDotYml, MoonDotYmlKind},
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
   package_json::{PackageJson, PackageJsonKind},
-  paths::get_relative_path,
+  paths::{get_cwd, get_relative_path},
   pnpm::PnpmWorkspace,
   tera::TemplateOutput,
   ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
@@ -45,7 +45,7 @@ pub struct PackageConfig {
     value_name = "DIR",
     help = "The path to the directory for this package, joined to the root_dir. Defaults to the name of the package"
   )]
-  pub dir: Option<String>,
+  pub dir: Option<PathBuf>,
 
   /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.
   #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
@@ -134,12 +134,12 @@ impl Config {
 
     let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = PathBuf::from(
-      typescript
+    let root_dir = PathBuf::from(typescript.root_dir.unwrap_or_else(|| {
+      self
         .root_dir
-        .as_deref()
-        .unwrap_or_else(|| self.root_dir.as_ref().map_or(".", |v| v)),
-    );
+        .as_ref()
+        .map_or_else(|| get_cwd(), |v| v.clone())
+    }));
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
 
@@ -161,7 +161,7 @@ impl Config {
         .unwrap_or_else(|| "my-awesome-package".to_string())
     });
 
-    let output = root_dir.join(config.dir.unwrap_or_else(|| package_name.clone()));
+    let output = root_dir.join(config.dir.unwrap_or_else(|| get_cwd()));
 
     create_dir_all(&output).map_err(|e| GenError::DirCreation {
       path: output.to_owned(),
@@ -435,7 +435,7 @@ impl Config {
 
     if let Some(templates) = config.generate_templates && !templates.is_empty() {
       self
-        .generate_templates(&output.to_string_lossy(), templates)?;
+        .generate_templates(&output, templates)?;
     }
 
     Ok(())

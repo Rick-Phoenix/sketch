@@ -4,6 +4,8 @@
 #[macro_use]
 mod macros;
 
+use std::path::Path;
+
 use askama::Template;
 use figment::{
   providers::{Format, Json, Toml, Yaml},
@@ -34,7 +36,7 @@ pub(crate) mod templating;
 use std::{
   collections::BTreeMap,
   fs::{create_dir_all, File},
-  path::{Path, PathBuf},
+  path::PathBuf,
 };
 
 pub(crate) use merging_strategies::*;
@@ -69,53 +71,54 @@ pub enum Preset {
 
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
 
-pub(crate) fn merge_config_file(mut figment: Figment, path: &Path) -> Result<Figment, GenError> {
-  File::open(path).map_err(|e| GenError::ReadError {
-    path: path.to_path_buf(),
+pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, GenError> {
+  let config_file: PathBuf =
+    config_file
+      .canonicalize()
+      .map_err(|e| GenError::PathCanonicalization {
+        path: config_file.into(),
+        source: e,
+      })?;
+
+  File::open(&config_file).map_err(|e| GenError::ReadError {
+    path: config_file.clone(),
     source: e,
   })?;
 
-  let extension = path
+  let extension = config_file
     .extension()
-    .unwrap_or_else(|| panic!("Config file '{}' has no extension.", path.display()));
+    .unwrap_or_else(|| panic!("Config file '{}' has no extension.", config_file.display()));
 
-  if extension == "yaml" || extension == "yml" {
-    figment = figment.merge(Yaml::file(path));
+  let figment = if extension == "yaml" || extension == "yml" {
+    Figment::from(Yaml::file(&config_file))
   } else if extension == "toml" {
-    figment = figment.merge(Toml::file(path));
+    Figment::from(Toml::file(&config_file))
   } else if extension == "json" {
-    figment = figment.merge(Json::file(path));
+    Figment::from(Json::file(&config_file))
   } else {
     return Err(GenError::InvalidConfigFormat {
-      file: path.to_path_buf(),
+      file: config_file.clone(),
     });
-  }
+  };
 
-  Ok(figment)
+  let mut config: Config = figment
+    .extract()
+    .map_err(|e| GenError::ConfigParsing { source: e })?;
+
+  config.config_file = Some(config_file.clone());
+
+  Ok(config)
 }
 
 impl Config {
-  pub fn from_file<T: Into<PathBuf>>(config_file_path: T) -> Result<Self, GenError> {
-    let config_file_path: PathBuf = config_file_path.into();
+  pub fn from_file<T: Into<PathBuf> + Clone>(config_file: T) -> Result<Self, GenError> {
+    let config_file: PathBuf = config_file.into();
+    let mut config = extract_config_from_file(&config_file)?;
 
-    let config_figment = merge_config_file(Config::figment(), &config_file_path)?;
-
-    let mut config: Config = config_figment
-      .extract()
-      .map_err(|e| GenError::ConfigParsing { source: e })?;
+    config.config_file = Some(config_file);
 
     if !config.extends.is_empty() {
-      let base_path = config_file_path.parent().ok_or(GenError::Custom(format!(
-        "Could not get the parent directory of file '{}' to get the extended configs.",
-        config_file_path.display()
-      )))?;
-
-      config = config.merge_configs(&base_path.canonicalize().map_err(|e| {
-        GenError::PathCanonicalization {
-          path: config_file_path,
-          source: e,
-        }
-      })?)?;
+      config = config.merge_config_files()?;
     }
 
     Ok(config)
@@ -130,8 +133,7 @@ impl Config {
 
     let root_dir = typescript
       .root_dir
-      .as_deref()
-      .unwrap_or_else(|| self.root_dir.as_ref().map_or(".", |v| v));
+      .unwrap_or_else(|| self.root_dir.clone().unwrap_or_else(|| PathBuf::from("")));
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
@@ -324,8 +326,7 @@ impl Config {
     }
 
     if let Some(templates) = root_package.generate_templates && !templates.is_empty() {
-      let root_dir = root_dir.to_string();
-      self.generate_templates(&root_dir, templates)?;
+      self.generate_templates(&output, templates)?;
     }
 
     Ok(())
@@ -352,6 +353,7 @@ mod test {
     match config {
       Ok(_) => panic!("Circular configs test did not fail as expected"),
       Err(e) => {
+        println!("{}", e);
         if matches!(e, GenError::CircularDependency(_)) {
           Ok(())
         } else {

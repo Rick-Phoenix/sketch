@@ -5,11 +5,13 @@ use std::{
 
 use askama::Template;
 
-use crate::{commands::launch_command, Config, GenError, PreCommitConfig, PreCommitSetting};
+use crate::{
+  commands::launch_command, paths::get_cwd, Config, GenError, PreCommitConfig, PreCommitSetting,
+};
 
 impl Config {
   pub fn init_repo(self, remote: Option<&str>) -> Result<(), GenError> {
-    let root_dir = self.root_dir.unwrap_or_else(|| ".".to_string());
+    let root_dir = self.root_dir.unwrap_or_else(|| get_cwd());
     let output = PathBuf::from(&root_dir);
     let shell = self.shell.as_deref();
 

@@ -89,7 +89,7 @@ fn tera_uuid(
 impl Config {
   pub fn initialize_tera(&self) -> Result<Tera, GenError> {
     let mut tera = if let Some(templates_dir) = &self.templates_dir {
-      Tera::new(&format!("{}/**/*", templates_dir))
+      Tera::new(&format!("{}/**/*", templates_dir.display()))
         .map_err(|e| GenError::TemplateDirLoading { source: e })?
     } else {
       Tera::default()
@@ -115,9 +115,9 @@ impl Config {
   }
 
   /// A helper to generate custom templates.
-  pub fn generate_templates(
+  pub fn generate_templates<T: Into<PathBuf>>(
     self,
-    output_root: &str,
+    output_root: T,
     templates: Vec<TemplateOutput>,
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
@@ -126,6 +126,8 @@ impl Config {
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
 
     global_context.extend(get_default_context());
+
+    let output_root: PathBuf = output_root.into();
 
     for template in templates {
       let mut local_context = global_context.clone();
@@ -137,7 +139,7 @@ impl Config {
         local_context.extend(added_context);
       }
 
-      let output_path = PathBuf::from(output_root).join(template.output);
+      let output_path = output_root.join(template.output);
 
       create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
         "Could not get the parent directory for '{}'",

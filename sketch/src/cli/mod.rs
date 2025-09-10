@@ -1,4 +1,3 @@
-#![allow(clippy::large_enum_variant)]
 use std::{
   fs::read_to_string,
   io::{self, Write},
@@ -14,12 +13,11 @@ use Commands::*;
 use crate::{
   commands::launch_command,
   package::PackageDataKind,
+  paths::{get_cwd, get_parent_dir},
   tera::{TemplateData, TemplateOutput},
 };
 
 pub(crate) mod parsers;
-
-use std::env::current_dir;
 
 use clap::{error::ErrorKind, CommandFactory, Parser, Subcommand};
 use merge::Merge;
@@ -35,20 +33,34 @@ use crate::{
 pub async fn start_cli() -> Result<(), GenError> {
   let cli = Cli::parse();
 
-  let mut config = if let Some(config_path) = cli.config.as_deref() {
-    match Config::from_file(config_path) {
+  let config_file = cli.config;
+
+  let mut config = if let Some(config_path) = config_file.as_ref() {
+    let mut conf = match Config::from_file(config_path) {
       Ok(conf) => conf,
       Err(e) => {
         let mut cmd = Cli::command();
         cmd.error(ErrorKind::InvalidValue, format!("{}", e)).exit();
       }
-    }
+    };
+
+    conf.config_file = Some(config_path.to_path_buf());
+    conf
   } else {
     Config::default()
   };
 
   if let Some(overrides) = cli.overrides {
     config.merge(overrides);
+
+    if let Some(config_file) = config_file {
+      let config_file_dir = get_parent_dir(&config_file);
+      if let Some(root_dir) = config.root_dir {
+        config.root_dir = Some(config_file_dir.join(root_dir));
+      } else {
+        config.root_dir = Some(config_file_dir.to_path_buf());
+      }
+    }
   }
 
   if let Some(vars) = cli.templates_vars {
@@ -77,6 +89,15 @@ pub async fn start_cli() -> Result<(), GenError> {
         config.pre_commit = PreCommitSetting::Bool(false);
       }
 
+      if config.debug {
+        println!("DEBUG:");
+        println!("  config: {:#?}", config);
+        println!("  remote: {:?}", remote);
+        println!("  no_pre_commit: {}", no_pre_commit);
+      }
+
+      exit_if_dry_run!();
+
       config.init_repo(remote.as_deref())?;
     }
 
@@ -90,15 +111,21 @@ pub async fn start_cli() -> Result<(), GenError> {
         })?
         .clone();
 
-      let base_path = config.root_dir.clone();
-      config.generate_templates(base_path.as_deref().unwrap_or("."), preset)?;
+      if config.debug {
+        println!("DEBUG:");
+        println!("  config: {:#?}", config);
+        println!("  preset: {:#?}", preset);
+      }
+
+      exit_if_dry_run!();
+
+      config.generate_templates(get_cwd(), preset)?;
     }
 
     Render {
       content,
       output,
       id,
-      ..
     } => {
       let template_data = if let Some(id) = id {
         TemplateData::Id(id)
@@ -118,17 +145,14 @@ pub async fn start_cli() -> Result<(), GenError> {
       };
 
       if config.debug {
-        println!("DEBUG: {:#?}", template);
+        println!("DEBUG:");
+        println!("  config: {:#?}", config);
+        println!("  template: {:#?}", template);
       }
 
       exit_if_dry_run!();
 
-      config.generate_templates(
-        &current_dir()
-          .expect("Could not get the cwd")
-          .to_string_lossy(),
-        vec![template],
-      )?;
+      config.generate_templates(get_cwd(), vec![template])?;
     }
     New { output } => {
       let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
@@ -143,9 +167,17 @@ pub async fn start_cli() -> Result<(), GenError> {
       let format = <ConfigFormat as FromStr>::from_str(
         &output_path
           .extension()
-          .unwrap_or_else(|| panic!("File {} has no extension.", output_path.display()))
+          .unwrap_or_else(|| panic!("Output file {} has no extension.", output_path.display()))
           .to_string_lossy(),
       )?;
+
+      if config.debug {
+        println!("DEBUG:");
+        println!("  config: {:#?}", config);
+        println!("  output path: {}", output_path.display());
+      }
+
+      exit_if_dry_run!();
 
       let mut output_file = if config.overwrite {
         File::create(&output_path).map_err(|e| GenError::FileCreation {
@@ -195,8 +227,18 @@ pub async fn start_cli() -> Result<(), GenError> {
     }
     Command { command, file, cwd } => {
       let command = if let Some(literal) = command {
+        if config.debug {
+          println!("DEBUG:");
+          println!("  config: {:#?}", config);
+          println!("  command: {}", literal);
+        }
         literal
       } else if let Some(file_path) = file {
+        if config.debug {
+          println!("DEBUG:");
+          println!("  config: {:#?}", config);
+          println!("  file: {}", file_path.display());
+        }
         read_to_string(&file_path).map_err(|e| GenError::ReadError {
           path: file_path,
           source: e,
@@ -261,6 +303,11 @@ pub async fn start_cli() -> Result<(), GenError> {
             root_package.moonrepo = Some(MoonConfigKind::Bool(true));
           }
 
+          if config.debug {
+            println!("DEBUG:");
+            println!("  config: {:#?}", config);
+          }
+
           exit_if_dry_run!();
         }
         TsCommands::Package {
@@ -313,8 +360,9 @@ pub async fn start_cli() -> Result<(), GenError> {
           let package = package.clone();
 
           if config.debug {
-            println!("DEBUG: Config {:#?}", config);
-            println!("DEBUG: Package {:#?}", package);
+            println!("DEBUG:");
+            println!("  config: {:#?}", config);
+            println!("  package {:#?}", package);
           }
 
           exit_if_dry_run!();
@@ -323,7 +371,7 @@ pub async fn start_cli() -> Result<(), GenError> {
             launch_command(
               None,
               &[package_manager.to_string().as_str(), "install"],
-              package_dir.as_deref().unwrap_or("."),
+              &package_dir.unwrap_or_else(|| get_cwd()),
               Some("Could not install dependencies"),
             )?;
           }
@@ -342,6 +390,7 @@ pub async fn start_cli() -> Result<(), GenError> {
   Ok(())
 }
 
+/// The struct defining the cli for this crate.
 #[derive(Parser)]
 #[command(name = "sketch")]
 #[command(version, about, long_about = None)]
@@ -369,6 +418,7 @@ struct Cli {
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
 
+/// The cli commands.
 #[derive(Subcommand)]
 enum Commands {
   /// Launches typescript-specific commands.

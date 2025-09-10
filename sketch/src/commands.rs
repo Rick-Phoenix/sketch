@@ -1,13 +1,12 @@
 use std::{
-  env::current_dir,
   fs::create_dir_all,
-  path::PathBuf,
+  path::{Path, PathBuf},
   process::{Command, Stdio},
 };
 
 use tera::Context;
 
-use crate::{tera::get_default_context, Config, GenError};
+use crate::{paths::get_cwd, tera::get_default_context, Config, GenError};
 
 pub(crate) fn default_shell() -> &'static str {
   if cfg!(target_os = "windows") {
@@ -54,21 +53,21 @@ impl Config {
 
     let shell_arg = if shell == "cmd.exe" { "/C" } else { "-c" };
 
-    let dir = cwd.unwrap_or_else(|| current_dir().expect("Could not get the cwd."));
+    let dir = cwd.unwrap_or_else(|| get_cwd());
 
     create_dir_all(&dir).map_err(|e| GenError::DirCreation {
       path: dir.clone(),
       source: e,
     })?;
 
-    launch_command(Some(shell), &[shell_arg], &dir.to_string_lossy(), None)
+    launch_command(Some(shell), &[shell_arg], &dir, None)
   }
 }
 
 pub(crate) fn launch_command(
   shell: Option<&str>,
   commands: &[&str],
-  cwd: &str,
+  cwd: &Path,
   custom_error_message: Option<&str>,
 ) -> Result<(), GenError> {
   let shell = shell.unwrap_or_else(|| default_shell());

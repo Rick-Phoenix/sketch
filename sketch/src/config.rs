@@ -1,10 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
 use figment::{
   providers::{Env, Format, Json, Toml, Yaml},
   value::{Dict, Map},
-  Error, Figment, Metadata, Profile, Provider, Source,
+  Error, Figment, Metadata, Profile, Provider,
 };
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
@@ -13,11 +13,12 @@ use serde_json::Value;
 
 use crate::{
   config_elements::*,
-  merge_config_file, merge_index_maps, merge_index_sets, merge_optional_nested,
+  extract_config_from_file, merge_index_maps, merge_index_sets,
   moon::MoonConfigKind,
   overwrite_option,
   package::{vitest::VitestConfig, PackageConfig},
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
+  paths::get_parent_dir,
   pnpm::PnpmWorkspace,
   tera::TemplateOutput,
   ts_config::{TsConfig, TsConfigDirective},
@@ -59,7 +60,6 @@ pub struct RootPackage {
   pub package_json: Option<PackageJsonKind>,
 
   /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
-  #[merge(strategy = merge::option::overwrite_none)]
   #[arg(skip)]
   pub moonrepo: Option<MoonConfigKind>,
 
@@ -127,10 +127,10 @@ pub struct TypescriptConfig {
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
-  /// The root directory for the project [default: "."].
+  /// The root directory for the typescript monorepo. If unset, it defaults to root_dir (cwd without a config file, parent directory of the config file otherwise).
   #[merge(strategy = overwrite_option)]
   #[arg(long, value_name = "DIR")]
-  pub root_dir: Option<String>,
+  pub root_dir: Option<PathBuf>,
 
   /// The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).
   #[merge(strategy = overwrite_option)]
@@ -188,12 +188,26 @@ pub struct TypescriptConfig {
   pub pnpm_config: Option<PnpmWorkspace>,
 }
 
+impl Config {
+  pub fn new() -> Self {
+    Self {
+      ..Default::default()
+    }
+  }
+}
+
 /// The global configuration struct.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
 #[serde(default)]
 pub struct Config {
+  #[serde(skip)]
+  #[doc(hidden)]
+  #[arg(skip)]
+  #[merge(strategy = merge::option::overwrite_none)]
+  pub(crate) config_file: Option<PathBuf>,
+
   /// The configuration for typescript packages.
-  #[merge(strategy = merge_optional_nested)]
+  #[merge(strategy = merge::option::overwrite_none)]
   #[arg(skip)]
   pub typescript: Option<TypescriptConfig>,
 
@@ -210,12 +224,12 @@ pub struct Config {
   /// The root directory for the project [default: "."].
   #[merge(strategy = overwrite_option)]
   #[arg(long, value_name = "DIR")]
-  pub root_dir: Option<String>,
+  pub root_dir: Option<PathBuf>,
 
   /// The path to the directory with the template files.
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(long, value_name = "DIR")]
-  pub templates_dir: Option<String>,
+  pub templates_dir: Option<PathBuf>,
 
   /// Whether file generation should always override existing files. Defaults to true.
   #[merge(strategy = merge::bool::overwrite_true)]
@@ -257,15 +271,15 @@ pub struct Config {
 impl Config {
   fn merge_configs_recursive(
     &mut self,
-    base_path: &Path,
-    current_path: &Path,
-    processed_sources: &mut Vec<PathBuf>,
+    processed_sources: &mut IndexSet<PathBuf>,
   ) -> Result<(), GenError> {
-    processed_sources.push(current_path.to_path_buf());
+    // Safe unwrapping due to the check below
+    let current_config_file = self.config_file.clone().unwrap();
+    let current_dir = get_parent_dir(&current_config_file);
 
     for path in self.extends.clone() {
       let path =
-        base_path
+        current_dir
           .join(&path)
           .canonicalize()
           .map_err(|e| GenError::PathCanonicalization {
@@ -273,30 +287,24 @@ impl Config {
             source: e,
           })?;
 
-      let extended_figment = merge_config_file(Config::figment(), &path)?;
+      let mut extended_config = extract_config_from_file(&path)?;
 
-      for data in extended_figment.metadata() {
-        if let Some(Source::File(extended_source)) = &data.source
-          && processed_sources.contains(extended_source) {
-            let was_absent = !processed_sources.contains(extended_source);
-            processed_sources.push(extended_source.clone());
+      let was_absent = processed_sources.insert(path.to_path_buf());
 
-            if !was_absent {
-            let chain: Vec<_> = processed_sources.iter().map(|source| source.to_string_lossy()).collect();
+      if !was_absent {
+        let chain: Vec<_> = processed_sources
+          .iter()
+          .map(|source| source.to_string_lossy())
+          .collect();
 
-              return Err(GenError::CircularDependency(format!(
-                "Found circular dependency to the config file {}. The full processed path is: {}",
-                extended_source.display(), chain.join(" -> ")
-              )));
-            }
-          }
+        return Err(GenError::CircularDependency(format!(
+          "Found circular dependency to the config file {}. The full processed path is: {}",
+          path.display(),
+          chain.join(" -> ")
+        )));
       }
 
-      let mut extended_config: Config = extended_figment
-        .extract()
-        .map_err(|e| GenError::ConfigParsing { source: e })?;
-
-      extended_config.merge_configs_recursive(base_path, &path, processed_sources)?;
+      extended_config.merge_configs_recursive(processed_sources)?;
 
       self.merge(extended_config);
     }
@@ -304,10 +312,22 @@ impl Config {
     Ok(())
   }
 
-  pub fn merge_configs(mut self, base_path: &Path) -> Result<Self, GenError> {
-    let mut processed_sources: Vec<PathBuf> = Default::default();
+  pub fn merge_config_files(mut self) -> Result<Self, GenError> {
+    let mut processed_sources: IndexSet<PathBuf> = Default::default();
 
-    self.merge_configs_recursive(base_path, base_path, &mut processed_sources)?;
+    let config_file = self
+      .config_file
+      .clone()
+      .expect("Cannot use merge_config_files with a config that has no source file.");
+
+    processed_sources.insert(config_file.canonicalize().map_err(|e| {
+      GenError::PathCanonicalization {
+        path: config_file.clone(),
+        source: e,
+      }
+    })?);
+
+    self.merge_configs_recursive(&mut processed_sources)?;
 
     Ok(self)
   }
@@ -339,6 +359,7 @@ impl Default for TypescriptConfig {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      config_file: None,
       templating_presets: Default::default(),
       typescript: None,
       shell: None,
