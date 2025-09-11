@@ -127,11 +127,6 @@ pub struct TypescriptConfig {
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
-  /// The root directory for the typescript monorepo. If unset, it defaults to root_dir (cwd without a config file, parent directory of the config file otherwise).
-  #[merge(strategy = overwrite_option)]
-  #[arg(long, value_name = "DIR")]
-  pub root_dir: Option<PathBuf>,
-
   /// The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).
   #[merge(strategy = overwrite_option)]
   #[arg(value_enum)]
@@ -277,19 +272,19 @@ impl Config {
     let current_config_file = self.config_file.clone().unwrap();
     let current_dir = get_parent_dir(&current_config_file);
 
-    for path in self.extends.clone() {
-      let path =
+    for rel_path in self.extends.clone() {
+      let abs_path =
         current_dir
-          .join(&path)
+          .join(&rel_path)
           .canonicalize()
           .map_err(|e| GenError::PathCanonicalization {
-            path: path.clone(),
+            path: rel_path.clone(),
             source: e,
           })?;
 
-      let mut extended_config = extract_config_from_file(&path)?;
+      let mut extended_config = extract_config_from_file(&abs_path)?;
 
-      let was_absent = processed_sources.insert(path.to_path_buf());
+      let was_absent = processed_sources.insert(abs_path.to_path_buf());
 
       if !was_absent {
         let chain: Vec<_> = processed_sources
@@ -299,7 +294,7 @@ impl Config {
 
         return Err(GenError::CircularDependency(format!(
           "Found circular dependency to the config file {}. The full processed path is: {}",
-          path.display(),
+          abs_path.display(),
           chain.join(" -> ")
         )));
       }
@@ -320,14 +315,14 @@ impl Config {
       .clone()
       .expect("Cannot use merge_config_files with a config that has no source file.");
 
-    processed_sources.insert(config_file.canonicalize().map_err(|e| {
-      GenError::PathCanonicalization {
-        path: config_file.clone(),
-        source: e,
-      }
-    })?);
+    processed_sources.insert(config_file.clone());
 
     self.merge_configs_recursive(&mut processed_sources)?;
+
+    processed_sources.swap_remove(&config_file);
+
+    // Replace rel paths with abs paths for better debugging
+    self.extends = processed_sources;
 
     Ok(self)
   }
@@ -351,7 +346,6 @@ impl Default for TypescriptConfig {
       people: Default::default(),
       pnpm_config: Default::default(),
       root_package: Default::default(),
-      root_dir: None,
     }
   }
 }

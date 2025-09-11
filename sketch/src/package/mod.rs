@@ -37,13 +37,13 @@ pub struct PackageConfig {
   #[arg(skip)]
   pub name: Option<String>,
 
-  /// The path to the directory for this package, joined to the [`Config::root_dir`].
+  /// The path to the directory for this package which will be joined to the [`Config::root_dir`] as the base path for file generation.
   /// Defaults to the name of the package.
   #[arg(
     short,
     long,
     value_name = "DIR",
-    help = "The path to the directory for this package, joined to the root_dir. Defaults to the name of the package"
+    help = "The new package's directory. It will be joined with the root_dir as the base path for the new files. Defaults to the name of the package"
   )]
   pub dir: Option<PathBuf>,
 
@@ -134,14 +134,7 @@ impl Config {
 
     let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = PathBuf::from(typescript.root_dir.unwrap_or_else(|| {
-      self
-        .root_dir
-        .as_ref()
-        .map_or_else(|| get_cwd(), |v| v.clone())
-    }));
-    let package_manager = typescript.package_manager.unwrap_or_default();
-    let version_ranges = typescript.version_range.unwrap_or_default();
+    let root_dir = self.root_dir.clone().unwrap_or_else(|| get_cwd());
 
     let config = match data.kind {
       PackageDataKind::Config(conf) => conf,
@@ -161,18 +154,21 @@ impl Config {
         .unwrap_or_else(|| "my-awesome-package".to_string())
     });
 
-    let output = root_dir.join(config.dir.unwrap_or_else(|| get_cwd()));
+    let output = root_dir.join(config.dir.unwrap_or_else(|| package_name.clone().into()));
 
     create_dir_all(&output).map_err(|e| GenError::DirCreation {
       path: output.to_owned(),
       source: e,
     })?;
 
+    let package_manager = typescript.package_manager.unwrap_or_default();
+    let version_ranges = typescript.version_range.unwrap_or_default();
+
     macro_rules! write_to_output {
-    ($($tokens:tt)*) => {
-      write_file!(output, self.overwrite, $($tokens) *)
-    };
-  }
+      ($($tokens:tt)*) => {
+        write_file!(output, self.overwrite, $($tokens) *)
+      };
+    }
 
     let (package_json_id, mut package_json_data) =
       if let Some(package_json_config) = config.package_json {

@@ -16,7 +16,10 @@ use maplit::btreeset;
 use merge::Merge;
 use serde_json::Value;
 
-use crate::package_json::{PackageJsonKind, Person};
+use crate::{
+  package_json::{PackageJsonKind, Person},
+  paths::get_cwd,
+};
 pub mod config_elements;
 pub use config::*;
 pub use config_elements::*;
@@ -72,16 +75,8 @@ pub enum Preset {
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
 
 pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, GenError> {
-  let config_file: PathBuf =
-    config_file
-      .canonicalize()
-      .map_err(|e| GenError::PathCanonicalization {
-        path: config_file.into(),
-        source: e,
-      })?;
-
-  File::open(&config_file).map_err(|e| GenError::ReadError {
-    path: config_file.clone(),
+  File::open(config_file).map_err(|e| GenError::ReadError {
+    path: config_file.to_path_buf(),
     source: e,
   })?;
 
@@ -97,7 +92,7 @@ pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, Gen
     Figment::from(Json::file(&config_file))
   } else {
     return Err(GenError::InvalidConfigFormat {
-      file: config_file.clone(),
+      file: config_file.to_path_buf(),
     });
   };
 
@@ -105,17 +100,28 @@ pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, Gen
     .extract()
     .map_err(|e| GenError::ConfigParsing { source: e })?;
 
-  config.config_file = Some(config_file.clone());
+  config.config_file = Some(config_file.to_path_buf());
+
+  if let Some(templates_dir) = &config.templates_dir {
+    config.templates_dir = Some(config_file.join(templates_dir));
+  }
 
   Ok(config)
 }
 
 impl Config {
   pub fn from_file<T: Into<PathBuf> + Clone>(config_file: T) -> Result<Self, GenError> {
-    let config_file: PathBuf = config_file.into();
-    let mut config = extract_config_from_file(&config_file)?;
+    let config_file: PathBuf =
+      config_file
+        .clone()
+        .into()
+        .canonicalize()
+        .map_err(|e| GenError::PathCanonicalization {
+          path: config_file.into(),
+          source: e,
+        })?;
 
-    config.config_file = Some(config_file);
+    let mut config = extract_config_from_file(&config_file)?;
 
     if !config.extends.is_empty() {
       config = config.merge_config_files()?;
@@ -131,26 +137,22 @@ impl Config {
 
     let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = typescript
-      .root_dir
-      .unwrap_or_else(|| self.root_dir.clone().unwrap_or_else(|| PathBuf::from("")));
+    let root_dir = self.root_dir.clone().unwrap_or_else(|| get_cwd());
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
     let root_package = typescript.root_package.unwrap_or_default();
 
-    let output = PathBuf::from(root_dir);
-
-    create_dir_all(&output).map_err(|e| GenError::DirCreation {
-      path: output.to_owned(),
+    create_dir_all(&root_dir).map_err(|e| GenError::DirCreation {
+      path: root_dir.to_owned(),
       source: e,
     })?;
 
     macro_rules! write_to_output {
-    ($($tokens:tt)*) => {
-      write_file!(output, self.overwrite, $($tokens)*)
-    };
-  }
+      ($($tokens:tt)*) => {
+        write_file!(root_dir, self.overwrite, $($tokens)*)
+      };
+    }
 
     let mut package_json_data = match root_package.package_json.unwrap_or_default() {
       PackageJsonKind::Id(id) => package_json_presets
@@ -276,8 +278,8 @@ impl Config {
       let mut pnpm_data = typescript.pnpm_config.unwrap_or_default();
 
       for dir in &pnpm_data.packages {
-        create_dir_all(output.join(dir)).map_err(|e| GenError::DirCreation {
-          path: output.to_path_buf(),
+        create_dir_all(root_dir.join(dir)).map_err(|e| GenError::DirCreation {
+          path: root_dir.to_path_buf(),
           source: e,
         })?;
       }
@@ -295,7 +297,7 @@ impl Config {
         MoonConfigKind::Config(c) => *c
       };
 
-      let moon_dir = output.join(".moon");
+      let moon_dir = root_dir.join(".moon");
 
       create_dir_all(&moon_dir).map_err(|e| GenError::DirCreation {
         path: moon_dir.to_path_buf(),
@@ -319,47 +321,16 @@ impl Config {
     }
 
     if let Some(shared_out_dir) = typescript.shared_out_dir.get_name() {
-      create_dir_all(output.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
-        path: output.to_path_buf(),
+      create_dir_all(root_dir.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
+        path: root_dir.to_path_buf(),
         source: e,
       })?;
     }
 
     if let Some(templates) = root_package.generate_templates && !templates.is_empty() {
-      self.generate_templates(&output, templates)?;
+      self.generate_templates(&root_dir, templates)?;
     }
 
     Ok(())
-  }
-}
-
-#[cfg(test)]
-mod test {
-  use std::path::PathBuf;
-
-  use crate::{config::Config, GenError};
-
-  #[tokio::test]
-  async fn repo_test() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("sketch.toml"))?;
-
-    config.create_ts_monorepo().await
-  }
-
-  #[tokio::test]
-  async fn circular_configs() -> Result<(), GenError> {
-    let config = Config::from_file(PathBuf::from("tests/circular_configs/sketch.toml"));
-
-    match config {
-      Ok(_) => panic!("Circular configs test did not fail as expected"),
-      Err(e) => {
-        println!("{}", e);
-        if matches!(e, GenError::CircularDependency(_)) {
-          Ok(())
-        } else {
-          panic!("Circular configs test returned wrong kind of error")
-        }
-      }
-    }
   }
 }
