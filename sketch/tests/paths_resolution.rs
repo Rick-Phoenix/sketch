@@ -4,10 +4,27 @@ use serde_json::Value;
 use sketch_it::{config::Config, GenError};
 
 #[tokio::test]
-async fn paths_resolution() -> Result<(), GenError> {
-  let mut config = Config::from_file(PathBuf::from("tests/paths_resolution/root_config.toml"))?;
+async fn root_dir_resolution() -> Result<(), GenError> {
+  let config_file_path = PathBuf::from("tests/paths_resolution/root_config.toml");
+  let config = Config::from_file(&config_file_path)?;
 
-  println!("{:#?}", config);
+  let abs_path = config_file_path
+    .parent()
+    .unwrap()
+    .join("../output")
+    .canonicalize()
+    .unwrap();
+
+  println!("{}", abs_path.display());
+
+  assert_eq!(config.root_dir.expect("Missing root dir"), abs_path);
+
+  Ok(())
+}
+
+#[tokio::test]
+async fn config_files_resolution() -> Result<(), GenError> {
+  let mut config = Config::from_file(PathBuf::from("tests/paths_resolution/root_config.toml"))?;
 
   assert_eq!(
     config
@@ -29,7 +46,7 @@ async fn paths_resolution() -> Result<(), GenError> {
 }
 
 #[tokio::test]
-async fn repo_test() -> Result<(), GenError> {
+async fn ts_repo_gen() -> Result<(), GenError> {
   let config = Config::from_file(PathBuf::from("sketch.toml"))?;
 
   config.create_ts_monorepo().await

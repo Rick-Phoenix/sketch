@@ -18,7 +18,7 @@ use serde_json::Value;
 
 use crate::{
   package_json::{PackageJsonKind, Person},
-  paths::get_cwd,
+  paths::{get_abs_path, get_cwd, get_parent_dir},
 };
 pub mod config_elements;
 pub use config::*;
@@ -103,7 +103,13 @@ pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, Gen
   config.config_file = Some(config_file.to_path_buf());
 
   if let Some(templates_dir) = &config.templates_dir {
-    config.templates_dir = Some(config_file.join(templates_dir));
+    config.templates_dir = Some(get_abs_path(
+      &get_parent_dir(config_file).join(templates_dir),
+    )?);
+  }
+
+  if let Some(root_dir) = &config.root_dir {
+    config.root_dir = Some(get_abs_path(&get_parent_dir(config_file).join(root_dir))?);
   }
 
   Ok(config)
@@ -111,15 +117,7 @@ pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, Gen
 
 impl Config {
   pub fn from_file<T: Into<PathBuf> + Clone>(config_file: T) -> Result<Self, GenError> {
-    let config_file: PathBuf =
-      config_file
-        .clone()
-        .into()
-        .canonicalize()
-        .map_err(|e| GenError::PathCanonicalization {
-          path: config_file.into(),
-          source: e,
-        })?;
+    let config_file: PathBuf = get_abs_path(&config_file.into())?;
 
     let mut config = extract_config_from_file(&config_file)?;
 

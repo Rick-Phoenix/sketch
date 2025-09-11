@@ -339,7 +339,10 @@ impl PackageJson {
 
 #[cfg(test)]
 mod test {
-  use std::{fs::File, path::PathBuf};
+  use std::{
+    fs::{create_dir_all, File},
+    path::PathBuf,
+  };
 
   use askama::Template;
   use maplit::{btreemap, btreeset};
@@ -348,7 +351,7 @@ mod test {
     Bugs, Directories, Exports, JsModuleType, Man, PackageJson, Person, PersonData, PublishConfig,
     PublishConfigAccess, Repository,
   };
-  use crate::{convert_btreemap_to_json, GenError};
+  use crate::{convert_btreemap_to_json, paths::get_parent_dir, GenError};
 
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
@@ -467,7 +470,10 @@ mod test {
       use_default_deps: true,
     };
 
-    let output_path = PathBuf::from("output/test/package_json/package.json");
+    let output_path = PathBuf::from("tests/output/package_json_gen/package.json");
+
+    create_dir_all(get_parent_dir(&output_path)).unwrap();
+
     let mut output_file = File::create(&output_path).map_err(|e| GenError::FileCreation {
       path: output_path.clone(),
       source: e,

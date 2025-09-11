@@ -1,4 +1,4 @@
-root_dir = "output"
+root_dir = "../output"
 
 [typescript.tsconfig_presets.one]
 extend_presets = ["two"]

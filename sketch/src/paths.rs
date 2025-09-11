@@ -5,6 +5,15 @@ use std::{
 
 use crate::GenError;
 
+pub(crate) fn get_abs_path(path: &Path) -> Result<PathBuf, GenError> {
+  path
+    .canonicalize()
+    .map_err(|e| GenError::PathCanonicalization {
+      path: path.into(),
+      source: e,
+    })
+}
+
 pub(crate) fn get_parent_dir(path: &Path) -> &Path {
   path
     .parent()
