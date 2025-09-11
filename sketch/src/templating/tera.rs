@@ -150,12 +150,7 @@ impl Config {
         source: e,
       })?;
 
-      let mut output_file = if self.overwrite {
-        File::create(&output_path).map_err(|e| GenError::FileCreation {
-          path: output_path.clone(),
-          source: e,
-        })?
-      } else {
+      let mut output_file = if self.no_overwrite {
         File::create_new(&output_path).map_err(|e| match e.kind() {
           ErrorKind::AlreadyExists => GenError::FileExists {
             path: output_path.clone(),
@@ -164,6 +159,11 @@ impl Config {
             path: output_path.clone(),
             source: e,
           },
+        })?
+      } else {
+        File::create(&output_path).map_err(|e| GenError::FileCreation {
+          path: output_path.clone(),
+          source: e,
         })?
       };
 

@@ -22,7 +22,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(output, self.overwrite, $($tokens)*)
+        write_file!(output, !self.no_overwrite, $($tokens)*)
       };
     }
 

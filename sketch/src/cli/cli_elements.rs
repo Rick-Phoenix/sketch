@@ -37,7 +37,7 @@ impl Display for ConfigFormat {
   }
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 #[group(multiple = false)]
 pub struct PackageKindFlag {
   /// Marks the package as an application.

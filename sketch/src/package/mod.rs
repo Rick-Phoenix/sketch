@@ -16,7 +16,6 @@ use crate::{
   pnpm::PnpmWorkspace,
   tera::TemplateOutput,
   ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
-  versions::get_latest_version,
   *,
 };
 
@@ -166,7 +165,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(output, self.overwrite, $($tokens) *)
+        write_file!(output, !self.no_overwrite, $($tokens) *)
       };
     }
 
@@ -203,18 +202,10 @@ impl Config {
 
     if package_json_data.use_default_deps {
       for dep in DEFAULT_DEPS {
-        let version = if typescript.catalog {
-          "catalog:".to_string()
+        let version = if typescript.no_catalog {
+          "latest".to_string()
         } else {
-          let version = get_latest_version(dep).await.unwrap_or_else(|e| {
-            println!(
-              "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
-              dep,
-              e,
-            );
-            "latest".to_string()
-          });
-          version_ranges.create(version)
+          "catalog:".to_string()
         };
 
         package_json_data
@@ -225,7 +216,7 @@ impl Config {
 
     package_json_data.name = package_name.clone();
 
-    if typescript.convert_latest_to_range {
+    if !typescript.no_convert_latest_to_range {
       package_json_data
         .get_latest_version_range(version_ranges)
         .await?;
@@ -233,7 +224,7 @@ impl Config {
 
     write_to_output!(package_json_data, "package.json");
 
-    if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
+    if !typescript.no_catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
       let pnpm_workspace_file = File::open(&pnpm_workspace_path)
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;

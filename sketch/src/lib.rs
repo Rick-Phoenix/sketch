@@ -32,7 +32,6 @@ use crate::{
   moon::{MoonConfig, MoonConfigKind},
   package_json::PackageJson,
   ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
-  versions::get_latest_version,
 };
 
 pub(crate) mod templating;
@@ -74,25 +73,28 @@ pub enum Preset {
 
 pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];
 
-pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, GenError> {
-  File::open(config_file).map_err(|e| GenError::ReadError {
-    path: config_file.to_path_buf(),
+pub(crate) fn extract_config_from_file(config_file_abs: &Path) -> Result<Config, GenError> {
+  File::open(config_file_abs).map_err(|e| GenError::ReadError {
+    path: config_file_abs.to_path_buf(),
     source: e,
   })?;
 
-  let extension = config_file
-    .extension()
-    .unwrap_or_else(|| panic!("Config file '{}' has no extension.", config_file.display()));
+  let extension = config_file_abs.extension().unwrap_or_else(|| {
+    panic!(
+      "Config file '{}' has no extension.",
+      config_file_abs.display()
+    )
+  });
 
   let figment = if extension == "yaml" || extension == "yml" {
-    Figment::from(Yaml::file(&config_file))
+    Figment::from(Yaml::file(&config_file_abs))
   } else if extension == "toml" {
-    Figment::from(Toml::file(&config_file))
+    Figment::from(Toml::file(&config_file_abs))
   } else if extension == "json" {
-    Figment::from(Json::file(&config_file))
+    Figment::from(Json::file(&config_file_abs))
   } else {
     return Err(GenError::InvalidConfigFormat {
-      file: config_file.to_path_buf(),
+      file: config_file_abs.to_path_buf(),
     });
   };
 
@@ -100,16 +102,18 @@ pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, Gen
     .extract()
     .map_err(|e| GenError::ConfigParsing { source: e })?;
 
-  config.config_file = Some(config_file.to_path_buf());
+  config.config_file = Some(config_file_abs.to_path_buf());
 
   if let Some(templates_dir) = &config.templates_dir {
     config.templates_dir = Some(get_abs_path(
-      &get_parent_dir(config_file).join(templates_dir),
+      &get_parent_dir(config_file_abs).join(templates_dir),
     )?);
   }
 
   if let Some(root_dir) = &config.root_dir {
-    config.root_dir = Some(get_abs_path(&get_parent_dir(config_file).join(root_dir))?);
+    config.root_dir = Some(get_abs_path(
+      &get_parent_dir(config_file_abs).join(root_dir),
+    )?);
   }
 
   Ok(config)
@@ -117,9 +121,11 @@ pub(crate) fn extract_config_from_file(config_file: &Path) -> Result<Config, Gen
 
 impl Config {
   pub fn from_file<T: Into<PathBuf> + Clone>(config_file: T) -> Result<Self, GenError> {
-    let config_file: PathBuf = get_abs_path(&config_file.into())?;
+    let config_file_path = config_file.into();
 
-    let mut config = extract_config_from_file(&config_file)?;
+    let config_file_abs: PathBuf = get_abs_path(&config_file_path)?;
+
+    let mut config = extract_config_from_file(&config_file_abs)?;
 
     if !config.extends.is_empty() {
       config = config.merge_config_files()?;
@@ -148,7 +154,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(root_dir, self.overwrite, $($tokens)*)
+        write_file!(root_dir, !self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -184,17 +190,10 @@ impl Config {
 
     if package_json_data.use_default_deps {
       for dep in ["typescript", "oxlint"] {
-        let version = if typescript.catalog {
-          "catalog:".to_string()
+        let version = if typescript.no_catalog {
+          "latest".to_string()
         } else {
-          get_latest_version(dep).await.unwrap_or_else(|e| {
-            println!(
-              "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
-              dep,
-              e,
-            );
-            "latest".to_string()
-          })
+          "catalog:".to_string()
         };
 
         let range = version_ranges.create(version);
@@ -204,7 +203,7 @@ impl Config {
       }
     }
 
-    if typescript.convert_latest_to_range {
+    if !typescript.no_convert_latest_to_range {
       package_json_data
         .get_latest_version_range(version_ranges)
         .await?;

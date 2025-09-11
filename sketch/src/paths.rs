@@ -1,9 +1,17 @@
 use std::{
   env::current_dir,
+  fs::create_dir_all,
   path::{Path, PathBuf},
 };
 
 use crate::GenError;
+
+pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), GenError> {
+  create_dir_all(path).map_err(|e| GenError::DirCreation {
+    path: path.to_path_buf(),
+    source: e,
+  })
+}
 
 pub(crate) fn get_abs_path(path: &Path) -> Result<PathBuf, GenError> {
   path

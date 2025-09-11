@@ -1,0 +1,7 @@
+root_dir = "../output/root_dir_tests"
+
+[typescript.package_json_presets.in_root_dir]
+description = "This is in the root dir"
+
+[typescript.package_json_presets.in_custom_out_dir]
+description = "This is in the custom out_dir"

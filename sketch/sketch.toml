@@ -7,21 +7,12 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 templates_dir = "tests/templates"
 
 [typescript]
-package_dirs = ["packages", "apps"]
 pnpm_config = { onlyBuiltDependencies = [
   "esbuild",
   "rolldown",
   "@tailwindcss/oxide",
 ] }
 
-[typescript.package_presets.custom_templates_test]
-generate_templates = [
-  { template = "subdir/nested.j2", output = "nested.yaml" },
-  { template = "abc.j2", output = "with_global_var.yaml" },
-  { template = "abc.j2", output = "with_override.yaml", context = { my_var = 20 } },
-  { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
-  { template = "lit_template", output = "literal_from_config.yaml" },
-]
 
 [typescript.package_presets.alt2]
 name = "abc2"

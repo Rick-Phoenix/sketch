@@ -136,15 +136,15 @@ pub struct TypescriptConfig {
   )]
   pub version_range: Option<VersionRange>,
 
-  /// Whether to use the pnpm catalog for default dependencies [default: true].
-  #[merge(strategy = merge::bool::overwrite_true)]
-  #[arg(skip)]
-  pub catalog: bool,
+  /// Whether to use the pnpm catalog for default dependencies.
+  #[merge(strategy = merge::bool::overwrite_false)]
+  #[arg(long)]
+  pub no_catalog: bool,
 
   /// Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package.
-  #[merge(strategy = merge::bool::overwrite_true)]
-  #[arg(skip)]
-  pub convert_latest_to_range: bool,
+  #[merge(strategy = merge::bool::overwrite_false)]
+  #[arg(long = "no-convert-latest")]
+  pub no_convert_latest_to_range: bool,
 
   /// A map of individual [`PersonData`] that can be referenced in [`PackageJson::contributors`] or [`PackageJson::maintainers`].
   #[arg(skip)]
@@ -226,10 +226,10 @@ pub struct Config {
   #[arg(long, value_name = "DIR")]
   pub templates_dir: Option<PathBuf>,
 
-  /// Whether file generation should always override existing files. Defaults to true.
-  #[merge(strategy = merge::bool::overwrite_true)]
-  #[arg(skip)]
-  pub overwrite: bool,
+  /// Exits with error if a file being created already exists.
+  #[merge(strategy = merge::bool::overwrite_false)]
+  #[arg(long)]
+  pub no_overwrite: bool,
 
   /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
   #[merge(skip)]
@@ -331,7 +331,7 @@ impl Config {
 impl Default for TypescriptConfig {
   fn default() -> Self {
     Self {
-      convert_latest_to_range: true,
+      no_convert_latest_to_range: false,
       package_json_presets: Default::default(),
       package_manager: Default::default(),
       root_tsconfig_name: None,
@@ -339,7 +339,7 @@ impl Default for TypescriptConfig {
       dev_tsconfig_name: None,
       package_presets: Default::default(),
       vitest_presets: Default::default(),
-      catalog: true,
+      no_catalog: false,
       version_range: Default::default(),
       tsconfig_presets: Default::default(),
       shared_out_dir: SharedOutDir::Name(".out".to_string()),
@@ -365,7 +365,7 @@ impl Default for Config {
       templates: Default::default(),
       global_templates_vars: Default::default(),
       extends: Default::default(),
-      overwrite: true,
+      no_overwrite: false,
     }
   }
 }

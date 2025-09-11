@@ -13,7 +13,7 @@ use Commands::*;
 use crate::{
   commands::launch_command,
   package::PackageDataKind,
-  paths::{get_cwd, get_parent_dir},
+  paths::get_cwd,
   tera::{TemplateData, TemplateOutput},
 };
 
@@ -30,13 +30,9 @@ use crate::{
   Config, *,
 };
 
-pub async fn start_cli() -> Result<(), GenError> {
-  let cli = Cli::parse();
-
-  let config_file = cli.config;
-
-  let mut config = if let Some(config_path) = config_file.as_ref() {
-    let mut conf = match Config::from_file(config_path) {
+async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
+  let mut config = if let Some(config_path) = cli.config {
+    let conf = match Config::from_file(&config_path) {
       Ok(conf) => conf,
       Err(e) => {
         let mut cmd = Cli::command();
@@ -44,7 +40,6 @@ pub async fn start_cli() -> Result<(), GenError> {
       }
     };
 
-    conf.config_file = Some(config_path.to_path_buf());
     conf
   } else {
     Config::default()
@@ -52,20 +47,120 @@ pub async fn start_cli() -> Result<(), GenError> {
 
   if let Some(overrides) = cli.overrides {
     config.merge(overrides);
-
-    if let Some(config_file) = config_file {
-      let config_file_dir = get_parent_dir(&config_file);
-      if let Some(root_dir) = config.root_dir {
-        config.root_dir = Some(config_file_dir.join(root_dir));
-      } else {
-        config.root_dir = Some(config_file_dir.to_path_buf());
-      }
-    }
   }
 
   if let Some(vars) = cli.templates_vars {
     config.global_templates_vars.extend(vars);
   }
+
+  match cli.command {
+    Init { no_pre_commit, .. } => {
+      if no_pre_commit {
+        config.pre_commit = PreCommitSetting::Bool(false);
+      }
+    }
+
+    RenderPreset { .. } => {}
+
+    Render { .. } => {}
+    New { .. } => {}
+    Command { .. } => {}
+    Ts {
+      command,
+      typescript_overrides,
+      shared_out_dir,
+      no_shared_out_dir,
+    } => {
+      let typescript = config.typescript.get_or_insert_default();
+
+      if let Some(typescript_overrides) = typescript_overrides {
+        typescript.merge(typescript_overrides);
+      }
+
+      if no_shared_out_dir {
+        typescript.shared_out_dir = SharedOutDir::Bool(false);
+      }
+
+      if let Some(shared_out_dir) = shared_out_dir {
+        typescript.shared_out_dir = SharedOutDir::Name(shared_out_dir);
+      }
+
+      match command {
+        TsCommands::Monorepo {
+          moonrepo,
+          no_oxlint,
+          root_package_overrides,
+          ..
+        } => {
+          let root_package = typescript.root_package.get_or_insert_default();
+
+          if let Some(root_package_overrides) = root_package_overrides {
+            root_package.merge(root_package_overrides);
+          }
+
+          if no_oxlint {
+            root_package.oxlint = Some(OxlintConfig::Bool(false));
+          }
+
+          if moonrepo {
+            root_package.moonrepo = Some(MoonConfigKind::Bool(true));
+          }
+        }
+        TsCommands::Package {
+          package_config,
+          kind,
+          preset,
+          moonrepo,
+          no_vitest,
+          oxlint,
+          no_update_root_tsconfig,
+          ..
+        } => {
+          let package = if let Some(preset) = preset {
+            typescript
+              .package_presets
+              .get_mut(&preset)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::Package,
+                name: preset.clone(),
+              })?
+          } else {
+            &mut package_config.unwrap_or_default()
+          };
+
+          if let Some(kind) = kind {
+            package.kind = Some(kind.into());
+          }
+
+          if moonrepo {
+            package.moonrepo = Some(MoonDotYmlKind::Bool(true));
+          }
+
+          if no_vitest {
+            package.vitest = VitestConfigKind::Boolean(false);
+          }
+
+          if oxlint {
+            package.oxlint = Some(OxlintConfig::Bool(true));
+          }
+
+          if no_update_root_tsconfig {
+            package.update_root_tsconfig = false;
+          }
+        }
+      }
+    }
+  };
+
+  Ok(config)
+}
+
+pub async fn main_entrypoint() -> Result<(), GenError> {
+  execute_cli(Cli::parse()).await
+}
+
+async fn execute_cli(cli: Cli) -> Result<(), GenError> {
+  let mut config = get_config_from_cli(cli.clone()).await?;
 
   macro_rules! exit_if_dry_run {
     () => {
@@ -76,22 +171,18 @@ pub async fn start_cli() -> Result<(), GenError> {
     };
   }
 
-  if cli.no_overwrite {
-    config.overwrite = false;
+  if config.debug {
+    println!("DEBUG:");
+    println!("  config: {:#?}", config);
   }
 
   match cli.command {
     Init {
-      no_pre_commit,
       remote,
+      no_pre_commit,
     } => {
-      if no_pre_commit {
-        config.pre_commit = PreCommitSetting::Bool(false);
-      }
-
       if config.debug {
         println!("DEBUG:");
-        println!("  config: {:#?}", config);
         println!("  remote: {:?}", remote);
         println!("  no_pre_commit: {}", no_pre_commit);
       }
@@ -113,7 +204,6 @@ pub async fn start_cli() -> Result<(), GenError> {
 
       if config.debug {
         println!("DEBUG:");
-        println!("  config: {:#?}", config);
         println!("  preset: {:#?}", preset);
       }
 
@@ -146,7 +236,6 @@ pub async fn start_cli() -> Result<(), GenError> {
 
       if config.debug {
         println!("DEBUG:");
-        println!("  config: {:#?}", config);
         println!("  template: {:#?}", template);
       }
 
@@ -173,18 +262,10 @@ pub async fn start_cli() -> Result<(), GenError> {
 
       if config.debug {
         println!("DEBUG:");
-        println!("  config: {:#?}", config);
         println!("  output path: {}", output_path.display());
       }
 
-      exit_if_dry_run!();
-
-      let mut output_file = if config.overwrite {
-        File::create(&output_path).map_err(|e| GenError::FileCreation {
-          path: output_path.clone(),
-          source: e,
-        })?
-      } else {
+      let mut output_file = if config.no_overwrite {
         File::create_new(&output_path).map_err(|e| match e.kind() {
           io::ErrorKind::AlreadyExists => GenError::FileExists {
             path: output_path.clone(),
@@ -193,6 +274,11 @@ pub async fn start_cli() -> Result<(), GenError> {
             path: output_path.clone(),
             source: e,
           },
+        })?
+      } else {
+        File::create(&output_path).map_err(|e| GenError::FileCreation {
+          path: output_path.clone(),
+          source: e,
         })?
       };
 
@@ -229,14 +315,12 @@ pub async fn start_cli() -> Result<(), GenError> {
       let command = if let Some(literal) = command {
         if config.debug {
           println!("DEBUG:");
-          println!("  config: {:#?}", config);
           println!("  command: {}", literal);
         }
         literal
       } else if let Some(file_path) = file {
         if config.debug {
           println!("DEBUG:");
-          println!("  config: {:#?}", config);
           println!("  file: {}", file_path.display());
         }
         read_to_string(&file_path).map_err(|e| GenError::ReadError {
@@ -247,131 +331,51 @@ pub async fn start_cli() -> Result<(), GenError> {
         panic!("At least one between command and file must be set.")
       };
 
-      exit_if_dry_run!();
-
       let shell = config.shell.clone();
       config.execute_command(shell.as_deref(), cwd, &command)?;
     }
-    Ts {
-      command,
-      typescript_overrides,
-      shared_out_dir,
-      no_shared_out_dir,
-      no_convert_latest,
-      no_catalog,
-    } => {
+    Ts { command, .. } => {
       let typescript = config.typescript.get_or_insert_default();
 
-      if let Some(typescript_overrides) = typescript_overrides {
-        typescript.merge(typescript_overrides);
-      }
-
-      if no_convert_latest {
-        typescript.convert_latest_to_range = false;
-      }
-
-      if no_catalog {
-        typescript.catalog = false;
-      }
-
-      if no_shared_out_dir {
-        typescript.shared_out_dir = SharedOutDir::Bool(false);
-      }
-
-      if let Some(shared_out_dir) = shared_out_dir {
-        typescript.shared_out_dir = SharedOutDir::Name(shared_out_dir);
-      }
-
       match command {
-        TsCommands::Monorepo {
-          moonrepo,
-          no_oxlint,
-          root_package_overrides,
-          ..
-        } => {
-          let root_package = typescript.root_package.get_or_insert_default();
-
-          if let Some(root_package_overrides) = root_package_overrides {
-            root_package.merge(root_package_overrides);
-          }
-
-          if no_oxlint {
-            root_package.oxlint = Some(OxlintConfig::Bool(false));
-          }
-
-          if moonrepo {
-            root_package.moonrepo = Some(MoonConfigKind::Bool(true));
-          }
-
-          if config.debug {
-            println!("DEBUG:");
-            println!("  config: {:#?}", config);
-          }
-
-          exit_if_dry_run!();
+        TsCommands::Monorepo { .. } => {
+          config.create_ts_monorepo().await?;
         }
         TsCommands::Package {
-          package_config,
-          kind,
           preset,
-          moonrepo,
-          no_vitest,
-          oxlint,
-          no_update_root_tsconfig,
+          package_config,
           install,
           name,
+          ..
         } => {
           let package_manager = typescript.package_manager.unwrap_or_default();
 
           let package = if let Some(preset) = preset {
             typescript
               .package_presets
-              .get_mut(&preset)
+              .shift_remove(&preset)
               .ok_or(GenError::PresetNotFound {
                 kind: Preset::Package,
                 name: preset.clone(),
               })?
           } else {
-            &mut package_config.unwrap_or_default()
+            package_config.unwrap_or_default()
           };
-
-          let package_dir = package.dir.clone();
-
-          if let Some(kind) = kind {
-            package.kind = Some(kind.into());
-          }
-
-          if moonrepo {
-            package.moonrepo = Some(MoonDotYmlKind::Bool(true));
-          }
-
-          if no_vitest {
-            package.vitest = VitestConfigKind::Boolean(false);
-          }
-
-          if oxlint {
-            package.oxlint = Some(OxlintConfig::Bool(true));
-          }
-
-          if no_update_root_tsconfig {
-            package.update_root_tsconfig = false;
-          }
-
-          let package = package.clone();
 
           if config.debug {
             println!("DEBUG:");
-            println!("  config: {:#?}", config);
             println!("  package {:#?}", package);
           }
 
           exit_if_dry_run!();
 
+          let package_dir = package.dir.clone().unwrap_or_else(|| get_cwd());
+
           if install {
             launch_command(
               None,
               &[package_manager.to_string().as_str(), "install"],
-              &package_dir.unwrap_or_else(|| get_cwd()),
+              &package_dir,
               Some("Could not install dependencies"),
             )?;
           }
@@ -379,19 +383,18 @@ pub async fn start_cli() -> Result<(), GenError> {
           config
             .build_package(package::PackageData {
               name,
-              kind: PackageDataKind::Config(package),
+              kind: PackageDataKind::Config(package.clone()),
             })
             .await?;
         }
       }
     }
-  };
-
+  }
   Ok(())
 }
 
 /// The struct defining the cli for this crate.
-#[derive(Parser)]
+#[derive(Parser, Debug, Clone)]
 #[command(name = "sketch")]
 #[command(version, about, long_about = None)]
 struct Cli {
@@ -409,17 +412,13 @@ struct Cli {
   #[arg(long)]
   pub dry_run: bool,
 
-  /// Exits with error if a file being created already exists.
-  #[arg(long)]
-  pub(crate) no_overwrite: bool,
-
   /// Set a variable (as key=value) to use in templates. Overrides global and local variables.
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
 
 /// The cli commands.
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, Clone)]
 enum Commands {
   /// Launches typescript-specific commands.
   Ts {
@@ -436,14 +435,6 @@ enum Commands {
     /// Does not use a shared out_dir for TS packages.
     #[arg(long, default_value_t = false)]
     no_shared_out_dir: bool,
-
-    /// Does not convert 'latest' to a version range.
-    #[arg(long)]
-    no_convert_latest: bool,
-
-    /// Does not use the catalog for default dependencies.
-    #[arg(long)]
-    no_catalog: bool,
   },
 
   /// Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config.
@@ -497,7 +488,7 @@ enum Commands {
   },
 }
 
-#[derive(Subcommand)]
+#[derive(Subcommand, Debug, Clone)]
 enum TsCommands {
   /// Generates a new typescript monorepo
   Monorepo {
@@ -549,8 +540,34 @@ enum TsCommands {
   },
 }
 
-#[test]
-fn verify_cli() {
-  use clap::CommandFactory;
-  Cli::command().debug_assert();
+#[cfg(test)]
+mod test {
+  use clap::Parser;
+
+  use crate::cli::{execute_cli, Cli};
+
+  #[tokio::test]
+  async fn cli_root_dir() -> Result<(), Box<dyn std::error::Error>> {
+    let cli = Cli::try_parse_from([
+      "sketch",
+      "--debug",
+      "-c",
+      "tests/paths_resolution/root_dir_resolution.toml",
+      "ts",
+      "--no-catalog",
+      "package",
+      "package1",
+    ])?;
+
+    println!("{:#?}", cli);
+
+    execute_cli(cli).await?;
+
+    Ok(())
+  }
+  #[test]
+  fn verify_cli() {
+    use clap::CommandFactory;
+    Cli::command().debug_assert();
+  }
 }
