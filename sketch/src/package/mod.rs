@@ -9,12 +9,12 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+  custom_templating::TemplateOutput,
   moon::{MoonDotYml, MoonDotYmlKind},
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
   package_json::{PackageJson, PackageJsonKind},
   paths::{get_cwd, get_relative_path},
   pnpm::PnpmWorkspace,
-  tera::TemplateOutput,
   ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
   *,
 };

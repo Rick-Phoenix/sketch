@@ -5,9 +5,10 @@ use std::{
 };
 
 use clap::Parser;
+use serde::{Deserialize, Serialize};
 
 use crate::{
-  cli::{execute_cli, Cli},
+  cli::{execute_cli, get_config_from_cli, Cli},
   package_json::{PackageJson, Person},
   pnpm::PnpmWorkspace,
   ts_config::{
@@ -19,16 +20,19 @@ use crate::{
   },
 };
 
-static OUTPUT_DIR: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("tests/output/ts_repo"));
+static TS_TESTS_ROOT: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("tests/output/ts_repo"));
 
 static SETUP: Once = Once::new();
 
-fn run_setup() {
-  if OUTPUT_DIR.exists() {
-    remove_dir_all(OUTPUT_DIR.as_path()).expect("Failed to empty the output dir");
+fn reset_testing_dir<T: Into<PathBuf>>(dir: T) {
+  let dir: PathBuf = dir.into();
+  if dir.exists() {
+    remove_dir_all(dir.as_path())
+      .unwrap_or_else(|_| panic!("Failed to empty the output dir '{}'", dir.display()));
   }
 
-  create_dir_all(OUTPUT_DIR.as_path()).expect("Failed to create OUTPUT_DIR");
+  create_dir_all(dir.as_path())
+    .unwrap_or_else(|_| panic!("Failed to create the output dir '{}'", dir.display()));
 }
 
 macro_rules! assert_dir_exists {
@@ -70,8 +74,8 @@ macro_rules! deserialize_yaml {
 }
 
 #[tokio::test]
-async fn cli_root_dir() -> Result<(), Box<dyn std::error::Error>> {
-  SETUP.call_once(|| run_setup());
+async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
+  SETUP.call_once(|| reset_testing_dir(TS_TESTS_ROOT.clone()));
 
   let ts_repo_root = PathBuf::from("tests/output/ts_repo");
 
@@ -228,6 +232,68 @@ async fn cli_root_dir() -> Result<(), Box<dyn std::error::Error>> {
     .get("@sveltejs/kit")
     .unwrap()
     .starts_with("^"));
+
+  Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct CustomTemplateTest {
+  pub my_var: usize,
+}
+
+#[tokio::test]
+async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
+  let output_dir = PathBuf::from("tests/output/custom_templates");
+
+  reset_testing_dir(&output_dir);
+
+  let rendering_cmd = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    "tests/custom_templates/custom_templates.toml",
+    "--root-dir",
+    "tests/output/custom_templates",
+    "render-preset",
+    "test",
+  ])?;
+
+  let with_cli_override = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    "tests/custom_templates/custom_templates.toml",
+    "--root-dir",
+    "tests/output/custom_templates",
+    "--set",
+    "my_var=25",
+    "render",
+    "--id",
+    "lit_template",
+    "with_cli_override.yaml",
+  ])?;
+
+  execute_cli(rendering_cmd.clone()).await?;
+  execute_cli(with_cli_override.clone()).await?;
+
+  let config = get_config_from_cli(rendering_cmd).await?;
+
+  let templates = config.templating_presets.get("test").unwrap();
+
+  for template in templates {
+    let output_path = output_dir.join(&template.output);
+    let output = deserialize_yaml!(CustomTemplateTest, output_path);
+
+    let output_path_str = output_path.to_string_lossy();
+
+    // Checking local context override
+    if output_path_str.ends_with("with_override.yaml") {
+      assert_eq!(output.my_var, 20);
+      // Checking override from cli
+    } else if output_path_str == "with_cli_override.yaml" {
+      assert_eq!(output.my_var, 25);
+    } else {
+      assert_eq!(output.my_var, 15);
+    }
+  }
 
   Ok(())
 }

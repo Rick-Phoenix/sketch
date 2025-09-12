@@ -6,7 +6,7 @@ use std::{
 
 use tera::Context;
 
-use crate::{paths::get_cwd, tera::get_default_context, Config, GenError};
+use crate::{custom_templating::get_default_context, paths::get_cwd, Config, GenError};
 
 pub(crate) fn default_shell() -> &'static str {
   if cfg!(target_os = "windows") {

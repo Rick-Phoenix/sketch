@@ -12,9 +12,9 @@ use Commands::*;
 
 use crate::{
   commands::launch_command,
+  custom_templating::{TemplateData, TemplateOutput},
   package::PackageData,
   paths::get_cwd,
-  tera::{TemplateData, TemplateOutput},
 };
 
 pub(crate) mod parsers;
@@ -184,7 +184,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.generate_templates(get_cwd(), preset)?;
+      let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
+      config.generate_templates(root_dir, preset)?;
     }
 
     Render {
@@ -216,7 +217,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.generate_templates(get_cwd(), vec![template])?;
+      let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
+      config.generate_templates(root_dir, vec![template])?;
     }
     New { output } => {
       let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));

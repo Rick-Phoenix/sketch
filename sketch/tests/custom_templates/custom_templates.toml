@@ -1,4 +1,4 @@
-root_dir = "../output"
+root_dir = "../output/custom_templates"
 
 global_templates_vars = { my_var = 15 }
 
@@ -6,8 +6,7 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 
 templates_dir = "../templates"
 
-[typescript.package_presets.custom_templates_test]
-generate_templates = [
+templating_presets.test = [
   { template = "subdir/nested.j2", output = "nested.yaml" },
   { template = "abc.j2", output = "with_global_var.yaml" },
   { template = "abc.j2", output = "with_override.yaml", context = { my_var = 20 } },

@@ -9,6 +9,7 @@ use serde_json::Value;
 use crate::{
   config_elements::*,
   config_setup::extract_config_from_file,
+  custom_templating::TemplateOutput,
   merge_index_maps, merge_index_sets,
   moon::MoonConfigKind,
   overwrite_option,
@@ -16,7 +17,6 @@ use crate::{
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
   paths::get_parent_dir,
   pnpm::PnpmWorkspace,
-  tera::TemplateOutput,
   ts_config::{TsConfig, TsConfigDirective},
   GenError, SharedOutDir, VersionRange,
 };
