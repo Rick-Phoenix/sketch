@@ -7,15 +7,19 @@ use sketch_it::{
 };
 
 #[tokio::test]
-async fn package_test() -> Result<(), GenError> {
-  let config = Config::from_file(PathBuf::from("sketch.toml"))?;
+async fn circular_configs() -> Result<(), GenError> {
+  let config = Config::from_file(PathBuf::from("tests/circular_configs/sketch.toml"));
 
-  config
-    .build_package(PackageData {
-      name: None,
-      kind: PackageDataKind::Preset("alt2".to_string()),
-    })
-    .await
+  match config {
+    Ok(_) => panic!("Circular configs test did not fail as expected"),
+    Err(e) => {
+      if matches!(e, GenError::CircularDependency(_)) {
+        Ok(())
+      } else {
+        panic!("Circular configs test returned wrong kind of error")
+      }
+    }
+  }
 }
 
 #[tokio::test]

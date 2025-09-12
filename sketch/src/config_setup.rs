@@ -1,11 +1,7 @@
 use std::{
   fs::File,
+  io::Read,
   path::{Path, PathBuf},
-};
-
-use figment::{
-  providers::{Format, Json, Toml, Yaml},
-  Figment,
 };
 
 use crate::{
@@ -14,38 +10,41 @@ use crate::{
   Config, GenError,
 };
 
-pub(crate) fn extract_config_from_file(config_file_abs: &Path) -> Result<Config, GenError> {
-  File::open(config_file_abs).map_err(|e| GenError::ReadError {
-    path: config_file_abs.to_path_buf(),
+pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Config, GenError> {
+  let mut config_file = File::open(config_file_abs_path).map_err(|e| GenError::ReadError {
+    path: config_file_abs_path.to_path_buf(),
     source: e,
   })?;
 
-  let extension = config_file_abs.extension().unwrap_or_else(|| {
+  let extension = config_file_abs_path.extension().unwrap_or_else(|| {
     panic!(
       "Config file '{}' has no extension.",
-      config_file_abs.display()
+      config_file_abs_path.display()
     )
   });
 
-  let figment = if extension == "yaml" || extension == "yml" {
-    Figment::from(Yaml::file(&config_file_abs))
+  let mut config: Config = if extension == "yaml" || extension == "yml" {
+    serde_yaml_ng::from_reader(&config_file).map_err(|e| GenError::ConfigParsing(e.to_string()))?
   } else if extension == "toml" {
-    Figment::from(Toml::file(&config_file_abs))
+    let mut contents = String::new();
+    config_file
+      .read_to_string(&mut contents)
+      .map_err(|e| GenError::ReadError {
+        path: config_file_abs_path.to_path_buf(),
+        source: e,
+      })?;
+    toml::from_str(&contents).map_err(|e| GenError::ConfigParsing(e.to_string()))?
   } else if extension == "json" {
-    Figment::from(Json::file(&config_file_abs))
+    serde_json::from_reader(&config_file).map_err(|e| GenError::ConfigParsing(e.to_string()))?
   } else {
     return Err(GenError::InvalidConfigFormat {
-      file: config_file_abs.to_path_buf(),
+      file: config_file_abs_path.to_path_buf(),
     });
   };
 
-  let mut config: Config = figment
-    .extract()
-    .map_err(|e| GenError::ConfigParsing { source: e })?;
+  config.config_file = Some(config_file_abs_path.to_path_buf());
 
-  config.config_file = Some(config_file_abs.to_path_buf());
-
-  let parent_dir = &get_parent_dir(config_file_abs);
+  let parent_dir = &get_parent_dir(config_file_abs_path);
 
   if let Some(templates_dir) = &config.templates_dir {
     let templates_dir = parent_dir.join(templates_dir);

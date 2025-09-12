@@ -1,5 +1,5 @@
 use std::{
-  fs::read_to_string,
+  fs::{exists, read_to_string},
   io::{self, Write},
   path::PathBuf,
   str::FromStr,
@@ -30,8 +30,24 @@ use crate::{
   Config, *,
 };
 
+fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
+  if let Some(cli_arg) = cli_arg {
+    Some(cli_arg)
+  } else if exists("sketch.yaml").is_ok_and(|exists| exists) {
+    Some(PathBuf::from("sketch.yaml"))
+  } else if exists("sketch.toml").is_ok_and(|exists| exists) {
+    Some(PathBuf::from("sketch.toml"))
+  } else if exists("sketch.json").is_ok_and(|exists| exists) {
+    Some(PathBuf::from("sketch.json"))
+  } else {
+    None
+  }
+}
+
 async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
-  let mut config = if let Some(config_path) = cli.config {
+  let config_file = get_config_file_path(cli.config);
+
+  let mut config = if let Some(config_path) = config_file {
     let conf = match Config::from_file(&config_path) {
       Ok(conf) => conf,
       Err(e) => {
@@ -260,6 +276,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         println!("  output path: {}", output_path.display());
       }
 
+      exit_if_dry_run!();
+
       let mut output_file = if config.no_overwrite {
         File::create_new(&output_path).map_err(|e| match e.kind() {
           io::ErrorKind::AlreadyExists => GenError::FileExists {
@@ -326,6 +344,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         panic!("At least one between command and file must be set.")
       };
 
+      exit_if_dry_run!();
+
       let shell = config.shell.clone();
       config.execute_command(shell.as_deref(), cwd, &command)?;
     }
@@ -334,6 +354,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       match command {
         TsCommands::Monorepo { .. } => {
+          exit_if_dry_run!();
+
           config.create_ts_monorepo().await?;
         }
         TsCommands::Package {
@@ -532,35 +554,4 @@ enum TsCommands {
 }
 
 #[cfg(test)]
-mod test {
-  use clap::Parser;
-
-  use crate::cli::{execute_cli, Cli};
-
-  #[tokio::test]
-  async fn cli_root_dir() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::try_parse_from([
-      "sketch",
-      "--debug",
-      "-c",
-      "tests/paths_resolution/root_dir_resolution.toml",
-      "ts",
-      "--no-catalog",
-      "package",
-      "-d",
-      "nested/package1",
-      "package1",
-    ])?;
-
-    println!("{:#?}", cli);
-
-    execute_cli(cli).await?;
-
-    Ok(())
-  }
-  #[test]
-  fn verify_cli() {
-    use clap::CommandFactory;
-    Cli::command().debug_assert();
-  }
-}
+mod cli_tests;

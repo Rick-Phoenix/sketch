@@ -1,11 +1,6 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use figment::{
-  providers::{Env, Format, Json, Toml, Yaml},
-  value::{Dict, Map},
-  Error, Figment, Metadata, Profile, Provider,
-};
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use serde::{Deserialize, Serialize};
@@ -368,29 +363,5 @@ impl Default for Config {
       extends: Default::default(),
       no_overwrite: false,
     }
-  }
-}
-
-impl Config {
-  pub fn from<T: Provider>(provider: T) -> Result<Config, Error> {
-    Figment::from(provider).extract()
-  }
-
-  pub fn figment() -> Figment {
-    Figment::from(Config::default())
-      .merge(Yaml::file("sketch.yaml"))
-      .merge(Toml::file("sketch.toml"))
-      .merge(Json::file("sketch.json"))
-      .merge(Env::prefixed("SKETCH_"))
-  }
-}
-
-impl Provider for Config {
-  fn metadata(&self) -> Metadata {
-    Metadata::named("Config Struct")
-  }
-
-  fn data(&self) -> Result<Map<Profile, Dict>, Error> {
-    figment::providers::Serialized::defaults(Config::default()).data()
   }
 }

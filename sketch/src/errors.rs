@@ -16,8 +16,8 @@ pub enum GenError {
   DirCreation { path: PathBuf, source: io::Error },
   #[error("Could not create the file '{path}': {source}")]
   FileCreation { path: PathBuf, source: io::Error },
-  #[error("Failed to parse the configuration: {source}")]
-  ConfigParsing { source: figment::Error },
+  #[error("Failed to parse the configuration: {0}")]
+  ConfigParsing(String),
   #[error("{kind:?} preset '{name}' not found")]
   PresetNotFound { kind: Preset, name: String },
   #[error("Failed to parse the template '{template}': {source}")]

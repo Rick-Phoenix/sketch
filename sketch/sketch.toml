@@ -13,76 +13,22 @@ pnpm_config = { onlyBuiltDependencies = [
   "@tailwindcss/oxide",
 ] }
 
-
-[typescript.package_presets.alt2]
-name = "abc2"
-package_json = "abc"
-dir = "packages/mypkg"
+[typescript.package_presets.test]
+name = "test_package"
+package_json = "extended"
+dir = "packages/test_package"
 moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }
 
-[typescript.package_json_presets.base]
-scripts = { abc = "abc", bcd = "bcd" }
-repository = "myrepo"
-license = "Apache 2.0"
-keywords = ["hobbits", "isengard"]
-homepage = "hobbits.com"
-bugs = { url = "hobbits.com", email = "hello@hobbits.com" }
-author = { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" }
-files = ["index.ts", "index2.ts"]
-engines = { node = "23.0.0", deno = "2.2" }
-os = ["darwin", "linux"]
-cpu = ["x64", "arm64"]
+[typescript.people]
+aragorn = { name = "Aragorn", email = "aragorn@middleeath.com", url = "aragorn.middleearth.com" }
+legolas = { name = "Legolas", email = "legolas@middleeath.com", url = "legolas.middleearth.com" }
 
+[typescript.package_json_presets.base]
+keywords = ["hobbits", "isengard"]
+bugs = { url = "hobbits.com", email = "hello@hobbits.com" }
+author = { name = "Frodo", email = "Frodo@hobbits.com", url = "hobbits.com" }
 
 [typescript.package_json_presets.abc]
-name = "abc"
-bugs = { workspace = true }
-workspaces = ["one", "two"]
-main = "dist/index.js"
 extends = ["base"]
-contributors = [
-  { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
-  { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
-  { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
-]
-maintainers = [
-  { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
-  { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
-  { name = "vincenzo", email = "vincenzo@hobbits.com", url = "hobbits.com" },
-]
-peer_dependencies = { somepkg = "1.0.0", otherpkg = "2.0.0" }
-optional_dependencies = { somepkg = "1.0.0", otherpkg = "2.0.0" }
-bundled_dependencies = { somepkg = "1.0.0", otherpkg = "2.0.0" }
-man = ["./man/foo.1", "./man/foo.2"]
-config = { something = { setting = true, other = "something" }, otherThing = "some_setting" }
-publish_config = { access = "public", tag = "mytag", registry = "hobbits.com", something = { setting = true, other = "something" }, otherThing = "some_setting" }
-
-
-[typescript.package_json_presets.abc.dependencies]
-my-app = "^1.0.0"
-my-app2 = "^1.0.0"
-
-[typescript.package_json_presets.abc.dev_dependencies]
-my-app = "^1.0.0"
-
-[typescript.package_json_presets.abc.metadata]
-custom = { something = "abc", other = "abc" }
-
-[typescript.package_json_presets.abc.metadata.pnpm]
-onlyBuildDependencies = ["esbuild"]
-
-[typescript.root_package.moonrepo.toolchain]
-fileGroups = ["abc", "bcd"]
-
-[pre_commit]
-
-[[pre_commit.repos]]
-path = "local"
-
-[[pre_commit.repos.hooks]]
-id = "oxlint"
-name = "oxlint"
-entry = "oxlint"
-language = "system"
-files = '\.svelte$|\.js$|\.ts$'
-types = ["file"]
+contributors = ["aragorn", "legolas"]
+maintainers = ["aragorn", "legolas"]
