@@ -30,7 +30,7 @@ impl TypescriptConfig {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq)]
 #[merge(strategy = overwrite_option)]
 #[serde(default)]
 pub struct RootPackage {
@@ -77,7 +77,7 @@ impl Default for RootPackage {
   }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq)]
 #[serde(default)]
 pub struct TypescriptConfig {
   /// The configuration for the root typescript package.
@@ -188,7 +188,7 @@ impl Config {
 }
 
 /// The global configuration struct.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq)]
 #[serde(default)]
 pub struct Config {
   #[serde(skip)]
@@ -218,7 +218,7 @@ pub struct Config {
   pub root_dir: Option<PathBuf>,
 
   /// The path to the directory with the template files.
-  #[merge(strategy = merge::option::overwrite_none)]
+  #[merge(strategy = overwrite_option)]
   #[arg(long, value_name = "DIR")]
   pub templates_dir: Option<PathBuf>,
 

@@ -1,10 +1,11 @@
 use std::{
-  fs::{create_dir_all, remove_dir_all, File},
+  fs::{create_dir_all, read_to_string, remove_dir_all, File},
   path::PathBuf,
   sync::{LazyLock, Once},
 };
 
 use clap::Parser;
+use pretty_assertions::{assert_eq, assert_ne};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -18,6 +19,7 @@ use crate::{
     },
     TsConfig, TsConfigReference,
   },
+  Config,
 };
 
 static TS_TESTS_ROOT: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("tests/output/ts_repo"));
@@ -28,11 +30,11 @@ fn reset_testing_dir<T: Into<PathBuf>>(dir: T) {
   let dir: PathBuf = dir.into();
   if dir.exists() {
     remove_dir_all(dir.as_path())
-      .unwrap_or_else(|_| panic!("Failed to empty the output dir '{}'", dir.display()));
+      .unwrap_or_else(|e| panic!("Failed to empty the output dir '{}': {}", dir.display(), e));
   }
 
   create_dir_all(dir.as_path())
-    .unwrap_or_else(|_| panic!("Failed to create the output dir '{}'", dir.display()));
+    .unwrap_or_else(|e| panic!("Failed to create the output dir '{}': {}", dir.display(), e));
 }
 
 macro_rules! assert_dir_exists {
@@ -56,9 +58,9 @@ macro_rules! extract_package_json {
 macro_rules! deserialize_json {
   ($ty:ty, $path:expr) => {{
     let file = File::open(PathBuf::from(&$path))
-      .unwrap_or_else(|_| panic!("Failed to open {}", $path.display()));
+      .unwrap_or_else(|e| panic!("Failed to open {}: {}", $path.display(), e));
     let data: $ty = serde_json::from_reader(&file)
-      .unwrap_or_else(|_| panic!("Failed to deserialize {}", $path.display()));
+      .unwrap_or_else(|e| panic!("Failed to deserialize {}: {}", $path.display(), e));
     data
   }};
 }
@@ -66,9 +68,9 @@ macro_rules! deserialize_json {
 macro_rules! deserialize_yaml {
   ($ty:ty, $path:expr) => {{
     let file = File::open(PathBuf::from(&$path))
-      .unwrap_or_else(|_| panic!("Failed to open {}", $path.display()));
+      .unwrap_or_else(|e| panic!("Failed to open {}: {}", $path.display(), e));
     let data: $ty = serde_yaml_ng::from_reader(&file)
-      .unwrap_or_else(|_| panic!("Failed to deserialize {}", $path.display()));
+      .unwrap_or_else(|e| panic!("Failed to deserialize {}: {}", $path.display(), e));
     data
   }};
 }
@@ -232,6 +234,117 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     .get("@sveltejs/kit")
     .unwrap()
     .starts_with("^"));
+
+  Ok(())
+}
+
+#[tokio::test]
+async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
+  let output_dir = PathBuf::from("tests/output/generated_configs");
+
+  reset_testing_dir(&output_dir);
+
+  let default_config = Cli::try_parse_from([
+    "sketch",
+    "--root-dir",
+    &output_dir.to_string_lossy(),
+    "new",
+    "default_config.yaml",
+  ])?;
+
+  execute_cli(default_config).await?;
+
+  let default_config_output = deserialize_yaml!(Config, output_dir.join("default_config.yaml"));
+
+  // assert_eq!(default_config_output, Config::default());
+
+  Ok(())
+}
+
+#[tokio::test]
+async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
+  let output_dir = PathBuf::from("tests/output/commands_tests");
+  let config_file = PathBuf::from("tests/commands_tests/commands_tests.toml");
+
+  reset_testing_dir(&output_dir);
+
+  let literal = Cli::try_parse_from([
+    "sketch",
+    "--root-dir",
+    &output_dir.to_string_lossy(),
+    "--set",
+    "general=\"kenobi\"",
+    "exec",
+    "echo \"hello there!\\ngeneral {{ general }}.\" > command_output.txt",
+  ])?;
+
+  execute_cli(literal).await?;
+
+  let output: String = read_to_string(output_dir.join("command_output.txt"))?;
+
+  assert_eq!(output, "hello there!\ngeneral kenobi.\n");
+
+  let from_file = Cli::try_parse_from([
+    "sketch",
+    "--root-dir",
+    &output_dir.to_string_lossy(),
+    "--set",
+    "something=\"space\"",
+    "exec",
+    "-f",
+    "../../commands_tests/cmd_from_file.j2",
+  ])?;
+
+  execute_cli(from_file).await?;
+
+  let rendered_from_file: String = read_to_string(output_dir.join("output_from_file.txt"))?;
+
+  assert_eq!(
+    rendered_from_file,
+    "all the time you have to leave the space!\n"
+  );
+
+  let from_file_in_templates_dir = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    &config_file.to_string_lossy(),
+    "--set",
+    "category=\"gp2\"",
+    "exec",
+    "-t",
+    "cmd_template.j2",
+  ])?;
+
+  execute_cli(from_file_in_templates_dir).await?;
+
+  let rendered_from_file_in_templates_dir: String =
+    read_to_string(output_dir.join("output_from_templates_dir.txt"))?;
+
+  assert_eq!(
+    rendered_from_file_in_templates_dir,
+    "gp2 engine... gp2... argh!\n"
+  );
+
+  let from_template_id = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    &config_file.to_string_lossy(),
+    "--set",
+    "condition=\"slower\"",
+    "exec",
+    "-t",
+    "cmd_template",
+  ])?;
+
+  execute_cli(from_template_id).await?;
+
+  let rendered_from_file_in_templates_dir: String =
+    read_to_string(output_dir.join("output_from_template_id.txt"))?;
+
+  assert_eq!(
+    rendered_from_file_in_templates_dir,
+    "engine feels good, much slower than before... amazing\n"
+  );
 
   Ok(())
 }

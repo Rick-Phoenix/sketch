@@ -1,12 +1,15 @@
 use std::{
-  fs::create_dir_all,
-  path::{Path, PathBuf},
+  path::Path,
   process::{Command, Stdio},
 };
 
 use tera::Context;
 
-use crate::{custom_templating::get_default_context, paths::get_cwd, Config, GenError};
+use crate::{
+  custom_templating::{get_default_context, TemplateData},
+  paths::create_parent_dirs,
+  Config, GenError,
+};
 
 pub(crate) fn default_shell() -> &'static str {
   if cfg!(target_os = "windows") {
@@ -20,8 +23,8 @@ impl Config {
   pub fn execute_command(
     self,
     shell: Option<&str>,
-    cwd: Option<PathBuf>,
-    command: &str,
+    cwd: &Path,
+    command_template: TemplateData,
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
 
@@ -30,16 +33,23 @@ impl Config {
 
     context.extend(get_default_context());
 
-    tera
-      .add_raw_template("__command", command)
-      .map_err(|e| GenError::TemplateParsing {
-        template: "__command".to_string(),
-        source: e,
-      })?;
+    let template_name = match command_template {
+      TemplateData::Id(id) => id,
+      TemplateData::Content { name, content } => {
+        tera
+          .add_raw_template(&name, &content)
+          .map_err(|e| GenError::TemplateParsing {
+            template: name.clone(),
+            source: e,
+          })?;
+
+        name
+      }
+    };
 
     let rendered_command =
       tera
-        .render("__command", &context)
+        .render(&template_name, &context)
         .map_err(|e| GenError::TemplateParsing {
           template: "command".to_string(),
           source: e,
@@ -53,14 +63,9 @@ impl Config {
 
     let shell_arg = if shell == "cmd.exe" { "/C" } else { "-c" };
 
-    let dir = cwd.unwrap_or_else(|| get_cwd());
+    create_parent_dirs(cwd)?;
 
-    create_dir_all(&dir).map_err(|e| GenError::DirCreation {
-      path: dir.clone(),
-      source: e,
-    })?;
-
-    launch_command(Some(shell), &[shell_arg], &dir, None)
+    launch_command(Some(shell), &[shell_arg, &rendered_command], cwd, None)
   }
 }
 

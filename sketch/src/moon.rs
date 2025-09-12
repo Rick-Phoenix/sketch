@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{OrderedMap, PackageManager};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum MoonConfigKind {
   Bool(bool),
@@ -19,7 +19,7 @@ impl Default for MoonConfigKind {
 /// A struct for representing the values being used in the various configuration files for moonrepo.
 /// The tasks correspond to the list of tasks in the .moon/tasks.yml config file, and the tasks_config field represents all of the other key-value pairs being used in the same file.
 /// The `toolchain` field contains the key-value pairs belonging to the .moon/toolchain.yml file.
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 #[serde(default)]
 pub struct MoonConfig {
   pub tasks: Option<MoonTasks>,
@@ -28,7 +28,7 @@ pub struct MoonConfig {
 
 /// A struct that represents the key-value pairs being used in a .moon/toolchain.yml file.
 /// The `config` field represents any top level key-value pair that can be used in the file.
-#[derive(Clone, Debug, Template, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq)]
 #[template(path = "moon/toolchain.yml.j2")]
 #[serde(default)]
 pub struct MoonToolchain {
@@ -52,7 +52,7 @@ impl Default for MoonToolchain {
 
 /// A struct that represents the key-value pairs being used in a .moon/tasks.yml file.
 /// The `config` field represents any top level key-value pair that can be used in the file.
-#[derive(Clone, Debug, Template, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq)]
 #[template(path = "moon/tasks.yml.j2")]
 #[serde(default)]
 pub struct MoonTasks {
@@ -76,7 +76,7 @@ impl Default for MoonTasks {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum MoonDotYmlKind {
   Bool(bool),
@@ -91,7 +91,7 @@ impl Default for MoonDotYmlKind {
 
 /// A struct that represents the key-value pairs being used in a moon.yml file.
 /// The `config` field represents any top level key-value pair that can be used in the file.
-#[derive(Clone, Debug, Template, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Default, Serialize, Deserialize, PartialEq)]
 #[template(path = "moon/moon.yml.j2")]
 #[serde(default)]
 pub struct MoonDotYml {

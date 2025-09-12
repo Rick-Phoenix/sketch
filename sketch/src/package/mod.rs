@@ -20,7 +20,7 @@ use crate::{
 };
 
 /// The kind of ts package.
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageKind {
   #[default]
@@ -29,7 +29,7 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge)]
+#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq)]
 #[merge(strategy = merge::option::overwrite_none)]
 #[serde(default)]
 pub struct PackageConfig {

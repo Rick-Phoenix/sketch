@@ -24,6 +24,9 @@ pre-release-hook = [
   "cd .. ; cargo test --all-features; git cliff --latest --prepend CHANGELOG.md --tag \"{{version}}\";",
 ]
 
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+
 [dependencies]
 askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }

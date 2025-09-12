@@ -2,7 +2,6 @@ use std::{
   fs::{exists, read_to_string},
   io::{self, Write},
   path::PathBuf,
-  str::FromStr,
 };
 
 mod cli_elements;
@@ -80,7 +79,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
 
     Render { .. } => {}
     New { .. } => {}
-    Command { .. } => {}
+    Exec { .. } => {}
     Ts {
       command,
       typescript_overrides,
@@ -136,6 +135,7 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let mut config = get_config_from_cli(cli.clone()).await?;
+  let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
 
   macro_rules! exit_if_dry_run {
     () => {
@@ -184,7 +184,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
       config.generate_templates(root_dir, preset)?;
     }
 
@@ -217,11 +216,11 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
       config.generate_templates(root_dir, vec![template])?;
     }
     New { output } => {
-      let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
+      let output_file = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
+      let output_path = root_dir.join(output_file);
 
       if let Some(parent_dir) = output_path.parent() {
         create_dir_all(parent_dir).map_err(|e| GenError::DirCreation {
@@ -230,12 +229,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?;
       }
 
-      let format = <ConfigFormat as FromStr>::from_str(
-        &output_path
-          .extension()
-          .unwrap_or_else(|| panic!("Output file {} has no extension.", output_path.display()))
-          .to_string_lossy(),
-      )?;
+      let format = &output_path
+        .extension()
+        .unwrap_or_else(|| panic!("Output file {} has no extension.", output_path.display()))
+        .to_string_lossy();
 
       if config.debug {
         println!("DEBUG:");
@@ -261,14 +258,14 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?
       };
 
-      match format {
-        ConfigFormat::Yaml => serde_yaml_ng::to_writer(output_file, &config).map_err(|e| {
+      match format.as_ref() {
+        "yaml" => serde_yaml_ng::to_writer(output_file, &config).map_err(|e| {
           GenError::SerializationError {
             target: "the new config file".to_string(),
             error: e.to_string(),
           }
         })?,
-        ConfigFormat::Toml => {
+        "toml" => {
           let content =
             toml::to_string_pretty(&config).map_err(|e| GenError::SerializationError {
               target: "the new config file".to_string(),
@@ -282,30 +279,39 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
               source: e,
             })?;
         }
-        ConfigFormat::Json => serde_json::to_writer_pretty(output_file, &config).map_err(|e| {
+        "json" => serde_json::to_writer_pretty(output_file, &config).map_err(|e| {
           GenError::SerializationError {
             target: "the new config file".to_string(),
             error: e.to_string(),
           }
         })?,
+        _ => return Err(GenError::InvalidConfigFormat { file: output_path }),
       };
     }
-    Command { command, file, cwd } => {
+    Exec {
+      cmd: command,
+      file,
+      template,
+    } => {
       let command = if let Some(literal) = command {
-        if config.debug {
-          println!("DEBUG:");
-          println!("  command: {}", literal);
+        TemplateData::Content {
+          name: "__command".to_string(),
+          content: literal,
         }
-        literal
+      } else if let Some(id) = template {
+        TemplateData::Id(id)
       } else if let Some(file_path) = file {
-        if config.debug {
-          println!("DEBUG:");
-          println!("  file: {}", file_path.display());
-        }
-        read_to_string(&file_path).map_err(|e| GenError::ReadError {
-          path: file_path,
+        let file_path = root_dir.join(file_path);
+
+        let content = read_to_string(&file_path).map_err(|e| GenError::ReadError {
+          path: file_path.clone(),
           source: e,
-        })?
+        })?;
+
+        TemplateData::Content {
+          name: format!("__{}", file_path.display()),
+          content,
+        }
       } else {
         panic!("At least one between command and file must be set.")
       };
@@ -313,7 +319,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       exit_if_dry_run!();
 
       let shell = config.shell.clone();
-      config.execute_command(shell.as_deref(), cwd, &command)?;
+      config.execute_command(shell.as_deref(), &root_dir, command)?;
     }
     Ts { command, .. } => {
       let typescript = config.typescript.get_or_insert_default();
@@ -477,17 +483,18 @@ enum Commands {
   },
 
   /// Renders a template (from text or file) and launches it as a command
-  Command {
+  Exec {
+    #[arg(group = "input")]
     /// The literal definition for the command's template (cannot be used with the --file flag)
-    command: Option<String>,
+    cmd: Option<String>,
 
     /// The path to the command's template file
-    #[arg(short, long, conflicts_with = "command")]
+    #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The cwd for the command to execute
-    #[arg(long)]
-    cwd: Option<PathBuf>,
+    /// The id (or path inside templates_dir) of the template to use
+    #[arg(short, long, group = "input")]
+    template: Option<String>,
   },
 }
 

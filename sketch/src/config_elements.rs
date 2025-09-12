@@ -5,7 +5,7 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq)]
 pub enum VersionRange {
   Patch,
   #[default]
@@ -26,7 +26,7 @@ impl VersionRange {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum SharedOutDir {
   Bool(bool),
@@ -54,7 +54,7 @@ impl SharedOutDir {
   }
 }
 
-#[derive(Debug, Template, Serialize, Deserialize, Clone)]
+#[derive(Debug, Template, Serialize, Deserialize, Clone, PartialEq)]
 #[template(path = "oxlint.json.j2")]
 #[serde(untagged)]
 pub enum OxlintConfig {
@@ -68,7 +68,7 @@ impl Default for OxlintConfig {
   }
 }
 
-#[derive(Clone, Debug, Template, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq)]
 #[template(path = "gitignore.j2")]
 #[serde(untagged)]
 pub enum GitIgnore {
@@ -82,7 +82,7 @@ impl Default for GitIgnore {
   }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum PreCommitSetting {
   Bool(bool),
@@ -95,13 +95,13 @@ impl Default for PreCommitSetting {
   }
 }
 
-#[derive(Clone, Debug, Template, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Default, Serialize, Deserialize, PartialEq)]
 #[template(path = "pre-commit-config.yaml.j2")]
 pub struct PreCommitConfig {
   pub repos: Vec<PreCommitRepo>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct PreCommitRepo {
   pub path: String,
   pub rev: Option<String>,

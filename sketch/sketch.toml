@@ -2,7 +2,7 @@ root_dir = "tests/output"
 
 global_templates_vars = { my_var = 15 }
 
-templates = { lit_template = "my_var: {{ my_var }}" }
+templates = { lit_template = "my_var: {{ my_var }}", cmd_template = "echo \"engine feels good, much {{ condition }} than before... amazing\" > output_from_template_id.txt" }
 
 templates_dir = "tests/templates"
 

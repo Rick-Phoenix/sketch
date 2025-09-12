@@ -15,7 +15,7 @@ pub(crate) mod tsconfig_elements;
 
 pub use tsconfig_elements::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
 pub enum TsConfigKind {
   Id(String),
@@ -30,7 +30,7 @@ impl Default for TsConfigKind {
 
 /// A struct representing instructions for outputting a tsconfig file.
 /// The file name will be joined to the root directory of the package that the generated config will belong to.
-#[derive(Deserialize, Debug, Clone, Serialize)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq)]
 pub struct TsConfigDirective {
   pub output: Option<String>,
   pub config: Option<TsConfigKind>,

@@ -13,7 +13,7 @@ use crate::{
 };
 pub mod package_json_elements;
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(untagged)]
 pub enum PackageJsonKind {
   Id(String),
