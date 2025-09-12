@@ -29,22 +29,20 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(Clone, Debug, Deserialize, Serialize, Parser)]
+#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge)]
+#[merge(strategy = merge::option::overwrite_none)]
 #[serde(default)]
 pub struct PackageConfig {
-  /// The name of the package. It will be set as the name field in the package.json file.
-  #[arg(skip)]
-  pub name: Option<String>,
-
-  /// The path to the directory for this package which will be joined to the [`Config::root_dir`] as the base path for file generation.
-  /// Defaults to the name of the package.
+  /// The new package's directory, starting from the [`Config::root_dir`]. Defaults to the name of the package.
   #[arg(
-    short,
-    long,
     value_name = "DIR",
-    help = "The new package's directory. It will be joined with the root_dir as the base path for the new files. Defaults to the name of the package"
+    help = "The new package's directory, starting from the `root_dir`. Defaults to the name of the package"
   )]
   pub dir: Option<PathBuf>,
+
+  /// The name of the package. If `dir` is set, it defaults to the last segment of it.
+  #[arg(skip)]
+  pub name: Option<String>,
 
   /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.
   #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
@@ -87,6 +85,7 @@ pub struct PackageConfig {
 
   /// The configuration for this package's vitest setup. It can be set to false (to disable it), an id (to use a preset) or a literal configuration.
   #[arg(skip)]
+  #[merge(strategy = merge_if_not_default)]
   pub vitest: VitestConfigKind,
 
   /// The configuration for this package's oxlint setup. It can be set to true (to use defaults), or to a literal value.
@@ -94,7 +93,8 @@ pub struct PackageConfig {
   pub oxlint: Option<OxlintConfig>,
 
   /// Adds the new package to the references in the root tsconfig.
-  #[arg(long)]
+  #[arg(short = 'u', long)]
+  #[merge(strategy = merge::bool::overwrite_false)]
   pub update_root_tsconfig: bool,
 }
 
@@ -116,12 +116,7 @@ impl Default for PackageConfig {
   }
 }
 
-pub struct PackageData {
-  pub name: Option<String>,
-  pub kind: PackageDataKind,
-}
-
-pub enum PackageDataKind {
+pub enum PackageData {
   Preset(String),
   Config(PackageConfig),
 }
@@ -135,9 +130,9 @@ impl Config {
 
     let root_dir = self.root_dir.clone().unwrap_or_else(|| get_cwd());
 
-    let config = match data.kind {
-      PackageDataKind::Config(conf) => conf,
-      PackageDataKind::Preset(id) => typescript
+    let config = match data {
+      PackageData::Config(conf) => conf,
+      PackageData::Preset(id) => typescript
         .package_presets
         .get(&id)
         .ok_or(GenError::PresetNotFound {
@@ -147,11 +142,13 @@ impl Config {
         .clone(),
     };
 
-    let package_name = data.name.unwrap_or_else(|| {
-      config
-        .name
-        .unwrap_or_else(|| "my-awesome-package".to_string())
-    });
+    let package_name = if let Some(name) = config.name {
+      name
+    } else if let Some(dir) = config.dir.as_ref() && let Some(base) = dir.file_name() {
+      base.to_string_lossy().to_string()
+    } else {
+      "my-awesome-package".to_string()
+    };
 
     let output = root_dir.join(config.dir.unwrap_or_else(|| package_name.clone().into()));
 
@@ -165,7 +162,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(output, !self.no_overwrite, $($tokens) *)
+        write_file!(output, !self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -319,7 +316,7 @@ impl Config {
           .project_tsconfig_name
           .as_ref()
           .map_or("tsconfig.src.json", |v| v),
-        is_app.then_some(
+        (!is_app).then_some(
           typescript
             .dev_tsconfig_name
             .as_ref()
@@ -357,6 +354,10 @@ impl Config {
       }
     }
 
+    for (file, tsconfig) in tsconfig_files {
+      write_to_output!(tsconfig, file);
+    }
+
     if config.update_root_tsconfig {
       let root_tsconfig_path = root_dir.join("tsconfig.json");
 
@@ -366,12 +367,12 @@ impl Config {
       let mut root_tsconfig: TsConfig = serde_json::from_reader(root_tsconfig_file)
         .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
 
-      let path_to_new_tsconfig = output.join("tsconfig.json").to_string_lossy().to_string();
+      let path_to_new_tsconfig = get_relative_path(&root_dir, &output.join("tsconfig.json"))?;
 
       let root_tsconfig_references = root_tsconfig.references.get_or_insert_default();
 
       root_tsconfig_references.insert(ts_config::TsConfigReference {
-        path: path_to_new_tsconfig,
+        path: path_to_new_tsconfig.to_string_lossy().to_string(),
       });
 
       root_tsconfig
@@ -382,12 +383,8 @@ impl Config {
         .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
     }
 
-    for (file, tsconfig) in tsconfig_files {
-      write_to_output!(tsconfig, file);
-    }
-
     let vitest_config = match config.vitest {
-      VitestConfigKind::Boolean(v) => v.then(VitestConfig::default),
+      VitestConfigKind::Bool(v) => v.then(VitestConfig::default),
       VitestConfigKind::Id(n) => {
         let vitest_presets = &typescript.vitest_presets;
         Some(

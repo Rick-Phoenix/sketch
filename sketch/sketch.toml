@@ -6,13 +6,6 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 
 templates_dir = "tests/templates"
 
-[typescript]
-pnpm_config = { onlyBuiltDependencies = [
-  "esbuild",
-  "rolldown",
-  "@tailwindcss/oxide",
-] }
-
 [typescript.package_presets.test]
 name = "test_package"
 package_json = "extended"
@@ -28,7 +21,10 @@ keywords = ["hobbits", "isengard"]
 bugs = { url = "hobbits.com", email = "hello@hobbits.com" }
 author = { name = "Frodo", email = "Frodo@hobbits.com", url = "hobbits.com" }
 
-[typescript.package_json_presets.abc]
+[typescript.package_json_presets.extended]
 extends = ["base"]
 contributors = ["aragorn", "legolas"]
 maintainers = ["aragorn", "legolas"]
+
+[typescript.package_json_presets.app]
+dev_dependencies = { svelte = "latest", tailwindcss = "catalog:", "@sveltejs/kit" = "catalog:svelte" }

@@ -2,7 +2,7 @@
 
 {
   "name": "{{ name }}",
-  "private": {{ self.private }},
+  "private": {{+ self.private }},
   "version": "{{ self.version }}",
   "type": "{{ self.type_ }}",
   {% call utils::render_optional_string("description", self.description, 2) +%}

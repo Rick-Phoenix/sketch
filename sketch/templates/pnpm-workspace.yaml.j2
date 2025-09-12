@@ -9,7 +9,7 @@ catalogs:
   {% for (name, catalog) in catalogs +%}
   {{+ name }}: 
   {% for (name, val) in catalog +%}
-    {{+ name }}: {{+ val }}
+    '{{+ name }}': {{+ val }}
   {% endfor %}
   {% endfor %}
 {% endif ~%}
@@ -17,10 +17,10 @@ catalogs:
 {%~ if !self.catalog.is_empty() ~%}
 catalog:
   {% for (name, version) in self.catalog +%}
-  {{+ name }}: {{+ version }}
+  '{{+ name }}': {{+ version }}
   {% endfor %}
 {% endif ~%}
 
 {%~ for (name, val) in self.extra ~%}
-{{+ name }}: {{+ crate::render_yaml_val(val, 0) }}
+'{{+ name }}': {{+ crate::render_yaml_val(val, 0) }}
 {% endfor %}

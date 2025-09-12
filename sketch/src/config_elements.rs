@@ -15,6 +15,9 @@ pub enum VersionRange {
 
 impl VersionRange {
   pub fn create(&self, version: String) -> String {
+    if version.starts_with("catalog:") {
+      return version;
+    }
     match self {
       VersionRange::Patch => format!("~{}", version),
       VersionRange::Minor => format!("^{}", version),

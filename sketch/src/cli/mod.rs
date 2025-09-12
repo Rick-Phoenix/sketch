@@ -12,7 +12,7 @@ use Commands::*;
 
 use crate::{
   commands::launch_command,
-  package::PackageDataKind,
+  package::PackageData,
   paths::get_cwd,
   tera::{TemplateData, TemplateOutput},
 };
@@ -122,43 +122,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
             root_package.moonrepo = Some(MoonConfigKind::Bool(true));
           }
         }
-        TsCommands::Package {
-          package_config,
-          kind,
-          preset,
-          moonrepo,
-          no_vitest,
-          oxlint,
-          ..
-        } => {
-          let package = if let Some(preset) = preset {
-            typescript
-              .package_presets
-              .get_mut(&preset)
-              .ok_or(GenError::PresetNotFound {
-                kind: Preset::Package,
-                name: preset.clone(),
-              })?
-          } else {
-            &mut package_config.unwrap_or_default()
-          };
-
-          if let Some(kind) = kind {
-            package.kind = Some(kind.into());
-          }
-
-          if moonrepo {
-            package.moonrepo = Some(MoonDotYmlKind::Bool(true));
-          }
-
-          if no_vitest {
-            package.vitest = VitestConfigKind::Boolean(false);
-          }
-
-          if oxlint {
-            package.oxlint = Some(OxlintConfig::Bool(true));
-          }
-        }
+        TsCommands::Package { .. } => {}
       }
     }
   };
@@ -362,22 +326,43 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           preset,
           package_config,
           install,
-          name,
-          ..
+          moonrepo,
+          no_vitest,
+          oxlint,
+          kind,
         } => {
-          let package_manager = typescript.package_manager.unwrap_or_default();
-
-          let package = if let Some(preset) = preset {
+          let mut package = if let Some(preset) = preset {
             typescript
               .package_presets
-              .shift_remove(&preset)
+              .get(&preset)
               .ok_or(GenError::PresetNotFound {
                 kind: Preset::Package,
                 name: preset.clone(),
               })?
+              .clone()
           } else {
-            package_config.unwrap_or_default()
+            PackageConfig::default()
           };
+
+          if let Some(overrides) = package_config {
+            package.merge(overrides);
+          }
+
+          if let Some(kind) = kind {
+            package.kind = Some(kind.into());
+          }
+
+          if moonrepo {
+            package.moonrepo = Some(MoonDotYmlKind::Bool(true));
+          }
+
+          if no_vitest {
+            package.vitest = VitestConfigKind::Bool(false);
+          }
+
+          if oxlint {
+            package.oxlint = Some(OxlintConfig::Bool(true));
+          }
 
           if config.debug {
             println!("DEBUG:");
@@ -389,6 +374,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           let package_dir = package.dir.clone().unwrap_or_else(|| get_cwd());
 
           if install {
+            let package_manager = typescript.package_manager.unwrap_or_default();
+
             launch_command(
               None,
               &[package_manager.to_string().as_str(), "install"],
@@ -398,10 +385,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           }
 
           config
-            .build_package(package::PackageData {
-              name,
-              kind: PackageDataKind::Config(package.clone()),
-            })
+            .build_package(PackageData::Config(package.clone()))
             .await?;
         }
       }
@@ -523,8 +507,6 @@ enum TsCommands {
 
   /// Generates a new typescript package
   Package {
-    /// The name of the new package
-    name: Option<String>,
     /// The package preset to use
     #[arg(long)]
     preset: Option<String>,

@@ -7,22 +7,22 @@ use serde::{Deserialize, Serialize};
 /// - True or false to use the default or disable generation altogether.
 /// - A string, indicating a preset stored in the global config
 /// - A object, with a literal definition
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum VitestConfigKind {
-  Boolean(bool),
+  Bool(bool),
   Id(String),
   Config(VitestConfig),
 }
 
 impl Default for VitestConfigKind {
   fn default() -> Self {
-    Self::Config(Default::default())
+    Self::Bool(true)
   }
 }
 
 /// The data used to generate a new vitest setup.
-#[derive(Clone, Debug, Template, Serialize, Deserialize)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, Eq)]
 #[template(path = "vitest.config.ts.j2")]
 #[serde(default)]
 pub struct VitestConfig {

@@ -6,6 +6,16 @@ use std::{
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 
+pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
+  v == &T::default()
+}
+
+pub(crate) fn merge_if_not_default<T: Default + PartialEq>(left: &mut T, right: T) {
+  if !is_default(&right) {
+    *left = right
+  }
+}
+
 pub(crate) fn merge_optional_nested<T: Merge>(left: &mut Option<T>, right: Option<T>) {
   if let Some(right_data) = right {
     if let Some(left_data) = left {

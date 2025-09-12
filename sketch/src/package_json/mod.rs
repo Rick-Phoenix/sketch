@@ -44,6 +44,7 @@ pub struct PackageJson {
   #[merge(strategy = merge::bool::overwrite_true)]
   pub private: bool,
 
+  #[serde(rename = "type")]
   #[merge(skip)]
   pub type_: JsModuleType,
 
@@ -53,6 +54,7 @@ pub struct PackageJson {
   #[merge(strategy = merge_btree_maps)]
   pub dependencies: StringBTreeMap,
 
+  #[serde(alias = "dev_dependencies")]
   #[merge(strategy = merge_btree_maps)]
   pub dev_dependencies: StringBTreeMap,
 
@@ -70,14 +72,17 @@ pub struct PackageJson {
   #[merge(strategy = merge::bool::overwrite_false)]
   pub use_default_deps: bool,
 
+  #[serde(alias = "optional_dependencies")]
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub optional_dependencies: StringBTreeMap,
 
+  #[serde(alias = "peer_dependencies")]
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub peer_dependencies: StringBTreeMap,
 
+  #[serde(alias = "bundle_dependencies")]
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub bundle_dependencies: StringBTreeMap,
@@ -130,10 +135,12 @@ pub struct PackageJson {
   #[merge(strategy = overwrite_option)]
   pub config: Option<JsonValueBTreeMap>,
 
+  #[serde(alias = "package_manager")]
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub package_manager: Option<String>,
 
+  #[serde(alias = "publish_config")]
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]
   pub publish_config: Option<PublishConfig>,
@@ -186,7 +193,7 @@ impl Default for PackageJson {
       scripts: Default::default(),
       metadata: Default::default(),
       repository: None,
-      description: Some("A package that solves all of your problems...".to_string()),
+      description: None,
       package_manager: Default::default(),
       config: Default::default(),
       publish_config: Default::default(),

@@ -1,10 +1,6 @@
 use std::path::PathBuf;
 
-use sketch_it::{
-  config::Config,
-  package::{PackageData, PackageDataKind},
-  GenError,
-};
+use sketch_it::{config::Config, package::PackageData, GenError};
 
 #[tokio::test]
 async fn circular_configs() -> Result<(), GenError> {
@@ -27,10 +23,7 @@ async fn circular_package_json() -> Result<(), GenError> {
   let config = Config::from_file(PathBuf::from("tests/circular_package_json/sketch.toml"))?;
 
   let result = config
-    .build_package(PackageData {
-      name: None,
-      kind: PackageDataKind::Preset("circular_package_json".to_string()),
-    })
+    .build_package(PackageData::Preset("circular_package_json".to_string()))
     .await;
 
   match result {
@@ -50,10 +43,7 @@ async fn circular_tsconfig() -> Result<(), GenError> {
   let config = Config::from_file(PathBuf::from("tests/circular_tsconfigs/sketch.toml"))?;
 
   let result = config
-    .build_package(PackageData {
-      name: None,
-      kind: PackageDataKind::Preset("circular_tsconfigs".to_string()),
-    })
+    .build_package(PackageData::Preset("circular_tsconfigs".to_string()))
     .await;
 
   match result {
