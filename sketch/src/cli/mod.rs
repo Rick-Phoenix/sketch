@@ -113,7 +113,6 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
           moonrepo,
           no_vitest,
           oxlint,
-          no_update_root_tsconfig,
           ..
         } => {
           let package = if let Some(preset) = preset {
@@ -142,10 +141,6 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
 
           if oxlint {
             package.oxlint = Some(OxlintConfig::Bool(true));
-          }
-
-          if no_update_root_tsconfig {
-            package.update_root_tsconfig = false;
           }
         }
       }
@@ -524,10 +519,6 @@ enum TsCommands {
     #[arg(long)]
     oxlint: bool,
 
-    /// Does not update the root tsconfig with a reference to the new tsconfig file
-    #[arg(long)]
-    no_update_root_tsconfig: bool,
-
     /// Installs the dependencies with the chosen package manager
     #[arg(short, long)]
     install: bool,
@@ -556,6 +547,8 @@ mod test {
       "ts",
       "--no-catalog",
       "package",
+      "-d",
+      "nested/package1",
       "package1",
     ])?;
 

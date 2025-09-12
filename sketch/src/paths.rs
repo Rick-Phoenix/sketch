@@ -39,10 +39,11 @@ pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, G
       path: base.to_path_buf(),
       source: e,
     })?;
+
   let canonical_target = target
     .canonicalize()
     .map_err(|e| GenError::PathCanonicalization {
-      path: base.to_path_buf(),
+      path: target.to_path_buf(),
       source: e,
     })?;
 

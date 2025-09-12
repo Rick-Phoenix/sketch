@@ -62,7 +62,7 @@ pub struct PackageConfig {
     help = "The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used",
     value_name = "DIR"
   )]
-  pub ts_out_dir: Option<String>,
+  pub ts_out_dir: Option<PathBuf>,
 
   /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition.
   #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
@@ -93,8 +93,8 @@ pub struct PackageConfig {
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
 
-  /// If true, the root tsconfig.json file will be updated when this package is created, by adding the new tsconfig file to its list of project references.
-  #[arg(skip)]
+  /// Adds the new package to the references in the root tsconfig.
+  #[arg(long)]
   pub update_root_tsconfig: bool,
 }
 
@@ -110,7 +110,7 @@ impl Default for PackageConfig {
       ts_config: None,
       generate_templates: Default::default(),
       ts_out_dir: None,
-      update_root_tsconfig: true,
+      update_root_tsconfig: false,
       oxlint: None,
     }
   }
@@ -287,28 +287,34 @@ impl Config {
       }
     } else {
       let is_app = matches!(config.kind.unwrap_or_default(), PackageKind::App);
-      let out_dir = if let Some(ref ts_out_dir) = config.ts_out_dir {
-        get_relative_path(&output, &PathBuf::from(ts_out_dir))?
+      let out_dir = if let Some(ts_out_dir) = config.ts_out_dir {
+        output.join(ts_out_dir)
       } else {
-        get_relative_path(
-          &output,
-          &root_dir.join(
-            typescript
-              .shared_out_dir
-              .get_name()
-              .unwrap_or(".out".to_string()),
-          ),
-        )?
-        .join(&package_name)
+        let rel_path_to_root = get_relative_path(&output, &root_dir)?;
+
+        let root_out_dir = rel_path_to_root.join(
+          typescript
+            .shared_out_dir
+            .get_name()
+            .unwrap_or(".out".to_string()),
+        );
+
+        root_out_dir.join(&package_name)
       }
       .to_string_lossy()
       .to_string();
 
-      let rel_path_to_root_dir = get_relative_path(&output, &root_dir)?
+      let path_to_root_tsconfig = get_relative_path(&output, &root_dir)?
+        .join(
+          typescript
+            .root_tsconfig_name
+            .unwrap_or_else(|| "tsconfig.options.json".to_string()),
+        )
         .to_string_lossy()
         .to_string();
+
       let base_tsconfig = get_default_package_tsconfig(
-        rel_path_to_root_dir,
+        path_to_root_tsconfig,
         typescript
           .project_tsconfig_name
           .as_ref()
@@ -329,7 +335,7 @@ impl Config {
         typescript
           .project_tsconfig_name
           .clone()
-          .unwrap_or_else(|| "tsconfig.options.json".to_string()),
+          .unwrap_or_else(|| "tsconfig.src.json".to_string()),
         src_tsconfig,
       ));
 
@@ -353,6 +359,7 @@ impl Config {
 
     if config.update_root_tsconfig {
       let root_tsconfig_path = root_dir.join("tsconfig.json");
+
       let root_tsconfig_file =
         File::open(&root_tsconfig_path).map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
 
@@ -361,14 +368,18 @@ impl Config {
 
       let path_to_new_tsconfig = output.join("tsconfig.json").to_string_lossy().to_string();
 
-      if let Some(root_tsconfig_references) = root_tsconfig.references.as_mut()
-         && !root_tsconfig_references.iter().any(|p| p.path == path_to_new_tsconfig)
-      {
-        root_tsconfig_references.insert(ts_config::TsConfigReference { path: path_to_new_tsconfig });
-        root_tsconfig.write_into(&mut File::create(&root_tsconfig_path)
-          .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?)
-          .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
-      }
+      let root_tsconfig_references = root_tsconfig.references.get_or_insert_default();
+
+      root_tsconfig_references.insert(ts_config::TsConfigReference {
+        path: path_to_new_tsconfig,
+      });
+
+      root_tsconfig
+        .write_into(
+          &mut File::create(&root_tsconfig_path)
+            .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?,
+        )
+        .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
     }
 
     for (file, tsconfig) in tsconfig_files {

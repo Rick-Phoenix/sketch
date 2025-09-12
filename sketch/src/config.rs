@@ -13,7 +13,8 @@ use serde_json::Value;
 
 use crate::{
   config_elements::*,
-  extract_config_from_file, merge_index_maps, merge_index_sets,
+  config_setup::extract_config_from_file,
+  merge_index_maps, merge_index_sets,
   moon::MoonConfigKind,
   overwrite_option,
   package::{vitest::VitestConfig, PackageConfig},
