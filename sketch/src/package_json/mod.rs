@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use askama::Template;
 use futures::future;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 pub use package_json_elements::*;
 use schemars::JsonSchema;
@@ -66,8 +66,8 @@ pub struct PackageJson {
   pub description: Option<String>,
 
   #[serde(skip_serializing)]
-  #[merge(strategy = merge_sets)]
-  pub extends: BTreeSet<String>,
+  #[merge(strategy = merge_index_sets)]
+  pub extends: IndexSet<String>,
 
   #[serde(skip_serializing)]
   #[merge(strategy = merge::bool::overwrite_false)]
@@ -300,17 +300,18 @@ impl PackageJson {
   fn merge_configs_recursive(
     &mut self,
     store: &IndexMap<String, PackageJson>,
-    processed_ids: &mut Vec<String>,
+    processed_ids: &mut IndexSet<String>,
   ) -> Result<(), GenError> {
     for id in self.extends.clone() {
-      let was_absent = !processed_ids.contains(&id);
-      processed_ids.push(id.clone());
+      let was_absent = processed_ids.insert(id.clone());
 
       if !was_absent {
+        let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
+
         return Err(GenError::CircularDependency(format!(
           "Found circular dependency for package_json '{}'. The full processed chain is: {}",
           id,
-          processed_ids.join(" -> ")
+          chain.join(" -> ")
         )));
       }
 
@@ -335,9 +336,9 @@ impl PackageJson {
     initial_id: &str,
     store: &IndexMap<String, PackageJson>,
   ) -> Result<Self, GenError> {
-    let mut processed_ids: Vec<String> = Default::default();
+    let mut processed_ids: IndexSet<String> = Default::default();
 
-    processed_ids.push(initial_id.to_string());
+    processed_ids.insert(initial_id.to_string());
 
     self.merge_configs_recursive(store, &mut processed_ids)?;
 

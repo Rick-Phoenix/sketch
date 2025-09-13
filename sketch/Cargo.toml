@@ -2,7 +2,7 @@
 name = "sketch-it"
 version = "0.1.0-beta.1"
 
-description = "A rapid templating and generation CLI tool"
+description = "🖌️ A tool for generating project setups, leveraging the power of templating engines for boilerplate generation"
 categories = ["command-line-utilities"]
 keywords = ["boilerplate", "generation", "templating"]
 repository = "https://github.com/Rick-Phoenix/sketch-it"

@@ -346,18 +346,23 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           oxlint,
           kind,
         } => {
-          let mut package = if let Some(preset) = preset {
-            typescript
-              .package_presets
-              .get(&preset)
-              .ok_or(GenError::PresetNotFound {
-                kind: Preset::Package,
-                name: preset.clone(),
-              })?
-              .clone()
+          let (id, mut package) = if let Some(preset) = preset {
+            (
+              preset.clone(),
+              typescript
+                .package_presets
+                .get(&preset)
+                .ok_or(GenError::PresetNotFound {
+                  kind: Preset::Package,
+                  name: preset.clone(),
+                })?
+                .clone(),
+            )
           } else {
-            PackageConfig::default()
+            ("__unnamed".to_string(), PackageConfig::default())
           };
+
+          package = package.merge_configs(&id, &typescript.package_presets)?;
 
           if let Some(overrides) = package_config {
             package.merge(overrides);

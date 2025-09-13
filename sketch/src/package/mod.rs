@@ -6,6 +6,7 @@ use std::{
 };
 
 use clap::Parser;
+use indexmap::IndexSet;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -31,9 +32,14 @@ pub enum PackageKind {
 
 /// The configuration struct that is used to generate new packages.
 #[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, JsonSchema)]
-#[merge(strategy = merge::option::overwrite_none)]
+#[merge(strategy = overwrite_option)]
 #[serde(default)]
 pub struct PackageConfig {
+  /// A list of [`PackageConfig`]s to extend, in the given order.
+  #[arg(skip)]
+  #[merge(strategy = merge_index_sets)]
+  extends: IndexSet<String>,
+
   /// The new package's directory, starting from the [`Config::root_dir`]. Defaults to the name of the package.
   #[arg(
     value_name = "DIR",
@@ -51,6 +57,7 @@ pub struct PackageConfig {
     help = "One or many tsconfig files for this package. If unset, defaults are used",
     value_name = "output=PATH,id=ID"
   )]
+  #[merge(strategy = merge_optional_vecs)]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
   /// The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.
@@ -74,6 +81,7 @@ pub struct PackageConfig {
   /// The templates to generate when this package is created.
   /// The paths specified for these templates' output paths will be joined to the package's directory.
   #[arg(skip)]
+  #[merge(strategy = merge_optional_vecs)]
   pub generate_templates: Option<Vec<TemplateOutput>>,
 
   /// The kind of package [default: 'library'].
@@ -102,6 +110,7 @@ pub struct PackageConfig {
 impl Default for PackageConfig {
   fn default() -> Self {
     Self {
+      extends: Default::default(),
       name: None,
       kind: Default::default(),
       package_json: None,
@@ -435,5 +444,55 @@ impl Config {
     }
 
     Ok(())
+  }
+}
+
+impl PackageConfig {
+  fn merge_configs_recursive(
+    &mut self,
+    store: &IndexMap<String, PackageConfig>,
+    processed_ids: &mut IndexSet<String>,
+  ) -> Result<(), GenError> {
+    for id in self.extends.clone() {
+      let was_absent = processed_ids.insert(id.clone());
+
+      if !was_absent {
+        let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
+
+        return Err(GenError::CircularDependency(format!(
+          "Found circular dependency for package preset '{}'. The full processed chain is: {}",
+          id,
+          chain.join(" -> ")
+        )));
+      }
+
+      let mut target = store
+        .get(id.as_str())
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::Package,
+          name: id.to_string(),
+        })?
+        .clone();
+
+      target.merge_configs_recursive(store, processed_ids)?;
+
+      self.merge(target);
+    }
+
+    Ok(())
+  }
+
+  pub fn merge_configs(
+    mut self,
+    initial_id: &str,
+    store: &IndexMap<String, PackageConfig>,
+  ) -> Result<PackageConfig, GenError> {
+    let mut processed_ids: IndexSet<String> = Default::default();
+
+    processed_ids.insert(initial_id.to_string());
+
+    self.merge_configs_recursive(store, &mut processed_ids)?;
+
+    Ok(self)
   }
 }

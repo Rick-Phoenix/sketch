@@ -1,14 +1,14 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use askama::Template;
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  cli::parsers::parse_key_value_pairs, merge_sets, overwrite_option, templating::filters, GenError,
-  OrderedMap, Preset,
+  cli::parsers::parse_key_value_pairs, merge_index_sets, overwrite_option, templating::filters,
+  GenError, OrderedMap, Preset,
 };
 
 pub(crate) mod tsconfig_defaults;
@@ -80,17 +80,18 @@ impl TsConfig {
   fn merge_configs_recursive(
     &mut self,
     store: &IndexMap<String, TsConfig>,
-    processed_ids: &mut Vec<String>,
+    processed_ids: &mut IndexSet<String>,
   ) -> Result<(), GenError> {
     for id in self.extend_presets.clone() {
-      let was_absent = !processed_ids.contains(&id);
-      processed_ids.push(id.clone());
+      let was_absent = processed_ids.insert(id.clone());
 
       if !was_absent {
+        let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
+
         return Err(GenError::CircularDependency(format!(
           "Found circular dependency for tsconfig '{}'. The full processed chain is: {}",
           id,
-          processed_ids.join(" -> ")
+          chain.join(" -> ")
         )));
       }
 
@@ -115,9 +116,9 @@ impl TsConfig {
     initial_id: &str,
     store: &IndexMap<String, TsConfig>,
   ) -> Result<TsConfig, GenError> {
-    let mut processed_ids: Vec<String> = Default::default();
+    let mut processed_ids: IndexSet<String> = Default::default();
 
-    processed_ids.push(initial_id.to_string());
+    processed_ids.insert(initial_id.to_string());
 
     self.merge_configs_recursive(store, &mut processed_ids)?;
 
@@ -150,9 +151,9 @@ pub struct WatchOptions {
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct TsConfig {
-  #[merge(strategy = merge_sets)]
+  #[merge(strategy = merge_index_sets)]
   #[serde(rename = "extend_presets", skip_serializing)]
-  pub extend_presets: BTreeSet<String>,
+  pub extend_presets: IndexSet<String>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_option)]

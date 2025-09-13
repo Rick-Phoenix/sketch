@@ -82,6 +82,24 @@ macro_rules! get_bin {
 }
 
 #[tokio::test]
+async fn examples() -> Result<(), Box<dyn std::error::Error>> {
+  let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_PATH"));
+  let output_dir = examples_dir.join("examples/output");
+
+  reset_testing_dir(&output_dir);
+
+  let examples = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    &examples_dir.join("typescript.yaml").to_string_lossy(),
+  ])?;
+
+  execute_cli(examples).await?;
+
+  Ok(())
+}
+
+#[tokio::test]
 async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
   let output_dir = PathBuf::from("tests/output/overwrite_test");
 

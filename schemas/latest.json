@@ -1167,6 +1167,15 @@
           ],
           "default": null
         },
+        "extends": {
+          "description": "A list of [`PackageConfig`]s to extend, in the given order.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
         "generate_templates": {
           "description": "The templates to generate when this package is created.\nThe paths specified for these templates' output paths will be joined to the package's directory.",
           "type": [
