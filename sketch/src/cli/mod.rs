@@ -18,7 +18,7 @@ use crate::{
 
 pub(crate) mod parsers;
 
-use clap::{error::ErrorKind, CommandFactory, Parser, Subcommand};
+use clap::{error::ErrorKind, Args, CommandFactory, Parser, Subcommand};
 use merge::Merge;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
@@ -201,6 +201,14 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         }
       } else {
         panic!("Missing id or content for template generation");
+      };
+
+      let output = if output.stdout {
+        "__stdout".to_string()
+      } else {
+        output
+          .output_path
+          .expect("At least one must be set between output_path and --stdout")
       };
 
       let template = TemplateOutput {
@@ -429,6 +437,18 @@ struct Cli {
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
 
+#[derive(Args, Debug, Clone)]
+#[group(required = true, multiple = false)]
+struct RenderingOutput {
+  /// The output file (relative from the cwd)
+  #[arg(requires = "input")]
+  output_path: Option<String>,
+
+  /// Output the result to stdout
+  #[arg(long, requires = "input")]
+  stdout: bool,
+}
+
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
@@ -468,12 +488,13 @@ enum Commands {
 
   /// Generates a single file from a template.
   Render {
-    /// The output file (relative from the cwd)
-    #[arg(requires = "input")]
-    output: String,
+    #[command(flatten)]
+    output: RenderingOutput,
+
     /// The id of the preset to select (cannot be used with the --content flag)
     #[arg(short, long, group = "input")]
     id: Option<String>,
+
     /// The literal definition for the template (cannot be used with the --id flag)
     #[arg(short, long, group = "input")]
     content: Option<String>,

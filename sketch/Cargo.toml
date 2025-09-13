@@ -26,6 +26,7 @@ pre-release-hook = [
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
+assert_cmd = "2.0.17"
 
 [dependencies]
 schemars = { version = "1.0.4", features = ["indexmap2"] }

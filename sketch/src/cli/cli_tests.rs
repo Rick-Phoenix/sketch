@@ -452,6 +452,43 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     }
   }
 
+  let from_literal = Cli::try_parse_from([
+    "sketch",
+    "--root-dir",
+    "tests/output/custom_templates",
+    "--set",
+    "location=\"Isengard\"",
+    "render",
+    "--content",
+    "they're taking the hobbits to {{ location }}!",
+    "from_literal.txt",
+  ])?;
+
+  execute_cli(from_literal).await?;
+
+  let from_literal_output: String = read_to_string(output_dir.join("from_literal.txt"))?;
+
+  assert_eq!(
+    from_literal_output,
+    "they're taking the hobbits to Isengard!"
+  );
+
+  let mut cmd = assert_cmd::Command::cargo_bin("sketch").expect("Failed to find the app binary");
+
+  cmd
+    .args([
+      "--root-dir",
+      "tests/output/custom_templates",
+      "--set",
+      "location=\"Isengard\"",
+      "render",
+      "--content",
+      "they're taking the hobbits to {{ location }}!",
+      "--stdout",
+    ])
+    .assert()
+    .stdout("they're taking the hobbits to Isengard!\n");
+
   Ok(())
 }
 

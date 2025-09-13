@@ -140,55 +140,62 @@ impl Config {
         local_context.extend(added_context);
       }
 
-      let output_path = output_root.join(template.output);
+      let template_name = template.template.name();
 
-      create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
-        "Could not get the parent directory for '{}'",
-        output_path.display()
-      )))?)
-      .map_err(|e| GenError::ParentDirCreation {
-        path: output_path.clone(),
-        source: e,
-      })?;
-
-      let mut output_file = if self.no_overwrite {
-        File::create_new(&output_path).map_err(|e| match e.kind() {
-          ErrorKind::AlreadyExists => GenError::FileExists {
-            path: output_path.clone(),
-          },
-          _ => GenError::WriteError {
-            path: output_path.clone(),
+      if let TemplateData::Content { name, content } = &template.template {
+        tera
+          .add_raw_template(name, content)
+          .map_err(|e| GenError::TemplateParsing {
+            template: name.to_string(),
             source: e,
-          },
-        })?
-      } else {
-        File::create(&output_path).map_err(|e| GenError::FileCreation {
-          path: output_path.clone(),
-          source: e,
-        })?
-      };
+          })?;
+      }
 
-      match template.template {
-        TemplateData::Content { name, content } => {
+      if template.output == "__stdout" {
+        let output =
           tera
-            .add_raw_template(&name, &content)
-            .map_err(|e| GenError::TemplateParsing {
-              template: name.to_string(),
+            .render(template_name, &local_context)
+            .map_err(|e| GenError::TemplateRendering {
+              template: template_name.to_string(),
               source: e,
             })?;
-          tera
-            .render_to(&name, &local_context, &mut output_file)
-            .map_err(|e| GenError::TemplateRendering {
-              template: name.to_string(),
+
+        println!("{}", output);
+      } else {
+        let output_path = output_root.join(template.output);
+
+        create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
+          "Could not get the parent directory for '{}'",
+          output_path.display()
+        )))?)
+        .map_err(|e| GenError::ParentDirCreation {
+          path: output_path.clone(),
+          source: e,
+        })?;
+
+        let mut output_file = if self.no_overwrite {
+          File::create_new(&output_path).map_err(|e| match e.kind() {
+            ErrorKind::AlreadyExists => GenError::FileExists {
+              path: output_path.clone(),
+            },
+            _ => GenError::WriteError {
+              path: output_path.clone(),
               source: e,
-            })?
-        }
-        TemplateData::Id(path) => tera
-          .render_to(&path, &local_context, &mut output_file)
-          .map_err(|e| GenError::TemplateRendering {
-            template: path.to_string(),
+            },
+          })?
+        } else {
+          File::create(&output_path).map_err(|e| GenError::FileCreation {
+            path: output_path.clone(),
             source: e,
-          })?,
+          })?
+        };
+
+        tera
+          .render_to(template_name, &local_context, &mut output_file)
+          .map_err(|e| GenError::TemplateRendering {
+            template: template_name.to_string(),
+            source: e,
+          })?
       }
     }
 
