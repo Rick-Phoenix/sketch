@@ -56,7 +56,7 @@ impl Config {
         })?;
 
     if self.debug {
-      println!("DEBUG: Rendered command: {}", rendered_command);
+      eprintln!("DEBUG: Rendered command: {}", rendered_command);
     }
 
     let shell = shell.unwrap_or_else(|| default_shell());

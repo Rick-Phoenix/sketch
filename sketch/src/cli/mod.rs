@@ -140,15 +140,15 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   macro_rules! exit_if_dry_run {
     () => {
       if cli.dry_run {
-        println!("Aborting due to dry run...");
+        eprintln!("Aborting due to dry run...");
         return Ok(());
       }
     };
   }
 
   if config.debug {
-    println!("DEBUG:");
-    println!("  config: {:#?}", config);
+    eprintln!("DEBUG:");
+    eprintln!("  config: {:#?}", config);
   }
 
   match cli.command {
@@ -157,9 +157,9 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       no_pre_commit,
     } => {
       if config.debug {
-        println!("DEBUG:");
-        println!("  remote: {:?}", remote);
-        println!("  no_pre_commit: {}", no_pre_commit);
+        eprintln!("DEBUG:");
+        eprintln!("  remote: {:?}", remote);
+        eprintln!("  no_pre_commit: {}", no_pre_commit);
       }
 
       exit_if_dry_run!();
@@ -178,8 +178,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         .clone();
 
       if config.debug {
-        println!("DEBUG:");
-        println!("  preset: {:#?}", preset);
+        eprintln!("DEBUG:");
+        eprintln!("  preset: {:#?}", preset);
       }
 
       exit_if_dry_run!();
@@ -218,8 +218,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       };
 
       if config.debug {
-        println!("DEBUG:");
-        println!("  template: {:#?}", template);
+        eprintln!("DEBUG:");
+        eprintln!("  template: {:#?}", template);
       }
 
       exit_if_dry_run!();
@@ -242,8 +242,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         .to_string_lossy();
 
       if config.debug {
-        println!("DEBUG:");
-        println!("  output path: {}", output_path.display());
+        eprintln!("DEBUG:");
+        eprintln!("  output path: {}", output_path.display());
       }
 
       exit_if_dry_run!();
@@ -380,8 +380,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           }
 
           if config.debug {
-            println!("DEBUG:");
-            println!("  package {:#?}", package);
+            eprintln!("DEBUG:");
+            eprintln!("  package {:#?}", package);
           }
 
           exit_if_dry_run!();

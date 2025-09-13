@@ -80,7 +80,7 @@ impl PnpmWorkspace {
       let version = get_latest_version(&name)
           .await
           .unwrap_or_else(|e| {
-            println!(
+            eprintln!(
               "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
               name,
               e,
@@ -112,7 +112,7 @@ impl PnpmWorkspace {
         let version = get_latest_version(name)
           .await
           .unwrap_or_else(|e| {
-            println!(
+            eprintln!(
               "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
               name,
               e,
