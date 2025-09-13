@@ -246,17 +246,16 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let default_config = Cli::try_parse_from([
     "sketch",
-    "--root-dir",
-    &output_dir.to_string_lossy(),
+    "--no-config-file",
     "new",
-    "default_config.yaml",
+    &output_dir.join("default_config.yaml").to_string_lossy(),
   ])?;
 
   execute_cli(default_config).await?;
 
   let default_config_output = deserialize_yaml!(Config, output_dir.join("default_config.yaml"));
 
-  // assert_eq!(default_config_output, Config::default());
+  assert_eq!(default_config_output, Config::default());
 
   Ok(())
 }

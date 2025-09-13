@@ -46,7 +46,7 @@ fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
 async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   let config_file = get_config_file_path(cli.config);
 
-  let mut config = if let Some(config_path) = config_file {
+  let mut config = if let Some(config_path) = config_file && !cli.no_config_file {
     let conf = match Config::from_file(&config_path) {
       Ok(conf) => conf,
       Err(e) => {
@@ -219,8 +219,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       config.generate_templates(root_dir, vec![template])?;
     }
     New { output } => {
-      let output_file = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
-      let output_path = root_dir.join(output_file);
+      let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
 
       if let Some(parent_dir) = output_path.parent() {
         create_dir_all(parent_dir).map_err(|e| GenError::DirCreation {
@@ -408,8 +407,12 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 #[command(version, about, long_about = None)]
 struct Cli {
   /// Sets a custom config file.
-  #[arg(short, long, value_name = "FILE")]
+  #[arg(short, long, value_name = "FILE", group = "config-file")]
   pub config: Option<PathBuf>,
+
+  /// Ignores any config files, uses cli instructions only
+  #[arg(long, group = "config-file")]
+  pub no_config_file: bool,
 
   #[command(subcommand)]
   pub command: Commands,
