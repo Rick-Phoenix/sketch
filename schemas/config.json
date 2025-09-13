@@ -1,0 +1,2299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "description": "The global configuration struct.",
+  "type": "object",
+  "properties": {
+    "debug": {
+      "description": "Activates debugging mode.",
+      "type": "boolean",
+      "default": false
+    },
+    "extends": {
+      "description": "The relative paths, from the current file, to the other config files to merge with the current one.",
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "gitignore": {
+      "description": "Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.",
+      "$ref": "#/$defs/GitIgnore",
+      "default": []
+    },
+    "global_templates_vars": {
+      "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set as a template's local context or via a cli command.",
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "no_overwrite": {
+      "description": "Exits with error if a file being created already exists.",
+      "type": "boolean",
+      "default": false
+    },
+    "pre_commit": {
+      "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/).",
+      "$ref": "#/$defs/PreCommitSetting",
+      "default": true
+    },
+    "root_dir": {
+      "description": "The root directory for the project [default: \".\"].",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "shell": {
+      "description": "The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "templates": {
+      "description": "A map that contains templates defined literally.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {}
+    },
+    "templates_dir": {
+      "description": "The path to the directory with the template files.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
+    "templating_presets": {
+      "description": "A map that contains templating presets.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/TemplateOutput"
+        }
+      },
+      "default": {}
+    },
+    "typescript": {
+      "description": "The configuration for typescript packages.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TypescriptConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "$defs": {
+    "Bugs": {
+      "description": "A struct representing the `bugs` field in a package.json file.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "CompilerOptions": {
+      "type": "object",
+      "properties": {
+        "allowArbitraryExtensions": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowImportingTsExtensions": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowJs": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowSyntheticDefaultImports": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowUmdGlobalAccess": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowUnreachableCode": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "allowUnusedLabels": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "alwaysStrict": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "assumeChangesOnlyAffectDirectDependencies": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "baseUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "checkJs": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "composite": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "customConditions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "declaration": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "declarationDir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "declarationMap": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "disableReferencedProjectLoad": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "disableSizeLimit": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "disableSolutionSearching": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "disableSourceOfProjectReferenceRedirect": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "downlevelIteration": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "emitBOM": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "emitDeclarationOnly": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "emitDecoratorMetadata": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "erasableSyntaxOnly": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "esModuleInterop": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "exactOptionalPropertyTypes": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "experimentalDecorators": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "explainFiles": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "extendedDiagnostics": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "forceConsistentCasingInFileNames": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "generateTrace": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "importHelpers": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "incremental": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "inlineSourceMap": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "inlineSources": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "isolatedDeclarations": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "isolatedModules": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "jsx": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Jsx"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "jsxFactory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jsxFragmentFactory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jsxImportSource": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lib": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/Lib"
+          },
+          "uniqueItems": true
+        },
+        "libReplacement": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "listEmittedFiles": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "listFiles": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "mapRoot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxNodeModuleJsDepth": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "module": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Module"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "moduleDetection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModuleDetection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "moduleResolution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModuleResolution"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "moduleSuffixes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "newLine": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NewLine"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "noCheck": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noEmit": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noEmitHelpers": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noEmitOnError": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noErrorTruncation": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noFallthroughCasesInSwitch": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitAny": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitOverride": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitReturns": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitThis": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitUseStrict": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noLib": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noPropertyAccessFromIndexSignature": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noResolve": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noStrictGenericChecks": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noUncheckedIndexedAccess": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noUncheckedSideEffectsImports": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noUnusedLocals": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noUnusedParameters": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "outDir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "paths": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "plugins": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "preserveConstEnums": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "preserveSymlinks": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "preserveWatchOutput": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "pretty": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reactNamespace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "removeComments": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resolveJsonModule": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resolvePackageJsonExports": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resolvePackageJsonImports": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rewriteRelativeImportsExtensions": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rootDir": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rootDirs": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "skipDefaultLibCheck": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "skipLibCheck": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sourceMap": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sourceRoot": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "strict": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictBindCallApply": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictBuiltinIteratorReturn": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictFunctionTypes": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictNullChecks": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictPropertyInitialization": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "stripInternal": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "suppressExcessPropertyErrors": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "suppressImplicitAnyIndexErrors": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Target"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "traceResolution": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "tsBuildInfoFile": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "typeRoots": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "types": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "useDefineForClassFields": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "useUnknownInCatchVariables": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "verbatimModuleSyntax": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "Directories": {
+      "description": "A struct that matches the value of the `directories` field in a package.json file.",
+      "type": "object",
+      "properties": {
+        "bin": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "example": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lib": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "man": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "test": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "Exports": {
+      "description": "A struct matching a value in the `exports` object inside a package.json file.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "default": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "import": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "node": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "require": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "types": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "FallbackPolling": {
+      "type": "string",
+      "enum": [
+        "fixedPollingInterval",
+        "priorityPollingInterval",
+        "dynamicPriorityPolling"
+      ]
+    },
+    "GitIgnore": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "JsModuleType": {
+      "type": "string",
+      "enum": [
+        "module",
+        "CommonJs"
+      ]
+    },
+    "Jsx": {
+      "type": "string",
+      "enum": [
+        "react",
+        "react-jsx",
+        "react-jsxdev",
+        "react-native",
+        "preserve"
+      ]
+    },
+    "Lib": {
+      "type": "string",
+      "enum": [
+        "Es5",
+        "Es2015",
+        "Es6",
+        "Es2016",
+        "Es7",
+        "Es2017",
+        "Es2018",
+        "Es2019",
+        "Es2020",
+        "EsNext",
+        "Dom",
+        "WebWorker",
+        "ScriptHost"
+      ]
+    },
+    "Man": {
+      "description": "A struct that matches the possible values for the `man` field of a package.json file.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "Module": {
+      "type": "string",
+      "enum": [
+        "None",
+        "CommonJs",
+        "Umd",
+        "Amd",
+        "System",
+        "Es6",
+        "Es2015",
+        "Es2020",
+        "Es2022",
+        "EsNext",
+        "Node16",
+        "Node18",
+        "Node20",
+        "NodeNext",
+        "Preserve"
+      ]
+    },
+    "ModuleDetection": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "legacy",
+        "force"
+      ]
+    },
+    "ModuleResolution": {
+      "type": "string",
+      "enum": [
+        "node",
+        "node16",
+        "nodenext",
+        "bundler"
+      ]
+    },
+    "MoonConfig": {
+      "description": "A struct for representing the values being used in the various configuration files for moonrepo.\nThe tasks correspond to the list of tasks in the .moon/tasks.yml config file, and the tasks_config field represents all of the other key-value pairs being used in the same file.\nThe `toolchain` field contains the key-value pairs belonging to the .moon/toolchain.yml file.",
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoonTasks"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "toolchain": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoonToolchain"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      }
+    },
+    "MoonConfigKind": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/MoonConfig"
+        }
+      ]
+    },
+    "MoonDotYml": {
+      "description": "A struct that represents the key-value pairs being used in a moon.yml file.\nThe `config` field represents any top level key-value pair that can be used in the file.",
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "additionalProperties": true
+    },
+    "MoonDotYmlKind": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/MoonDotYml"
+        }
+      ]
+    },
+    "MoonTasks": {
+      "description": "A struct that represents the key-value pairs being used in a .moon/tasks.yml file.\nThe `config` field represents any top level key-value pair that can be used in the file.",
+      "type": "object",
+      "properties": {
+        "out_dir": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": ".out"
+        },
+        "project_tsconfig_name": {
+          "type": "string",
+          "default": "tsconfig.src.json"
+        },
+        "root_tsconfig_name": {
+          "type": "string",
+          "default": "tsconfig.options.json"
+        },
+        "tasks": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "additionalProperties": true
+    },
+    "MoonToolchain": {
+      "description": "A struct that represents the key-value pairs being used in a .moon/toolchain.yml file.\nThe `config` field represents any top level key-value pair that can be used in the file.",
+      "type": "object",
+      "properties": {
+        "package_manager": {
+          "$ref": "#/$defs/PackageManager",
+          "default": "pnpm"
+        },
+        "project_tsconfig_name": {
+          "type": "string",
+          "default": "tsconfig.src.json"
+        },
+        "root_tsconfig_name": {
+          "type": "string",
+          "default": "tsconfig.options.json"
+        }
+      },
+      "additionalProperties": true
+    },
+    "NewLine": {
+      "type": "string",
+      "enum": [
+        "lf",
+        "crlf"
+      ]
+    },
+    "OxlintConfig": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "PackageConfig": {
+      "description": "The configuration struct that is used to generate new packages.",
+      "type": "object",
+      "properties": {
+        "dir": {
+          "description": "The new package's directory, starting from the [`Config::root_dir`]. Defaults to the name of the package.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "generate_templates": {
+          "description": "The templates to generate when this package is created.\nThe paths specified for these templates' output paths will be joined to the package's directory.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/TemplateOutput"
+          }
+        },
+        "kind": {
+          "description": "The kind of package [default: 'library'].",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "moonrepo": {
+          "description": "Configuration for the moon.yml file. It can be a boolean, to use defaults, or a full configuration.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoonDotYmlKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "name": {
+          "description": "The name of the package. If `dir` is set, it defaults to the last segment of it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "oxlint": {
+          "description": "The configuration for this package's oxlint setup. It can be set to true (to use defaults), or to a literal value.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OxlintConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "package_json": {
+          "description": "The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageJsonKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "ts_config": {
+          "description": "A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/TsConfigDirective"
+          }
+        },
+        "ts_out_dir": {
+          "description": "The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.\nIf it's unset and the shared_out_dir is set for the global config, it will resolve to the shared_out_dir, joined with a directory with this package's name.\nSo if the shared_out_dir is 'root_dir/.out' and the name of the package is \"my_pkg\" (situated in root_dir/my_pkg), the out_dir's default value will be '../.out/my_pkg'.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "update_root_tsconfig": {
+          "description": "Adds the new package to the references in the root tsconfig.",
+          "type": "boolean",
+          "default": false
+        },
+        "vitest": {
+          "description": "The configuration for this package's vitest setup. It can be set to false (to disable it), an id (to use a preset) or a literal configuration.",
+          "$ref": "#/$defs/VitestConfigKind",
+          "default": true
+        }
+      }
+    },
+    "PackageJson": {
+      "description": "A struct representing the contents of a package.json file.",
+      "type": "object",
+      "properties": {
+        "author": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Person"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "browser": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bugs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bugs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bundleDependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "config": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "contributors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Person"
+          },
+          "uniqueItems": true
+        },
+        "cpu": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "devDependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "directories": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Directories"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "engines": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "exports": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Exports"
+          }
+        },
+        "extends": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "writeOnly": true
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "homepage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "license": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "main": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maintainers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Person"
+          },
+          "uniqueItems": true
+        },
+        "man": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Man"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string",
+          "default": "my-awesome-package"
+        },
+        "optionalDependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "os": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "packageManager": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "peerDependencies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "private": {
+          "type": "boolean",
+          "default": true
+        },
+        "publishConfig": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PublishConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Repository"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scripts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "type": {
+          "$ref": "#/$defs/JsModuleType",
+          "default": "module"
+        },
+        "useDefaultDeps": {
+          "type": "boolean",
+          "writeOnly": true
+        },
+        "version": {
+          "type": "string",
+          "default": "0.1.0"
+        },
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "PackageJsonKind": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PackageJson"
+        }
+      ]
+    },
+    "PackageKind": {
+      "description": "The kind of ts package.",
+      "type": "string",
+      "enum": [
+        "library",
+        "app"
+      ]
+    },
+    "PackageManager": {
+      "type": "string",
+      "enum": [
+        "pnpm",
+        "npm",
+        "deno",
+        "bun",
+        "yarn"
+      ]
+    },
+    "Person": {
+      "description": "The possible values used for representing an individual in a package.json file, which can be used to populate the `contributors` and `maintainers` fields.\nIf a plain string is used, it will be interpreted as an id for a [`Person`] that is stored in the global config.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PersonData"
+        }
+      ]
+    },
+    "PersonData": {
+      "description": "A struct that matches how an individual's information is represented in a package.json file in the author, maintainers and contributors fields.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "PnpmWorkspace": {
+      "description": "A struct representing a pnpm-workspace.yaml config. Some widely used fields such as catalog, catalogs and packages are included directly. Everything else is flattened in the `extra` field.",
+      "type": "object",
+      "properties": {
+        "catalog": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "catalogs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "packages": {
+          "type": "array",
+          "default": [
+            "apps/*",
+            "packages/*"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "PreCommitConfig": {
+      "type": "object",
+      "properties": {
+        "repos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PreCommitRepo"
+          }
+        }
+      },
+      "required": [
+        "repos"
+      ]
+    },
+    "PreCommitRepo": {
+      "type": "object",
+      "properties": {
+        "hooks": {
+          "type": "array",
+          "items": true
+        },
+        "path": {
+          "type": "string"
+        },
+        "rev": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "hooks"
+      ]
+    },
+    "PreCommitSetting": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/PreCommitConfig"
+        }
+      ]
+    },
+    "PublishConfig": {
+      "description": "A struct that matches the `publishConfig` field in a package.json file.",
+      "type": "object",
+      "properties": {
+        "access": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PublishConfigAccess"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registry": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "PublishConfigAccess": {
+      "type": "string",
+      "enum": [
+        "public",
+        "restricted"
+      ]
+    },
+    "Repository": {
+      "description": "An enum representing valid formats for the `repository` field in a package.json file.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "directory": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "RootPackage": {
+      "type": "object",
+      "properties": {
+        "generate_templates": {
+          "description": "The templates to generate when the root package is generated.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/TemplateOutput"
+          }
+        },
+        "moonrepo": {
+          "description": "Configuration settings for [`moonrepo`](https://moonrepo.dev/).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MoonConfigKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "name": {
+          "description": "The name of the root package [default: \"root\"].",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "oxlint": {
+          "description": "Oxlint configuration for the root package.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OxlintConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": true
+        },
+        "package_json": {
+          "description": "The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageJsonKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "ts_config": {
+          "description": "A list of [`TsConfigDirective`]s for the root package. They can be preset ids or literal configurations. If unset, defaults are used.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "default": null,
+          "items": {
+            "$ref": "#/$defs/TsConfigDirective"
+          }
+        }
+      }
+    },
+    "SharedOutDir": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Target": {
+      "type": "string",
+      "enum": [
+        "Es3",
+        "Es5",
+        "Es6",
+        "Es7",
+        "Es2015",
+        "Es2016",
+        "Es2017",
+        "Es2018",
+        "Es2019",
+        "Es2020",
+        "EsNext"
+      ]
+    },
+    "TemplateData": {
+      "description": "The types of configuration values for a template's data.\nIt can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)",
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "content"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "TemplateOutput": {
+      "description": "The data for outputting a new template.\nThe output directory will be joined to the root of the package being generated with this template.\nThe context specified here will override the global context.",
+      "type": "object",
+      "properties": {
+        "context": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        },
+        "output": {
+          "type": "string"
+        },
+        "template": {
+          "$ref": "#/$defs/TemplateData"
+        }
+      },
+      "required": [
+        "template",
+        "output"
+      ]
+    },
+    "TsConfig": {
+      "type": "object",
+      "properties": {
+        "compilerOptions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompilerOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exclude": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "extend_presets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "writeOnly": true
+        },
+        "extends": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "include": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "references": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/TsConfigReference"
+          },
+          "uniqueItems": true
+        },
+        "typeAcquisition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeAcquisition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "watchOptions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WatchOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TsConfigDirective": {
+      "description": "A struct representing instructions for outputting a tsconfig file.\nThe file name will be joined to the root directory of the package that the generated config will belong to.",
+      "type": "object",
+      "properties": {
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TsConfigKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "TsConfigKind": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/TsConfig"
+        }
+      ]
+    },
+    "TsConfigReference": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "TypeAcquisition": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "disable_filename_based_type_acquisition": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "enable": {
+              "type": "boolean"
+            },
+            "exclude": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "include": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "enable"
+          ]
+        }
+      ]
+    },
+    "TypescriptConfig": {
+      "type": "object",
+      "properties": {
+        "dev_tsconfig_name": {
+          "description": "The name of the development tsconfig file (which will only typecheck scripts and tests and configs and generate no files) to use inside the individual packages, alongside the default tsconfig.json file.\nIgnored if moonrepo is not used and if the default tsconfig presets are not used.\n[default: \"tsconfig.dev.json\"]",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "no_catalog": {
+          "description": "Whether to use the pnpm catalog for default dependencies.",
+          "type": "boolean",
+          "default": false
+        },
+        "no_convert_latest_to_range": {
+          "description": "Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package.",
+          "type": "boolean",
+          "default": false
+        },
+        "package_json_presets": {
+          "description": "A map containing [`PackageJson`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PackageJson"
+          },
+          "default": {}
+        },
+        "package_manager": {
+          "description": "The package manager being used. [default: pnpm].",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageManager"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "package_presets": {
+          "description": "A map of [`PackageConfig`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PackageConfig"
+          },
+          "default": {}
+        },
+        "people": {
+          "description": "A map of individual [`PersonData`] that can be referenced in [`PackageJson::contributors`] or [`PackageJson::maintainers`].",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PersonData"
+          },
+          "default": {}
+        },
+        "pnpm_config": {
+          "description": "The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PnpmWorkspace"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "project_tsconfig_name": {
+          "description": "The name of the tsconfig file to use inside the individual packages, alongside the default tsconfig.json file.\nIgnored if moonrepo is not used and if the default tsconfig presets are not used.\n[default: \"tsconfig.src.json\"]",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "root_package": {
+          "description": "The configuration for the root typescript package.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RootPackage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "root_tsconfig_name": {
+          "description": "The name of the tsconfig file to use at the root, alongside tsconfig.json.\nIgnored if moonrepo is not used and if the default tsconfig presets are not used.\n[default: \"tsconfig.options.json\"]",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "shared_out_dir": {
+          "description": "If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory with this name (or the default '.out') in the root of the monorepo, with subdirectories for each package.\nSo if for example we have package1 and package2 and shared_out_dir is set to 'tsc-out', the tsc output for package1 will go to tsc-out/package1.",
+          "$ref": "#/$defs/SharedOutDir",
+          "default": ".out"
+        },
+        "tsconfig_presets": {
+          "description": "A map containing [`TsConfig`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TsConfig"
+          },
+          "default": {}
+        },
+        "version_range": {
+          "description": "The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VersionRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "vitest_presets": {
+          "description": "A map of [`VitestConfig`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/VitestConfig"
+          },
+          "default": {}
+        }
+      }
+    },
+    "VersionRange": {
+      "type": "string",
+      "enum": [
+        "Patch",
+        "Minor",
+        "Exact"
+      ]
+    },
+    "VitestConfig": {
+      "description": "The data used to generate a new vitest setup.",
+      "type": "object",
+      "properties": {
+        "plugins": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "setup_dir": {
+          "type": "string",
+          "default": "setup"
+        },
+        "setup_files": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          }
+        },
+        "src_rel_path": {
+          "type": "string",
+          "default": "../../src"
+        }
+      }
+    },
+    "VitestConfigKind": {
+      "description": "The types of configuration for generating a vitest setup.\nCan be set to:\n- True or false to use the default or disable generation altogether.\n- A string, indicating a preset stored in the global config\n- A object, with a literal definition",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/VitestConfig"
+        }
+      ]
+    },
+    "WatchDirectory": {
+      "type": "string",
+      "enum": [
+        "fixedPollingInterval",
+        "dynamicPriorityPolling",
+        "useFsEvents"
+      ]
+    },
+    "WatchFile": {
+      "type": "string",
+      "enum": [
+        "fixedPollingInterval",
+        "priorityPollingInterval",
+        "dynamicPriorityPolling",
+        "useFsEvents",
+        "useFsEventsOnParentDirectory"
+      ]
+    },
+    "WatchOptions": {
+      "type": "object",
+      "properties": {
+        "excludeDirectories": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "excludeFiles": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "fallbackPolling": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FallbackPolling"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "synchronousWatchDirectory": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "watchDirectory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WatchDirectory"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "watchFile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WatchFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

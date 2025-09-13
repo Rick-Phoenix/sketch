@@ -28,6 +28,7 @@ pre-release-hook = [
 pretty_assertions = "1.4.1"
 
 [dependencies]
+schemars = { version = "1.0.4", features = ["indexmap2"] }
 askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }

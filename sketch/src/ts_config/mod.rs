@@ -3,6 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use askama::Template;
 use indexmap::IndexMap;
 use merge::Merge;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -15,7 +16,7 @@ pub(crate) mod tsconfig_elements;
 
 pub use tsconfig_elements::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TsConfigKind {
   Id(String),
@@ -30,7 +31,7 @@ impl Default for TsConfigKind {
 
 /// A struct representing instructions for outputting a tsconfig file.
 /// The file name will be joined to the root directory of the package that the generated config will belong to.
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, JsonSchema)]
 pub struct TsConfigDirective {
   pub output: Option<String>,
   pub config: Option<TsConfigKind>,
@@ -124,7 +125,7 @@ impl TsConfig {
   }
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema)]
 #[template(path = "watch_options.j2")]
 #[serde(rename_all = "camelCase")]
 pub struct WatchOptions {
@@ -142,7 +143,9 @@ pub struct WatchOptions {
   pub exclude_files: Option<BTreeSet<String>>,
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, Template, Default, Merge, PartialEq, Eq)]
+#[derive(
+  Deserialize, Debug, Clone, Serialize, Template, Default, Merge, PartialEq, Eq, JsonSchema,
+)]
 #[template(path = "tsconfig.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
@@ -184,7 +187,7 @@ pub struct TsConfig {
   pub watch_options: Option<WatchOptions>,
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema)]
 #[template(path = "type_acquisition.j2")]
 #[serde(untagged)]
 pub enum TypeAcquisition {
@@ -197,7 +200,7 @@ pub enum TypeAcquisition {
   },
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, Default, Merge, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default, Merge, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 #[merge(strategy = overwrite_option)]

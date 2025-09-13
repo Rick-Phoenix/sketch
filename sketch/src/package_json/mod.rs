@@ -5,6 +5,7 @@ use futures::future;
 use indexmap::IndexMap;
 use merge::Merge;
 pub use package_json_elements::*;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -13,7 +14,7 @@ use crate::{
 };
 pub mod package_json_elements;
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum PackageJsonKind {
   Id(String),
@@ -33,7 +34,7 @@ impl PackageJsonKind {
 }
 
 /// A struct representing the contents of a package.json file.
-#[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq, JsonSchema)]
 #[template(path = "package.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]

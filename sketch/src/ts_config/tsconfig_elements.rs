@@ -1,10 +1,11 @@
 use std::fmt::Display;
 
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::JsonValueBTreeMap;
 
-#[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq, JsonSchema)]
 pub struct TsConfigPlugin {
   pub name: Option<String>,
   #[serde(flatten)]
@@ -23,12 +24,12 @@ impl Ord for TsConfigPlugin {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, JsonSchema)]
 pub struct TsConfigReference {
   pub path: String,
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum NewLine {
   Lf,
@@ -44,7 +45,7 @@ impl Display for NewLine {
   }
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum WatchFile {
   #[serde(alias = "fixedpollinginterval")]
@@ -71,7 +72,7 @@ impl Display for WatchFile {
   }
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum WatchDirectory {
   #[serde(alias = "fixedpollinginterval")]
@@ -92,7 +93,7 @@ impl Display for WatchDirectory {
   }
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum FallbackPolling {
   #[serde(alias = "fixedpollinginterval")]
@@ -113,7 +114,7 @@ impl Display for FallbackPolling {
   }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum Jsx {
   React,
@@ -135,7 +136,7 @@ impl Display for Jsx {
   }
 }
 
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Eq, PartialOrd, Ord, JsonSchema)]
 pub enum Lib {
   #[serde(alias = "ES5")]
   Es5,
@@ -183,7 +184,7 @@ impl Display for Lib {
   }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Copy, Clone, Default)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Copy, Clone, Default, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum ModuleDetection {
   #[default]
@@ -202,7 +203,7 @@ impl Display for ModuleDetection {
   }
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq, JsonSchema)]
 pub enum ModuleResolution {
   #[serde(rename = "node", alias = "Node", alias = "node10", alias = "Node10")]
   Node,
@@ -225,7 +226,7 @@ impl Display for ModuleResolution {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 pub enum Module {
   #[serde(alias = "none")]
   None,
@@ -281,7 +282,7 @@ impl Display for Module {
   }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 pub enum Target {
   #[serde(alias = "es3")]
   Es3,

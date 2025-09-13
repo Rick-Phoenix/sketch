@@ -6,6 +6,7 @@ use std::{
 };
 
 use indexmap::IndexMap;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tera::{Context, Tera};
@@ -14,7 +15,7 @@ use crate::{config::Config, GenError};
 
 /// The types of configuration values for a template's data.
 /// It can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TemplateData {
   Content { name: String, content: String },
@@ -33,7 +34,7 @@ impl TemplateData {
 /// The data for outputting a new template.
 /// The output directory will be joined to the root of the package being generated with this template.
 /// The context specified here will override the global context.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 pub struct TemplateOutput {
   pub template: TemplateData,
   pub output: String,

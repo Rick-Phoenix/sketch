@@ -1,3 +1,5 @@
+#:schema ../schemas/config.json
+
 root_dir = "tests/output"
 
 global_templates_vars = { my_var = 15 }

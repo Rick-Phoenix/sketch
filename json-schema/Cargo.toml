@@ -1,0 +1,13 @@
+[package]
+name = "json-schema"
+version = "0.1.0"
+publish = false
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+sketch-it = { path = "../sketch/" }
+schemars = { version = "1.0.4", features = ["indexmap2"] }
+serde_json = "1"
+paste = "1"

@@ -1,5 +1,5 @@
 [workspace]
-members = ["sketch"]
+members = [ "json-schema","sketch"]
 resolver = "3"
 
 [workspace.package]

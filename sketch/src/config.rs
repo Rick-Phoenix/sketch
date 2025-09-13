@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -30,7 +31,7 @@ impl TypescriptConfig {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq, JsonSchema)]
 #[merge(strategy = overwrite_option)]
 #[serde(default)]
 pub struct RootPackage {
@@ -77,7 +78,7 @@ impl Default for RootPackage {
   }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
 #[serde(default)]
 pub struct TypescriptConfig {
   /// The configuration for the root typescript package.
@@ -188,7 +189,7 @@ impl Config {
 }
 
 /// The global configuration struct.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
 #[serde(default)]
 pub struct Config {
   #[serde(skip)]

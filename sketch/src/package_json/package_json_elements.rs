@@ -1,12 +1,13 @@
 use std::{collections::BTreeMap, fmt::Display};
 
 use askama::Template;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{filters, StringBTreeMap};
 
 /// An enum representing valid formats for the `repository` field in a package.json file.
-#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
 #[template(path = "repository.j2")]
 #[serde(untagged)]
 pub enum Repository {
@@ -22,7 +23,7 @@ pub enum Repository {
 }
 
 /// A struct representing the `bugs` field in a package.json file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Template)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Template, JsonSchema)]
 #[template(path = "bugs.j2")]
 pub struct Bugs {
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -33,7 +34,7 @@ pub struct Bugs {
 
 /// The possible values used for representing an individual in a package.json file, which can be used to populate the `contributors` and `maintainers` fields.
 /// If a plain string is used, it will be interpreted as an id for a [`Person`] that is stored in the global config.
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq, JsonSchema)]
 #[serde(untagged)]
 #[derive(Clone)]
 pub enum Person {
@@ -43,7 +44,17 @@ pub enum Person {
 
 /// A struct that matches how an individual's information is represented in a package.json file in the author, maintainers and contributors fields.
 #[derive(
-  Clone, Debug, Serialize, Deserialize, Default, Template, Ord, PartialEq, PartialOrd, Eq,
+  Clone,
+  Debug,
+  Serialize,
+  Deserialize,
+  Default,
+  Template,
+  Ord,
+  PartialEq,
+  PartialOrd,
+  Eq,
+  JsonSchema,
 )]
 #[template(path = "person.j2")]
 pub struct PersonData {
@@ -55,7 +66,7 @@ pub struct PersonData {
 }
 
 /// A struct matching a value in the `exports` object inside a package.json file.
-#[derive(Clone, Debug, Serialize, Deserialize, Template, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Template, PartialEq, Eq, JsonSchema)]
 #[template(path = "export_path.j2")]
 #[serde(untagged)]
 pub enum Exports {
@@ -78,7 +89,7 @@ pub enum Exports {
 }
 
 /// A struct that matches the value of the `directories` field in a package.json file.
-#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, Template)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, Template, JsonSchema)]
 #[serde(default)]
 #[template(path = "directories.j2")]
 pub struct Directories {
@@ -100,7 +111,7 @@ pub struct Directories {
 }
 
 /// A struct that matches the possible values for the `man` field of a package.json file.
-#[derive(Clone, Debug, Serialize, Deserialize, Template, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Template, PartialEq, Eq, JsonSchema)]
 #[template(path = "man.j2")]
 #[serde(untagged)]
 pub enum Man {
@@ -108,7 +119,7 @@ pub enum Man {
   List(Vec<String>),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum PublishConfigAccess {
   Public,
@@ -125,7 +136,7 @@ impl Display for PublishConfigAccess {
 }
 
 /// A struct that matches the `publishConfig` field in a package.json file.
-#[derive(Clone, Debug, Serialize, Deserialize, Default, Template, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, Template, PartialEq, Eq, JsonSchema)]
 #[serde(default)]
 #[template(path = "publish_config.j2")]
 pub struct PublishConfig {
@@ -140,7 +151,7 @@ pub struct PublishConfig {
   pub other: StringBTreeMap,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone, Copy, PartialEq, Eq, JsonSchema)]
 pub enum JsModuleType {
   #[serde(rename = "module")]
   #[default]
@@ -158,7 +169,7 @@ impl Display for JsModuleType {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum DepKind {
+pub(crate) enum DepKind {
   Dependency,
   DevDependency,
   OptionalDependency,

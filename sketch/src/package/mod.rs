@@ -6,6 +6,7 @@ use std::{
 };
 
 use clap::Parser;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -20,7 +21,7 @@ use crate::{
 };
 
 /// The kind of ts package.
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageKind {
   #[default]
@@ -29,7 +30,7 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, JsonSchema)]
 #[merge(strategy = merge::option::overwrite_none)]
 #[serde(default)]
 pub struct PackageConfig {

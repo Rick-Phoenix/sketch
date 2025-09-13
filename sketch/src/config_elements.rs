@@ -2,10 +2,11 @@ use std::fmt::Display;
 
 use askama::Template;
 use clap::ValueEnum;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, JsonSchema)]
 pub enum VersionRange {
   Patch,
   #[default]
@@ -26,7 +27,7 @@ impl VersionRange {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum SharedOutDir {
   Bool(bool),
@@ -54,7 +55,7 @@ impl SharedOutDir {
   }
 }
 
-#[derive(Debug, Template, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Template, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 #[template(path = "oxlint.json.j2")]
 #[serde(untagged)]
 pub enum OxlintConfig {
@@ -68,7 +69,7 @@ impl Default for OxlintConfig {
   }
 }
 
-#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[template(path = "gitignore.j2")]
 #[serde(untagged)]
 pub enum GitIgnore {
@@ -82,7 +83,7 @@ impl Default for GitIgnore {
   }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum PreCommitSetting {
   Bool(bool),
@@ -95,20 +96,22 @@ impl Default for PreCommitSetting {
   }
 }
 
-#[derive(Clone, Debug, Template, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Template, Default, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[template(path = "pre-commit-config.yaml.j2")]
 pub struct PreCommitConfig {
   pub repos: Vec<PreCommitRepo>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct PreCommitRepo {
   pub path: String,
   pub rev: Option<String>,
   pub hooks: Vec<Value>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default, ValueEnum, Copy)]
+#[derive(
+  Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default, ValueEnum, Copy, JsonSchema,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageManager {
   #[default]
