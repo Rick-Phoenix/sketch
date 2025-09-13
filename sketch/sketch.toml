@@ -15,8 +15,8 @@ dir = "packages/test_package"
 moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }
 
 [typescript.people]
-aragorn = { name = "Aragorn", email = "aragorn@middleeath.com", url = "aragorn.middleearth.com" }
-legolas = { name = "Legolas", email = "legolas@middleeath.com", url = "legolas.middleearth.com" }
+Aragorn = { name = "Aragorn", email = "aragorn@middleeath.com", url = "aragorn.middleearth.com" }
+Legolas = { name = "Legolas", email = "legolas@middleeath.com", url = "legolas.middleearth.com" }
 
 [typescript.package_json_presets.base]
 keywords = ["hobbits", "isengard"]
@@ -25,8 +25,8 @@ author = { name = "Frodo", email = "Frodo@hobbits.com", url = "hobbits.com" }
 
 [typescript.package_json_presets.extended]
 extends = ["base"]
-contributors = ["aragorn", "legolas"]
-maintainers = ["aragorn", "legolas"]
+contributors = ["Aragorn", "Legolas"]
+maintainers = ["Aragorn", "Legolas"]
 
 [typescript.package_json_presets.app]
 dev_dependencies = { svelte = "latest", tailwindcss = "catalog:", "@sveltejs/kit" = "catalog:svelte" }

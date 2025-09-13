@@ -257,6 +257,51 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   assert_eq!(default_config_output, Config::default());
 
+  let with_extras = Cli::try_parse_from([
+    "sketch",
+    "--no-config-file",
+    "--root-dir",
+    "tests/output",
+    "--templates-dir",
+    "tests/templates",
+    "--shell",
+    "zsh",
+    "--set",
+    "hello=\"there\"",
+    "--set",
+    "general=\"kenobi\"",
+    "new",
+    &output_dir.join("with_extras.yaml").to_string_lossy(),
+  ])?;
+
+  execute_cli(with_extras).await?;
+
+  let with_extras_output = deserialize_yaml!(Config, output_dir.join("with_extras.yaml"));
+
+  assert_eq!(
+    with_extras_output.root_dir,
+    Some(PathBuf::from("tests/output"))
+  );
+  assert_eq!(
+    with_extras_output.templates_dir,
+    Some(PathBuf::from("tests/templates"))
+  );
+  assert_eq!(with_extras_output.shell.unwrap(), "zsh");
+  assert_eq!(
+    with_extras_output
+      .global_templates_vars
+      .get("hello")
+      .unwrap(),
+    "there"
+  );
+  assert_eq!(
+    with_extras_output
+      .global_templates_vars
+      .get("general")
+      .unwrap(),
+    "kenobi"
+  );
+
   Ok(())
 }
 
