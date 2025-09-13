@@ -75,6 +75,48 @@ macro_rules! deserialize_yaml {
   }};
 }
 
+macro_rules! get_bin {
+  () => {
+    assert_cmd::Command::cargo_bin("sketch").expect("Failed to find the app binary")
+  };
+}
+
+#[tokio::test]
+async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
+  let output_dir = PathBuf::from("tests/output/overwrite_test");
+
+  reset_testing_dir(&output_dir);
+
+  let first_write = Cli::try_parse_from([
+    "sketch",
+    "--root-dir",
+    &output_dir.to_string_lossy(),
+    "render",
+    "--content",
+    "they're taking the hobbits to Isengard!",
+    "overwrite_test.txt",
+  ])?;
+
+  execute_cli(first_write).await?;
+
+  let mut cmd = get_bin!();
+
+  cmd
+    .args([
+      "--no-overwrite",
+      "--root-dir",
+      &output_dir.to_string_lossy(),
+      "render",
+      "--content",
+      "they're taking the hobbits to Isengard!",
+      "overwrite_test.txt",
+    ])
+    .assert()
+    .failure();
+
+  Ok(())
+}
+
 #[tokio::test]
 async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
   SETUP.call_once(|| reset_testing_dir(TS_TESTS_ROOT.clone()));
