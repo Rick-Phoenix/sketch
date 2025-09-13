@@ -18,10 +18,11 @@ name = "sketch"
 path = "src/main.rs"
 
 [package.metadata.release]
+tag-prefix = "sketch-"
 pre-release-hook = [
   "sh",
   "-c",
-  "cd .. ; cargo test --all-features; git cliff --latest --prepend CHANGELOG.md --tag \"{{version}}\";",
+  "cd .. ; cargo test --all-features; git cliff --latest --prepend CHANGELOG.md --tag \"{{version}}\"; cargo run --bin json-schema \"{{version}}\"",
 ]
 
 [dev-dependencies]

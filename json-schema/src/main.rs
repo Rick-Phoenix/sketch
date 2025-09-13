@@ -1,24 +1,30 @@
-use std::{fs::File, path::PathBuf};
+use std::{
+  fs::{create_dir_all, File},
+  path::PathBuf,
+};
 
+use clap::Parser;
 use schemars::schema_for;
 use sketch_it::Config;
+
+#[derive(Debug, Parser)]
+pub(crate) struct SchemaCmd {
+  pub(crate) version: String,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   let schemas_dir = PathBuf::from("schemas");
 
-  macro_rules! write_schema {
-    ($name:ident) => {
-      paste::paste! {
-        {
-          let schema = schema_for!($name);
-          let output = File::create(schemas_dir.join(concat!(stringify!([< $name:snake >]), ".json")))?;
-          serde_json::to_writer_pretty(&output, &schema)?;
-        }
-      }
-    };
-  }
+  create_dir_all(&schemas_dir)?;
 
-  write_schema!(Config);
+  let version = SchemaCmd::parse().version;
+
+  let schema = schema_for!(Config);
+  let versioned = File::create(schemas_dir.join(format!("{}.json", version)))?;
+  serde_json::to_writer_pretty(&versioned, &schema)?;
+
+  let latest = File::create(schemas_dir.join("latest.json"))?;
+  serde_json::to_writer_pretty(&latest, &schema)?;
 
   Ok(())
 }
