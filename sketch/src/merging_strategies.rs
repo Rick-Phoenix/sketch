@@ -62,17 +62,13 @@ pub(crate) fn overwrite_option<T>(left: &mut Option<T>, right: Option<T>) {
   }
 }
 
-pub(crate) fn merge_optional_vecs<T>(left: &mut Option<Vec<T>>, right: Option<Vec<T>>)
+pub(crate) fn merge_optional_sets<T>(left: &mut Option<BTreeSet<T>>, right: Option<BTreeSet<T>>)
 where
-  T: PartialEq,
+  T: Ord,
 {
   if let Some(right_data) = right {
     if let Some(left_data) = left {
-      for item in right_data {
-        if !left_data.contains(&item) {
-          left_data.push(item);
-        }
-      }
+      left_data.extend(right_data);
     } else {
       *left = Some(right_data)
     }

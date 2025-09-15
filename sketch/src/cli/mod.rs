@@ -346,23 +346,18 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           oxlint,
           kind,
         } => {
-          let (id, mut package) = if let Some(preset) = preset {
-            (
-              preset.clone(),
-              typescript
-                .package_presets
-                .get(&preset)
-                .ok_or(GenError::PresetNotFound {
-                  kind: Preset::Package,
-                  name: preset.clone(),
-                })?
-                .clone(),
-            )
+          let mut package = if let Some(preset) = preset {
+            typescript
+              .package_presets
+              .get(&preset)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::Package,
+                name: preset.clone(),
+              })?
+              .clone()
           } else {
-            ("__unnamed".to_string(), PackageConfig::default())
+            PackageConfig::default()
           };
-
-          package = package.merge_configs(&id, &typescript.package_presets)?;
 
           if let Some(overrides) = package_config {
             package.merge(overrides);
@@ -382,11 +377,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
           if oxlint {
             package.oxlint = Some(OxlintConfig::Bool(true));
-          }
-
-          if config.debug {
-            eprintln!("DEBUG:");
-            eprintln!("  package {:#?}", package);
           }
 
           exit_if_dry_run!();

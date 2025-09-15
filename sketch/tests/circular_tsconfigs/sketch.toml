@@ -1,7 +1,6 @@
 root_dir = "../output"
 
 [typescript]
-no_catalog = true
 
 [typescript.tsconfig_presets.one]
 extend_presets = ["two"]

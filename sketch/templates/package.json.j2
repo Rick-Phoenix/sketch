@@ -76,9 +76,11 @@
   {% call utils::render_list_if_not_empty("os", self.os, 2) +%}
   {% call utils::render_list_if_not_empty("cpu", self.cpu, 2) +%}
   {% call utils::render_string_object_if_not_empty("devDependencies", self.dev_dependencies, 2) +%}
-  "dependencies": {
+  "dependencies": { {% if self.dependencies.is_empty() %} } 
+  {% else %}
     {% for (name, version) in self.dependencies +%}
     "{{ name }}": "{{ version }}" {% call utils::optional_comma(!loop.last) %}
     {% endfor +%}
   }
+  {% endif +%}
 }

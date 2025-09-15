@@ -7,8 +7,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  cli::parsers::parse_key_value_pairs, merge_index_sets, overwrite_option, templating::filters,
-  GenError, OrderedMap, Preset,
+  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_sets, overwrite_option,
+  templating::filters, GenError, OrderedMap, Preset,
 };
 
 pub(crate) mod tsconfig_defaults;
@@ -150,25 +150,25 @@ pub struct WatchOptions {
 #[template(path = "tsconfig.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[merge(strategy = overwrite_option)]
 pub struct TsConfig {
   #[merge(strategy = merge_index_sets)]
   #[serde(rename = "extend_presets", skip_serializing)]
   pub extend_presets: IndexSet<String>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
   pub extends: Option<String>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = merge_optional_sets)]
   pub files: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = merge_optional_sets)]
   pub exclude: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = merge_optional_sets)]
   pub include: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]

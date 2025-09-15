@@ -8,6 +8,9 @@ templates = { lit_template = "my_var: {{ my_var }}", cmd_template = "echo \"engi
 
 templates_dir = "tests/templates"
 
+[typescript]
+catalog = true
+
 [typescript.package_presets.test]
 name = "test_package"
 package_json = "extended"

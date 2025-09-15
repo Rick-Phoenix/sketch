@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, JsonSchema)]
+#[serde(rename_all = "lowercase")]
 pub enum VersionRange {
   Patch,
   #[default]

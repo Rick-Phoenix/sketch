@@ -28,8 +28,10 @@ pre-release-hook = [
 [dev-dependencies]
 pretty_assertions = "1.4.1"
 assert_cmd = "2.0.17"
+clap-markdown = "0.1.5"
 
 [dependencies]
+document-features = "=0.2.11"
 schemars = { version = "1.0.4", features = ["indexmap2"] }
 askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }
@@ -52,7 +54,10 @@ indexmap = { version = "2.11.0", features = ["serde"] }
 uuid = { version = "1.18.1", features = ["v4"], optional = true }
 
 [features]
+## Adds a `uuid` function to generate UUID in custom templates.
 uuid = ["dep:uuid"]
+
+default = ["uuid"]
 
 [package.metadata.docs.rs]
 all-features = true

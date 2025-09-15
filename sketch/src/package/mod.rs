@@ -6,7 +6,6 @@ use std::{
 };
 
 use clap::Parser;
-use indexmap::IndexSet;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -35,11 +34,6 @@ pub enum PackageKind {
 #[merge(strategy = overwrite_option)]
 #[serde(default)]
 pub struct PackageConfig {
-  /// A list of [`PackageConfig`]s to extend, in the given order.
-  #[arg(skip)]
-  #[merge(strategy = merge_index_sets)]
-  extends: IndexSet<String>,
-
   /// The new package's directory, starting from the [`Config::root_dir`]. Defaults to the name of the package.
   #[arg(
     value_name = "DIR",
@@ -57,7 +51,6 @@ pub struct PackageConfig {
     help = "One or many tsconfig files for this package. If unset, defaults are used",
     value_name = "output=PATH,id=ID"
   )]
-  #[merge(strategy = merge_optional_vecs)]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
   /// The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.
@@ -81,7 +74,6 @@ pub struct PackageConfig {
   /// The templates to generate when this package is created.
   /// The paths specified for these templates' output paths will be joined to the package's directory.
   #[arg(skip)]
-  #[merge(strategy = merge_optional_vecs)]
   pub generate_templates: Option<Vec<TemplateOutput>>,
 
   /// The kind of package [default: 'library'].
@@ -110,7 +102,6 @@ pub struct PackageConfig {
 impl Default for PackageConfig {
   fn default() -> Self {
     Self {
-      extends: Default::default(),
       name: None,
       kind: Default::default(),
       package_json: None,
@@ -152,15 +143,20 @@ impl Config {
         .clone(),
     };
 
-    let package_name = if let Some(name) = config.name {
-      name
+    let package_name = if let Some(name) = config.name.as_ref() {
+      name.clone()
     } else if let Some(dir) = config.dir.as_ref() && let Some(base) = dir.file_name() {
       base.to_string_lossy().to_string()
     } else {
       "my-awesome-package".to_string()
     };
 
-    let output = root_dir.join(config.dir.unwrap_or_else(|| package_name.clone().into()));
+    let output = root_dir.join(
+      config
+        .dir
+        .clone()
+        .unwrap_or_else(|| package_name.clone().into()),
+    );
 
     create_dir_all(&output).map_err(|e| GenError::DirCreation {
       path: output.to_owned(),
@@ -177,21 +173,21 @@ impl Config {
     }
 
     let (package_json_id, mut package_json_data) =
-      if let Some(package_json_config) = config.package_json {
+      if let Some(package_json_config) = config.package_json.as_ref() {
         match package_json_config {
           PackageJsonKind::Id(id) => {
             let config = package_json_presets
-              .get(&id)
+              .get(id)
               .ok_or(GenError::PresetNotFound {
                 kind: Preset::PackageJson,
                 name: id.clone(),
               })?
               .clone();
 
-            (id, config)
+            (id.to_string(), config)
           }
           PackageJsonKind::Config(package_json_config) => {
-            (package_name.clone(), *package_json_config)
+            (package_name.clone(), *package_json_config.clone())
           }
         }
       } else {
@@ -209,10 +205,10 @@ impl Config {
 
     if package_json_data.use_default_deps {
       for dep in DEFAULT_DEPS {
-        let version = if typescript.no_catalog {
-          "latest".to_string()
-        } else {
+        let version = if typescript.catalog {
           "catalog:".to_string()
+        } else {
+          "latest".to_string()
         };
 
         package_json_data
@@ -231,7 +227,7 @@ impl Config {
 
     write_to_output!(package_json_data, "package.json");
 
-    if !typescript.no_catalog && matches!(package_manager, PackageManager::Pnpm) {
+    if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
       let pnpm_workspace_file = File::open(&pnpm_workspace_path)
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
@@ -251,10 +247,10 @@ impl Config {
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
     }
 
-    if let Some(moon_config_kind) = config.moonrepo && !matches!(moon_config_kind, MoonDotYmlKind::Bool(false)) {
+    if let Some(moon_config_kind) = config.moonrepo.as_ref() && !matches!(moon_config_kind, MoonDotYmlKind::Bool(false)) {
       let moon_config = match moon_config_kind {
         MoonDotYmlKind::Bool(_) => MoonDotYml::default(),
-        MoonDotYmlKind::Config(moon_dot_yml) => moon_dot_yml,
+        MoonDotYmlKind::Config(moon_dot_yml) => moon_dot_yml.clone(),
       };
 
       write_to_output!(moon_config, "moon.yml");
@@ -264,7 +260,7 @@ impl Config {
 
     let tsconfig_presets = &typescript.tsconfig_presets;
 
-    if let Some(tsconfig_directives) = config.ts_config {
+    if let Some(tsconfig_directives) = config.ts_config.clone() {
       for directive in tsconfig_directives {
         let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
@@ -276,9 +272,9 @@ impl Config {
               })?
               .clone();
 
-            (id, tsconfig)
+            (id.to_string(), tsconfig)
           }
-          TsConfigKind::Config(ts_config) => (format!("__{}", package_name), *ts_config),
+          TsConfigKind::Config(ts_config) => (format!("__{}", package_name), *ts_config.clone()),
         };
 
         if !tsconfig.extend_presets.is_empty() {
@@ -294,7 +290,7 @@ impl Config {
       }
     } else {
       let is_app = matches!(config.kind.unwrap_or_default(), PackageKind::App);
-      let out_dir = if let Some(ts_out_dir) = config.ts_out_dir {
+      let out_dir = if let Some(ts_out_dir) = config.ts_out_dir.as_ref() {
         output.join(ts_out_dir)
       } else {
         let rel_path_to_root = get_relative_path(&output, &root_dir)?;
@@ -362,6 +358,11 @@ impl Config {
           dev_tsconfig,
         ));
       }
+    }
+
+    if self.debug {
+      eprintln!("DEBUG:");
+      eprintln!("  package {:#?}", config);
     }
 
     for (file, tsconfig) in tsconfig_files {
@@ -444,55 +445,5 @@ impl Config {
     }
 
     Ok(())
-  }
-}
-
-impl PackageConfig {
-  fn merge_configs_recursive(
-    &mut self,
-    store: &IndexMap<String, PackageConfig>,
-    processed_ids: &mut IndexSet<String>,
-  ) -> Result<(), GenError> {
-    for id in self.extends.clone() {
-      let was_absent = processed_ids.insert(id.clone());
-
-      if !was_absent {
-        let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
-
-        return Err(GenError::CircularDependency(format!(
-          "Found circular dependency for package preset '{}'. The full processed chain is: {}",
-          id,
-          chain.join(" -> ")
-        )));
-      }
-
-      let mut target = store
-        .get(id.as_str())
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::Package,
-          name: id.to_string(),
-        })?
-        .clone();
-
-      target.merge_configs_recursive(store, processed_ids)?;
-
-      self.merge(target);
-    }
-
-    Ok(())
-  }
-
-  pub fn merge_configs(
-    mut self,
-    initial_id: &str,
-    store: &IndexMap<String, PackageConfig>,
-  ) -> Result<PackageConfig, GenError> {
-    let mut processed_ids: IndexSet<String> = Default::default();
-
-    processed_ids.insert(initial_id.to_string());
-
-    self.merge_configs_recursive(store, &mut processed_ids)?;
-
-    Ok(self)
   }
 }

@@ -67,10 +67,10 @@ impl Config {
 
     if package_json_data.use_default_deps {
       for dep in ["typescript", "oxlint"] {
-        let version = if typescript.no_catalog {
-          "latest".to_string()
-        } else {
+        let version = if typescript.catalog {
           "catalog:".to_string()
+        } else {
+          "latest".to_string()
         };
 
         let range = version_ranges.create(version);

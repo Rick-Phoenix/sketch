@@ -136,7 +136,7 @@ pub struct TypescriptConfig {
   /// Whether to use the pnpm catalog for default dependencies.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
-  pub no_catalog: bool,
+  pub catalog: bool,
 
   /// Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package.
   #[merge(strategy = merge::bool::overwrite_false)]
@@ -336,7 +336,7 @@ impl Default for TypescriptConfig {
       dev_tsconfig_name: None,
       package_presets: Default::default(),
       vitest_presets: Default::default(),
-      no_catalog: false,
+      catalog: false,
       version_range: Default::default(),
       tsconfig_presets: Default::default(),
       shared_out_dir: SharedOutDir::Name(".out".to_string()),
