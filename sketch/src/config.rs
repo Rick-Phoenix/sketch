@@ -263,6 +263,9 @@ pub struct Config {
 impl Config {
   fn merge_configs_recursive(
     &mut self,
+    is_initial: bool,
+    base: &mut Config,
+
     processed_sources: &mut IndexSet<PathBuf>,
   ) -> Result<(), GenError> {
     // Safe unwrapping due to the check below
@@ -296,9 +299,13 @@ impl Config {
         )));
       }
 
-      extended_config.merge_configs_recursive(processed_sources)?;
+      extended_config.merge_configs_recursive(false, base, processed_sources)?;
 
-      self.merge(extended_config);
+      base.merge(extended_config);
+    }
+
+    if !is_initial {
+      base.merge(self.clone());
     }
 
     Ok(())
@@ -314,14 +321,18 @@ impl Config {
 
     processed_sources.insert(config_file.clone());
 
-    self.merge_configs_recursive(&mut processed_sources)?;
+    let mut extended = Config::default();
+
+    self.merge_configs_recursive(true, &mut extended, &mut processed_sources)?;
+
+    extended.merge(self);
 
     processed_sources.swap_remove(&config_file);
 
     // Replace rel paths with abs paths for better debugging
-    self.extends = processed_sources;
+    extended.extends = processed_sources;
 
-    Ok(self)
+    Ok(extended)
   }
 }
 

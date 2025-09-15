@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+root_dir:
+  ../../sketch/tests/output/ts_examples
+
+  # ANCHOR: all
+typescript:
+  package_json_presets:
+    # The base from which all the packages from a specific project will start
+    base:
+      author:
+        name: Bruce Wayne
+        email: i-may-or-may-not-be-batman@gotham.com
+      license: Apache-2.0
+      bugs:
+        url: joker.com
+
+    # Another preset defining some common dependencies and scripts
+    frontend:
+      extends: ["base"]
+      scripts:
+        build: vite build
+        dev: vite dev
+      devDependencies:
+        # By default, these will be converted into version ranges
+        # starting from the actual latest version for them
+        tailwindcss: latest
+        svelte: latest
+        vite: latest
+
+    # This will inherit the settings from `base` and `frontend`
+    svelte_frontend:
+      extends: ["frontend"]
+      # But it can also override values selectively
+      license: MIT
+
+  package_presets:
+    svelte_frontend:
+      package_json: svelte_frontend
+      dir: packages/svelte_frontend
+      # ANCHOR_END: all

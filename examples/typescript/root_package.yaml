@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+root_dir: ../../sketch/tests/output/ts_examples
+
+# ANCHOR: all
+typescript:
+  root_package:
+    name: workspace
+
+    package_json:
+      license: Apache-2.0
+      devDependencies:
+        husky: latest
+
+    # The tsconfig files to generate at the root.
+    # If left empty, defaults will be used.
+    ts_config:
+      - output: tsconfig.options.json
+        config:
+          compilerOptions:
+            verbatimModuleSyntax: true
+            strict: true
+
+      - output: tsconfig.json
+        config:
+          files: []
+
+    # Literal oxlint configuration to generate at the root
+    # of the workspace.
+    # Can be set to `true` to use defaults.
+    oxlint: |
+      {
+        "plugins": ["unicorn", "typescript", "oxc"]
+      }
+
+    # Setup for moonrepo (can also just be set to `true` to use defaults)
+    moonrepo:
+      toolchain:
+        root_tsconfig_name: tsconfig.options.json
+  # ANCHOR_END: all

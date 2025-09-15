@@ -64,7 +64,7 @@ pub struct PackageConfig {
   pub ts_out_dir: Option<PathBuf>,
 
   /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition.
-  #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
+  #[arg(long, value_parser = PackageJsonKind::from_cli)]
   #[arg(
     help = "The id of the package.json preset to use for this package",
     value_name = "ID"

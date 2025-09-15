@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+typescript:
+  # Convert `latest` to a version range for dependencies
+  no_convert_latest_to_range: false
+
+  # ...use this kind of version range (patch, minor, exact)
+  version_range: patch
+
+  # Only relevant if you use
+  # default tsconfigs or moonrepo
+  root_tsconfig_name: tsconfig.options.json
+
+  package_manager: pnpm
+
+  pnpm_config:
+    # Default is `packages/*` and `apps/*`.
+    # All dirs listed here will be created automatically
+    packages: ["packages/*", "apps/*"]
+
+  # Use the pnpm catalog for default dependencies
+  catalog: false
+
+  # Use a shared out_dir for tsc
+  # (only relevant if you use default tsconfigs)
+  shared_out_dir: .out

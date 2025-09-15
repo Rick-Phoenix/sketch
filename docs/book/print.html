@@ -1,0 +1,789 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Sketch</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Sketch</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
+<h1 id="lsp-integration"><a class="header" href="#lsp-integration">Lsp Integration</a></h1>
+<p>Every time a new version is released, the json schema for the configuration file will be updated in the <a href="https://github.com/Rick-Phoenix/sketch/tree/main/schemas">github repo</a>.</p>
+<p>Each version will have its own distinct schema file, and the <code>latest.json</code> file will track the schema for the latest version.</p>
+<p>You can then use this schema with the <code>yaml</code>, <code>toml</code> or <code>json</code> language servers to get autocompletion, type information and documentation for each element of the config file.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="lsp-integration-1"><a class="header" href="#lsp-integration-1">Lsp Integration</a></h1>
+<p>In order to have the best development experience, it is crucial that you use the json schema for the configuration when writing one.</p>
+<p>Every time a new version is released, the json schema for the configuration file will be updated in the <a href="https://github.com/Rick-Phoenix/sketch/tree/main/schemas">github repo</a>.</p>
+<p>Each version will have its own distinct schema file, and the <code>latest.json</code> file will track the schema for the latest version.</p>
+<p>You can then use this schema with the <code>yaml</code>, <code>toml</code> or <code>json</code> language servers to get autocompletion, type information and documentation for each element of the config file.</p>
+<p>This can be done via your IDE's configuration or in most cases simply by using a directive at the top of your file that uses the link to the json schema.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="extensible-configurations"><a class="header" href="#extensible-configurations">Extensible Configurations</a></h1>
+<p>Configuration files can be extended like this:</p>
+<pre><code class="language-yaml">extends: ["other_config.yaml"]
+</code></pre>
+<p>The path used here is a relative path starting from the parent directory of the originating config file.</p>
+<p>Conflicting values will be overridden by the extended config, except for default values.</p>
+<p>Non-conflicting values that are lists of elements such as the templating variables will instead be merged.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="typescript-projects"><a class="header" href="#typescript-projects">Typescript Projects</a></h1>
+<p>Sketch can be used to quickly generate Typescript monorepos and packages, and uses modular and extensible presets to define some reusable elements that can be shared among different kinds of typical TS projects.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
+<p>These are the top level configuration settings for Typescript projects:</p>
+<pre><code class="language-yaml"># yaml-language-server: $schema=../../schemas/latest.json
+
+typescript:
+  # Convert `latest` to a version range for dependencies
+  no_convert_latest_to_range: false
+
+  # ...use this kind of version range (patch, minor, exact)
+  version_range: patch
+
+  # Only relevant if you use
+  # default tsconfigs or moonrepo
+  root_tsconfig_name: tsconfig.options.json
+
+  package_manager: pnpm
+
+  pnpm_config:
+    # Default is `packages/*` and `apps/*`.
+    # All dirs listed here will be created automatically
+    packages: ["packages/*", "apps/*"]
+
+  # Use the pnpm catalog for default dependencies
+  catalog: false
+
+  # Use a shared out_dir for tsc
+  # (only relevant if you use default tsconfigs)
+  shared_out_dir: .out
+</code></pre>
+<h2 id="root-package-settings"><a class="header" href="#root-package-settings">Root Package Settings</a></h2>
+<p>Setting up the root package is pretty straightforward:</p>
+<pre><code class="language-yaml">typescript:
+  root_package:
+    name: workspace
+
+    package_json:
+      license: Apache-2.0
+      devDependencies:
+        husky: latest
+
+    # The tsconfig files to generate at the root.
+    # If left empty, defaults will be used.
+    ts_config:
+      - output: tsconfig.options.json
+        config:
+          compilerOptions:
+            verbatimModuleSyntax: true
+            strict: true
+
+      - output: tsconfig.json
+        config:
+          files: []
+
+    # Literal oxlint configuration to generate at the root
+    # of the workspace.
+    # Can be set to `true` to use defaults.
+    oxlint: |
+      {
+        "plugins": ["unicorn", "typescript", "oxc"]
+      }
+
+    # Setup for moonrepo (can also just be set to `true` to use defaults)
+    moonrepo:
+      toolchain:
+        root_tsconfig_name: tsconfig.options.json
+</code></pre>
+<p>So with this setup, once we run</p>
+<p><code>sketch ts monorepo</code></p>
+<p>The tree structure of the output dir will look like this:</p>
+<pre><code>.
+├── .moon
+│   ├── tasks.yml
+│   └── toolchain.yml
+├── .out
+├── .oxlintrc.json
+├── apps
+├── package.json
+├── packages
+├── pnpm-workspace.yaml
+├── tsconfig.json
+└── tsconfig.options.json
+
+5 directories, 7 files
+</code></pre>
+<p>Output of the package.json file:</p>
+<pre><code class="language-json">{
+  "name": "workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm",
+  "scripts": {},
+  "devDependencies": {
+    "husky": "^9.1.7", 
+    "oxlint": "^1.15.0", 
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {}
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="tsconfig-presets"><a class="header" href="#tsconfig-presets">TsConfig Presets</a></h1>
+<p>The configuration file can contain a variety of presets that can be used for generating Tsconfig files.</p>
+<p>These presets contain all of the fields of a normal <code>tsconfig.json</code> file, with the addition of an extra field called <code>extend-presets</code>, which allows you to extend a basic preset from another one.</p>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>Let's start with some basic starting point here:</p>
+<p>Here we define two typical tsconfig settings to use for the packages in our workspace.</p>
+<p>The <code>app</code> preset will not emit any .d.ts or .js files, whereas the <code>library</code> preset, which can be used for internal packages, will have <code>emitDeclarationOnly</code> set to <code>true</code>.</p>
+<pre><code class="language-yaml">typescript:
+  tsconfig_presets:
+    app:
+      compilerOptions:
+        noEmit: true
+      include:
+        - src
+
+    lib:
+      compilerOptions:
+        emitDeclarationOnly: true
+
+</code></pre>
+<p>Now let's say that we want to create another preset which starts from the <code>app</code> preset but adds the <code>tests</code> directory to <code>include</code>:</p>
+<pre><code class="language-yaml">    testing:
+      extend_presets: ["app"]
+      # The two lists will be merged and deduped
+      include: ["tests"]
+</code></pre>
+<p>Now we will set up a package that will generate 2 tsconfig files.</p>
+<ul>
+<li>A basic tsconfig.json file, which we will define literally, and it will have just the <code>files</code> field set to an empty array.</li>
+<li>One which will use the lib preset and extend it with an extra feature of our choice, and that will apply only to the files inside src. We will generate this in <code>tsconfig.src.json</code>.</li>
+<li>A separate config that will take care of typechecking the files inside the <code>tests</code> directory, without emitting files. We will create this inside <code>tsconfig.dev.json</code>.</li>
+</ul>
+<pre><code class="language-yaml">  package_presets:
+    tsconfig-example:
+      dir: packages/tsconfig-example
+      name: "@examples/tsconfig"
+
+      # Tsconfig can also be not defined at all,
+      # and the default presets will be used.
+      ts_config:
+        - output: tsconfig.json
+          # Literal definition
+          config:
+            files: []
+
+        - output: tsconfig.dev.json
+          # Only specifying the preset id here
+          config: testing
+
+        - output: tsconfig.src.json
+          config:
+            # Literal definition that extends a preset
+            extend_presets: ["lib"]
+            compilerOptions:
+              verbatimModuleSyntax: true
+
+</code></pre>
+<p>After running the command</p>
+<p><code>sketch ts package --preset tsconfig-example</code></p>
+<p>tsconfig.json</p>
+<pre><code class="language-json">{
+  "files": []
+}
+</code></pre>
+<p>tsconfig.src.json</p>
+<pre><code class="language-json">{
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "verbatimModuleSyntax": true
+  }
+}
+</code></pre>
+<p>tsconfig.dev.json</p>
+<pre><code class="language-json">{
+  "include": [
+    "src",
+    "tests"
+  ],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}
+
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="packagejson-presets"><a class="header" href="#packagejson-presets">Package.json Presets</a></h1>
+<p>You can use the config file to store some <code>package.json</code> presets that you can easily reuse among different projects or packages with similar characteristics, like scripts or dependencies.</p>
+<p>Just like <a href="./tsconfig_presets.html">tsconfigs</a> and <a href="./configuration.html">global configurations</a>, <code>package.json</code> presets can also extend one another.</p>
+<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
+<pre><code class="language-yaml">typescript:
+  package_json_presets:
+    # The base from which all the packages from a specific project will start
+    base:
+      author:
+        name: Bruce Wayne
+        email: i-may-or-may-not-be-batman@gotham.com
+      license: Apache-2.0
+      bugs:
+        url: joker.com
+
+    # Another preset defining some common dependencies and scripts
+    frontend:
+      extends: ["base"]
+      scripts:
+        build: vite build
+        dev: vite dev
+      devDependencies:
+        # By default, these will be converted into version ranges
+        # starting from the actual latest version for them
+        tailwindcss: latest
+        svelte: latest
+        vite: latest
+
+    # This will inherit the settings from `base` and `frontend`
+    svelte_frontend:
+      extends: ["frontend"]
+      # But it can also override values selectively
+      license: MIT
+
+  package_presets:
+    svelte_frontend:
+      package_json: svelte_frontend
+      dir: packages/svelte_frontend
+</code></pre>
+<p>After we run</p>
+<p><code>sketch ts package --preset svelte_frontend</code></p>
+<p>We get this output in the package.json file:</p>
+<p>(typescript and oxlint are always added to the dev dependencies, along with vitest for packages that are not root packages)</p>
+<pre><code class="language-json">{
+  "name": "svelte_frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm",
+  "scripts": {
+    "build": "vite build", 
+    "dev": "vite dev"
+  },
+  "bugs": {
+    "url": "joker.com"
+  },
+  "author": {
+    "name": "Bruce Wayne",
+    "email": "i-may-or-may-not-be-batman@gotham.com"
+  },
+  "devDependencies": {
+    "oxlint": "^1.15.0", 
+    "svelte": "^5.38.10", 
+    "tailwindcss": "^4.1.13", 
+    "typescript": "^5.9.2", 
+    "vite": "^7.1.5", 
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {}
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="smart-versions-handling"><a class="header" href="#smart-versions-handling">Smart Versions Handling</a></h1>
+<p>You can set up Sketch so that it can organize your dependencies in a convenient way.</p>
+<h2 id="converting-latest-to-a-range"><a class="header" href="#converting-latest-to-a-range">Converting <code>latest</code> to a range</a></h2>
+<p>By default, all <code>latest</code> versions will be converted to a version range (which can be specified in the config) that starts from the actual latest version for that package.</p>
+<p>This means that you can easily use your presets and ensure that they're always going to be updated, without using <code>latest</code>, which is not very good practice.</p>
+<p>And we extend it with these settings (which are the defaults)</p>
+<pre><code class="language-yaml">typescript:
+  # Default
+  no_convert_latest_to_range: false
+
+  # Default
+  version_range: patch
+</code></pre>
+<p>The result will look like this:</p>
+<h2 id="adding-dependencies-to-the-catalog"><a class="header" href="#adding-dependencies-to-the-catalog">Adding dependencies to the catalog</a></h2>
+<p>If you set up your package manager to be <code>pnpm</code> (which is the default) and set <code>catalog</code> to <code>true</code>, whenever you try to generate a new package that has dependencies marked with <code>catalog:</code> (either the default catalog or a named one) but that package is absent in the <code>pnpm-workspace.yaml</code> file, then Sketch will add it automatically for you.</p>
+<h3 id="example-2"><a class="header" href="#example-2">Example</a></h3>
+<pre><code class="language-yaml">typescript:
+  catalog: true
+
+  package_presets:
+    with_catalog:
+      name: with_catalog
+      dir: packages/with_catalog
+      package_json:
+        devDependencies:
+          # Named catalog
+          svelte: catalog:svelte
+          # Default catalog
+          hono: "catalog:"
+</code></pre>
+<p>After running</p>
+<p><code>sketch ts package --preset with_catalog</code></p>
+<p>We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:</p>
+<pre><code class="language-yaml">packages:
+  - 'apps/*'
+  - 'packages/*'
+
+catalogs:
+  "svelte":
+    "svelte": ^5.38.10
+
+catalog:
+  "hono": ^4.9.7
+  "oxlint": ^1.15.0
+  "typescript": ^5.9.2
+  "vitest": ^3.2.4
+
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="maintainers-db"><a class="header" href="#maintainers-db">Maintainers DB</a></h1>
+<h1 id="reusable-maintainers-information"><a class="header" href="#reusable-maintainers-information">Reusable Maintainers Information</a></h1>
+<p>If you are working in a group, and you frequently find yourself adding the same information to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> field in <code>package.json</code> files, you might be interested in using the <code>people</code> field of the config file, where you can store information about maintainers that can be reused, by simply copying their id, in the generated <code>package.json</code> files.</p>
+<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
+<pre><code class="language-yaml">typescript:
+  people:
+    bruce:
+      name: Bruce Wayne
+      email: bruce@gotham.com
+      url: brucewayne.com
+
+  package_json_presets:
+    people-example:
+      author: bruce # Using the id from the store
+      maintainers:
+        # Literal definition
+        - name: Clark Kent
+          url: clarkkent.com
+          email: clark-kent@dailyplanet.com
+      contributors:
+        - bruce
+
+  package_presets:
+    people-example:
+      dir: packages/people-example
+      package_json: people-example
+
+</code></pre>
+<p>After we run</p>
+<p><code>sketch ts package --preset people-example</code></p>
+<p>We get this <code>package.json</code> file in the root of the new package:</p>
+<pre><code class="language-json">{
+  "name": "people-example",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm",
+  "scripts": {},
+  "contributors": [
+    {
+      "name": "Bruce Wayne",
+      "email": "bruce@gotham.com",
+      "url": "brucewayne.com" 
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Clark Kent",
+      "email": "clark-kent@dailyplanet.com",
+      "url": "clarkkent.com" 
+    }
+  ],
+  "devDependencies": {
+    "oxlint": "^1.15.0", 
+    "typescript": "^5.9.2", 
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {}
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="command-line-help-for-sketch"><a class="header" href="#command-line-help-for-sketch">Command-Line Help for <code>sketch</code></a></h1>
+<p>This document contains the help content for the <code>sketch</code> command-line program.</p>
+<p><strong>Command Overview:</strong></p>
+<ul>
+<li><a href="cli.html#sketch"><code>sketch</code>↴</a></li>
+<li><a href="cli.html#sketch-ts"><code>sketch ts</code>↴</a></li>
+<li><a href="cli.html#sketch-ts-monorepo"><code>sketch ts monorepo</code>↴</a></li>
+<li><a href="cli.html#sketch-ts-package"><code>sketch ts package</code>↴</a></li>
+<li><a href="cli.html#sketch-init"><code>sketch init</code>↴</a></li>
+<li><a href="cli.html#sketch-new"><code>sketch new</code>↴</a></li>
+<li><a href="cli.html#sketch-render"><code>sketch render</code>↴</a></li>
+<li><a href="cli.html#sketch-render-preset"><code>sketch render-preset</code>↴</a></li>
+<li><a href="cli.html#sketch-exec"><code>sketch exec</code>↴</a></li>
+</ul>
+<h2 id="sketch"><a class="header" href="#sketch"><code>sketch</code></a></h2>
+<p>🖌️ A tool for generating project setups, leveraging the power of templating engines for boilerplate generation</p>
+<p><strong>Usage:</strong> <code>sketch [OPTIONS] &lt;COMMAND&gt;</code></p>
+<h6 id="subcommands"><a class="header" href="#subcommands"><strong>Subcommands:</strong></a></h6>
+<ul>
+<li><code>ts</code> — Launches typescript-specific commands</li>
+<li><code>init</code> — Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</li>
+<li><code>new</code> — Generates a new config file with some optional initial values defined via the cli flags</li>
+<li><code>render</code> — Generates a single file from a template</li>
+<li><code>render-preset</code> — Generates content from a templating preset, with predefined content, output and context</li>
+<li><code>exec</code> — Renders a template (from text or file) and launches it as a command</li>
+</ul>
+<h6 id="options"><a class="header" href="#options"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-c</code>, <code>--config &lt;FILE&gt;</code> — Sets a custom config file</li>
+<li><code>--no-config-file</code> — Ignores any config files, uses cli instructions only</li>
+<li><code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
+<li><code>--debug</code> — Activates debugging mode</li>
+<li><code>--root-dir &lt;DIR&gt;</code> — The root directory for the project [default: "."]</li>
+<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the directory with the template files</li>
+<li><code>--no-overwrite</code> — Exits with error if a file being created already exists</li>
+<li><code>--dry-run</code> — Aborts before writing any content to disk</li>
+<li><code>-s</code>, <code>--set &lt;KEY=VALUE&gt;</code> — Set a variable (as key=value) to use in templates. Overrides global and local variables</li>
+</ul>
+<h2 id="sketch-ts"><a class="header" href="#sketch-ts"><code>sketch ts</code></a></h2>
+<p>Launches typescript-specific commands</p>
+<p><strong>Usage:</strong> <code>sketch ts [OPTIONS] &lt;COMMAND&gt;</code></p>
+<h6 id="subcommands-1"><a class="header" href="#subcommands-1"><strong>Subcommands:</strong></a></h6>
+<ul>
+<li><code>monorepo</code> — Generates a new typescript monorepo</li>
+<li><code>package</code> — Generates a new typescript package</li>
+</ul>
+<h6 id="options-1"><a class="header" href="#options-1"><strong>Options:</strong></a></h6>
+<ul>
+<li>
+<p><code>--root-tsconfig &lt;NAME&gt;</code> — The name of the tsconfig file to use at the root [default: 'tsconfig.options.json']</p>
+</li>
+<li>
+<p><code>--project-tsconfig &lt;NAME&gt;</code> — The name of the tsconfig file for individual packages [default: 'tsconfig.src.json']</p>
+</li>
+<li>
+<p><code>--dev-tsconfig &lt;NAME&gt;</code> — The name of the development tsconfig file [default: 'tsconfig.dev.json']</p>
+</li>
+<li>
+<p><code>--package-manager &lt;NAME&gt;</code> — The package manager being used. [default: pnpm]</p>
+<p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
+</li>
+<li>
+<p><code>--version-range &lt;KIND&gt;</code> — The kind of version range to use for dependencies added automatically [default: minor]</p>
+<p>Possible values: <code>patch</code>, <code>minor</code>, <code>exact</code></p>
+</li>
+<li>
+<p><code>--catalog</code> — Whether to use the pnpm catalog for default dependencies</p>
+</li>
+<li>
+<p><code>--no-convert-latest</code> — Whether the dependencies with <code>latest</code> should be converted to a version range (configurable in [<code>TypescriptConfig::version_ranges</code>]) with the actual latest version for that package</p>
+</li>
+<li>
+<p><code>--shared-out-dir &lt;SHARED_OUT_DIR&gt;</code> — The path to the shared out_dir for TS packages</p>
+</li>
+<li>
+<p><code>--no-shared-out-dir</code> — Does not use a shared out_dir for TS packages</p>
+<p>Default value: <code>false</code></p>
+</li>
+</ul>
+<h2 id="sketch-ts-monorepo"><a class="header" href="#sketch-ts-monorepo"><code>sketch ts monorepo</code></a></h2>
+<p>Generates a new typescript monorepo</p>
+<p><strong>Usage:</strong> <code>sketch ts monorepo [OPTIONS]</code></p>
+<h6 id="options-2"><a class="header" href="#options-2"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the root package [default: "root"]</li>
+<li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for the root package. If unset, defaults are used</li>
+<li><code>-p</code>, <code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for the root package</li>
+<li><code>--no-oxlint</code> — Does not generate an oxlint config at the root</li>
+<li><code>--moonrepo</code> — Generate setup for moonrepo</li>
+</ul>
+<h2 id="sketch-ts-package"><a class="header" href="#sketch-ts-package"><code>sketch ts package</code></a></h2>
+<p>Generates a new typescript package</p>
+<p><strong>Usage:</strong> <code>sketch ts package [OPTIONS] [DIR]</code></p>
+<h6 id="arguments"><a class="header" href="#arguments"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;DIR&gt;</code> — The new package's directory, starting from the <code>root_dir</code>. Defaults to the name of the package</li>
+</ul>
+<h6 id="options-3"><a class="header" href="#options-3"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — The package preset to use</li>
+<li><code>--moonrepo</code> — Sets up a basic moon.yml file</li>
+<li><code>--no-vitest</code> — Does not set up vitest for this package</li>
+<li><code>--oxlint</code> — Sets up an oxlint config file for this package</li>
+<li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
+<li><code>--app</code> — Marks the package as an application</li>
+<li><code>--library</code> — Marks the package as a library</li>
+<li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for this package. If unset, defaults are used</li>
+<li><code>--ts-out-dir &lt;DIR&gt;</code> — The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used</li>
+<li><code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for this package</li>
+<li><code>-u</code>, <code>--update-root-tsconfig</code> — Adds the new package to the references in the root tsconfig</li>
+</ul>
+<h2 id="sketch-init"><a class="header" href="#sketch-init"><code>sketch init</code></a></h2>
+<p>Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</p>
+<p><strong>Usage:</strong> <code>sketch init [OPTIONS]</code></p>
+<h6 id="options-4"><a class="header" href="#options-4"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>--no-pre-commit</code> — Does not generate a pre-commit config</li>
+<li><code>--remote &lt;REMOTE&gt;</code> — The link to the git remote to use</li>
+</ul>
+<h2 id="sketch-new"><a class="header" href="#sketch-new"><code>sketch new</code></a></h2>
+<p>Generates a new config file with some optional initial values defined via the cli flags</p>
+<p><strong>Usage:</strong> <code>sketch new [OUTPUT]</code></p>
+<h6 id="arguments-1"><a class="header" href="#arguments-1"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;OUTPUT&gt;</code> — The output file [default: sketch.yaml]</li>
+</ul>
+<h2 id="sketch-render"><a class="header" href="#sketch-render"><code>sketch render</code></a></h2>
+<p>Generates a single file from a template</p>
+<p><strong>Usage:</strong> <code>sketch render [OPTIONS] &lt;OUTPUT_PATH|--stdout&gt;</code></p>
+<h6 id="arguments-2"><a class="header" href="#arguments-2"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;OUTPUT_PATH&gt;</code> — The output file (relative from the cwd)</li>
+</ul>
+<h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>--stdout</code> — Output the result to stdout</li>
+<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the preset to select (cannot be used with the --content flag)</li>
+<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template (cannot be used with the --id flag)</li>
+</ul>
+<h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
+<p>Generates content from a templating preset, with predefined content, output and context</p>
+<p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt;</code></p>
+<h6 id="arguments-3"><a class="header" href="#arguments-3"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;ID&gt;</code> — The id of the preset</li>
+</ul>
+<h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
+<p>Renders a template (from text or file) and launches it as a command</p>
+<p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
+<h6 id="arguments-4"><a class="header" href="#arguments-4"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;CMD&gt;</code> — The literal definition for the command's template (cannot be used with the --file flag)</li>
+</ul>
+<h6 id="options-6"><a class="header" href="#options-6"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file</li>
+<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id (or path inside templates_dir) of the template to use</li>
+</ul>
+<hr/>
+<p><small><i>
+This document was generated automatically by
+<a href="https://crates.io/crates/clap-markdown"><code>clap-markdown</code></a>.
+</i></small></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>

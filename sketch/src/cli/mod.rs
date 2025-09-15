@@ -536,7 +536,7 @@ enum TsCommands {
   /// Generates a new typescript package
   Package {
     /// The package preset to use
-    #[arg(long)]
+    #[arg(short, long)]
     preset: Option<String>,
 
     /// Sets up a basic moon.yml file

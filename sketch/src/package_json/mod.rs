@@ -297,12 +297,14 @@ impl PackageJson {
     Ok(())
   }
 
-  fn merge_configs_recursive(
-    &mut self,
+  fn aggregate_extended_configs(
+    &self,
+    is_initial: bool,
+    base: &mut Self,
     store: &IndexMap<String, PackageJson>,
     processed_ids: &mut IndexSet<String>,
   ) -> Result<(), GenError> {
-    for id in self.extends.clone() {
+    for id in &self.extends {
       let was_absent = processed_ids.insert(id.clone());
 
       if !was_absent {
@@ -315,7 +317,7 @@ impl PackageJson {
         )));
       }
 
-      let mut target = store
+      let target = store
         .get(id.as_str())
         .ok_or(GenError::PresetNotFound {
           kind: Preset::PackageJson,
@@ -323,26 +325,38 @@ impl PackageJson {
         })?
         .clone();
 
-      target.merge_configs_recursive(store, processed_ids)?;
+      target.aggregate_extended_configs(false, base, store, processed_ids)?;
 
-      self.merge(target);
+      base.merge(target);
+    }
+
+    if !is_initial {
+      base.merge(self.clone());
     }
 
     Ok(())
   }
 
   pub fn merge_configs(
-    mut self,
+    self,
     initial_id: &str,
     store: &IndexMap<String, PackageJson>,
   ) -> Result<Self, GenError> {
+    if self.extends.is_empty() {
+      return Ok(self);
+    }
+
     let mut processed_ids: IndexSet<String> = Default::default();
 
     processed_ids.insert(initial_id.to_string());
 
-    self.merge_configs_recursive(store, &mut processed_ids)?;
+    let mut extended = Self::default();
 
-    Ok(self)
+    self.aggregate_extended_configs(true, &mut extended, store, &mut processed_ids)?;
+
+    extended.merge(self);
+
+    Ok(extended)
   }
 }
 

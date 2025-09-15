@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+# ANCHOR: all
+typescript:
+  # Default
+  no_convert_latest_to_range: false
+
+  # Default
+  version_range: patch
+  # ANCHOR_END: all

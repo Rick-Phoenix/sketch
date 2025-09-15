@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+root_dir: ../../sketch/tests/output/ts_examples
+
+# ANCHOR: basic
+typescript:
+  tsconfig_presets:
+    app:
+      compilerOptions:
+        noEmit: true
+      include:
+        - src
+
+    lib:
+      compilerOptions:
+        emitDeclarationOnly: true
+
+    # ANCHOR_END: basic
+
+    # ANCHOR: extended
+    testing:
+      extend_presets: ["app"]
+      # The two lists will be merged and deduped
+      include: ["tests"]
+      # ANCHOR_END: extended
+
+      # ANCHOR: package
+  package_presets:
+    tsconfig-example:
+      dir: packages/tsconfig-example
+      name: "@examples/tsconfig"
+
+      # Tsconfig can also be not defined at all,
+      # and the default presets will be used.
+      ts_config:
+        - output: tsconfig.json
+          # Literal definition
+          config:
+            files: []
+
+        - output: tsconfig.dev.json
+          # Only specifying the preset id here
+          config: testing
+
+        - output: tsconfig.src.json
+          config:
+            # Literal definition that extends a preset
+            extend_presets: ["lib"]
+            compilerOptions:
+              verbatimModuleSyntax: true
+
+    # ANCHOR_END: package

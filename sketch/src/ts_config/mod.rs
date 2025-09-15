@@ -7,8 +7,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_sets, overwrite_option,
-  templating::filters, GenError, OrderedMap, Preset,
+  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_nested,
+  merge_optional_sets, overwrite_option, templating::filters, GenError, OrderedMap, Preset,
 };
 
 pub(crate) mod tsconfig_defaults;
@@ -77,8 +77,10 @@ impl TsConfigDirective {
 }
 
 impl TsConfig {
-  fn merge_configs_recursive(
-    &mut self,
+  fn aggregate_extended_configs(
+    &self,
+    is_initial: bool,
+    base: &mut TsConfig,
     store: &IndexMap<String, TsConfig>,
     processed_ids: &mut IndexSet<String>,
   ) -> Result<(), GenError> {
@@ -95,7 +97,7 @@ impl TsConfig {
         )));
       }
 
-      let mut target = store
+      let target = store
         .get(id.as_str())
         .ok_or(GenError::PresetNotFound {
           kind: Preset::TsConfig,
@@ -103,31 +105,44 @@ impl TsConfig {
         })?
         .clone();
 
-      target.merge_configs_recursive(store, processed_ids)?;
+      target.aggregate_extended_configs(false, base, store, processed_ids)?;
 
-      self.merge(target);
+      base.merge(target);
+    }
+
+    if !is_initial {
+      base.merge(self.clone());
     }
 
     Ok(())
   }
 
   pub fn merge_configs(
-    mut self,
+    self,
     initial_id: &str,
     store: &IndexMap<String, TsConfig>,
   ) -> Result<TsConfig, GenError> {
+    if self.extend_presets.is_empty() {
+      return Ok(self);
+    }
+
     let mut processed_ids: IndexSet<String> = Default::default();
 
     processed_ids.insert(initial_id.to_string());
 
-    self.merge_configs_recursive(store, &mut processed_ids)?;
+    let mut extended = TsConfig::default();
 
-    Ok(self)
+    self.aggregate_extended_configs(true, &mut extended, store, &mut processed_ids)?;
+
+    extended.merge(self);
+
+    Ok(extended)
   }
 }
 
-#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema, Merge)]
 #[template(path = "watch_options.j2")]
+#[merge(strategy = overwrite_option)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -180,11 +195,11 @@ pub struct TsConfig {
   pub type_acquisition: Option<TypeAcquisition>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = merge_optional_nested)]
   pub compiler_options: Option<CompilerOptions>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = merge_optional_nested)]
   pub watch_options: Option<WatchOptions>,
 }
 

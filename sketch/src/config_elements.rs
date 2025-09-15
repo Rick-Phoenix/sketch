@@ -17,7 +17,7 @@ pub enum VersionRange {
 
 impl VersionRange {
   pub fn create(&self, version: String) -> String {
-    if version.starts_with("catalog:") {
+    if version.starts_with("catalog:") || version == "latest" {
       return version;
     }
     match self {

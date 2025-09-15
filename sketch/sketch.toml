@@ -1,4 +1,4 @@
-#:schema ../schemas/config.json
+#:schema ../schemas/latest.json
 
 root_dir = "tests/output"
 
