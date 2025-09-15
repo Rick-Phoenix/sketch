@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Maintainers DB - Sketch</title>
+        <title>Custom Templating - Sketch</title>
 
 
         <!-- Custom HTML head -->
@@ -175,76 +175,17 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="maintainers-db"><a class="header" href="#maintainers-db">Maintainers DB</a></h1>
-<h1 id="reusable-maintainers-information"><a class="header" href="#reusable-maintainers-information">Reusable Maintainers Information</a></h1>
-<p>If you are working in a group, and you frequently find yourself adding the same information to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> field in <code>package.json</code> files, you might be interested in using the <code>people</code> field of the config file, where you can store information about maintainers that can be reused, by simply copying their id, in the generated <code>package.json</code> files.</p>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
-<pre><code class="language-yaml">typescript:
-  people:
-    bruce:
-      name: Bruce Wayne
-      email: bruce@gotham.com
-      url: brucewayne.com
-
-  package_json_presets:
-    people-example:
-      author: bruce # Using the id from the store
-      maintainers:
-        # Literal definition
-        - name: Clark Kent
-          url: clarkkent.com
-          email: clark-kent@dailyplanet.com
-      contributors:
-        - bruce
-
-  package_presets:
-    people-example:
-      dir: packages/people-example
-      package_json: people-example
-
-</code></pre>
-<p>After we run</p>
-<p><code>sketch ts package --preset people-example</code></p>
-<p>We get this <code>package.json</code> file in the root of the new package:</p>
-<pre><code class="language-json">{
-  "name": "people-example",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "packageManager": "pnpm",
-  "scripts": {},
-  "contributors": [
-    {
-      "name": "Bruce Wayne",
-      "email": "bruce@gotham.com",
-      "url": "brucewayne.com" 
-    }
-  ],
-  "maintainers": [
-    {
-      "name": "Clark Kent",
-      "email": "clark-kent@dailyplanet.com",
-      "url": "clarkkent.com" 
-    }
-  ],
-  "devDependencies": {
-    "oxlint": "^1.15.0", 
-    "typescript": "^5.9.2", 
-    "vitest": "^3.2.4"
-  },
-  "dependencies": {}
-}
-</code></pre>
+                        <h1 id="custom-templating"><a class="header" href="#custom-templating">Custom Templating</a></h1>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="versions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="maintainers.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="custom_templating.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="cli.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -254,11 +195,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="versions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="maintainers.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="custom_templating.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="cli.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

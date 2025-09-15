@@ -9,4 +9,5 @@
     - [Package.json Presets](./package_json_presets.md)
         - [Smart Versions Handling](./versions.md)
         - [Maintainers DB](./maintainers.md)
+- [Custom Templating](./custom_templating.md)
 - [Cli documentation](./cli.md)
