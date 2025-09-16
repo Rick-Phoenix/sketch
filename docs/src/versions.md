@@ -28,7 +28,7 @@ If you set up your package manager to be `pnpm` (which is the default) and set `
 
 After running 
 
-`{{#include ../../sketch/tests/output/example_cmds/catalog_cmd}}`
+`{{#include ../../sketch/tests/output/ts_examples/commands/catalog_cmd}}`
 
 We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:
 

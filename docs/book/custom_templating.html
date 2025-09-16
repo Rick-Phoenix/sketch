@@ -176,6 +176,77 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="custom-templating"><a class="header" href="#custom-templating">Custom Templating</a></h1>
+<p>Sketch can be used to leverage the Tera templating engine to quickly set up all sorts of files or entire project structures.</p>
+<p>This means being able to inject variables into generated content, as well as using all of the functions and filters available in Tera (like extracting envs), plus extra ones added by Sketch (like uuid generation).</p>
+<p>Templates can be defined in files or directly within a command. The variables can also be defined in the config file or as part of a command.</p>
+<pre><code class="language-toml">root_dir = "../output/custom_templates"
+
+global_templates_vars = { my_var = 15 }
+
+# We can define templates directly in the config file
+templates = { lit_template = "my_var: {{ my_var }}" }
+
+# Or as files inside a directory
+templates_dir = "../templates"
+</code></pre>
+<h2 id="rendering-templates"><a class="header" href="#rendering-templates">Rendering templates</a></h2>
+<p>Templates can be rendered as a group, or individually.</p>
+<p>This is how groups are defined:</p>
+<pre><code class="language-toml"># A group of templates that will be rendered together
+templating_presets.test = [
+  # Full path to the template file from templates_dir
+  { template = "subdir/nested.j2", output = "new_dir/nested.yaml" },
+
+  # Only using the global variables
+  { template = "abc.j2", output = "with_global_var.yaml" },
+
+  # Using a local override
+  { template = "abc.j2", output = "with_override.yaml", context = { my_var = 20 } },
+
+  # Defining a literal template
+  { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
+
+  # Using a literal template defined in the config file
+  { template = "lit_template", output = "literal_from_config.yaml" },
+]
+</code></pre>
+<p>When we run the command</p>
+<p><code>sketch render-preset test</code></p>
+<p>The output of the specified <code>root-dir</code> will look like this:</p>
+<pre><code>.
+├── from_literal.txt
+├── literal_from_config.yaml
+├── literal_inlined.yaml
+├── new_dir
+│   └── nested.yaml
+├── with_cli_override.yaml
+├── with_global_var.yaml
+└── with_override.yaml
+
+2 directories, 7 files
+</code></pre>
+<h2 id="global-and-local-context"><a class="header" href="#global-and-local-context">Global and Local Context</a></h2>
+<p>As you can see, the variables provided as a local context override global variables:</p>
+<pre><code class="language-yaml">my_var: 20
+</code></pre>
+<p>But the variables defined from the command always have the greatest priority.</p>
+<p>So if we run this command:</p>
+<p><code>sketch --set my_var=25 render --id lit_template with_cli_override.yaml</code></p>
+<p>The output will be:</p>
+<pre><code class="language-yaml">my_var: 25
+</code></pre>
+<div class="warning">
+Variables defined with the --set flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
+</div>
+<h2 id="defining-a-template-in-the-command"><a class="header" href="#defining-a-template-in-the-command">Defining a template in the command</a></h2>
+<p>We can also define a template inside the command itself.</p>
+<p>Cmd:</p>
+<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
+<p>Output:</p>
+<pre><code class="language-txt">they're taking the hobbits to Isengard!
+</code></pre>
+<h2 id="rendering-to-stdout"><a class="header" href="#rendering-to-stdout">Rendering to stdout</a></h2>
+<p>Templates can also be rendered to stdout with the --stdout flag.</p>
 
                     </main>
 

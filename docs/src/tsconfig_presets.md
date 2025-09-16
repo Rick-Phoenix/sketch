@@ -32,7 +32,7 @@ Now we will set up a package that will generate 2 tsconfig files.
 
 After running the command
 
-`{{#include ../../sketch/tests/output/example_cmds/tsconfig_cmd}}`
+`{{#include ../../sketch/tests/output/ts_examples/commands/tsconfig_cmd}}`
 
 tsconfig.json
 

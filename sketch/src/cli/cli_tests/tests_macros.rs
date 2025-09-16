@@ -1,3 +1,9 @@
+macro_rules! path_to_str {
+  ($path:expr) => {
+    &$path.to_string_lossy().to_string()
+  };
+}
+
 macro_rules! assert_dir_exists {
   ($path:expr) => {
     assert!($path.exists() && $path.is_dir())

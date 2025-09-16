@@ -12,7 +12,7 @@ If you are working in a group, and you frequently find yourself adding the same 
 
 After we run
 
-`{{#include ../../sketch/tests/output/example_cmds/people_cmd}}`
+`{{#include ../../sketch/tests/output/ts_examples/commands/people_cmd}}`
 
 We get this `package.json` file in the root of the new package:
 

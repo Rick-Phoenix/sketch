@@ -10,10 +10,57 @@ mod ts_gen_tests;
 use std::{
   fs::{create_dir_all, remove_dir_all, File},
   io::Write,
-  path::PathBuf,
+  ops::Range,
+  path::{Path, PathBuf},
+  process::Command,
 };
 
 use crate::cli::Cli;
+
+fn get_tree_output<T: Into<PathBuf>>(dir: T, file: &str) -> Result<(), Box<dyn std::error::Error>> {
+  Command::new("tree")
+    .current_dir(dir.into())
+    .arg("-a")
+    .arg("-I")
+    .arg(file)
+    .arg("-I")
+    .arg("commands")
+    .arg("-o")
+    .arg(file)
+    .output()?;
+
+  Ok(())
+}
+
+fn get_clean_example_cmd(
+  cmd: &[&str],
+  remove_range: Range<usize>,
+  output: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
+  let mut example = String::new();
+
+  for (i, segment) in cmd.iter().enumerate() {
+    if !remove_range.contains(&i) {
+      if segment.contains(' ') {
+        example.push('"');
+        example.push_str(segment);
+        example.push('"');
+      } else {
+        example.push_str(segment);
+      }
+
+      if i != cmd.len() - 1 {
+        example.push(' ');
+      }
+    }
+  }
+
+  let mut file = File::create(output)?;
+
+  file.write_all(example.as_bytes())?;
+
+  Ok(())
+}
 
 #[test]
 fn generate_docs() -> Result<(), Box<dyn std::error::Error>> {

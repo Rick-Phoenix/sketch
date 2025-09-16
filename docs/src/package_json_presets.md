@@ -12,7 +12,7 @@ Just like [tsconfigs](./tsconfig_presets.md) and [global configurations](./confi
 
 After we run
 
-`{{#include ../../sketch/tests/output/example_cmds/package_json_cmd}}`
+`{{#include ../../sketch/tests/output/ts_examples/commands/package_json_cmd}}`
 
 We get this output in the package.json file: 
 

@@ -486,7 +486,7 @@ enum Commands {
     #[command(flatten)]
     output: RenderingOutput,
 
-    /// The id of the preset to select (cannot be used with the --content flag)
+    /// The id of the template to select (cannot be used with the --content flag)
     #[arg(short, long, group = "input")]
     id: Option<String>,
 

@@ -156,7 +156,7 @@ Generates a single file from a template
 ###### **Options:**
 
 * `--stdout` — Output the result to stdout
-* `-i`, `--id <ID>` — The id of the preset to select (cannot be used with the --content flag)
+* `-i`, `--id <ID>` — The id of the template to select (cannot be used with the --content flag)
 * `-c`, `--content <CONTENT>` — The literal definition for the template (cannot be used with the --id flag)
 
 

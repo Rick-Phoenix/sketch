@@ -7,8 +7,8 @@ use clap::Parser;
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
 
-use super::reset_testing_dir;
-use crate::cli::{execute_cli, get_config_from_cli, Cli};
+use super::{get_clean_example_cmd, reset_testing_dir};
+use crate::cli::{cli_tests::get_tree_output, execute_cli, get_config_from_cli, Cli};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct CustomTemplateTest {
@@ -18,10 +18,17 @@ struct CustomTemplateTest {
 #[tokio::test]
 async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let output_dir = PathBuf::from("tests/output/custom_templates");
+  let commands_dir = output_dir.join("commands");
 
-  reset_testing_dir(&output_dir);
+  macro_rules! write_command {
+    ($args:expr, $remove_range:expr, $out_file:expr) => {
+      get_clean_example_cmd(&$args, $remove_range, &commands_dir.join($out_file))?
+    };
+  }
 
-  let rendering_cmd = Cli::try_parse_from([
+  reset_testing_dir(&commands_dir);
+
+  let preset_rendering_args = [
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.toml",
@@ -29,9 +36,17 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates",
     "render-preset",
     "test",
-  ])?;
+  ];
 
-  let with_cli_override = Cli::try_parse_from([
+  let rendering_cmd = Cli::try_parse_from(preset_rendering_args)?;
+
+  execute_cli(rendering_cmd.clone()).await?;
+
+  write_command!(preset_rendering_args, 1..5, "render_preset_cmd");
+
+  get_tree_output(&output_dir, "render_preset_tree.txt")?;
+
+  let cli_override_args = [
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.toml",
@@ -43,10 +58,13 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "--id",
     "lit_template",
     "with_cli_override.yaml",
-  ])?;
+  ];
 
-  execute_cli(rendering_cmd.clone()).await?;
-  execute_cli(with_cli_override.clone()).await?;
+  let with_cli_override = Cli::try_parse_from(cli_override_args)?;
+
+  execute_cli(with_cli_override).await?;
+
+  write_command!(cli_override_args, 1..5, "cli_override_cmd");
 
   let config = get_config_from_cli(rendering_cmd).await?;
 
@@ -69,7 +87,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     }
   }
 
-  let from_literal = Cli::try_parse_from([
+  let literal_template_cmd = [
     "sketch",
     "--root-dir",
     "tests/output/custom_templates",
@@ -79,7 +97,11 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "--content",
     "they're taking the hobbits to {{ location }}!",
     "from_literal.txt",
-  ])?;
+  ];
+
+  write_command!(literal_template_cmd, 1..3, "literal_template_cmd");
+
+  let from_literal = Cli::try_parse_from(literal_template_cmd)?;
 
   execute_cli(from_literal).await?;
 

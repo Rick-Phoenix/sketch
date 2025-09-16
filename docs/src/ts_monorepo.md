@@ -16,7 +16,7 @@ Setting up the root package is pretty straightforward:
 
 So with this setup, once we run
 
-`{{#include ../../sketch/tests/output/example_cmds/monorepo_cmd}}`
+`{{#include ../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}`
 
 The tree structure of the output dir will look like this:
 ```
