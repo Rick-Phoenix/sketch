@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use askama::Template;
 use convert_case::{Case, Casing};
 use schemars::JsonSchema;
@@ -16,6 +18,12 @@ pub enum VitestConfigKind {
   Config(VitestConfig),
 }
 
+impl VitestConfigKind {
+  pub fn is_enabled(&self) -> bool {
+    !matches!(self, Self::Bool(false))
+  }
+}
+
 impl Default for VitestConfigKind {
   fn default() -> Self {
     Self::Bool(true)
@@ -27,9 +35,15 @@ impl Default for VitestConfigKind {
 #[template(path = "vitest.config.ts.j2")]
 #[serde(default)]
 pub struct VitestConfig {
+  /// The path to the tests directory, from the root of the package. [default: 'tests']
+  pub tests_dir: String,
+  /// The directory where the config file should be placed, starting from the root of the package.
+  /// If unset, the `tests_dir` will be used.
+  pub out_dir: Option<PathBuf>,
+  /// A list of plugins, which will be set up in the config file.
   pub plugins: Vec<String>,
+  /// The path to the setup directory, starting from the `tests_dir`. [default: 'setup']
   pub setup_dir: String,
-  pub setup_files: Vec<String>,
   #[serde(skip)]
   pub(crate) src_rel_path: String,
 }
@@ -41,10 +55,11 @@ pub(crate) struct TestsSetupFile;
 impl Default for VitestConfig {
   fn default() -> Self {
     Self {
+      out_dir: None,
+      tests_dir: "tests".to_string(),
       plugins: vec![],
       setup_dir: "setup".to_string(),
-      setup_files: vec![],
-      src_rel_path: "../../src".to_string(),
+      src_rel_path: "../src".to_string(),
     }
   }
 }

@@ -6,13 +6,11 @@
   "properties": {
     "debug": {
       "description": "Activates debugging mode.",
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     },
     "extends": {
       "description": "The relative paths, from the current file, to the other config files to merge with the current one.",
       "type": "array",
-      "default": [],
       "items": {
         "type": "string"
       },
@@ -20,8 +18,7 @@
     },
     "gitignore": {
       "description": "Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.",
-      "$ref": "#/$defs/GitIgnore",
-      "default": []
+      "$ref": "#/$defs/GitIgnore"
     },
     "global_templates_vars": {
       "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set as a template's local context or via a cli command.",
@@ -91,8 +88,7 @@
         {
           "type": "null"
         }
-      ],
-      "default": null
+      ]
     }
   },
   "$defs": {
@@ -1245,14 +1241,6 @@
             "$ref": "#/$defs/TsConfigDirective"
           }
         },
-        "ts_out_dir": {
-          "description": "The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.\nIf it's unset and the shared_out_dir is set for the global config, it will resolve to the shared_out_dir, joined with a directory with this package's name.\nSo if the shared_out_dir is 'root_dir/.out' and the name of the package is \"my_pkg\" (situated in root_dir/my_pkg), the out_dir's default value will be '../.out/my_pkg'.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
         "update_root_tsconfig": {
           "description": "Adds the new package to the references in the root tsconfig.",
           "type": "boolean",
@@ -1485,10 +1473,6 @@
         "type": {
           "$ref": "#/$defs/JsModuleType",
           "default": "module"
-        },
-        "useDefaultDeps": {
-          "type": "boolean",
-          "writeOnly": true
         },
         "version": {
           "type": "string",
@@ -2178,6 +2162,13 @@
       "description": "The data used to generate a new vitest setup.",
       "type": "object",
       "properties": {
+        "file_path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "plugins": {
           "type": "array",
           "default": [],
@@ -2189,16 +2180,9 @@
           "type": "string",
           "default": "setup"
         },
-        "setup_files": {
-          "type": "array",
-          "default": [],
-          "items": {
-            "type": "string"
-          }
-        },
-        "src_rel_path": {
+        "tests_dir": {
           "type": "string",
-          "default": "../../src"
+          "default": "tests"
         }
       }
     },

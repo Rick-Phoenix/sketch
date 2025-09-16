@@ -26,19 +26,41 @@ typescript:
       # project references.
       update_root_tsconfig: false
 
-      # Can be set to true (for a default config), a literal config
-      # or to false (which is the default setting) for no oxlint config.
-      oxlint: false
-
-      # Generate a basic moon.yml file. Can be customized with extra fields.
-      moonrepo: true
-
       # The kind of package to generate. Only relevant if you use
       # default tsconfigs.
       kind: library
 
-      # Create a basic vitest setup (enabled by default)
-      vitest: true
+      # Can be set to true (for a default config), a literal config
+      # or to false (which is the default setting) for no oxlint config.
+      oxlint: false
+
+      # Generate a moon.yml file.
+      # Can be set to `true` to use a basic default.
+      moonrepo:
+        tasks:
+          test:
+            command: "vitest --config ./tests/vitest.config.ts run"
+            inputs:
+              - "tests/**/*"
+              - "src/**/*"
+
+      # Create a vitest setup.
+      # Can be set to true to use defaults (which are as below).
+      vitest:
+        # Where the config file should be generated, starting from
+        # the root of the package.
+        # It defaults to the value of `tests_dir`
+        out_dir: null
+
+        # The directory to use for tests
+        tests_dir: tests
+
+        # The directory containing the setup files for tests.
+        # (starting from tests_dir)
+        setup_dir: setup
+
+        # Can use a list of plugins which will be set up in the config file
+        plugins: []
       # ANCHOR_END: all
 
       # Use the default tsconfigs

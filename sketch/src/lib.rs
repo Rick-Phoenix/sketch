@@ -63,5 +63,3 @@ pub enum Preset {
   TsConfig,
   Templating,
 }
-
-pub(crate) const DEFAULT_DEPS: [&str; 3] = ["typescript", "vitest", "oxlint"];

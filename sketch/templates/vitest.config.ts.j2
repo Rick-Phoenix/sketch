@@ -24,10 +24,7 @@ export default defineConfig({
 
   test: { 
     setupFiles: [ 
-      j(setupDir, "tests_setup.ts"),
-      {% for file in setup_files %}
-      j(setupDir, "{{ file }}"),  
-      {% endfor %}
+      j(setupDir, "tests_setup.ts"),  
     ], 
     globals: true,
     environment: "node",

@@ -14,7 +14,7 @@ use crate::{
   moon::{MoonDotYml, MoonDotYmlKind},
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
   package_json::{PackageJson, PackageJsonKind},
-  paths::{get_cwd, get_relative_path},
+  paths::{create_parent_dirs, get_cwd, get_relative_path},
   pnpm::PnpmWorkspace,
   ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
   *,
@@ -140,7 +140,7 @@ impl Config {
       "my-awesome-package".to_string()
     };
 
-    let output = root_dir.join(
+    let mut output = root_dir.join(
       config
         .dir
         .clone()
@@ -151,6 +151,8 @@ impl Config {
       path: output.to_owned(),
       source: e,
     })?;
+
+    output = get_abs_path(&output)?;
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
@@ -192,18 +194,22 @@ impl Config {
     get_contributors!(package_json_data, typescript, contributors);
     get_contributors!(package_json_data, typescript, maintainers);
 
-    if package_json_data.use_default_deps {
-      for dep in DEFAULT_DEPS {
-        let version = if typescript.catalog {
-          "catalog:".to_string()
-        } else {
-          "latest".to_string()
-        };
+    let mut default_deps = vec!["typescript", "oxlint"];
 
-        package_json_data
-          .dev_dependencies
-          .insert(dep.to_string(), version);
-      }
+    if config.vitest.is_enabled() {
+      default_deps.push("vitest")
+    }
+
+    for dep in default_deps {
+      let version = if typescript.catalog {
+        "catalog:".to_string()
+      } else {
+        "latest".to_string()
+      };
+
+      package_json_data
+        .dev_dependencies
+        .insert(dep.to_string(), version);
     }
 
     package_json_data.name = package_name.clone();
@@ -381,6 +387,19 @@ impl Config {
         .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
     }
 
+    let src_dir = output.join("src");
+    create_dir_all(&src_dir).map_err(|e| GenError::DirCreation {
+      path: src_dir.clone(),
+      source: e,
+    })?;
+
+    write_to_output!(
+      GenericTemplate {
+        text: "console.log(\"They're taking the hobbits to Isengard!\");".to_string()
+      },
+      "src/index.ts"
+    );
+
     let vitest_config = match config.vitest {
       VitestConfigKind::Bool(v) => v.then(VitestConfig::default),
       VitestConfigKind::Id(n) => {
@@ -398,29 +417,30 @@ impl Config {
       VitestConfigKind::Config(vitest_config_struct) => Some(vitest_config_struct),
     };
 
-    if let Some(vitest) = vitest_config {
-      let tests_setup_dir = output.join("tests/setup");
-      create_dir_all(&tests_setup_dir).map_err(|e| GenError::DirCreation {
-        path: tests_setup_dir,
-        source: e,
-      })?;
+    if let Some(mut vitest) = vitest_config.clone() {
+      let tests_dir = output.join(&vitest.tests_dir);
+      let tests_setup_dir = tests_dir.join(&vitest.setup_dir);
 
-      write_to_output!(vitest, "tests/vitest.config.ts");
-      write_to_output!(TestsSetupFile {}, "tests/setup/tests_setup.ts");
+      create_parent_dirs(&tests_dir)?;
+      create_parent_dirs(&tests_setup_dir)?;
+
+      let file_parent_dir = vitest
+        .out_dir
+        .as_deref()
+        .unwrap_or_else(|| tests_dir.as_path());
+
+      let file_path = file_parent_dir.join("vitest.config.ts");
+
+      let src_rel_path = get_relative_path(&file_parent_dir, &src_dir)?;
+
+      vitest.src_rel_path = src_rel_path.to_string_lossy().to_string();
+      vitest.setup_dir = get_relative_path(&file_parent_dir, &tests_setup_dir)?
+        .to_string_lossy()
+        .to_string();
+
+      write_to_output!(vitest, file_path);
+      write_to_output!(TestsSetupFile {}, tests_setup_dir.join("tests_setup.ts"));
     }
-
-    let src_dir = output.join("src");
-    create_dir_all(&src_dir).map_err(|e| GenError::DirCreation {
-      path: src_dir,
-      source: e,
-    })?;
-
-    write_to_output!(
-      GenericTemplate {
-        text: "console.log(\"They're taking the hobbits to Isengard!\");".to_string()
-      },
-      "src/index.ts"
-    );
 
     if let Some(oxlint_config) = config.oxlint.clone() {
       write_to_output!(oxlint_config, ".oxlintrc.json");

@@ -69,10 +69,6 @@ pub struct PackageJson {
   #[merge(strategy = merge_index_sets)]
   pub extends: IndexSet<String>,
 
-  #[serde(skip_serializing)]
-  #[merge(strategy = merge::bool::overwrite_false)]
-  pub use_default_deps: bool,
-
   #[serde(alias = "optional_dependencies")]
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
@@ -188,7 +184,6 @@ impl Default for PackageJson {
       type_: JsModuleType::Module,
       version: "0.1.0".to_string(),
       extends: Default::default(),
-      use_default_deps: true,
       dependencies: Default::default(),
       dev_dependencies: Default::default(),
       scripts: Default::default(),
@@ -490,7 +485,6 @@ mod test {
         },
       }),
       extends: Default::default(),
-      use_default_deps: true,
     };
 
     let output_path = PathBuf::from("tests/output/package_json_gen/package.json");
