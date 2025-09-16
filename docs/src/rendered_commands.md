@@ -4,7 +4,7 @@ Sketch makes it possible to create shell commands starting from templates, which
 
 ### From literal template
 
-`{{#include ../../sketch/tests/output/commands_tests/commands/exec_literal_cmd}}`
+>`{{#include ../../sketch/tests/output/commands_tests/commands/exec_literal_cmd}}`
 
 Output:
 
@@ -22,7 +22,7 @@ File:
 
 Command:
 
-`{{#include ../../sketch/tests/output/commands_tests/commands/cmd_from_file}}`
+>`{{#include ../../sketch/tests/output/commands_tests/commands/cmd_from_file}}`
 
 Output:
 
@@ -42,7 +42,9 @@ File:
 
 Command:
 
-`{{#include ../../sketch/tests/output/commands_tests/commands/exec_from_template_cmd}}`
+>`{{#include ../../sketch/tests/output/commands_tests/commands/exec_from_template_cmd}}`
+
+>ℹ️ You do not have to use `.j2` as an extension for the template files. Any extension can be used.
 
 Output:
 

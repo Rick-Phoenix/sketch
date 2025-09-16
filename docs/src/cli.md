@@ -112,7 +112,6 @@ Generates a new typescript package
 * `--app` — Marks the package as an application
 * `--library` — Marks the package as a library
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for this package. If unset, defaults are used
-* `--ts-out-dir <DIR>` — The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used
 * `--package-json <ID>` — The id of the package.json preset to use for this package
 * `-u`, `--update-root-tsconfig` — Adds the new package to the references in the root tsconfig
 

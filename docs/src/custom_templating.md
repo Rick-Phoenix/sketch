@@ -58,17 +58,15 @@ The output will be:
 {{#include ../../sketch/tests/output/custom_templates/with_cli_override.yaml}}
 ```
 
-<div class="warning">
-Variables defined with the --set flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
-</div>
+>⚠️ Variables defined with the `--set` flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
 
-## Defining a template in the command
+## Defining a template in a command
 
 We can also define a template inside the command itself.
 
 Cmd:
 
-`{{#include ../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}`
+>`{{#include ../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}`
 
 Output:
 
@@ -77,6 +75,5 @@ Output:
 ```
 
 
-## Rendering to stdout
 
-Templates can also be rendered to stdout with the --stdout flag.
+>ℹ️ Templates can also be rendered to stdout with the --stdout flag.

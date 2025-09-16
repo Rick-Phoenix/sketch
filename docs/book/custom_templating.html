@@ -237,18 +237,21 @@ templating_presets.test = [
 <p>The output will be:</p>
 <pre><code class="language-yaml">my_var: 25
 </code></pre>
-<div class="warning">
-Variables defined with the --set flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
-</div>
-<h2 id="defining-a-template-in-the-command"><a class="header" href="#defining-a-template-in-the-command">Defining a template in the command</a></h2>
+<blockquote>
+<p>⚠️ Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.</p>
+</blockquote>
+<h2 id="defining-a-template-in-a-command"><a class="header" href="#defining-a-template-in-a-command">Defining a template in a command</a></h2>
 <p>We can also define a template inside the command itself.</p>
 <p>Cmd:</p>
+<blockquote>
 <p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
+</blockquote>
 <p>Output:</p>
 <pre><code class="language-txt">they're taking the hobbits to Isengard!
 </code></pre>
-<h2 id="rendering-to-stdout"><a class="header" href="#rendering-to-stdout">Rendering to stdout</a></h2>
-<p>Templates can also be rendered to stdout with the --stdout flag.</p>
+<blockquote>
+<p>ℹ️ Templates can also be rendered to stdout with the --stdout flag.</p>
+</blockquote>
 
                     </main>
 

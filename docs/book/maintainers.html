@@ -176,7 +176,6 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="maintainers-information"><a class="header" href="#maintainers-information">Maintainers Information</a></h1>
-<h1 id="reusable-maintainers-information"><a class="header" href="#reusable-maintainers-information">Reusable Maintainers Information</a></h1>
 <p>If you are working in a group, and you frequently find yourself adding the same information to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> field in <code>package.json</code> files, you might be interested in using the <code>people</code> field of the config file, where you can store information about maintainers that can be reused, by simply copying their id, in the generated <code>package.json</code> files.</p>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <pre><code class="language-yaml">typescript:
@@ -204,7 +203,9 @@
 
 </code></pre>
 <p>After we run</p>
+<blockquote>
 <p><code>sketch ts package --preset people-example</code></p>
+</blockquote>
 <p>We get this <code>package.json</code> file in the root of the new package:</p>
 <pre><code class="language-json">{
   "name": "people-example",

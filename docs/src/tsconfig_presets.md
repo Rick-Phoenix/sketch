@@ -4,6 +4,8 @@ The configuration file can contain a variety of presets that can be used for gen
 
 These presets contain all of the fields of a normal `tsconfig.json` file, with the addition of an extra field called `extend-presets`, which allows you to extend a basic preset from another one.
 
+>ℹ️ You can omit the ts_config field entirely, and the defaults will be used.
+
 ## Example
 
 Let's start with some basic starting point here:
@@ -32,21 +34,25 @@ Now we will set up a package that will generate 2 tsconfig files.
 
 After running the command
 
-`{{#include ../../sketch/tests/output/ts_examples/commands/tsconfig_cmd}}`
+>`{{#include ../../sketch/tests/output/ts_examples/commands/tsconfig_cmd}}`
 
-tsconfig.json
+We get the following files:
+
+`tsconfig.json`
 
 ```json
 {{#include ../../sketch/tests/output/ts_examples/packages/tsconfig-example/tsconfig.json}}
 ```
 
-tsconfig.src.json
+`tsconfig.src.json`
 
 ```json
 {{#include ../../sketch/tests/output/ts_examples/packages/tsconfig-example/tsconfig.src.json}}
 ```
 
-tsconfig.dev.json
+>✏️ Note how the two configs have been merged!
+
+`tsconfig.dev.json`
 
 ```json
 {{#include ../../sketch/tests/output/ts_examples/packages/tsconfig-example/tsconfig.dev.json}}

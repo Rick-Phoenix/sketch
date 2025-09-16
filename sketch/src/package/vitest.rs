@@ -30,6 +30,7 @@ pub struct VitestConfig {
   pub plugins: Vec<String>,
   pub setup_dir: String,
   pub setup_files: Vec<String>,
+  #[serde(skip)]
   pub(crate) src_rel_path: String,
 }
 

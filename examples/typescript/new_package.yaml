@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+root_dir:
+  ../../sketch/tests/output/ts_examples
+
+  # ANCHOR: all
+typescript:
+  package_presets:
+    frontend:
+      # The name of the project. If empty, it will use
+      # the name in the package.json preset, and if that's
+      # also unset, it will use the base name of the output dir
+      name: "@myproject/frontend"
+
+      # The package.json config for this package. Can be a preset id
+      # or a literal configuration.
+      package_json:
+        devDependencies:
+          tailwindcss: "^4.0.0"
+
+      # The directory for this package, starting from the global root_dir
+      dir: packages/frontend
+
+      # If true, it updates the tsconfig.json file at the root,
+      # by adding the new tsconfig.json file to the list of
+      # project references.
+      update_root_tsconfig: false
+
+      # Can be set to true (for a default config), a literal config
+      # or to false (which is the default setting) for no oxlint config.
+      oxlint: false
+
+      # Generate a basic moon.yml file. Can be customized with extra fields.
+      moonrepo: true
+
+      # The kind of package to generate. Only relevant if you use
+      # default tsconfigs.
+      kind: library
+
+      # Create a basic vitest setup (enabled by default)
+      vitest: true
+      # ANCHOR_END: all
+
+      # Use the default tsconfigs
+      ts_config: null
+      # ANCHOR: template_example
+      # Inside the package preset configuration
+      generate_templates:
+        - output: src/schemas/index.ts
+          # This can be a template defined in the config file
+          # or file path inside templates_dir
+          template: schemas
+
+templates:
+  schemas: |
+    import z from "zod";
+    import { sharedSchemas } from "{{ schemas_package }}";
+
+global_templates_vars:
+  schemas_package: "@myproject/schemas"
+  # ANCHOR_END: template_example

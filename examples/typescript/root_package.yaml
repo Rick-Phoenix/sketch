@@ -37,4 +37,20 @@ typescript:
     moonrepo:
       toolchain:
         root_tsconfig_name: tsconfig.options.json
-  # ANCHOR_END: all
+    # ANCHOR_END: all
+
+    # ANCHOR: template_example
+    generate_templates:
+      - output: docker/dev.dockerfile
+        template:
+          name: dev_dockerfile
+          content: |
+            FROM node:23-alpine
+
+            COPY . .
+            EXPOSE {{ docker_dev_port }}
+            CMD ["npm", "run", "dev"]
+
+global_templates_vars:
+  docker_dev_port: 5173
+  # ANCHOR_END: template_example

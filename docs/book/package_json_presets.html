@@ -215,9 +215,13 @@
       dir: packages/svelte_frontend
 </code></pre>
 <p>After we run</p>
+<blockquote>
 <p><code>sketch ts package --preset svelte_frontend</code></p>
+</blockquote>
 <p>We get this output in the package.json file:</p>
-<p>(typescript and oxlint are always added to the dev dependencies, along with vitest for packages that are not root packages)</p>
+<blockquote>
+<p>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages).</p>
+</blockquote>
 <pre><code class="language-json">{
   "name": "svelte_frontend",
   "private": true,

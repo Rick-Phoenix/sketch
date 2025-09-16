@@ -177,7 +177,9 @@
                     <main>
                         <h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
 <p>Once we have our settings (or not, if we want to use defaults), we can run</p>
+<blockquote>
 <p><code>sketch ts monorepo</code></p>
+</blockquote>
 <p>to create our new Typescript monorepo.</p>
 <p>For example, if we use this config:</p>
 <pre><code class="language-yaml">typescript:
@@ -215,20 +217,6 @@
       toolchain:
         root_tsconfig_name: tsconfig.options.json
 </code></pre>
-<p>The tree structure of the output dir will look like this:</p>
-<pre><code>.
-├── .moon
-│   ├── tasks.yml
-│   └── toolchain.yml
-├── .out
-├── .oxlintrc.json
-├── apps
-├── package.json
-├── packages
-├── pnpm-workspace.yaml
-├── tsconfig.json
-└── tsconfig.options.json
-</code></pre>
 <p>And the package.json file of the root package will be like this:</p>
 <pre><code class="language-json">{
   "name": "workspace",
@@ -246,6 +234,39 @@
   "dependencies": {}
 }
 </code></pre>
+<p>You can also use the <code>generate_templates</code> field to automatically generate a certain file structure when the monorepo is generated.</p>
+<p>Let's say, for example, that every time that you create a new monorepo, you always want to create a <code>docker</code> directory with a basic <code>dev.dockerfile</code> inside of it, so that you can quickly create a dev environment using docker.</p>
+<p>For the root package, you would do so like this:</p>
+<pre><code class="language-yaml">    generate_templates:
+      - output: docker/dev.dockerfile
+        template:
+          name: dev_dockerfile
+          content: |
+            FROM node:23-alpine
+
+            COPY . .
+            EXPOSE {{ docker_dev_port }}
+            CMD ["npm", "run", "dev"]
+
+global_templates_vars:
+  docker_dev_port: 5173
+</code></pre>
+<p>So the final tree structure of the output directory will look like this:</p>
+<pre><code>.
+├── .moon
+│   ├── tasks.yml
+│   └── toolchain.yml
+├── .out
+├── .oxlintrc.json
+├── apps
+├── docker
+│   └── dev.dockerfile
+├── package.json
+├── packages
+├── pnpm-workspace.yaml
+├── tsconfig.json
+└── tsconfig.options.json
+</code></pre>
 
                     </main>
 
@@ -255,7 +276,7 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="tsconfig_presets.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="ts_package_gen.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -269,7 +290,7 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="tsconfig_presets.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="ts_package_gen.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

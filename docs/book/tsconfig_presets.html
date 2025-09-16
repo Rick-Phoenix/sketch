@@ -178,6 +178,9 @@
                         <h1 id="tsconfig-presets"><a class="header" href="#tsconfig-presets">TsConfig Presets</a></h1>
 <p>The configuration file can contain a variety of presets that can be used for generating Tsconfig files.</p>
 <p>These presets contain all of the fields of a normal <code>tsconfig.json</code> file, with the addition of an extra field called <code>extend-presets</code>, which allows you to extend a basic preset from another one.</p>
+<blockquote>
+<p>ℹ️ You can omit the ts_config field entirely, and the defaults will be used.</p>
+</blockquote>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <p>Let's start with some basic starting point here:</p>
 <p>Here we define two typical tsconfig settings to use for the packages in our workspace.</p>
@@ -233,13 +236,16 @@
 
 </code></pre>
 <p>After running the command</p>
+<blockquote>
 <p><code>sketch ts package --preset tsconfig-example</code></p>
-<p>tsconfig.json</p>
+</blockquote>
+<p>We get the following files:</p>
+<p><code>tsconfig.json</code></p>
 <pre><code class="language-json">{
   "files": []
 }
 </code></pre>
-<p>tsconfig.src.json</p>
+<p><code>tsconfig.src.json</code></p>
 <pre><code class="language-json">{
   "compilerOptions": {
     "emitDeclarationOnly": true,
@@ -247,7 +253,10 @@
   }
 }
 </code></pre>
-<p>tsconfig.dev.json</p>
+<blockquote>
+<p>✏️ Note how the two configs have been merged!</p>
+</blockquote>
+<p><code>tsconfig.dev.json</code></p>
 <pre><code class="language-json">{
   "include": [
     "src",
@@ -264,7 +273,7 @@
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="ts_monorepo.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="ts_package_gen.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -278,7 +287,7 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="ts_monorepo.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="ts_package_gen.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 

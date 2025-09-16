@@ -181,7 +181,7 @@ The default is <code>sketch.yaml</code>, but any name is supported as long as th
 <p>If called with added arguments, it will generate a config with the provided values.
 Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
 <p>Command:</p>
-<pre><code class="language-txt">sketch --ignore-config-file --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
+<pre><code class="language-txt">sketch --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
 </code></pre>
 <p>Output:</p>
 <pre><code class="language-yaml">shell: zsh

@@ -154,5 +154,23 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(catalog_example).await?;
 
+  let package_gen_cmd = [
+    "sketch",
+    "-c",
+    path_to_str!(examples_dir.join("new_package.yaml")),
+    "ts",
+    "package",
+    "--preset",
+    "frontend",
+  ];
+
+  write_command!(package_gen_cmd, 1..3, "package_gen_cmd");
+
+  let package_gen = Cli::try_parse_from(package_gen_cmd)?;
+
+  execute_cli(package_gen).await?;
+
+  get_tree_output(&output_dir.join("packages/frontend"), "tree_output.txt")?;
+
   Ok(())
 }

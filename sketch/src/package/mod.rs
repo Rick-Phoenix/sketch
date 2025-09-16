@@ -53,16 +53,6 @@ pub struct PackageConfig {
   )]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
-  /// The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used.
-  /// If it's unset and the shared_out_dir is set for the global config, it will resolve to the shared_out_dir, joined with a directory with this package's name.
-  /// So if the shared_out_dir is 'root_dir/.out' and the name of the package is "my_pkg" (situated in root_dir/my_pkg), the out_dir's default value will be '../.out/my_pkg'.
-  #[arg(long)]
-  #[arg(
-    help = "The out_dir for this package's tsconfig. Ignored if the default tsconfigs are not used",
-    value_name = "DIR"
-  )]
-  pub ts_out_dir: Option<PathBuf>,
-
   /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition.
   #[arg(long, value_parser = PackageJsonKind::from_cli)]
   #[arg(
@@ -110,7 +100,6 @@ impl Default for PackageConfig {
       vitest: Default::default(),
       ts_config: None,
       generate_templates: Default::default(),
-      ts_out_dir: None,
       update_root_tsconfig: false,
       oxlint: None,
     }
@@ -290,9 +279,7 @@ impl Config {
       }
     } else {
       let is_app = matches!(config.kind.unwrap_or_default(), PackageKind::App);
-      let out_dir = if let Some(ts_out_dir) = config.ts_out_dir.as_ref() {
-        output.join(ts_out_dir)
-      } else {
+      let out_dir = {
         let rel_path_to_root = get_relative_path(&output, &root_dir)?;
 
         let root_out_dir = rel_path_to_root.join(

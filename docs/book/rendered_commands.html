@@ -178,7 +178,9 @@
                         <h1 id="rendered-commands"><a class="header" href="#rendered-commands">Rendered Commands</a></h1>
 <p>Sketch makes it possible to create shell commands starting from templates, which can be defined in a file or provided via command.</p>
 <h3 id="from-literal-template"><a class="header" href="#from-literal-template">From literal template</a></h3>
+<blockquote>
 <p><code>sketch --set general="kenobi" exec 'echo "hello there!\ngeneral {{ general }}." &gt; command_output.txt'</code></p>
+</blockquote>
 <p>Output:</p>
 <pre><code class="language-txt">hello there!
 general kenobi.
@@ -188,7 +190,9 @@ general kenobi.
 <pre><code class="language-txt">echo "all the time you have to leave the {{ something }}!" &gt; output_from_file.txt
 </code></pre>
 <p>Command:</p>
+<blockquote>
 <p><code>sketch --set something="space" exec -f ../../commands_tests/cmd_from_file.j2</code></p>
+</blockquote>
 <p>Output:</p>
 <pre><code class="language-txt">all the time you have to leave the space!
 </code></pre>
@@ -198,7 +202,12 @@ general kenobi.
 <pre><code class="language-txt">echo "{{ category }} engine... {{ category }}... argh!" &gt; output_from_templates_dir.txt
 </code></pre>
 <p>Command:</p>
+<blockquote>
 <p><code>sketch --set category="gp2" exec -t cmd_template.j2</code></p>
+</blockquote>
+<blockquote>
+<p>ℹ️ You do not have to use <code>.j2</code> as an extension for the template files. Any extension can be used.</p>
+</blockquote>
 <p>Output:</p>
 <pre><code class="language-txt">gp2 engine... gp2... argh!
 </code></pre>

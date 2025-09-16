@@ -12,11 +12,11 @@ Just like [tsconfigs](./tsconfig_presets.md) and [global configurations](./confi
 
 After we run
 
-`{{#include ../../sketch/tests/output/ts_examples/commands/package_json_cmd}}`
+>`{{#include ../../sketch/tests/output/ts_examples/commands/package_json_cmd}}`
 
 We get this output in the package.json file: 
 
-(typescript and oxlint are always added to the dev dependencies, along with vitest for packages that are not root packages)
+>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages).
 
 ```json
 {{#include ../../sketch/tests/output/ts_examples/packages/svelte_frontend/package.json}}
