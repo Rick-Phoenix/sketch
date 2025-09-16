@@ -17,6 +17,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
   let output_dir = PathBuf::from("tests/output/ts_examples");
   let commands_dir = output_dir.join("commands");
 
+  reset_testing_dir(&output_dir);
   reset_testing_dir(&commands_dir);
 
   macro_rules! write_command {

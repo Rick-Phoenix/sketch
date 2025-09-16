@@ -181,6 +181,30 @@
 <p>Every time a new version is released, the json schema for the configuration file will be updated in the <a href="https://github.com/Rick-Phoenix/sketch/tree/main/schemas">github repo</a>.</p>
 <p>Each version will have its own distinct schema file, and the <code>latest.json</code> file will track the schema for the latest version.</p>
 <p>You can then use this schema with the <code>yaml</code>, <code>toml</code> or <code>json</code> language servers to get autocompletion, type information and documentation for each element of the config file.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="basic-setup"><a class="header" href="#basic-setup">Basic Setup</a></h1>
+<p>You can use the <code>sketch new</code> command to generate a new configuration file in the desired output file and format.
+The default is <code>sketch.yaml</code>, but any name is supported as long as the format is either <code>json</code>, <code>toml</code> or <code>yaml</code>, and the configuration file is specified with the <code>-c</code> or <code>--config</code> flag.</p>
+<p>If called with added arguments, it will generate a config with the provided values.
+Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--no-config-file</code> to ignore the config file's values.</p>
+<p>Command:</p>
+<pre><code class="language-txt">sketch --no-config-file --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-yaml">typescript: null
+shell: zsh
+debug: false
+root_dir: tests/output
+templates_dir: tests/templates
+no_overwrite: false
+pre_commit: true
+gitignore: []
+extends: []
+templates: {}
+templating_presets: {}
+global_templates_vars:
+  hello: there
+  general: kenobi
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="lsp-integration-1"><a class="header" href="#lsp-integration-1">Lsp Integration</a></h1>
 <p>In order to have the best development experience, it is crucial that you use the json schema for the configuration when writing one.</p>
 <p>Every time a new version is released, the json schema for the configuration file will be updated in the <a href="https://github.com/Rick-Phoenix/sketch/tree/main/schemas">github repo</a>.</p>
@@ -277,8 +301,6 @@ typescript:
 ├── pnpm-workspace.yaml
 ├── tsconfig.json
 └── tsconfig.options.json
-
-5 directories, 7 files
 </code></pre>
 <p>Output of the package.json file:</p>
 <pre><code class="language-json">{
@@ -576,8 +598,7 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 # Or as files inside a directory
 templates_dir = "../templates"
 </code></pre>
-<h2 id="rendering-templates"><a class="header" href="#rendering-templates">Rendering templates</a></h2>
-<p>Templates can be rendered as a group, or individually.</p>
+<p>Templates can also be defined in groups, which can be rendered all at once starting from the same root_dir.</p>
 <p>This is how groups are defined:</p>
 <pre><code class="language-toml"># A group of templates that will be rendered together
 templating_presets.test = [
@@ -597,6 +618,7 @@ templating_presets.test = [
   { template = "lit_template", output = "literal_from_config.yaml" },
 ]
 </code></pre>
+<p>The output paths defined in the command or in the preset will be joined to the <code>root_dir</code> setting.</p>
 <p>When we run the command</p>
 <p><code>sketch render-preset test</code></p>
 <p>The output of the specified <code>root-dir</code> will look like this:</p>
@@ -609,11 +631,13 @@ templating_presets.test = [
 ├── with_cli_override.yaml
 ├── with_global_var.yaml
 └── with_override.yaml
-
-2 directories, 7 files
 </code></pre>
 <h2 id="global-and-local-context"><a class="header" href="#global-and-local-context">Global and Local Context</a></h2>
-<p>As you can see, the variables provided as a local context override global variables:</p>
+<p>As you can see from the previous example, the variables provided as a local context override global variables.</p>
+<p><code>with_global_vars.yaml</code> will be like this:</p>
+<pre><code class="language-yaml">my_var: 15
+</code></pre>
+<p>While <code>with_override.yaml</code> will be like this:</p>
 <pre><code class="language-yaml">my_var: 20
 </code></pre>
 <p>But the variables defined from the command always have the greatest priority.</p>
@@ -634,6 +658,33 @@ Variables defined with the --set flag must be formatted in valid json. This mean
 </code></pre>
 <h2 id="rendering-to-stdout"><a class="header" href="#rendering-to-stdout">Rendering to stdout</a></h2>
 <p>Templates can also be rendered to stdout with the --stdout flag.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rendered-commands"><a class="header" href="#rendered-commands">Rendered Commands</a></h1>
+<p>Sketch makes it possible to create shell commands starting from templates, which can be defined in a file or provided via command.</p>
+<h3 id="from-literal-template"><a class="header" href="#from-literal-template">From literal template</a></h3>
+<p><code>sketch --set general="kenobi" exec 'echo "hello there!\ngeneral {{ general }}." &gt; command_output.txt'</code></p>
+<p>Output:</p>
+<pre><code class="language-txt">hello there!
+general kenobi.
+</code></pre>
+<h3 id="from-file"><a class="header" href="#from-file">From file</a></h3>
+<p>File:</p>
+<pre><code class="language-txt">echo "all the time you have to leave the {{ something }}!" &gt; output_from_file.txt
+</code></pre>
+<p>Command:</p>
+<p><code>sketch --set something="space" exec -f ../../commands_tests/cmd_from_file.j2</code></p>
+<p>Output:</p>
+<pre><code class="language-txt">all the time you have to leave the space!
+</code></pre>
+<h3 id="from-template"><a class="header" href="#from-template">From template</a></h3>
+<p>You can also use a named template, which can be either a file inside <code>templates_dir</code> or a literal template defined in the config file.</p>
+<p>File:</p>
+<pre><code class="language-txt">echo "{{ category }} engine... {{ category }}... argh!" &gt; output_from_templates_dir.txt
+</code></pre>
+<p>Command:</p>
+<p><code>sketch --set category="gp2" exec -t cmd_template.j2</code></p>
+<p>Output:</p>
+<pre><code class="language-txt">gp2 engine... gp2... argh!
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="command-line-help-for-sketch"><a class="header" href="#command-line-help-for-sketch">Command-Line Help for <code>sketch</code></a></h1>
 <p>This document contains the help content for the <code>sketch</code> command-line program.</p>
 <p><strong>Command Overview:</strong></p>

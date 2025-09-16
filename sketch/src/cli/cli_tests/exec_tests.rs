@@ -4,16 +4,24 @@ use clap::Parser;
 use pretty_assertions::assert_eq;
 
 use super::reset_testing_dir;
-use crate::cli::{execute_cli, Cli};
+use crate::cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli};
 
 #[tokio::test]
 async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
   let output_dir = PathBuf::from("tests/output/commands_tests");
   let config_file = PathBuf::from("tests/commands_tests/commands_tests.toml");
+  let commands_dir = output_dir.join("commands");
 
   reset_testing_dir(&output_dir);
+  reset_testing_dir(&commands_dir);
 
-  let literal = Cli::try_parse_from([
+  macro_rules! write_command {
+    ($cmd:expr, $range:expr, $out_file:expr) => {
+      get_clean_example_cmd(&$cmd, $range, &commands_dir.join($out_file))?
+    };
+  }
+
+  let literal_template_cmd = [
     "sketch",
     "--root-dir",
     &output_dir.to_string_lossy(),
@@ -21,7 +29,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "general=\"kenobi\"",
     "exec",
     "echo \"hello there!\\ngeneral {{ general }}.\" > command_output.txt",
-  ])?;
+  ];
+
+  write_command!(literal_template_cmd, 1..3, "exec_literal_cmd");
+
+  let literal = Cli::try_parse_from(literal_template_cmd)?;
 
   execute_cli(literal).await?;
 
@@ -29,7 +41,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   assert_eq!(output, "hello there!\ngeneral kenobi.\n");
 
-  let from_file = Cli::try_parse_from([
+  let from_file_cmd = [
     "sketch",
     "--root-dir",
     &output_dir.to_string_lossy(),
@@ -38,7 +50,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "exec",
     "-f",
     "../../commands_tests/cmd_from_file.j2",
-  ])?;
+  ];
+
+  write_command!(from_file_cmd, 1..3, "cmd_from_file");
+
+  let from_file = Cli::try_parse_from(from_file_cmd)?;
 
   execute_cli(from_file).await?;
 
@@ -49,7 +65,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "all the time you have to leave the space!\n"
   );
 
-  let from_file_in_templates_dir = Cli::try_parse_from([
+  let from_template_cmd = [
     "sketch",
     "-c",
     &config_file.to_string_lossy(),
@@ -58,7 +74,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "exec",
     "-t",
     "cmd_template.j2",
-  ])?;
+  ];
+
+  write_command!(from_template_cmd, 1..3, "exec_from_template_cmd");
+
+  let from_file_in_templates_dir = Cli::try_parse_from(from_template_cmd)?;
 
   execute_cli(from_file_in_templates_dir).await?;
 

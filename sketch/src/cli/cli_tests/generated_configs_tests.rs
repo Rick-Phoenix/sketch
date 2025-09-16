@@ -5,7 +5,7 @@ use pretty_assertions::assert_eq;
 
 use super::reset_testing_dir;
 use crate::{
-  cli::{execute_cli, Cli},
+  cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
   Config,
 };
 
@@ -28,7 +28,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   assert_eq!(default_config_output, Config::default());
 
-  let with_extras = Cli::try_parse_from([
+  let with_extras_cmd = [
     "sketch",
     "--no-config-file",
     "--root-dir",
@@ -42,8 +42,12 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
     "--set",
     "general=\"kenobi\"",
     "new",
-    &output_dir.join("with_extras.yaml").to_string_lossy(),
-  ])?;
+    path_to_str!(output_dir.join("with_extras.yaml")),
+  ];
+
+  get_clean_example_cmd(&with_extras_cmd, 2..4, &output_dir.join("with_extras_cmd"))?;
+
+  let with_extras = Cli::try_parse_from(with_extras_cmd)?;
 
   execute_cli(with_extras).await?;
 

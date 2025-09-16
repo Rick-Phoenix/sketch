@@ -25,6 +25,7 @@ fn get_tree_output<T: Into<PathBuf>>(dir: T, file: &str) -> Result<(), Box<dyn s
     .arg(file)
     .arg("-I")
     .arg("commands")
+    .arg("--noreport")
     .arg("-o")
     .arg(file)
     .output()?;
@@ -42,9 +43,13 @@ fn get_clean_example_cmd(
   for (i, segment) in cmd.iter().enumerate() {
     if !remove_range.contains(&i) {
       if segment.contains(' ') {
-        example.push('"');
-        example.push_str(segment);
-        example.push('"');
+        if segment.contains('\'') {
+          example.push_str(&format!("\"{}\"", segment));
+        } else {
+          example.push('\'');
+          example.push_str(segment);
+          example.push('\'');
+        }
       } else {
         example.push_str(segment);
       }

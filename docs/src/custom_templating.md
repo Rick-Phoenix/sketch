@@ -10,15 +10,15 @@ Templates can be defined in files or directly within a command. The variables ca
 {{#include ../../sketch/tests/custom_templates/custom_templates.toml:config}}
 ```
 
-## Rendering templates
-
-Templates can be rendered as a group, or individually.
+Templates can also be defined in groups, which can be rendered all at once starting from the same root_dir.
 
 This is how groups are defined:
 
 ```toml
 {{#include ../../sketch/tests/custom_templates/custom_templates.toml:preset}}
 ```
+
+The output paths defined in the command or in the preset will be joined to the `root_dir` setting.
 
 When we run the command
 
@@ -32,7 +32,15 @@ The output of the specified `root-dir` will look like this:
 
 ## Global and Local Context
 
-As you can see, the variables provided as a local context override global variables:
+As you can see from the previous example, the variables provided as a local context override global variables.
+
+`with_global_vars.yaml` will be like this:
+
+```yaml
+{{#include ../../sketch/tests/output/custom_templates/with_global_var.yaml}}
+```
+
+While `with_override.yaml` will be like this:
 
 ```yaml
 {{#include ../../sketch/tests/output/custom_templates/with_override.yaml}}

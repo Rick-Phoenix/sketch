@@ -11,7 +11,7 @@ use crate::{
   config_elements::*,
   config_setup::extract_config_from_file,
   custom_templating::TemplateOutput,
-  merge_index_maps, merge_index_sets,
+  is_default, merge_index_maps, merge_index_sets,
   moon::MoonConfigKind,
   overwrite_option,
   package::{vitest::VitestConfig, PackageConfig},
@@ -201,6 +201,7 @@ pub struct Config {
   /// The configuration for typescript packages.
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub typescript: Option<TypescriptConfig>,
 
   /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
@@ -211,6 +212,7 @@ pub struct Config {
   /// Activates debugging mode.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
+  #[serde(skip_serializing_if = "is_default")]
   pub debug: bool,
 
   /// The root directory for the project [default: "."].
@@ -236,11 +238,13 @@ pub struct Config {
   /// Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.
   #[merge(skip)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub gitignore: GitIgnore,
 
   /// The relative paths, from the current file, to the other config files to merge with the current one.
   #[merge(strategy = merge_index_sets)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub extends: IndexSet<PathBuf>,
 
   /// A map that contains templates defined literally.

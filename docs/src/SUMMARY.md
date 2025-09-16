@@ -1,6 +1,7 @@
 # Summary
 
 - [Configuration](./configuration.md)
+    - [Basic Setup](./basic_setup.md)
     - [Lsp Integration](./lsp.md)
     - [Extensible Configurations](./extensible_configs.md)
 - [Typescript](./typescript.md)
@@ -10,4 +11,5 @@
         - [Smart Versions Handling](./versions.md)
         - [Maintainers DB](./maintainers.md)
 - [Custom Templating](./custom_templating.md)
-- [Cli documentation](./cli.md)
+- [Rendered Commands](./rendered_commands.md)
+- [Cli Reference](./cli.md)
