@@ -32,7 +32,7 @@ This document contains the help content for the `sketch` command-line program.
 ###### **Options:**
 
 * `-c`, `--config <FILE>` — Sets a custom config file
-* `--no-config-file` — Ignores any config files, uses cli instructions only
+* `--ignore-config-file` — Ignores any config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--debug` — Activates debugging mode
 * `--root-dir <DIR>` — The root directory for the project [default: "."]

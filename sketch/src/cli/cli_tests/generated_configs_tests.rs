@@ -17,7 +17,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let default_config = Cli::try_parse_from([
     "sketch",
-    "--no-config-file",
+    "--ignore-config-file",
     "new",
     &output_dir.join("default_config.yaml").to_string_lossy(),
   ])?;
@@ -30,7 +30,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let with_extras_cmd = [
     "sketch",
-    "--no-config-file",
+    "--ignore-config-file",
     "--root-dir",
     "tests/output",
     "--templates-dir",
@@ -45,7 +45,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
     path_to_str!(output_dir.join("with_extras.yaml")),
   ];
 
-  get_clean_example_cmd(&with_extras_cmd, 2..4, &output_dir.join("with_extras_cmd"))?;
+  get_clean_example_cmd(&with_extras_cmd, 1..4, &output_dir.join("with_extras_cmd"))?;
 
   let with_extras = Cli::try_parse_from(with_extras_cmd)?;
 

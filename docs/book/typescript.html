@@ -177,6 +177,34 @@
                     <main>
                         <h1 id="typescript-projects"><a class="header" href="#typescript-projects">Typescript Projects</a></h1>
 <p>Sketch can be used to quickly generate Typescript monorepos and packages, and uses modular and extensible presets to define some reusable elements that can be shared among different kinds of typical TS projects.</p>
+<p>These are the top level configuration settings for Typescript projects, with their default values:</p>
+<pre><code class="language-yaml"># yaml-language-server: $schema=../../schemas/latest.json
+
+typescript:
+  # Convert `latest` to a version range for dependencies
+  no_convert_latest_to_range: false
+
+  # ...use this kind of version range (patch, minor, exact)
+  version_range: patch
+
+  # Only relevant if you use
+  # default tsconfigs or moonrepo
+  root_tsconfig_name: tsconfig.options.json
+
+  package_manager: pnpm
+
+  pnpm_config:
+    # Default is `packages/*` and `apps/*`.
+    # All dirs listed here will be created automatically
+    packages: ["packages/*", "apps/*"]
+
+  # Use the pnpm catalog for default dependencies
+  catalog: false
+
+  # Use a shared out_dir for tsc
+  # (only relevant if you use default tsconfigs)
+  shared_out_dir: .out
+</code></pre>
 
                     </main>
 

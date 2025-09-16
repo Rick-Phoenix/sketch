@@ -46,7 +46,7 @@ fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
 async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   let config_file = get_config_file_path(cli.config);
 
-  let mut config = if let Some(config_path) = config_file && !cli.no_config_file {
+  let mut config = if let Some(config_path) = config_file && !cli.ignore_config_file {
     let conf = match Config::from_file(&config_path) {
       Ok(conf) => conf,
       Err(e) => {
@@ -415,7 +415,7 @@ struct Cli {
 
   /// Ignores any config files, uses cli instructions only
   #[arg(long, group = "config-file")]
-  pub no_config_file: bool,
+  pub ignore_config_file: bool,
 
   #[command(subcommand)]
   pub command: Commands,

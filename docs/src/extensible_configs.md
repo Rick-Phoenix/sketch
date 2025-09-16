@@ -1,13 +1,13 @@
 # Extensible Configurations
 
-Configuration files can be extended like this:
+Configuration files can extend one another by using the `extends` field:
 
 ```yaml
 extends: ["other_config.yaml"]
 ```
 
-The path used here is a relative path starting from the parent directory of the originating config file.
+Where the path being used is a relative path starting from the parent directory of the original config file.
 
-Conflicting values will be overridden by the extended config, except for default values. 
-
-Non-conflicting values that are lists of elements such as the templating variables will instead be merged.
+The merging strategy works as follows:
+- For conflicting values, such as opposite booleans, the previous value will be overridden.
+- For non-conflicting values such as maps (for example, the global template vars map), the values will be merged.

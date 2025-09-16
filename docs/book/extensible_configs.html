@@ -176,12 +176,15 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="extensible-configurations"><a class="header" href="#extensible-configurations">Extensible Configurations</a></h1>
-<p>Configuration files can be extended like this:</p>
+<p>Configuration files can extend one another by using the <code>extends</code> field:</p>
 <pre><code class="language-yaml">extends: ["other_config.yaml"]
 </code></pre>
-<p>The path used here is a relative path starting from the parent directory of the originating config file.</p>
-<p>Conflicting values will be overridden by the extended config, except for default values.</p>
-<p>Non-conflicting values that are lists of elements such as the templating variables will instead be merged.</p>
+<p>Where the path being used is a relative path starting from the parent directory of the original config file.</p>
+<p>The merging strategy works as follows:</p>
+<ul>
+<li>For conflicting values, such as opposite booleans, the previous value will be overridden.</li>
+<li>For non-conflicting values such as maps (for example, the global template vars map), the values will be merged.</li>
+</ul>
 
                     </main>
 

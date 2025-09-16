@@ -1,4 +1,4 @@
-# Maintainers DB
+# Maintainers Information
 
 # Reusable Maintainers Information
 

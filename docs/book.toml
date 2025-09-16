@@ -3,3 +3,4 @@ authors = ["Rick-Phoenix"]
 language = "en"
 src = "src"
 title = "Sketch"
+edition = "2024"

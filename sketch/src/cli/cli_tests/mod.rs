@@ -68,7 +68,7 @@ fn get_clean_example_cmd(
 }
 
 #[test]
-fn generate_docs() -> Result<(), Box<dyn std::error::Error>> {
+fn generate_cli_docs() -> Result<(), Box<dyn std::error::Error>> {
   let markdown: String = clap_markdown::help_markdown::<Cli>();
 
   let mut file = File::create("../docs/src/cli.md")?;

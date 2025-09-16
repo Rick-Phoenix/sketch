@@ -1,6 +1,4 @@
-# Smart Versions Handling
-
-You can set up Sketch so that it can organize your dependencies in a convenient way.
+# Handling Dependencies
 
 ## Converting `latest` to a range
 
