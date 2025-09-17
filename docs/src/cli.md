@@ -16,7 +16,7 @@ This document contains the help content for the `sketch` command-line program.
 
 ## `sketch`
 
-🖌️ A tool for generating project setups, leveraging the power of templating engines for boilerplate generation
+🖌️ Templating made portable. A tool to generate files, project structures or shell commands via custom templates
 
 **Usage:** `sketch [OPTIONS] <COMMAND>`
 

@@ -71,13 +71,10 @@ pub struct TypescriptConfig {
   #[arg(long)]
   pub no_default_deps: bool,
 
-  /// The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).
+  /// The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]
   #[merge(strategy = overwrite_option)]
   #[arg(value_enum)]
   #[arg(long, value_name = "KIND")]
-  #[arg(
-    help = "The kind of version range to use for dependencies added automatically [default: minor]"
-  )]
   pub version_range: Option<VersionRange>,
 
   /// Uses the pnpm catalog for default dependencies.
