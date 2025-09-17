@@ -12,17 +12,13 @@ use std::{
   fs::{create_dir_all, File},
 };
 
+pub use config::*;
+pub use errors::*;
 use indexmap::IndexMap;
 use serde_json::Value;
 
 use crate::{paths::get_abs_path, ts::package_json::PackageJson};
-
-pub mod config_elements;
-pub use config::*;
-pub use config_elements::*;
-pub use errors::*;
 pub mod commands;
-pub mod config_setup;
 pub(crate) mod init_repo;
 pub(crate) mod serde_strategies;
 pub mod ts;

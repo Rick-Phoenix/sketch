@@ -1049,6 +1049,7 @@ version = "0.0.0"
 dependencies = [
  "clap",
  "paste",
+ "regex",
  "schemars",
  "serde_json",
  "sketch-it",

@@ -1,6 +1,11 @@
+mod config_elements;
+mod config_setup;
+
 use std::path::PathBuf;
 
 use clap::Parser;
+pub use config_elements::*;
+pub(crate) use config_setup::*;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
@@ -8,9 +13,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  config_elements::*, config_setup::extract_config_from_file, custom_templating::TemplateOutput,
-  is_default, merge_index_maps, merge_index_sets, overwrite_option, paths::get_parent_dir,
-  ts::TypescriptConfig, GenError,
+  custom_templating::TemplateOutput, is_default, merge_index_maps, merge_index_sets,
+  overwrite_option, paths::get_parent_dir, ts::TypescriptConfig, GenError,
 };
 
 impl Config {
