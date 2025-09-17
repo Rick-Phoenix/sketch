@@ -1,17 +1,13 @@
+{% match self %}
+  {% when Self::Bool(true) %}
 repos:
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.27.2
+    rev: v8.28.0
     hooks:
       - id: gitleaks
-  - repo: local
-    hooks:
-      - id: oxlint
-        name: oxlint
-        entry: oxlint
-        language: system
-        files: '\.svelte$|\.js$|\.ts$'
-        types: [file]
-  {% for repo in repos +%}
+  {% when Self::Config(config) %}
+repos:
+  {% for repo in config.repos +%}
   - repo: "{{ repo.path }}"
     {% if let Some(rev) = repo.rev %}
     rev: {{+ rev ~}}
@@ -21,4 +17,5 @@ repos:
     - {{+ crate::render_yaml_val(hook, 2) | trim }}
     {% endfor +%}
   {% endfor +%}
-
+  {% when _ %}
+{% endmatch %}

@@ -64,18 +64,20 @@ impl Config {
     get_contributors!(package_json_data, typescript, contributors);
     get_contributors!(package_json_data, typescript, maintainers);
 
-    for dep in ["typescript", "oxlint"] {
-      if !package_json_data.dev_dependencies.contains_key(dep) {
-        let version = if typescript.catalog {
-          "catalog:".to_string()
-        } else {
-          "latest".to_string()
-        };
+    if !typescript.no_default_deps {
+      for dep in ["typescript", "oxlint"] {
+        if !package_json_data.dev_dependencies.contains_key(dep) {
+          let version = if typescript.catalog {
+            "catalog:".to_string()
+          } else {
+            "latest".to_string()
+          };
 
-        let range = version_ranges.create(version);
-        package_json_data
-          .dev_dependencies
-          .insert(dep.to_string(), range);
+          let range = version_ranges.create(version);
+          package_json_data
+            .dev_dependencies
+            .insert(dep.to_string(), range);
+        }
       }
     }
 

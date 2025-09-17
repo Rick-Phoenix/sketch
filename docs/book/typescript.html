@@ -184,6 +184,9 @@ typescript:
   # Convert `latest` to a version range for dependencies
   no_convert_latest_to_range: false
 
+  # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+  no_default_deps: false
+
   # ...use this kind of version range (patch, minor, exact)
   version_range: patch
 

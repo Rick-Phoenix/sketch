@@ -186,23 +186,25 @@ impl Config {
     get_contributors!(package_json_data, typescript, contributors);
     get_contributors!(package_json_data, typescript, maintainers);
 
-    let mut default_deps = vec!["typescript", "oxlint"];
+    if !typescript.no_default_deps {
+      let mut default_deps = vec!["typescript", "oxlint"];
 
-    if config.vitest.is_enabled() {
-      default_deps.push("vitest")
-    }
+      if config.vitest.is_enabled() {
+        default_deps.push("vitest")
+      }
 
-    for dep in default_deps {
-      if !package_json_data.dev_dependencies.contains_key(dep) {
-        let version = if typescript.catalog {
-          "catalog:".to_string()
-        } else {
-          "latest".to_string()
-        };
+      for dep in default_deps {
+        if !package_json_data.dev_dependencies.contains_key(dep) {
+          let version = if typescript.catalog {
+            "catalog:".to_string()
+          } else {
+            "latest".to_string()
+          };
 
-        package_json_data
-          .dev_dependencies
-          .insert(dep.to_string(), version);
+          package_json_data
+            .dev_dependencies
+            .insert(dep.to_string(), version);
+        }
       }
     }
 

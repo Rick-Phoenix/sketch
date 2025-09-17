@@ -6,35 +6,29 @@
 {{ addition ~}}
 {%~ endfor ~%}
 
-# Rust
-expanded.rs
-
 # Caches
 .task
 .cache 
-.moon/cache
-.moon/docker
 
-# Build output
-**/target/*
-out
+# Build Output
+target
 *.js.map
 *.d.ts 
 *.tsbuildInfo
+.out
 .output
 .vercel
 .netlify
 .wrangler
 .svelte-kit
 dist
-build/**
+build
 
-# Llm files
-llm*.txt
-llm*.md
-llm.*
+# Llm Files
+llms.txt
+llms.md
 
-# Node modules
+# Node Modules
 node_modules
 
 # Env

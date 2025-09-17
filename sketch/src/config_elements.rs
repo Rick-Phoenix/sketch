@@ -56,8 +56,9 @@ impl Default for GitIgnore {
   }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Template)]
 #[serde(untagged)]
+#[template(path = "pre-commit-config.yaml.j2")]
 pub enum PreCommitSetting {
   Bool(bool),
   Config(PreCommitConfig),
@@ -69,8 +70,13 @@ impl Default for PreCommitSetting {
   }
 }
 
-#[derive(Clone, Debug, Template, Default, Serialize, Deserialize, PartialEq, JsonSchema)]
-#[template(path = "pre-commit-config.yaml.j2")]
+impl PreCommitSetting {
+  pub(crate) fn is_enabled(&self) -> bool {
+    !matches!(self, Self::Bool(false))
+  }
+}
+
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct PreCommitConfig {
   pub repos: Vec<PreCommitRepo>,
 }

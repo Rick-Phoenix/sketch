@@ -180,6 +180,54 @@
 <p>Sketch supports <code>yaml</code>, <code>json</code> and <code>toml</code> formats for its configuration file.</p>
 <p>The configuration file can be manually specified with the <code>-c</code> or <code>--config</code> flag. If none is provided, the cli will automatically look for a file named <code>sketch.{yaml, json, toml}</code> in the cwd. If none is found, then it will look in the <code>XDG_CONFIG_HOME</code> directory. If no config is found there, it will use default values.</p>
 <p>You can also use the <code>--ignore-config-file</code> flag to temporarily ignore configuration files and only use cli-set values.</p>
+<h1 id="top-level-configuration"><a class="header" href="#top-level-configuration">Top Level Configuration</a></h1>
+<p>These are the defaults for the top level configuration values:</p>
+<pre><code class="language-yaml"># yaml-language-server: $schema=../schemas/latest.json
+
+# The root path for the generated files.
+# All output paths will start from this directory.
+root_dir: .
+
+# Enabled debugging mode
+debug: false
+
+# Extends other configuration files
+extends: []
+
+# Gitignore settings for the `init` command.
+# This can be:
+# - A list of directives (to add to the defaults)
+# - A literal string (to replace defaults)
+gitignore: ["my_ignored_dir"]
+
+# Variables for templates
+global_templates_vars: {}
+
+# Do not overwrite existing files
+no_overwrite: false
+
+# Also used in the `init` command.
+# Can be:
+# - A boolean, to use defaults or disable it altogether
+# - A list of repos to populate the config with
+pre_commit: true
+
+# The shell to use for the `exec` command. Defaults to `cmd.exe` on windows and `sh` elsewhere.
+shell: null
+
+# A map of template definitions.
+templates: {}
+
+# A map of templating presets.
+templating_presets: {}
+
+# The relative path from the config file (or from the cwd, if set via the cli flag)
+# to the directory containing templates.
+templates_dir: null
+
+# The configuration for typescript-related commands.
+typescript: null
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="generating-config-files"><a class="header" href="#generating-config-files">Generating Config Files</a></h1>
 <p>You can use the <code>sketch new</code> command to generate a new configuration file in the desired output file and format.
 The default is <code>sketch.yaml</code>, but any name is supported as long as the format is either <code>json</code>, <code>toml</code> or <code>yaml</code>, and the configuration file is specified with the <code>-c</code> or <code>--config</code> flag.</p>
@@ -246,6 +294,9 @@ global_templates_vars:
 typescript:
   # Convert `latest` to a version range for dependencies
   no_convert_latest_to_range: false
+
+  # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+  no_default_deps: false
 
   # ...use this kind of version range (patch, minor, exact)
   version_range: patch
@@ -573,7 +624,7 @@ global_templates_vars:
 </blockquote>
 <p>We get this output in the package.json file:</p>
 <blockquote>
-<p>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages).</p>
+<p>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages), unless <code>no_default_deps</code> is set to <code>true</code>.</p>
 </blockquote>
 <pre><code class="language-json">{
   "name": "svelte_frontend",

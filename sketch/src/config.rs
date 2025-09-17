@@ -84,6 +84,11 @@ pub struct TypescriptConfig {
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
+  /// Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+  #[merge(strategy = merge::bool::overwrite_false)]
+  #[arg(long)]
+  pub no_default_deps: bool,
+
   /// The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).
   #[merge(strategy = overwrite_option)]
   #[arg(value_enum)]
@@ -291,6 +296,7 @@ impl Config {
 impl Default for TypescriptConfig {
   fn default() -> Self {
     Self {
+      no_default_deps: false,
       no_convert_latest_to_range: false,
       package_json_presets: Default::default(),
       package_manager: Default::default(),

@@ -2,9 +2,7 @@ use std::fs::{create_dir_all, File};
 
 use askama::Template;
 
-use crate::{
-  commands::launch_command, paths::get_cwd, Config, GenError, PreCommitConfig, PreCommitSetting,
-};
+use crate::{commands::launch_command, paths::get_cwd, Config, GenError};
 
 impl Config {
   pub fn init_repo(self, remote: Option<&str>) -> Result<(), GenError> {
@@ -24,19 +22,8 @@ impl Config {
 
     write_to_output!(self.gitignore, ".gitignore");
 
-    let pre_commit_config = match &self.pre_commit {
-      PreCommitSetting::Bool(val) => {
-        if *val {
-          Some(&PreCommitConfig::default())
-        } else {
-          None
-        }
-      }
-      PreCommitSetting::Config(conf) => Some(conf),
-    };
-
-    if let Some(pre_commit) = pre_commit_config {
-      write_to_output!(pre_commit, ".pre-commit-config.yaml");
+    if self.pre_commit.is_enabled() {
+      write_to_output!(&self.pre_commit, ".pre-commit-config.yaml");
       launch_command(
         shell,
         &["pre-commit", "install"],

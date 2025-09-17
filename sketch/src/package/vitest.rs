@@ -36,11 +36,14 @@ impl Default for VitestConfigKind {
 pub struct VitestConfig {
   /// The path to the tests directory, from the root of the package. [default: 'tests']
   pub tests_dir: String,
+
   /// The directory where the config file should be placed, starting from the root of the package.
   /// If unset, the `tests_dir` will be used.
   pub out_dir: Option<PathBuf>,
+
   /// A list of plugins, which will be set up in the config file.
   pub plugins: Vec<String>,
+
   /// The path to the setup directory, starting from the `tests_dir`. [default: 'setup']
   pub setup_dir: String,
   #[serde(skip)]

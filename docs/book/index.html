@@ -179,6 +179,54 @@
 <p>Sketch supports <code>yaml</code>, <code>json</code> and <code>toml</code> formats for its configuration file.</p>
 <p>The configuration file can be manually specified with the <code>-c</code> or <code>--config</code> flag. If none is provided, the cli will automatically look for a file named <code>sketch.{yaml, json, toml}</code> in the cwd. If none is found, then it will look in the <code>XDG_CONFIG_HOME</code> directory. If no config is found there, it will use default values.</p>
 <p>You can also use the <code>--ignore-config-file</code> flag to temporarily ignore configuration files and only use cli-set values.</p>
+<h1 id="top-level-configuration"><a class="header" href="#top-level-configuration">Top Level Configuration</a></h1>
+<p>These are the defaults for the top level configuration values:</p>
+<pre><code class="language-yaml"># yaml-language-server: $schema=../schemas/latest.json
+
+# The root path for the generated files.
+# All output paths will start from this directory.
+root_dir: .
+
+# Enabled debugging mode
+debug: false
+
+# Extends other configuration files
+extends: []
+
+# Gitignore settings for the `init` command.
+# This can be:
+# - A list of directives (to add to the defaults)
+# - A literal string (to replace defaults)
+gitignore: ["my_ignored_dir"]
+
+# Variables for templates
+global_templates_vars: {}
+
+# Do not overwrite existing files
+no_overwrite: false
+
+# Also used in the `init` command.
+# Can be:
+# - A boolean, to use defaults or disable it altogether
+# - A list of repos to populate the config with
+pre_commit: true
+
+# The shell to use for the `exec` command. Defaults to `cmd.exe` on windows and `sh` elsewhere.
+shell: null
+
+# A map of template definitions.
+templates: {}
+
+# A map of templating presets.
+templating_presets: {}
+
+# The relative path from the config file (or from the cwd, if set via the cli flag)
+# to the directory containing templates.
+templates_dir: null
+
+# The configuration for typescript-related commands.
+typescript: null
+</code></pre>
 
                     </main>
 

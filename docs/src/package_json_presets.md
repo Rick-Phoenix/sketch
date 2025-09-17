@@ -16,7 +16,7 @@ After we run
 
 We get this output in the package.json file: 
 
->ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages).
+>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages), unless `no_default_deps` is set to `true`.
 
 ```json
 {{#include ../../sketch/tests/output/ts_examples/packages/svelte_frontend/package.json}}
