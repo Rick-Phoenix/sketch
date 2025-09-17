@@ -34,4 +34,4 @@ So the final tree structure of the output directory will look like this:
 {{#include ../../sketch/tests/output/ts_examples/tree_output.txt}}
 ```
 
-
+>ℹ️ You can use the `-i` flag to install dependencies for the root package after creating the new monorepo.

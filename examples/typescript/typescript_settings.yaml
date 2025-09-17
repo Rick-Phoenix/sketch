@@ -4,19 +4,35 @@ typescript:
   # Convert `latest` to a version range for dependencies
   no_convert_latest_to_range: false
 
+  # Use this kind of version range when converting from `latest`
+  version_range: patch
+
   # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   no_default_deps: false
 
-  # ...use this kind of version range (patch, minor, exact)
-  version_range: patch
+  # Use the pnpm catalog for default dependencies
+  catalog: false
 
   package_manager: pnpm
 
-  # Configuration to render inside pnpm-workspace.yaml
-  # if pnpm is the package manager
+  # Configuration for the generated pnpm-workspace.yaml file
   pnpm_config:
     # All dirs listed here will be created automatically
     packages: ["packages/*"]
 
-  # Use the pnpm catalog for default dependencies
-  catalog: false
+  # A map containing extensible package.json presets
+  package_json_presets: {}
+
+  # A map containing extensible package presets
+  package_presets: {}
+
+  # A map containing extensible tsconfig presets
+  tsconfig_presets: {}
+
+  # A map of contributors and maintainers, which can be referred to
+  # in package.json presets with their ID
+  people: {}
+
+  # The configuration for the root package
+  # (only relevant when creating a monorepo)
+  root_package: null

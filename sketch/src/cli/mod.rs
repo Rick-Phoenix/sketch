@@ -333,10 +333,22 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       let typescript = config.typescript.get_or_insert_default();
 
       match command {
-        TsCommands::Monorepo { .. } => {
+        TsCommands::Monorepo { install, .. } => {
           exit_if_dry_run!();
 
+          let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
+          let package_manager = typescript.package_manager.unwrap_or_default();
+
           config.create_ts_monorepo().await?;
+
+          if install {
+            launch_command(
+              None,
+              &[package_manager.to_string().as_str(), "install"],
+              &root_dir,
+              Some("Could not install dependencies"),
+            )?;
+          }
         }
         TsCommands::Package {
           preset,
@@ -516,6 +528,10 @@ enum TsCommands {
     /// Does not generate an oxlint config at the root.
     #[arg(long)]
     no_oxlint: bool,
+
+    /// Install the dependencies at the root after creation.
+    #[arg(short, long)]
+    install: bool,
   },
 
   /// Generates a new typescript package

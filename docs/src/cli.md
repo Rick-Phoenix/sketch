@@ -82,6 +82,7 @@ Generates a new typescript monorepo
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for the root package. If unset, defaults are used
 * `-p`, `--package-json <ID>` — The id of the package.json preset to use for the root package
 * `--no-oxlint` — Does not generate an oxlint config at the root
+* `-i`, `--install` — Install the dependencies at the root after creation
 
 
 
