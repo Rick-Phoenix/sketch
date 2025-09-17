@@ -177,7 +177,8 @@
                     <main>
                         <h1 id="rendering-templates"><a class="header" href="#rendering-templates">Rendering Templates</a></h1>
 <p>Templates can be defined in files or directly within a command. The variables can also be defined in the config file or as part of a command.</p>
-<pre><code class="language-toml">root_dir = "../output/custom_templates"
+<pre><code class="language-toml"># This will be the starting path for the templates' output paths
+root_dir = "../output/custom_templates"
 
 vars = { my_var = 15 }
 
@@ -187,7 +188,42 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 # Or as files inside a directory
 templates_dir = "../templates"
 </code></pre>
-<p>Templates can also be defined in groups, which can be rendered all at once starting from the same root_dir.</p>
+<p>We can then render them singularly, or in groups.</p>
+<blockquote>
+<p>ℹ️ Single templates can be rendered to stdout with the --stdout flag.</p>
+</blockquote>
+<h1 id="rendering-a-single-template"><a class="header" href="#rendering-a-single-template">Rendering A Single Template</a></h1>
+<h2 id="using-a-file"><a class="header" href="#using-a-file">Using A File</a></h2>
+<p>If <code>templates_dir</code> is set, all the files in <code>templates_dir</code> can be referenced with their ID, which is the relative path to them from <code>templates_dir</code>.</p>
+<p>So if we have this directory structure in our <code>templates_dir</code>:</p>
+<pre><code>.
+├── abc.j2
+└── subdir
+    └── nested.j2
+</code></pre>
+<p>We can render the contents of <code>nested.j2</code> by running</p>
+<blockquote>
+<p><code>sketch render --id subdir/nested.j2 from_template_file.yaml</code></p>
+</blockquote>
+<p>However, we can also render content from any file, by using the <code>-f</code> flag. In this case, the relative paths will be resolved from the cwd.</p>
+<p>Example:</p>
+<blockquote>
+<p><code>sketch render -f tests/custom_templates/single_file.j2 from_single_file.yaml</code></p>
+</blockquote>
+<h2 id="from-a-config-definition"><a class="header" href="#from-a-config-definition">From A Config Definition</a></h2>
+<p>Templates can be defined inside the configuration file:</p>
+<pre><code class="language-yaml">templates = { lit_template = "my_var: {{ my_var }}" }
+</code></pre>
+<blockquote>
+<p><code>sketch render --id lit_template from_config_template.yaml</code></p>
+</blockquote>
+<h2 id="from-literal-definition"><a class="header" href="#from-literal-definition">From Literal Definition</a></h2>
+<p>...or directly as part of the command:</p>
+<blockquote>
+<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
+</blockquote>
+<h1 id="rendering-presets"><a class="header" href="#rendering-presets">Rendering Presets</a></h1>
+<p>Templates can also be defined in groups, which can be rendered all at once starting from the same <code>root_dir</code>.</p>
 <p>This is how groups are defined:</p>
 <pre><code class="language-toml"># A group of templates that will be rendered together
 templating_presets.test = [
@@ -204,30 +240,17 @@ templating_presets.test = [
   { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
 ]
 </code></pre>
-<p>The output paths defined in the command or in the preset will be joined to the <code>root_dir</code> setting.</p>
 <p>When we run the command</p>
 <blockquote>
 <p><code>sketch render-preset test</code></p>
 </blockquote>
-<p>The output of the specified <code>root_dir</code> will look like this:</p>
+<p>These templates will be rendered together, so that the output of the specified <code>root_dir</code> will look like this:</p>
 <pre><code>.
 ├── literal_inlined.yaml
 ├── new_dir
 │   └── nested.yaml
 ├── with_global_var.yaml
 └── with_override.yaml
-</code></pre>
-<blockquote>
-<p>ℹ️ Templates can also be rendered to stdout with the --stdout flag.</p>
-</blockquote>
-<h2 id="defining-a-template-in-a-command"><a class="header" href="#defining-a-template-in-a-command">Defining a template in a command</a></h2>
-<p>We can also define a template inside the command itself.</p>
-<p>Cmd:</p>
-<blockquote>
-<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
-</blockquote>
-<p>Output:</p>
-<pre><code class="language-txt">they're taking the hobbits to Isengard!
 </code></pre>
 
                     </main>

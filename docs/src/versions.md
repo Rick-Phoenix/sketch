@@ -16,11 +16,11 @@ This means that you can easily use your presets and ensure that they're always g
 
 ## Adding dependencies to the catalog
 
-If you set up your package manager to be `pnpm` (which is the default) and set `catalog` to `true`, whenever you try to generate a new package that has dependencies marked with `catalog:` (either the default catalog or a named one) but that package is absent in the `pnpm-workspace.yaml` file, then Sketch will add it automatically for you.
+If you set up your package manager to be `pnpm` (which is the default) and set `catalog` to `true`, whenever you try to generate a new package that has dependencies marked with `catalog:` (either the default catalog or a named one), each package that is not present in the target catalog inside `pnpm-workspace.yaml` will be added automatically to it.
 
 ### Example
 
-With this config:
+Let's say that we are starting with a basic `pnpm-workspace.yaml` file, and we generate a package that has `catalog` dependencies, which are currently absent from their target catalogs:
 
 ```yaml
 {{#include ../../examples/typescript/catalog.yaml:all}}

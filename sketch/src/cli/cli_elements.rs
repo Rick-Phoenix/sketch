@@ -40,11 +40,11 @@ impl Display for ConfigFormat {
 #[derive(Args, Debug, Clone)]
 #[group(multiple = false)]
 pub struct PackageKindFlag {
-  /// Marks the package as an application.
+  /// Marks the package as an application (only relevant for default tsconfigs).
   #[arg(long)]
   app: bool,
 
-  /// Marks the package as a library.
+  /// Marks the package as a library (only relevant for default tsconfigs).
   #[arg(long)]
   library: bool,
 }

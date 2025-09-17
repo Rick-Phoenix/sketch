@@ -8,7 +8,7 @@ mod rendering_tests;
 mod ts_gen_tests;
 
 use std::{
-  fs::{create_dir_all, remove_dir_all, File},
+  fs::{create_dir_all, remove_dir_all, remove_file, File},
   io::Write,
   ops::Range,
   path::{Path, PathBuf},
@@ -18,8 +18,16 @@ use std::{
 use crate::cli::Cli;
 
 fn get_tree_output<T: Into<PathBuf>>(dir: T, file: &str) -> Result<(), Box<dyn std::error::Error>> {
+  let dir: PathBuf = dir.into();
+
+  let output_file = dir.join(file);
+
+  if output_file.is_file() {
+    remove_file(&output_file)?;
+  }
+
   Command::new("tree")
-    .current_dir(dir.into())
+    .current_dir(dir)
     .arg("-a")
     .arg("-I")
     .arg(file)

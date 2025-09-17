@@ -197,9 +197,9 @@
 <li><code>ts</code> — Launches typescript-specific commands</li>
 <li><code>init</code> — Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</li>
 <li><code>new</code> — Generates a new config file with some optional initial values defined via the cli flags</li>
-<li><code>render</code> — Generates a single file from a template</li>
-<li><code>render-preset</code> — Generates content from a templating preset, with predefined content, output and context</li>
-<li><code>exec</code> — Renders a template (from text or file) and launches it as a command</li>
+<li><code>render</code> — Renders a single template to a file or to stdout</li>
+<li><code>render-preset</code> — Renders a templating preset defined in the configuration file</li>
+<li><code>exec</code> — Renders a template and launches it as a command</li>
 </ul>
 <h6 id="options"><a class="header" href="#options"><strong>Options:</strong></a></h6>
 <ul>
@@ -207,9 +207,9 @@
 <li><code>--ignore-config-file</code> — Ignores any config files, uses cli instructions only</li>
 <li><code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
 <li><code>--debug</code> — Activates debugging mode</li>
-<li><code>--root-dir &lt;DIR&gt;</code> — The root directory for the project [default: "."]</li>
-<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the directory with the template files</li>
-<li><code>--no-overwrite</code> — Exits with error if a file being created already exists</li>
+<li><code>--root-dir &lt;DIR&gt;</code> — The base path for the generated files [default: "."]</li>
+<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)</li>
+<li><code>--no-overwrite</code> — Does not overwrite existing files</li>
 <li><code>--dry-run</code> — Aborts before writing any content to disk</li>
 <li><code>-s</code>, <code>--set &lt;KEY=VALUE&gt;</code> — Set a variable (as key=value) to use in templates. Overrides global and local variables</li>
 </ul>
@@ -228,17 +228,17 @@
 <p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
 </li>
 <li>
-<p><code>--no-default-deps</code> — Do not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
+<p><code>--no-default-deps</code> — Does not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
 </li>
 <li>
 <p><code>--version-range &lt;KIND&gt;</code> — The kind of version range to use for dependencies added automatically [default: minor]</p>
 <p>Possible values: <code>patch</code>, <code>minor</code>, <code>exact</code></p>
 </li>
 <li>
-<p><code>--catalog</code> — Whether to use the pnpm catalog for default dependencies</p>
+<p><code>--catalog</code> — Uses the pnpm catalog for default dependencies</p>
 </li>
 <li>
-<p><code>--no-convert-latest</code> — Whether the dependencies with <code>latest</code> should be converted to a version range</p>
+<p><code>--no-convert-latest</code> — Does not convert dependencies marked as <code>latest</code> to a version range</p>
 </li>
 </ul>
 <h2 id="sketch-ts-monorepo"><a class="header" href="#sketch-ts-monorepo"><code>sketch ts monorepo</code></a></h2>
@@ -266,8 +266,8 @@
 <li><code>--no-vitest</code> — Does not set up vitest for this package</li>
 <li><code>--oxlint</code> — Sets up an oxlint config file for this package</li>
 <li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
-<li><code>--app</code> — Marks the package as an application</li>
-<li><code>--library</code> — Marks the package as a library</li>
+<li><code>--app</code> — Marks the package as an application (only relevant for default tsconfigs)</li>
+<li><code>--library</code> — Marks the package as a library (only relevant for default tsconfigs)</li>
 <li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. If <code>dir</code> is set, it defaults to the last segment of it</li>
 <li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for this package. If unset, defaults are used</li>
 <li><code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for this package</li>
@@ -288,7 +288,7 @@
 <li><code>&lt;OUTPUT&gt;</code> — The output file [default: sketch.yaml]</li>
 </ul>
 <h2 id="sketch-render"><a class="header" href="#sketch-render"><code>sketch render</code></a></h2>
-<p>Generates a single file from a template</p>
+<p>Renders a single template to a file or to stdout</p>
 <p><strong>Usage:</strong> <code>sketch render [OPTIONS] &lt;OUTPUT_PATH|--stdout&gt;</code></p>
 <h6 id="arguments-2"><a class="header" href="#arguments-2"><strong>Arguments:</strong></a></h6>
 <ul>
@@ -297,27 +297,28 @@
 <h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>--stdout</code> — Output the result to stdout</li>
-<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to select (cannot be used with the --content flag)</li>
-<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template (cannot be used with the --id flag)</li>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the template file, from the cwd</li>
+<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to use</li>
+<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template</li>
 </ul>
 <h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
-<p>Generates content from a templating preset, with predefined content, output and context</p>
+<p>Renders a templating preset defined in the configuration file</p>
 <p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt;</code></p>
 <h6 id="arguments-3"><a class="header" href="#arguments-3"><strong>Arguments:</strong></a></h6>
 <ul>
 <li><code>&lt;ID&gt;</code> — The id of the preset</li>
 </ul>
 <h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
-<p>Renders a template (from text or file) and launches it as a command</p>
+<p>Renders a template and launches it as a command</p>
 <p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
 <h6 id="arguments-4"><a class="header" href="#arguments-4"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;CMD&gt;</code> — The literal definition for the command's template (cannot be used with the --file flag)</li>
+<li><code>&lt;CMD&gt;</code> — The literal definition for the command's template</li>
 </ul>
 <h6 id="options-6"><a class="header" href="#options-6"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file</li>
-<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id (or path inside templates_dir) of the template to use</li>
+<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id of the template to use</li>
 </ul>
 <hr/>
 <p><small><i>

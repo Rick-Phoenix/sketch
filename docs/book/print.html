@@ -297,22 +297,38 @@ typescript:
   # Convert `latest` to a version range for dependencies
   no_convert_latest_to_range: false
 
+  # Use this kind of version range when converting from `latest`
+  version_range: patch
+
   # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   no_default_deps: false
 
-  # ...use this kind of version range (patch, minor, exact)
-  version_range: patch
+  # Use the pnpm catalog for default dependencies
+  catalog: false
 
   package_manager: pnpm
 
-  # Configuration to render inside pnpm-workspace.yaml
-  # if pnpm is the package manager
+  # Configuration for the generated pnpm-workspace.yaml file
   pnpm_config:
     # All dirs listed here will be created automatically
     packages: ["packages/*"]
 
-  # Use the pnpm catalog for default dependencies
-  catalog: false
+  # A map containing extensible package.json presets
+  package_json_presets: {}
+
+  # A map containing extensible package presets
+  package_presets: {}
+
+  # A map containing extensible tsconfig presets
+  tsconfig_presets: {}
+
+  # A map of contributors and maintainers, which can be referred to
+  # in package.json presets with their ID
+  people: {}
+
+  # The configuration for the root package
+  # (only relevant when creating a monorepo)
+  root_package: null
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
 <p>Once we have our settings (or not, if we want to use defaults), we can run</p>
@@ -673,9 +689,9 @@ vars:
   version_range: patch
 </code></pre>
 <h2 id="adding-dependencies-to-the-catalog"><a class="header" href="#adding-dependencies-to-the-catalog">Adding dependencies to the catalog</a></h2>
-<p>If you set up your package manager to be <code>pnpm</code> (which is the default) and set <code>catalog</code> to <code>true</code>, whenever you try to generate a new package that has dependencies marked with <code>catalog:</code> (either the default catalog or a named one) but that package is absent in the <code>pnpm-workspace.yaml</code> file, then Sketch will add it automatically for you.</p>
+<p>If you set up your package manager to be <code>pnpm</code> (which is the default) and set <code>catalog</code> to <code>true</code>, whenever you try to generate a new package that has dependencies marked with <code>catalog:</code> (either the default catalog or a named one), each package that is not present in the target catalog inside <code>pnpm-workspace.yaml</code> will be added automatically to it.</p>
 <h3 id="example-2"><a class="header" href="#example-2">Example</a></h3>
-<p>With this config:</p>
+<p>Let's say that we are starting with a basic <code>pnpm-workspace.yaml</code> file, and we generate a package that has <code>catalog</code> dependencies, which are currently absent from their target catalogs:</p>
 <pre><code class="language-yaml">typescript:
   catalog: true
 
@@ -710,7 +726,8 @@ catalog:
 
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="maintainers-information"><a class="header" href="#maintainers-information">Maintainers Information</a></h1>
-<p>If you are working in a group, and you frequently find yourself adding the same information to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> field in <code>package.json</code> files, you might be interested in using the <code>people</code> field of the config file, where you can store information about maintainers that can be reused, by simply copying their id, in the generated <code>package.json</code> files.</p>
+<p>When working with a team on a monorepo that is made of several individual packages, it's very common that the same people have to be added to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> fields in the <code>package.json</code> files for these packages.</p>
+<p>To make this job easier and faster, you can use the <code>people</code> field in the typescript config to store information about the contributors that are referred in multiple places, and then you can simply refer them by their ID.</p>
 <h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
 <pre><code class="language-yaml">typescript:
   people:
@@ -727,8 +744,18 @@ catalog:
         - name: Clark Kent
           url: clarkkent.com
           email: clark-kent@dailyplanet.com
+        - bruce
       contributors:
         - bruce
+
+    # Since package.json presets are extensible,
+    # you can use the above as a base for other package.json files,
+    # if the author or contributors are always the same
+    some-other-project:
+      extends:
+        - people-example
+      scripts:
+        say-hi: echo hi!
 
   package_presets:
     people-example:
@@ -756,6 +783,11 @@ catalog:
     }
   ],
   "maintainers": [
+    {
+      "name": "Bruce Wayne",
+      "email": "bruce@gotham.com",
+      "url": "brucewayne.com" 
+    },
     {
       "name": "Clark Kent",
       "email": "clark-kent@dailyplanet.com",
@@ -797,7 +829,8 @@ catalog:
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="rendering-templates"><a class="header" href="#rendering-templates">Rendering Templates</a></h1>
 <p>Templates can be defined in files or directly within a command. The variables can also be defined in the config file or as part of a command.</p>
-<pre><code class="language-toml">root_dir = "../output/custom_templates"
+<pre><code class="language-toml"># This will be the starting path for the templates' output paths
+root_dir = "../output/custom_templates"
 
 vars = { my_var = 15 }
 
@@ -807,7 +840,42 @@ templates = { lit_template = "my_var: {{ my_var }}" }
 # Or as files inside a directory
 templates_dir = "../templates"
 </code></pre>
-<p>Templates can also be defined in groups, which can be rendered all at once starting from the same root_dir.</p>
+<p>We can then render them singularly, or in groups.</p>
+<blockquote>
+<p>ℹ️ Single templates can be rendered to stdout with the --stdout flag.</p>
+</blockquote>
+<h1 id="rendering-a-single-template"><a class="header" href="#rendering-a-single-template">Rendering A Single Template</a></h1>
+<h2 id="using-a-file"><a class="header" href="#using-a-file">Using A File</a></h2>
+<p>If <code>templates_dir</code> is set, all the files in <code>templates_dir</code> can be referenced with their ID, which is the relative path to them from <code>templates_dir</code>.</p>
+<p>So if we have this directory structure in our <code>templates_dir</code>:</p>
+<pre><code>.
+├── abc.j2
+└── subdir
+    └── nested.j2
+</code></pre>
+<p>We can render the contents of <code>nested.j2</code> by running</p>
+<blockquote>
+<p><code>sketch render --id subdir/nested.j2 from_template_file.yaml</code></p>
+</blockquote>
+<p>However, we can also render content from any file, by using the <code>-f</code> flag. In this case, the relative paths will be resolved from the cwd.</p>
+<p>Example:</p>
+<blockquote>
+<p><code>sketch render -f tests/custom_templates/single_file.j2 from_single_file.yaml</code></p>
+</blockquote>
+<h2 id="from-a-config-definition"><a class="header" href="#from-a-config-definition">From A Config Definition</a></h2>
+<p>Templates can be defined inside the configuration file:</p>
+<pre><code class="language-yaml">templates = { lit_template = "my_var: {{ my_var }}" }
+</code></pre>
+<blockquote>
+<p><code>sketch render --id lit_template from_config_template.yaml</code></p>
+</blockquote>
+<h2 id="from-literal-definition"><a class="header" href="#from-literal-definition">From Literal Definition</a></h2>
+<p>...or directly as part of the command:</p>
+<blockquote>
+<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
+</blockquote>
+<h1 id="rendering-presets"><a class="header" href="#rendering-presets">Rendering Presets</a></h1>
+<p>Templates can also be defined in groups, which can be rendered all at once starting from the same <code>root_dir</code>.</p>
 <p>This is how groups are defined:</p>
 <pre><code class="language-toml"># A group of templates that will be rendered together
 templating_presets.test = [
@@ -824,12 +892,11 @@ templating_presets.test = [
   { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
 ]
 </code></pre>
-<p>The output paths defined in the command or in the preset will be joined to the <code>root_dir</code> setting.</p>
 <p>When we run the command</p>
 <blockquote>
 <p><code>sketch render-preset test</code></p>
 </blockquote>
-<p>The output of the specified <code>root_dir</code> will look like this:</p>
+<p>These templates will be rendered together, so that the output of the specified <code>root_dir</code> will look like this:</p>
 <pre><code>.
 ├── literal_inlined.yaml
 ├── new_dir
@@ -837,51 +904,41 @@ templating_presets.test = [
 ├── with_global_var.yaml
 └── with_override.yaml
 </code></pre>
-<blockquote>
-<p>ℹ️ Templates can also be rendered to stdout with the --stdout flag.</p>
-</blockquote>
-<h2 id="defining-a-template-in-a-command"><a class="header" href="#defining-a-template-in-a-command">Defining a template in a command</a></h2>
-<p>We can also define a template inside the command itself.</p>
-<p>Cmd:</p>
-<blockquote>
-<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
-</blockquote>
-<p>Output:</p>
-<pre><code class="language-txt">they're taking the hobbits to Isengard!
-</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="executing-templates"><a class="header" href="#executing-templates">Executing Templates</a></h1>
 <p>With the <code>sketch exec</code> command, you can render a template and then execute it as a shell command.</p>
 <p>To do this, you can use a regular file, a template with an id (either defined in the config file or inside the <code>templates_dir</code>), or even one defined within the command itself.</p>
 <h3 id="from-template"><a class="header" href="#from-template">From Template</a></h3>
-<p>File:</p>
+<p>Let's say that we have a file named <code>cmd_template.j2</code> inside our <code>templates_dir</code>, and it looks like this:</p>
 <pre><code class="language-txt">echo "{{ category }} engine... {{ category }}... argh!" &gt; output_from_templates_dir.txt
 </code></pre>
-<p>Command:</p>
-<blockquote>
-<p><code>sketch --set category="gp2" exec -t cmd_template.j2</code></p>
-</blockquote>
 <blockquote>
 <p>ℹ️ You do not have to use <code>.j2</code> as an extension for the template files. Any extension can be used.</p>
 </blockquote>
-<p>Output:</p>
+<p>We can refer to it by its id:</p>
+<blockquote>
+<p><code>sketch --set category="gp2" exec -t cmd_template.j2</code></p>
+</blockquote>
+<p>This will create a file containing</p>
 <pre><code class="language-txt">gp2 engine... gp2... argh!
 </code></pre>
 <h3 id="from-file"><a class="header" href="#from-file">From File</a></h3>
-<p>File:</p>
+<p>We can also use a file that is not inside <code>templates_dir</code> by using the <code>-f</code> flag and providing the path to said file.  Relative paths will be resolved starting from the cwd.</p>
+<p>So let's say that we have this template file:</p>
 <pre><code class="language-txt">echo "all the time you have to leave the {{ something }}!" &gt; output_from_file.txt
 </code></pre>
-<p>Command:</p>
+<p>We launch the command like this:</p>
 <blockquote>
-<p><code>sketch --set something="space" exec -f ../../commands_tests/cmd_from_file.j2</code></p>
+<p><code>sketch --set something="space" exec -f tests/commands_tests/cmd_from_file.j2</code></p>
 </blockquote>
-<p>Output:</p>
+<p>To create a file containing:</p>
 <pre><code class="language-txt">all the time you have to leave the space!
 </code></pre>
 <h3 id="from-literal-template"><a class="header" href="#from-literal-template">From Literal Template</a></h3>
+<p>Templates can also be defined directly as part of the command.</p>
 <blockquote>
 <p><code>sketch --set general="kenobi" exec 'echo "hello there!\ngeneral {{ general }}." &gt; command_output.txt'</code></p>
 </blockquote>
-<p>Output:</p>
+<p>This creates a file containing:</p>
 <pre><code class="language-txt">hello there!
 general kenobi.
 </code></pre>
@@ -907,9 +964,9 @@ general kenobi.
 <li><code>ts</code> — Launches typescript-specific commands</li>
 <li><code>init</code> — Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</li>
 <li><code>new</code> — Generates a new config file with some optional initial values defined via the cli flags</li>
-<li><code>render</code> — Generates a single file from a template</li>
-<li><code>render-preset</code> — Generates content from a templating preset, with predefined content, output and context</li>
-<li><code>exec</code> — Renders a template (from text or file) and launches it as a command</li>
+<li><code>render</code> — Renders a single template to a file or to stdout</li>
+<li><code>render-preset</code> — Renders a templating preset defined in the configuration file</li>
+<li><code>exec</code> — Renders a template and launches it as a command</li>
 </ul>
 <h6 id="options"><a class="header" href="#options"><strong>Options:</strong></a></h6>
 <ul>
@@ -917,9 +974,9 @@ general kenobi.
 <li><code>--ignore-config-file</code> — Ignores any config files, uses cli instructions only</li>
 <li><code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
 <li><code>--debug</code> — Activates debugging mode</li>
-<li><code>--root-dir &lt;DIR&gt;</code> — The root directory for the project [default: "."]</li>
-<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the directory with the template files</li>
-<li><code>--no-overwrite</code> — Exits with error if a file being created already exists</li>
+<li><code>--root-dir &lt;DIR&gt;</code> — The base path for the generated files [default: "."]</li>
+<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)</li>
+<li><code>--no-overwrite</code> — Does not overwrite existing files</li>
 <li><code>--dry-run</code> — Aborts before writing any content to disk</li>
 <li><code>-s</code>, <code>--set &lt;KEY=VALUE&gt;</code> — Set a variable (as key=value) to use in templates. Overrides global and local variables</li>
 </ul>
@@ -938,17 +995,17 @@ general kenobi.
 <p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
 </li>
 <li>
-<p><code>--no-default-deps</code> — Do not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
+<p><code>--no-default-deps</code> — Does not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
 </li>
 <li>
 <p><code>--version-range &lt;KIND&gt;</code> — The kind of version range to use for dependencies added automatically [default: minor]</p>
 <p>Possible values: <code>patch</code>, <code>minor</code>, <code>exact</code></p>
 </li>
 <li>
-<p><code>--catalog</code> — Whether to use the pnpm catalog for default dependencies</p>
+<p><code>--catalog</code> — Uses the pnpm catalog for default dependencies</p>
 </li>
 <li>
-<p><code>--no-convert-latest</code> — Whether the dependencies with <code>latest</code> should be converted to a version range</p>
+<p><code>--no-convert-latest</code> — Does not convert dependencies marked as <code>latest</code> to a version range</p>
 </li>
 </ul>
 <h2 id="sketch-ts-monorepo"><a class="header" href="#sketch-ts-monorepo"><code>sketch ts monorepo</code></a></h2>
@@ -976,8 +1033,8 @@ general kenobi.
 <li><code>--no-vitest</code> — Does not set up vitest for this package</li>
 <li><code>--oxlint</code> — Sets up an oxlint config file for this package</li>
 <li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
-<li><code>--app</code> — Marks the package as an application</li>
-<li><code>--library</code> — Marks the package as a library</li>
+<li><code>--app</code> — Marks the package as an application (only relevant for default tsconfigs)</li>
+<li><code>--library</code> — Marks the package as a library (only relevant for default tsconfigs)</li>
 <li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. If <code>dir</code> is set, it defaults to the last segment of it</li>
 <li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for this package. If unset, defaults are used</li>
 <li><code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for this package</li>
@@ -998,7 +1055,7 @@ general kenobi.
 <li><code>&lt;OUTPUT&gt;</code> — The output file [default: sketch.yaml]</li>
 </ul>
 <h2 id="sketch-render"><a class="header" href="#sketch-render"><code>sketch render</code></a></h2>
-<p>Generates a single file from a template</p>
+<p>Renders a single template to a file or to stdout</p>
 <p><strong>Usage:</strong> <code>sketch render [OPTIONS] &lt;OUTPUT_PATH|--stdout&gt;</code></p>
 <h6 id="arguments-2"><a class="header" href="#arguments-2"><strong>Arguments:</strong></a></h6>
 <ul>
@@ -1007,27 +1064,28 @@ general kenobi.
 <h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>--stdout</code> — Output the result to stdout</li>
-<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to select (cannot be used with the --content flag)</li>
-<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template (cannot be used with the --id flag)</li>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the template file, from the cwd</li>
+<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to use</li>
+<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template</li>
 </ul>
 <h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
-<p>Generates content from a templating preset, with predefined content, output and context</p>
+<p>Renders a templating preset defined in the configuration file</p>
 <p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt;</code></p>
 <h6 id="arguments-3"><a class="header" href="#arguments-3"><strong>Arguments:</strong></a></h6>
 <ul>
 <li><code>&lt;ID&gt;</code> — The id of the preset</li>
 </ul>
 <h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
-<p>Renders a template (from text or file) and launches it as a command</p>
+<p>Renders a template and launches it as a command</p>
 <p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
 <h6 id="arguments-4"><a class="header" href="#arguments-4"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;CMD&gt;</code> — The literal definition for the command's template (cannot be used with the --file flag)</li>
+<li><code>&lt;CMD&gt;</code> — The literal definition for the command's template</li>
 </ul>
 <h6 id="options-6"><a class="header" href="#options-6"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file</li>
-<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id (or path inside templates_dir) of the template to use</li>
+<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id of the template to use</li>
 </ul>
 <hr/>
 <p><small><i>

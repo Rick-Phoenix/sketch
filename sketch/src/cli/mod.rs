@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod cli_tests;
+
 mod cli_elements;
 pub(crate) mod parsers;
 
@@ -192,6 +195,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       content,
       output,
       id,
+      file,
     } => {
       let template_data = if let Some(id) = id {
         TemplateData::Id(id)
@@ -199,6 +203,16 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         TemplateData::Content {
           name: "template_from_cli".to_string(),
           content,
+        }
+      } else if let Some(file) = file {
+        let file_content = read_to_string(&file).map_err(|e| GenError::ReadError {
+          path: file.clone(),
+          source: e,
+        })?;
+
+        TemplateData::Content {
+          name: "template_from_cli".to_string(),
+          content: file_content,
         }
       } else {
         panic!("Missing id or content for template generation");
@@ -309,8 +323,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       } else if let Some(id) = template {
         TemplateData::Id(id)
       } else if let Some(file_path) = file {
-        let file_path = root_dir.join(file_path);
-
         let content = read_to_string(&file_path).map_err(|e| GenError::ReadError {
           path: file_path.clone(),
           source: e,
@@ -482,37 +494,41 @@ enum Commands {
     output: Option<PathBuf>,
   },
 
-  /// Generates a single file from a template.
+  /// Renders a single template to a file or to stdout
   Render {
     #[command(flatten)]
     output: RenderingOutput,
 
-    /// The id of the template to select (cannot be used with the --content flag)
+    /// The path to the template file, from the cwd
+    #[arg(short, long, group = "input")]
+    file: Option<PathBuf>,
+
+    /// The id of the template to use
     #[arg(short, long, group = "input")]
     id: Option<String>,
 
-    /// The literal definition for the template (cannot be used with the --id flag)
+    /// The literal definition for the template
     #[arg(short, long, group = "input")]
     content: Option<String>,
   },
 
-  /// Generates content from a templating preset, with predefined content, output and context.
+  /// Renders a templating preset defined in the configuration file
   RenderPreset {
     /// The id of the preset.
     id: String,
   },
 
-  /// Renders a template (from text or file) and launches it as a command
+  /// Renders a template and launches it as a command
   Exec {
     #[arg(group = "input")]
-    /// The literal definition for the command's template (cannot be used with the --file flag)
+    /// The literal definition for the command's template
     cmd: Option<String>,
 
     /// The path to the command's template file
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id (or path inside templates_dir) of the template to use
+    /// The id of the template to use
     #[arg(short, long, group = "input")]
     template: Option<String>,
   },
@@ -564,6 +580,3 @@ enum TsCommands {
     package_config: Option<PackageConfig>,
   },
 }
-
-#[cfg(test)]
-mod cli_tests;

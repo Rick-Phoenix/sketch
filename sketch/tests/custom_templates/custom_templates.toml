@@ -1,5 +1,6 @@
 # ANCHOR: all
 # ANCHOR: config
+# This will be the starting path for the templates' output paths
 root_dir = "../output/custom_templates"
 
 # ANCHOR: global_vars

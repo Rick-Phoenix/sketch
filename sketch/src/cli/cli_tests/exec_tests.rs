@@ -49,7 +49,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "something=\"space\"",
     "exec",
     "-f",
-    "../../commands_tests/cmd_from_file.j2",
+    "tests/commands_tests/cmd_from_file.j2",
   ];
 
   write_command!(from_file_cmd, 1..3, "cmd_from_file");

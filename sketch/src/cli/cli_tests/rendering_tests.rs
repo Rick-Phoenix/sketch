@@ -47,6 +47,80 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&output_dir, "render_preset_tree.txt")?;
 
+  let from_single_file_cmd = [
+    "sketch",
+    "-c",
+    "tests/custom_templates/custom_templates.toml",
+    "--root-dir",
+    "tests/output/custom_templates",
+    "render",
+    "-f",
+    "tests/custom_templates/single_file.j2",
+    "from_single_file.yaml",
+  ];
+
+  let from_single_file = Cli::try_parse_from(from_single_file_cmd)?;
+
+  execute_cli(from_single_file.clone()).await?;
+
+  write_command!(from_single_file_cmd, 1..5, "from_single_file_cmd");
+
+  let output = deserialize_yaml!(CustomTemplateTest, output_dir.join("from_single_file.yaml"));
+
+  assert_eq!(output.my_var, 15);
+
+  let from_config_template_cmd = [
+    "sketch",
+    "-c",
+    "tests/custom_templates/custom_templates.toml",
+    "--root-dir",
+    "tests/output/custom_templates",
+    "render",
+    "--id",
+    "lit_template",
+    "from_config_template.yaml",
+  ];
+
+  let from_config_template = Cli::try_parse_from(from_config_template_cmd)?;
+
+  execute_cli(from_config_template.clone()).await?;
+
+  write_command!(from_config_template_cmd, 1..5, "from_config_template_cmd");
+
+  let output = deserialize_yaml!(
+    CustomTemplateTest,
+    output_dir.join("from_config_template.yaml")
+  );
+
+  assert_eq!(output.my_var, 15);
+
+  let from_template_file_cmd = [
+    "sketch",
+    "-c",
+    "tests/custom_templates/custom_templates.toml",
+    "--root-dir",
+    "tests/output/custom_templates",
+    "render",
+    "--id",
+    "subdir/nested.j2",
+    "from_template_file.yaml",
+  ];
+
+  let from_template_file = Cli::try_parse_from(from_template_file_cmd)?;
+
+  execute_cli(from_template_file.clone()).await?;
+
+  get_tree_output("tests/templates", "templates_tree.txt")?;
+
+  write_command!(from_template_file_cmd, 1..5, "from_template_file_cmd");
+
+  let output = deserialize_yaml!(
+    CustomTemplateTest,
+    output_dir.join("from_template_file.yaml")
+  );
+
+  assert_eq!(output.my_var, 15);
+
   let cli_override_args = [
     "sketch",
     "-c",

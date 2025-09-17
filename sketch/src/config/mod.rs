@@ -51,39 +51,39 @@ pub struct Config {
   #[serde(skip_serializing_if = "is_default")]
   pub debug: bool,
 
-  /// The root directory for the project [default: "."].
+  /// The base path for the generated files [default: "."].
   #[merge(strategy = overwrite_option)]
   #[arg(long, value_name = "DIR")]
   pub root_dir: Option<PathBuf>,
 
-  /// The path to the directory with the template files.
+  /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
   #[merge(strategy = overwrite_option)]
   #[arg(long, value_name = "DIR")]
   pub templates_dir: Option<PathBuf>,
 
-  /// Exits with error if a file being created already exists.
+  /// Does not overwrite existing files.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub no_overwrite: bool,
 
-  /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
+  /// Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.
   #[merge(skip)]
   #[arg(skip)]
   pub pre_commit: PreCommitSetting,
 
-  /// Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.
+  /// Settings for the gitignore file to generate in new repos. It can be a list of directives to append to the defaults or a string, to replace the defaults entirely.
   #[merge(skip)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "is_default")]
   pub gitignore: GitIgnore,
 
-  /// The relative paths, from the current file, to the other config files to merge with the current one.
+  /// The relative paths, from the current file, to the config files to merge with the current one.
   #[merge(strategy = merge_index_sets)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "is_default")]
   pub extends: IndexSet<PathBuf>,
 
-  /// A map that contains templates defined literally.
+  /// A map that contains template definitions.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub templates: IndexMap<String, String>,
@@ -94,7 +94,7 @@ pub struct Config {
   pub templating_presets: IndexMap<String, Vec<TemplateOutput>>,
 
   /// The global variables that will be available for every template being generated.
-  /// They are overridden by vars set as a template's local context or via a cli command.
+  /// They are overridden by vars set in a template's local context or via the cli.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub vars: IndexMap<String, Value>,

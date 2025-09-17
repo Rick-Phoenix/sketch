@@ -2,10 +2,10 @@
 name = "sketch-it"
 version = "0.1.0-beta.1"
 
-description = "🖌️ A tool for generating project setups, leveraging the power of templating engines for boilerplate generation"
-categories = ["command-line-utilities"]
+description = "🖌️ Templating made portable. A tool to generate files, project structures or shell commands via custom templates"
+categories = ["command-line-utilities", "development-tools"]
 keywords = ["boilerplate", "generation", "templating"]
-repository = "https://github.com/Rick-Phoenix/sketch-it"
+repository = "https://github.com/Rick-Phoenix/sketch"
 
 edition.workspace = true
 license.workspace = true

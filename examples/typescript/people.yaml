@@ -18,8 +18,18 @@ typescript:
         - name: Clark Kent
           url: clarkkent.com
           email: clark-kent@dailyplanet.com
+        - bruce
       contributors:
         - bruce
+
+    # Since package.json presets are extensible,
+    # you can use the above as a base for other package.json files,
+    # if the author or contributors are always the same
+    some-other-project:
+      extends:
+        - people-example
+      scripts:
+        say-hi: echo hi!
 
   package_presets:
     people-example:

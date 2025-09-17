@@ -1,0 +1,4 @@
+.
+├── abc.j2
+└── subdir
+    └── nested.j2

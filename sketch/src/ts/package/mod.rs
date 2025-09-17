@@ -41,6 +41,7 @@ pub struct RootPackage {
   pub name: Option<String>,
 
   /// Oxlint configuration for the root package.
+  /// Can be set to true (to use defaults) or false (to disable it) or to a string defining the configuration to generate.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
 

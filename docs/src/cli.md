@@ -25,9 +25,9 @@ This document contains the help content for the `sketch` command-line program.
 * `ts` — Launches typescript-specific commands
 * `init` — Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config
 * `new` — Generates a new config file with some optional initial values defined via the cli flags
-* `render` — Generates a single file from a template
-* `render-preset` — Generates content from a templating preset, with predefined content, output and context
-* `exec` — Renders a template (from text or file) and launches it as a command
+* `render` — Renders a single template to a file or to stdout
+* `render-preset` — Renders a templating preset defined in the configuration file
+* `exec` — Renders a template and launches it as a command
 
 ###### **Options:**
 
@@ -35,9 +35,9 @@ This document contains the help content for the `sketch` command-line program.
 * `--ignore-config-file` — Ignores any config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--debug` — Activates debugging mode
-* `--root-dir <DIR>` — The root directory for the project [default: "."]
-* `--templates-dir <DIR>` — The path to the directory with the template files
-* `--no-overwrite` — Exits with error if a file being created already exists
+* `--root-dir <DIR>` — The base path for the generated files [default: "."]
+* `--templates-dir <DIR>` — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)
+* `--no-overwrite` — Does not overwrite existing files
 * `--dry-run` — Aborts before writing any content to disk
 * `-s`, `--set <KEY=VALUE>` — Set a variable (as key=value) to use in templates. Overrides global and local variables
 
@@ -60,13 +60,13 @@ Launches typescript-specific commands
 
   Possible values: `pnpm`, `npm`, `deno`, `bun`, `yarn`
 
-* `--no-default-deps` — Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+* `--no-default-deps` — Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
 * `--version-range <KIND>` — The kind of version range to use for dependencies added automatically [default: minor]
 
   Possible values: `patch`, `minor`, `exact`
 
-* `--catalog` — Whether to use the pnpm catalog for default dependencies
-* `--no-convert-latest` — Whether the dependencies with `latest` should be converted to a version range
+* `--catalog` — Uses the pnpm catalog for default dependencies
+* `--no-convert-latest` — Does not convert dependencies marked as `latest` to a version range
 
 
 
@@ -103,8 +103,8 @@ Generates a new typescript package
 * `--no-vitest` — Does not set up vitest for this package
 * `--oxlint` — Sets up an oxlint config file for this package
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
-* `--app` — Marks the package as an application
-* `--library` — Marks the package as a library
+* `--app` — Marks the package as an application (only relevant for default tsconfigs)
+* `--library` — Marks the package as a library (only relevant for default tsconfigs)
 * `-n`, `--name <NAME>` — The name of the new package. If `dir` is set, it defaults to the last segment of it
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for this package. If unset, defaults are used
 * `--package-json <ID>` — The id of the package.json preset to use for this package
@@ -138,7 +138,7 @@ Generates a new config file with some optional initial values defined via the cl
 
 ## `sketch render`
 
-Generates a single file from a template
+Renders a single template to a file or to stdout
 
 **Usage:** `sketch render [OPTIONS] <OUTPUT_PATH|--stdout>`
 
@@ -149,14 +149,15 @@ Generates a single file from a template
 ###### **Options:**
 
 * `--stdout` — Output the result to stdout
-* `-i`, `--id <ID>` — The id of the template to select (cannot be used with the --content flag)
-* `-c`, `--content <CONTENT>` — The literal definition for the template (cannot be used with the --id flag)
+* `-f`, `--file <FILE>` — The path to the template file, from the cwd
+* `-i`, `--id <ID>` — The id of the template to use
+* `-c`, `--content <CONTENT>` — The literal definition for the template
 
 
 
 ## `sketch render-preset`
 
-Generates content from a templating preset, with predefined content, output and context
+Renders a templating preset defined in the configuration file
 
 **Usage:** `sketch render-preset <ID>`
 
@@ -168,18 +169,18 @@ Generates content from a templating preset, with predefined content, output and 
 
 ## `sketch exec`
 
-Renders a template (from text or file) and launches it as a command
+Renders a template and launches it as a command
 
 **Usage:** `sketch exec [OPTIONS] [CMD]`
 
 ###### **Arguments:**
 
-* `<CMD>` — The literal definition for the command's template (cannot be used with the --file flag)
+* `<CMD>` — The literal definition for the command's template
 
 ###### **Options:**
 
 * `-f`, `--file <FILE>` — The path to the command's template file
-* `-t`, `--template <TEMPLATE>` — The id (or path inside templates_dir) of the template to use
+* `-t`, `--template <TEMPLATE>` — The id of the template to use
 
 
 

@@ -1,6 +1,8 @@
 # Maintainers Information
 
-If you are working in a group, and you frequently find yourself adding the same information to the `author`, `contributors` and `maintainers` field in `package.json` files, you might be interested in using the `people` field of the config file, where you can store information about maintainers that can be reused, by simply copying their id, in the generated `package.json` files.
+When working with a team on a monorepo that is made of several individual packages, it's very common that the same people have to be added to the `author`, `contributors` and `maintainers` fields in the `package.json` files for these packages. 
+
+To make this job easier and faster, you can use the `people` field in the typescript config to store information about the contributors that are referred in multiple places, and then you can simply refer them by their ID.
 
 ## Example
 

@@ -55,7 +55,8 @@ impl Default for TypescriptConfig {
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
 #[serde(default)]
 pub struct TypescriptConfig {
-  /// The configuration for the root typescript package.
+  /// The configuration for the root typescript package to generate in new monorepos.
+  /// Can be empty to use defaults.
   #[merge(skip)]
   #[arg(skip)]
   pub root_package: Option<RootPackage>,
@@ -65,7 +66,7 @@ pub struct TypescriptConfig {
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
-  /// Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+  /// Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub no_default_deps: bool,
@@ -79,12 +80,12 @@ pub struct TypescriptConfig {
   )]
   pub version_range: Option<VersionRange>,
 
-  /// Whether to use the pnpm catalog for default dependencies.
+  /// Uses the pnpm catalog for default dependencies.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub catalog: bool,
 
-  /// Whether the dependencies with `latest` should be converted to a version range.
+  /// Does not convert dependencies marked as `latest` to a version range.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long = "no-convert-latest")]
   pub no_convert_latest_to_range: bool,
