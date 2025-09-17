@@ -193,15 +193,17 @@ impl Config {
     }
 
     for dep in default_deps {
-      let version = if typescript.catalog {
-        "catalog:".to_string()
-      } else {
-        "latest".to_string()
-      };
+      if !package_json_data.dev_dependencies.contains_key(dep) {
+        let version = if typescript.catalog {
+          "catalog:".to_string()
+        } else {
+          "latest".to_string()
+        };
 
-      package_json_data
-        .dev_dependencies
-        .insert(dep.to_string(), version);
+        package_json_data
+          .dev_dependencies
+          .insert(dep.to_string(), version);
+      }
     }
 
     package_json_data.name = package_name.clone();
@@ -271,12 +273,7 @@ impl Config {
       let out_dir = {
         let rel_path_to_root = get_relative_path(&output, &root_dir)?;
 
-        let root_out_dir = rel_path_to_root.join(
-          typescript
-            .shared_out_dir
-            .get_name()
-            .unwrap_or(".out".to_string()),
-        );
+        let root_out_dir = rel_path_to_root.join(".out");
 
         root_out_dir.join(&package_name)
       }
@@ -352,18 +349,6 @@ impl Config {
 
     let vitest_config = match config.vitest {
       VitestConfigKind::Bool(v) => v.then(VitestConfig::default),
-      VitestConfigKind::Id(n) => {
-        let vitest_presets = &typescript.vitest_presets;
-        Some(
-          vitest_presets
-            .get(&n)
-            .ok_or(GenError::PresetNotFound {
-              kind: Preset::Vitest,
-              name: n,
-            })?
-            .clone(),
-        )
-      }
       VitestConfigKind::Config(vitest_config_struct) => Some(vitest_config_struct),
     };
 

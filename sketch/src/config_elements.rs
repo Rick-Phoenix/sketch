@@ -28,34 +28,6 @@ impl VersionRange {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema)]
-#[serde(untagged)]
-pub enum SharedOutDir {
-  Bool(bool),
-  Name(String),
-}
-
-impl Default for SharedOutDir {
-  fn default() -> Self {
-    Self::Name(".out".to_string())
-  }
-}
-
-impl SharedOutDir {
-  pub fn get_name(&self) -> Option<String> {
-    match self {
-      Self::Bool(v) => {
-        if *v {
-          Some(".out".to_string())
-        } else {
-          None
-        }
-      }
-      Self::Name(v) => Some(v.clone()),
-    }
-  }
-}
-
 #[derive(Debug, Template, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 #[template(path = "oxlint.json.j2")]
 #[serde(untagged)]

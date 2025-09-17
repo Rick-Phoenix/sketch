@@ -176,14 +176,15 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="templating"><a class="header" href="#templating">Templating</a></h1>
-<p>Sketch can be used to leverage the Tera templating engine to quickly set up all sorts of files or entire project structures.</p>
-<p>This means being able to inject variables into generated content, as well as using all of the functions and filters available in Tera (like extracting envs), plus extra ones added by Sketch (like uuid generation).</p>
+<p>Sketch uses the <a href="https://keats.github.io/tera/docs/">Tera</a> templating engine to render custom templates. Every template, whether it's defined in a file, in the config file, or inlined, can take advantage of all of Tera's functionalities, like using filters, functions, defining and using macros, performing operations and importing other templates.</p>
 <h1 id="special-variables"><a class="header" href="#special-variables">Special variables</a></h1>
 <p>Sketch provides some special variables prefixed with to get access to some commonly used information. All of the following variables are available in templates, prefixed with <code>sketch_</code> (i.e. <code>sketch_os</code> and so on).</p>
 <ul>
+<li><code>cwd</code></li>
+<li><code>tmp_dir</code> (obtained with env::temp_dir)</li>
+<li><code>home</code> (obtained with env::home_dir)</li>
 <li><code>os</code> (env OS)</li>
 <li><code>user</code> (env USER)</li>
-<li><code>home</code> (env HOME)</li>
 <li><code>hostname</code> (env HOSTNAME)</li>
 <li><code>arch</code> (env HOSTTYPE)</li>
 <li><code>xdg_config</code> (env XDG_CONFIG_HOME)</li>
@@ -208,7 +209,7 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="custom_templating.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="rendering_templates.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -222,7 +223,7 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="custom_templating.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="rendering_templates.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

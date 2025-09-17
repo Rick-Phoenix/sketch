@@ -12,12 +12,12 @@ use crate::{
   config_setup::extract_config_from_file,
   custom_templating::TemplateOutput,
   is_default, merge_index_maps, merge_index_sets, overwrite_option,
-  package::{vitest::VitestConfig, PackageConfig},
+  package::PackageConfig,
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
   paths::get_parent_dir,
   pnpm::PnpmWorkspace,
   ts_config::{TsConfig, TsConfigDirective},
-  GenError, SharedOutDir, VersionRange,
+  GenError, VersionRange,
 };
 
 impl TypescriptConfig {
@@ -98,7 +98,7 @@ pub struct TypescriptConfig {
   #[arg(long)]
   pub catalog: bool,
 
-  /// Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package.
+  /// Whether the dependencies with `latest` should be converted to a version range.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long = "no-convert-latest")]
   pub no_convert_latest_to_range: bool,
@@ -123,17 +123,6 @@ pub struct TypescriptConfig {
   #[arg(skip)]
   pub package_presets: IndexMap<String, PackageConfig>,
 
-  /// A map of [`VitestConfig`] presets.
-  #[arg(skip)]
-  #[merge(strategy = merge_index_maps)]
-  pub vitest_presets: IndexMap<String, VitestConfig>,
-
-  /// If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory with this name (or the default '.out') in the root of the monorepo, with subdirectories for each package.
-  /// So if for example we have package1 and package2 and shared_out_dir is set to 'tsc-out', the tsc output for package1 will go to tsc-out/package1.
-  #[merge(skip)]
-  #[arg(skip)]
-  pub shared_out_dir: SharedOutDir,
-
   /// The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
   #[merge(skip)]
   #[arg(skip)]
@@ -153,12 +142,11 @@ impl Config {
 #[serde(default)]
 pub struct Config {
   #[serde(skip)]
-  #[doc(hidden)]
   #[arg(skip)]
   #[merge(strategy = merge::option::overwrite_none)]
   pub(crate) config_file: Option<PathBuf>,
 
-  /// The configuration for typescript packages.
+  /// The configuration for typescript projects.
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -307,11 +295,9 @@ impl Default for TypescriptConfig {
       package_json_presets: Default::default(),
       package_manager: Default::default(),
       package_presets: Default::default(),
-      vitest_presets: Default::default(),
       catalog: false,
       version_range: Default::default(),
       tsconfig_presets: Default::default(),
-      shared_out_dir: SharedOutDir::Name(".out".to_string()),
       people: Default::default(),
       pnpm_config: Default::default(),
       root_package: Default::default(),

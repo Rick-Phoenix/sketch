@@ -1,16 +1,16 @@
 # Templating
 
-Sketch can be used to leverage the Tera templating engine to quickly set up all sorts of files or entire project structures.
-
-This means being able to inject variables into generated content, as well as using all of the functions and filters available in Tera (like extracting envs), plus extra ones added by Sketch (like uuid generation). 
+Sketch uses the [Tera](https://keats.github.io/tera/docs/) templating engine to render custom templates. Every template, whether it's defined in a file, in the config file, or inlined, can take advantage of all of Tera's functionalities, like using filters, functions, defining and using macros, performing operations and importing other templates.
 
 # Special variables
 
 Sketch provides some special variables prefixed with to get access to some commonly used information. All of the following variables are available in templates, prefixed with `sketch_` (i.e. `sketch_os` and so on).
 
+- `cwd`
+- `tmp_dir` (obtained with env::temp_dir)
+- `home` (obtained with env::home_dir)
 - `os` (env OS)
 - `user` (env USER)
-- `home` (env HOME)
 - `hostname` (env HOSTNAME)
 - `arch` (env HOSTTYPE)
 - `xdg_config` (env XDG_CONFIG_HOME)

@@ -67,7 +67,6 @@ pub(crate) fn get_default_context() -> Context {
 
   add_env_to_context!(os);
   add_env_to_context!(user);
-  add_env_to_context!(home);
   add_env_to_context!(hostname);
   add_env_to_context!(arch, HOSTTYPE);
   add_env_to_context!(xdg_config, XDG_CONFIG_HOME);
@@ -76,6 +75,7 @@ pub(crate) fn get_default_context() -> Context {
   add_env_to_context!(xdg_state, XDG_STATE_HOME);
 
   context.insert("sketch_tmp_dir", &env::temp_dir());
+  context.insert("sketch_home", &env::home_dir());
 
   context
 }

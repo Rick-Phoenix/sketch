@@ -12,6 +12,6 @@
         - [Handling Dependencies](./versions.md)
         - [Maintainers Information](./maintainers.md)
 - [Templating](./templating.md)
-    - [Rendering Templates](./custom_templating.md)
-    - [Executing Templates](./rendered_commands.md)
+    - [Rendering Templates](./rendering_templates.md)
+    - [Executing Templates](./executing_templates.md)
 - [Cli Reference](./cli.md)

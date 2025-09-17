@@ -65,16 +65,18 @@ impl Config {
     get_contributors!(package_json_data, typescript, maintainers);
 
     for dep in ["typescript", "oxlint"] {
-      let version = if typescript.catalog {
-        "catalog:".to_string()
-      } else {
-        "latest".to_string()
-      };
+      if !package_json_data.dev_dependencies.contains_key(dep) {
+        let version = if typescript.catalog {
+          "catalog:".to_string()
+        } else {
+          "latest".to_string()
+        };
 
-      let range = version_ranges.create(version);
-      package_json_data
-        .dev_dependencies
-        .insert(dep.to_string(), range);
+        let range = version_ranges.create(version);
+        package_json_data
+          .dev_dependencies
+          .insert(dep.to_string(), range);
+      }
     }
 
     if !typescript.no_convert_latest_to_range {
@@ -162,13 +164,6 @@ impl Config {
 
     if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfig::Bool(false)) {
       write_to_output!(oxlint_config, ".oxlintrc.json");
-    }
-
-    if let Some(shared_out_dir) = typescript.shared_out_dir.get_name() {
-      create_dir_all(root_dir.join(shared_out_dir)).map_err(|e| GenError::DirCreation {
-        path: root_dir.to_path_buf(),
-        source: e,
-      })?;
     }
 
     if let Some(templates) = root_package.generate_templates && !templates.is_empty() {

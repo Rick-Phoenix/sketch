@@ -1,5 +1,6 @@
 use std::{
-  fs::{exists, read_to_string},
+  env,
+  fs::{exists, read_dir, read_to_string},
   io::{self, Write},
   path::PathBuf,
 };
@@ -18,7 +19,7 @@ use crate::{
 
 pub(crate) mod parsers;
 
-use clap::{error::ErrorKind, Args, CommandFactory, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use merge::Merge;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
@@ -42,22 +43,40 @@ fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
   }
 }
 
-async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
-  let config_file = get_config_file_path(cli.config);
+fn get_config_from_xdg() -> Option<PathBuf> {
+  if let Ok(xdg_config) = env::var("XDG_CONFIG_HOME") {
+    let config_dir = PathBuf::from(xdg_config).join("sketch");
 
-  let mut config = if let Some(config_path) = config_file && !cli.ignore_config_file {
-    let conf = match Config::from_file(&config_path) {
-      Ok(conf) => conf,
-      Err(e) => {
-        let mut cmd = Cli::command();
-        cmd.error(ErrorKind::InvalidValue, format!("{}", e)).exit();
+    if config_dir.is_dir() {
+      if let Ok(dir_contents) = read_dir(&config_dir) {
+        for item in dir_contents {
+          if let Ok(item) = item {
+            if item.file_name() == "sketch.toml"
+              || item.file_name() == "sketch.yaml"
+              || item.file_name() == "sketch.json"
+            {
+              return Some(item.path());
+            }
+          }
+        }
       }
-    };
+    }
+  }
+  None
+}
 
-    conf
-  } else {
-    Config::default()
-  };
+async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
+  let mut config = Config::default();
+
+  if !cli.ignore_config_file {
+    let config_file = get_config_file_path(cli.config);
+
+    if let Some(config_path) = config_file {
+      config.merge(Config::from_file(&config_path)?);
+    } else if let Some(config_from_xdg) = get_config_from_xdg() {
+      config.merge(Config::from_file(&config_from_xdg)?);
+    }
+  }
 
   if let Some(overrides) = cli.overrides {
     config.merge(overrides);
@@ -82,21 +101,11 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
     Ts {
       command,
       typescript_overrides,
-      shared_out_dir,
-      no_shared_out_dir,
     } => {
       let typescript = config.typescript.get_or_insert_default();
 
       if let Some(typescript_overrides) = typescript_overrides {
         typescript.merge(typescript_overrides);
-      }
-
-      if no_shared_out_dir {
-        typescript.shared_out_dir = SharedOutDir::Bool(false);
-      }
-
-      if let Some(shared_out_dir) = shared_out_dir {
-        typescript.shared_out_dir = SharedOutDir::Name(shared_out_dir);
       }
 
       match command {
@@ -444,14 +453,6 @@ enum Commands {
 
     #[command(subcommand)]
     command: TsCommands,
-
-    /// The path to the shared out_dir for TS packages.
-    #[arg(long, conflicts_with = "no_shared_out_dir")]
-    shared_out_dir: Option<String>,
-
-    /// Does not use a shared out_dir for TS packages.
-    #[arg(long, default_value_t = false)]
-    no_shared_out_dir: bool,
   },
 
   /// Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config.

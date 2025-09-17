@@ -26,6 +26,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     };
   }
 
+  reset_testing_dir(&output_dir);
   reset_testing_dir(&commands_dir);
 
   let preset_rendering_args = [

@@ -175,7 +175,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="custom-templating"><a class="header" href="#custom-templating">Custom Templating</a></h1>
+                        <h1 id="rendering-templates"><a class="header" href="#rendering-templates">Rendering Templates</a></h1>
 <p>Templates can be defined in files or directly within a command. The variables can also be defined in the config file or as part of a command.</p>
 <pre><code class="language-toml">root_dir = "../output/custom_templates"
 
@@ -191,7 +191,7 @@ templates_dir = "../templates"
 <p>This is how groups are defined:</p>
 <pre><code class="language-toml"># A group of templates that will be rendered together
 templating_presets.test = [
-  # Full path to the template file from templates_dir
+  # Full path to the template file from `templates_dir`
   { template = "subdir/nested.j2", output = "new_dir/nested.yaml" },
 
   # Only using the global variables
@@ -209,14 +209,11 @@ templating_presets.test = [
 <blockquote>
 <p><code>sketch render-preset test</code></p>
 </blockquote>
-<p>The output of the specified <code>root-dir</code> will look like this:</p>
+<p>The output of the specified <code>root_dir</code> will look like this:</p>
 <pre><code>.
-├── from_literal.txt
-├── literal_from_config.yaml
 ├── literal_inlined.yaml
 ├── new_dir
 │   └── nested.yaml
-├── with_cli_override.yaml
 ├── with_global_var.yaml
 └── with_override.yaml
 </code></pre>
@@ -241,7 +238,7 @@ templating_presets.test = [
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="rendered_commands.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="executing_templates.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -255,7 +252,7 @@ templating_presets.test = [
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="rendered_commands.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="executing_templates.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
