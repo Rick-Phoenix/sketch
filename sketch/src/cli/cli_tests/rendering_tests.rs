@@ -117,8 +117,6 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   cmd
     .args([
-      "--root-dir",
-      "tests/output/custom_templates",
       "--set",
       "location=\"Isengard\"",
       "render",

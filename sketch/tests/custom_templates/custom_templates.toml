@@ -3,7 +3,7 @@
 root_dir = "../output/custom_templates"
 
 # ANCHOR: global_vars
-global_templates_vars = { my_var = 15 }
+vars = { my_var = 15 }
 # ANCHOR_END: global_vars
 
 # We can define templates directly in the config file

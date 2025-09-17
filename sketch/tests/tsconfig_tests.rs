@@ -7,7 +7,7 @@ use askama::Template;
 use indexmap::indexmap;
 use maplit::{btreemap, btreeset};
 use serde_json::Value;
-use sketch_it::ts_config::*;
+use sketch_it::ts::ts_config::*;
 
 #[test]
 fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {

@@ -47,6 +47,6 @@ typescript:
             EXPOSE {{ docker_dev_port }}
             CMD ["npm", "run", "dev"]
 
-global_templates_vars:
+vars:
   docker_dev_port: 5173
   # ANCHOR_END: template_example

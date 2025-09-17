@@ -62,20 +62,8 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
     Some(PathBuf::from("tests/templates"))
   );
   assert_eq!(with_extras_output.shell.unwrap(), "zsh");
-  assert_eq!(
-    with_extras_output
-      .global_templates_vars
-      .get("hello")
-      .unwrap(),
-    "there"
-  );
-  assert_eq!(
-    with_extras_output
-      .global_templates_vars
-      .get("general")
-      .unwrap(),
-    "kenobi"
-  );
+  assert_eq!(with_extras_output.vars.get("hello").unwrap(), "there");
+  assert_eq!(with_extras_output.vars.get("general").unwrap(), "kenobi");
 
   Ok(())
 }

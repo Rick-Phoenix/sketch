@@ -20,12 +20,6 @@
       "description": "Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.",
       "$ref": "#/$defs/GitIgnore"
     },
-    "global_templates_vars": {
-      "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set as a template's local context or via a cli command.",
-      "type": "object",
-      "additionalProperties": true,
-      "default": {}
-    },
     "no_overwrite": {
       "description": "Exits with error if a file being created already exists.",
       "type": "boolean",
@@ -80,7 +74,7 @@
       "default": {}
     },
     "typescript": {
-      "description": "The configuration for typescript packages.",
+      "description": "The configuration for typescript projects.",
       "anyOf": [
         {
           "$ref": "#/$defs/TypescriptConfig"
@@ -89,6 +83,12 @@
           "type": "null"
         }
       ]
+    },
+    "vars": {
+      "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set as a template's local context or via a cli command.",
+      "type": "object",
+      "additionalProperties": true,
+      "default": {}
     }
   },
   "$defs": {
@@ -1028,112 +1028,6 @@
         "bundler"
       ]
     },
-    "MoonConfig": {
-      "description": "A struct for representing the values being used in the various configuration files for moonrepo.\nThe tasks correspond to the list of tasks in the .moon/tasks.yml config file, and the tasks_config field represents all of the other key-value pairs being used in the same file.\nThe `toolchain` field contains the key-value pairs belonging to the .moon/toolchain.yml file.",
-      "type": "object",
-      "properties": {
-        "tasks": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/MoonTasks"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "toolchain": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/MoonToolchain"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        }
-      }
-    },
-    "MoonConfigKind": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "$ref": "#/$defs/MoonConfig"
-        }
-      ]
-    },
-    "MoonDotYml": {
-      "description": "A struct that represents the key-value pairs being used in a moon.yml file.\nThe `config` field represents any top level key-value pair that can be used in the file.",
-      "type": "object",
-      "properties": {
-        "tasks": {
-          "type": "object",
-          "additionalProperties": true,
-          "default": {}
-        }
-      },
-      "additionalProperties": true
-    },
-    "MoonDotYmlKind": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "$ref": "#/$defs/MoonDotYml"
-        }
-      ]
-    },
-    "MoonTasks": {
-      "description": "A struct that represents the key-value pairs being used in a .moon/tasks.yml file.\nThe `config` field represents any top level key-value pair that can be used in the file.",
-      "type": "object",
-      "properties": {
-        "out_dir": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": ".out"
-        },
-        "project_tsconfig_name": {
-          "type": "string",
-          "default": "tsconfig.src.json"
-        },
-        "root_tsconfig_name": {
-          "type": "string",
-          "default": "tsconfig.options.json"
-        },
-        "tasks": {
-          "type": "object",
-          "additionalProperties": true,
-          "default": {}
-        }
-      },
-      "additionalProperties": true
-    },
-    "MoonToolchain": {
-      "description": "A struct that represents the key-value pairs being used in a .moon/toolchain.yml file.\nThe `config` field represents any top level key-value pair that can be used in the file.",
-      "type": "object",
-      "properties": {
-        "package_manager": {
-          "$ref": "#/$defs/PackageManager",
-          "default": "pnpm"
-        },
-        "project_tsconfig_name": {
-          "type": "string",
-          "default": "tsconfig.src.json"
-        },
-        "root_tsconfig_name": {
-          "type": "string",
-          "default": "tsconfig.options.json"
-        }
-      },
-      "additionalProperties": true
-    },
     "NewLine": {
       "type": "string",
       "enum": [
@@ -1186,18 +1080,6 @@
           ],
           "default": null
         },
-        "moonrepo": {
-          "description": "Configuration for the moon.yml file. It can be a boolean, to use defaults, or a full configuration.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/MoonDotYmlKind"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
         "name": {
           "description": "The name of the package. If `dir` is set, it defaults to the last segment of it.",
           "type": [
@@ -1240,11 +1122,6 @@
           "items": {
             "$ref": "#/$defs/TsConfigDirective"
           }
-        },
-        "update_root_tsconfig": {
-          "description": "Adds the new package to the references in the root tsconfig.",
-          "type": "boolean",
-          "default": false
         },
         "vitest": {
           "description": "The configuration for this package's vitest setup. It can be set to false (to disable it), an id (to use a preset) or a literal configuration.",
@@ -1575,7 +1452,6 @@
         "packages": {
           "type": "array",
           "default": [
-            "apps/*",
             "packages/*"
           ],
           "items": {
@@ -1715,18 +1591,6 @@
             "$ref": "#/$defs/TemplateOutput"
           }
         },
-        "moonrepo": {
-          "description": "Configuration settings for [`moonrepo`](https://moonrepo.dev/).",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/MoonConfigKind"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
         "name": {
           "description": "The name of the root package [default: \"root\"].",
           "type": [
@@ -1771,16 +1635,6 @@
           }
         }
       }
-    },
-    "SharedOutDir": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "string"
-        }
-      ]
     },
     "Target": {
       "type": "string",
@@ -2026,16 +1880,13 @@
           "type": "boolean",
           "default": false
         },
-        "dev_tsconfig_name": {
-          "description": "The name of the development tsconfig file (which will only typecheck scripts and tests and configs and generate no files) to use inside the individual packages, alongside the default tsconfig.json file.\nIgnored if moonrepo is not used and if the default tsconfig presets are not used.\n[default: \"tsconfig.dev.json\"]",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
         "no_convert_latest_to_range": {
-          "description": "Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package.",
+          "description": "Whether the dependencies with `latest` should be converted to a version range.",
+          "type": "boolean",
+          "default": false
+        },
+        "no_default_deps": {
+          "description": "Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)",
           "type": "boolean",
           "default": false
         },
@@ -2087,14 +1938,6 @@
           ],
           "default": null
         },
-        "project_tsconfig_name": {
-          "description": "The name of the tsconfig file to use inside the individual packages, alongside the default tsconfig.json file.\nIgnored if moonrepo is not used and if the default tsconfig presets are not used.\n[default: \"tsconfig.src.json\"]",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
         "root_package": {
           "description": "The configuration for the root typescript package.",
           "anyOf": [
@@ -2106,19 +1949,6 @@
             }
           ],
           "default": null
-        },
-        "root_tsconfig_name": {
-          "description": "The name of the tsconfig file to use at the root, alongside tsconfig.json.\nIgnored if moonrepo is not used and if the default tsconfig presets are not used.\n[default: \"tsconfig.options.json\"]",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
-        "shared_out_dir": {
-          "description": "If this is set and the default tsconfigs are used, all tsc output will be directed to a single output directory with this name (or the default '.out') in the root of the monorepo, with subdirectories for each package.\nSo if for example we have package1 and package2 and shared_out_dir is set to 'tsc-out', the tsc output for package1 will go to tsc-out/package1.",
-          "$ref": "#/$defs/SharedOutDir",
-          "default": ".out"
         },
         "tsconfig_presets": {
           "description": "A map containing [`TsConfig`] presets.",
@@ -2139,14 +1969,6 @@
             }
           ],
           "default": null
-        },
-        "vitest_presets": {
-          "description": "A map of [`VitestConfig`] presets.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/VitestConfig"
-          },
-          "default": {}
         }
       }
     },
@@ -2162,7 +1984,8 @@
       "description": "The data used to generate a new vitest setup.",
       "type": "object",
       "properties": {
-        "file_path": {
+        "out_dir": {
+          "description": "The directory where the config file should be placed, starting from the root of the package.\nIf unset, the `tests_dir` will be used.",
           "type": [
             "string",
             "null"
@@ -2170,6 +1993,7 @@
           "default": null
         },
         "plugins": {
+          "description": "A list of plugins, which will be set up in the config file.",
           "type": "array",
           "default": [],
           "items": {
@@ -2177,10 +2001,12 @@
           }
         },
         "setup_dir": {
+          "description": "The path to the setup directory, starting from the `tests_dir`. [default: 'setup']",
           "type": "string",
           "default": "setup"
         },
         "tests_dir": {
+          "description": "The path to the tests directory, from the root of the package. [default: 'tests']",
           "type": "string",
           "default": "tests"
         }
@@ -2191,9 +2017,6 @@
       "anyOf": [
         {
           "type": "boolean"
-        },
-        {
-          "type": "string"
         },
         {
           "$ref": "#/$defs/VitestConfig"

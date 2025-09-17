@@ -17,7 +17,7 @@ extends: []
 gitignore: []
 
 # Variables for templates
-global_templates_vars: {}
+vars: {}
 
 # Do not overwrite existing files
 no_overwrite: false

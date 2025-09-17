@@ -2,4 +2,4 @@ extends = ["nested/nested_config.toml"]
 
 root_dir = "../output"
 
-global_templates_vars = { hello = "there" }
+vars = { hello = "there" }

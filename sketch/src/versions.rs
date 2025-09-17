@@ -1,8 +1,33 @@
 use std::sync::LazyLock;
 
+use clap::ValueEnum;
 use reqwest::Client;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::{ParseError, Url};
+
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum VersionRange {
+  Patch,
+  #[default]
+  Minor,
+  Exact,
+}
+
+impl VersionRange {
+  pub fn create(&self, version: String) -> String {
+    if version.starts_with("catalog:") || version == "latest" {
+      return version;
+    }
+    match self {
+      VersionRange::Patch => format!("~{}", version),
+      VersionRange::Minor => format!("^{}", version),
+      VersionRange::Exact => version,
+    }
+  }
+}
 
 #[derive(Debug, serde::Deserialize)]
 struct NpmApiResponse {

@@ -1,22 +1,26 @@
-pub mod vitest;
-
 use std::{
   fs::{create_dir_all, File},
   path::PathBuf,
 };
 
+use askama::Template;
 use clap::Parser;
+use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-  custom_templating::TemplateOutput,
-  package::vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
+use super::{
   package_json::{PackageJson, PackageJsonKind},
-  paths::{create_parent_dirs, get_cwd, get_relative_path},
   pnpm::PnpmWorkspace,
   ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
-  *,
+  vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
+};
+use crate::{
+  custom_templating::TemplateOutput,
+  merge_if_not_default, overwrite_option,
+  paths::{create_parent_dirs, get_abs_path, get_cwd, get_relative_path},
+  ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
+  Config, GenError, GenericTemplate, Preset,
 };
 
 /// The kind of ts package.
@@ -26,6 +30,48 @@ pub enum PackageKind {
   #[default]
   Library,
   App,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq, JsonSchema)]
+#[merge(strategy = overwrite_option)]
+#[serde(default)]
+pub struct RootPackage {
+  /// The name of the root package [default: "root"].
+  #[arg(short, long)]
+  pub name: Option<String>,
+
+  /// Oxlint configuration for the root package.
+  #[arg(skip)]
+  pub oxlint: Option<OxlintConfig>,
+
+  /// A list of [`TsConfigDirective`]s for the root package. They can be preset ids or literal configurations. If unset, defaults are used.
+  #[arg(help = "One or many tsconfig files for the root package. If unset, defaults are used")]
+  #[arg(short, long, value_parser = TsConfigDirective::from_cli, value_name = "output=PATH,id=ID")]
+  pub ts_config: Option<Vec<TsConfigDirective>>,
+
+  /// The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition.
+  #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
+  #[arg(
+    help = "The id of the package.json preset to use for the root package",
+    value_name = "ID"
+  )]
+  pub package_json: Option<PackageJsonKind>,
+
+  /// The templates to generate when the root package is generated.
+  #[arg(skip)]
+  pub generate_templates: Option<Vec<TemplateOutput>>,
+}
+
+impl Default for RootPackage {
+  fn default() -> Self {
+    Self {
+      name: None,
+      oxlint: Some(Default::default()),
+      ts_config: Default::default(),
+      generate_templates: Default::default(),
+      package_json: Default::default(),
+    }
+  }
 }
 
 /// The configuration struct that is used to generate new packages.
@@ -40,8 +86,8 @@ pub struct PackageConfig {
   )]
   pub dir: Option<PathBuf>,
 
-  /// The name of the package. If `dir` is set, it defaults to the last segment of it.
-  #[arg(skip)]
+  /// The name of the new package. If `dir` is set, it defaults to the last segment of it.
+  #[arg(short, long)]
   pub name: Option<String>,
 
   /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.

@@ -123,7 +123,7 @@ impl Config {
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
 
-    let mut global_context = Context::from_serialize(self.global_templates_vars)
+    let mut global_context = Context::from_serialize(self.vars)
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
 
     global_context.extend(get_default_context());

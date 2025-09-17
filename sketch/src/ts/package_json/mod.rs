@@ -9,8 +9,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  merging_strategies::*, templating::render_json_val, versions::get_latest_version, GenError,
-  JsonValueBTreeMap, Preset, StringBTreeMap, VersionRange,
+  merging_strategies::*,
+  templating::render_json_val,
+  versions::{get_latest_version, VersionRange},
+  GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
 pub mod package_json_elements;
 

@@ -7,8 +7,10 @@ use pretty_assertions::assert_eq;
 use super::{get_clean_example_cmd, reset_testing_dir};
 use crate::{
   cli::{cli_tests::get_tree_output, execute_cli, Cli},
-  package_json::{PackageJson, Person, PersonData},
-  ts_config::{CompilerOptions, TsConfig},
+  ts::{
+    package_json::{PackageJson, Person, PersonData},
+    ts_config::{CompilerOptions, TsConfig},
+  },
 };
 
 #[tokio::test]

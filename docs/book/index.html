@@ -187,28 +187,30 @@
 # All output paths will start from this directory.
 root_dir: .
 
-# Enabled debugging mode
+# Enables debugging mode
 debug: false
 
 # Extends other configuration files
 extends: []
 
-# Gitignore settings for the `init` command.
+# Settings for the .gitignore file generated via the `init` command.
 # This can be:
 # - A list of directives (to add to the defaults)
 # - A literal string (to replace defaults)
-gitignore: ["my_ignored_dir"]
+gitignore: []
 
 # Variables for templates
-global_templates_vars: {}
+vars: {}
 
 # Do not overwrite existing files
 no_overwrite: false
 
-# Also used in the `init` command.
+# The pre-commit settings, used for the .pre-commit-config file
+# generated with the `init` command.
 # Can be:
 # - A boolean, to use defaults or disable it altogether
 # - A list of repos to populate the config with
+# The default setting includes just the gitleaks repo.
 pre_commit: true
 
 # The shell to use for the `exec` command. Defaults to `cmd.exe` on windows and `sh` elsewhere.

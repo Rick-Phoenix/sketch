@@ -244,12 +244,11 @@
             EXPOSE {{ docker_dev_port }}
             CMD ["npm", "run", "dev"]
 
-global_templates_vars:
+vars:
   docker_dev_port: 5173
 </code></pre>
 <p>So the final tree structure of the output directory will look like this:</p>
 <pre><code>.
-├── .out
 ├── .oxlintrc.json
 ├── docker
 │   └── dev.dockerfile

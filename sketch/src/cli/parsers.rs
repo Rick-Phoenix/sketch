@@ -1,25 +1,6 @@
-use std::{collections::BTreeSet, str::FromStr};
+use std::str::FromStr;
 
-use indexmap::IndexSet;
 use serde_json::Value;
-
-pub fn parse_btreeset_from_csv(s: &str) -> Result<BTreeSet<String>, String> {
-  Ok(
-    s.split(',')
-      .map(|item| item.trim().to_string())
-      .filter(|item| !item.is_empty())
-      .collect(),
-  )
-}
-
-pub fn parse_indexset_from_csv(s: &str) -> Result<IndexSet<String>, String> {
-  Ok(
-    s.split(',')
-      .map(|item| item.trim().to_string())
-      .filter(|item| !item.is_empty())
-      .collect(),
-  )
-}
 
 pub fn parse_key_value_pairs<'a>(
   name: &'a str,

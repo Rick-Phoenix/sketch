@@ -9,7 +9,10 @@ use regex::Regex;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{versions::get_latest_version, OrderedMap, PackageJson, StringBTreeMap, VersionRange};
+use crate::{
+  versions::{get_latest_version, VersionRange},
+  OrderedMap, PackageJson, StringBTreeMap,
+};
 
 /// A struct representing a pnpm-workspace.yaml config. Some widely used fields such as catalog, catalogs and packages are included directly. Everything else is flattened in the `extra` field.
 #[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema)]

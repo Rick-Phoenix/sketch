@@ -6,7 +6,7 @@ macro_rules! path_to_str {
 
 macro_rules! assert_dir_exists {
   ($path:expr) => {
-    assert!($path.exists() && $path.is_dir())
+    assert!($path.is_dir())
   };
 }
 

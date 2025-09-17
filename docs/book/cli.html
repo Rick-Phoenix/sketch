@@ -228,6 +228,9 @@
 <p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
 </li>
 <li>
+<p><code>--no-default-deps</code> — Do not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
+</li>
+<li>
 <p><code>--version-range &lt;KIND&gt;</code> — The kind of version range to use for dependencies added automatically [default: minor]</p>
 <p>Possible values: <code>patch</code>, <code>minor</code>, <code>exact</code></p>
 </li>
@@ -235,14 +238,7 @@
 <p><code>--catalog</code> — Whether to use the pnpm catalog for default dependencies</p>
 </li>
 <li>
-<p><code>--no-convert-latest</code> — Whether the dependencies with <code>latest</code> should be converted to a version range (configurable in [<code>TypescriptConfig::version_ranges</code>]) with the actual latest version for that package</p>
-</li>
-<li>
-<p><code>--shared-out-dir &lt;SHARED_OUT_DIR&gt;</code> — The path to the shared out_dir for TS packages</p>
-</li>
-<li>
-<p><code>--no-shared-out-dir</code> — Does not use a shared out_dir for TS packages</p>
-<p>Default value: <code>false</code></p>
+<p><code>--no-convert-latest</code> — Whether the dependencies with <code>latest</code> should be converted to a version range</p>
 </li>
 </ul>
 <h2 id="sketch-ts-monorepo"><a class="header" href="#sketch-ts-monorepo"><code>sketch ts monorepo</code></a></h2>

@@ -5,10 +5,13 @@ use maplit::btreeset;
 use merge::Merge;
 
 use crate::{
-  package_json::{PackageJsonKind, Person},
   paths::get_cwd,
-  ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
-  Config, GenError, OxlintConfig, PackageManager, Preset,
+  ts::{
+    package_json::{PackageJsonKind, Person},
+    ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
+    OxlintConfig, PackageManager,
+  },
+  Config, GenError, Preset,
 };
 
 impl Config {

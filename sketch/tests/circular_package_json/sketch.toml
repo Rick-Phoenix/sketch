@@ -1,6 +1,6 @@
 root_dir = "../output"
 
-global_templates_vars = { my_var = 15 }
+vars = { my_var = 15 }
 
 templates = { lit_template = "my_var: {{ my_var }}" }
 

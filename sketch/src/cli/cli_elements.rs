@@ -2,7 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use clap::{Args, ValueEnum};
 
-use crate::{package::PackageKind, GenError};
+use crate::{ts::package::PackageKind, GenError};
 
 #[derive(Clone, Debug, ValueEnum, Default)]
 pub enum ConfigFormat {

@@ -26,7 +26,7 @@ async fn config_files_resolution() -> Result<(), GenError> {
 
   assert_eq!(
     config
-      .global_templates_vars
+      .vars
       .shift_remove("hello")
       .expect("Error in paths resolution test"),
     Value::String("there".to_string())
@@ -34,7 +34,7 @@ async fn config_files_resolution() -> Result<(), GenError> {
 
   assert_eq!(
     config
-      .global_templates_vars
+      .vars
       .shift_remove("general")
       .expect("Error in paths resolution test"),
     Value::String("kenobi".to_string())

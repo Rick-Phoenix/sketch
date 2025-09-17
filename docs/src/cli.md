@@ -60,16 +60,13 @@ Launches typescript-specific commands
 
   Possible values: `pnpm`, `npm`, `deno`, `bun`, `yarn`
 
+* `--no-default-deps` — Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
 * `--version-range <KIND>` — The kind of version range to use for dependencies added automatically [default: minor]
 
   Possible values: `patch`, `minor`, `exact`
 
 * `--catalog` — Whether to use the pnpm catalog for default dependencies
-* `--no-convert-latest` — Whether the dependencies with `latest` should be converted to a version range (configurable in [`TypescriptConfig::version_ranges`]) with the actual latest version for that package
-* `--shared-out-dir <SHARED_OUT_DIR>` — The path to the shared out_dir for TS packages
-* `--no-shared-out-dir` — Does not use a shared out_dir for TS packages
-
-  Default value: `false`
+* `--no-convert-latest` — Whether the dependencies with `latest` should be converted to a version range
 
 
 
@@ -107,6 +104,7 @@ Generates a new typescript package
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `--app` — Marks the package as an application
 * `--library` — Marks the package as a library
+* `-n`, `--name <NAME>` — The name of the new package. If `dir` is set, it defaults to the last segment of it
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for this package. If unset, defaults are used
 * `--package-json <ID>` — The id of the package.json preset to use for this package
 

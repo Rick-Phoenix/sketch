@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use sketch_it::{config::Config, package::PackageData, GenError};
+use sketch_it::{config::Config, ts::package::PackageData, GenError};
 
 #[tokio::test]
 async fn circular_configs() -> Result<(), GenError> {

@@ -6,14 +6,16 @@ use pretty_assertions::{assert_eq, assert_ne};
 use super::reset_testing_dir;
 use crate::{
   cli::{execute_cli, Cli},
-  package_json::{PackageJson, Person},
-  pnpm::PnpmWorkspace,
-  ts_config::{
-    tsconfig_defaults::{
-      get_default_dev_tsconfig, get_default_package_tsconfig, get_default_root_tsconfig,
-      get_default_src_tsconfig,
+  ts::{
+    package_json::{PackageJson, Person},
+    pnpm::PnpmWorkspace,
+    ts_config::{
+      tsconfig_defaults::{
+        get_default_dev_tsconfig, get_default_package_tsconfig, get_default_root_tsconfig,
+        get_default_src_tsconfig,
+      },
+      TsConfig, TsConfigReference,
     },
-    TsConfig, TsConfigReference,
   },
 };
 
@@ -43,7 +45,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let options_tsconfig = extract_tsconfig!(ts_repo_root.join("tsconfig.options.json"));
 
-  for dir in ["packages", ".out"] {
+  for dir in ["packages"] {
     assert_dir_exists!(ts_repo_root.join(dir));
   }
 

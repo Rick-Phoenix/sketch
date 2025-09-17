@@ -1,3 +1,6 @@
+mod cli_elements;
+pub(crate) mod parsers;
+
 use std::{
   env,
   fs::{exists, read_dir, read_to_string},
@@ -5,27 +8,22 @@ use std::{
   path::PathBuf,
 };
 
-mod cli_elements;
-
+use clap::{Args, Parser, Subcommand};
 use cli_elements::*;
+use merge::Merge;
+use parsers::parse_serializable_key_value_pair;
+use serde_json::Value;
 use Commands::*;
 
 use crate::{
   commands::launch_command,
   custom_templating::{TemplateData, TemplateOutput},
-  package::PackageData,
   paths::get_cwd,
-};
-
-pub(crate) mod parsers;
-
-use clap::{Args, Parser, Subcommand};
-use merge::Merge;
-use parsers::parse_serializable_key_value_pair;
-use serde_json::Value;
-
-use crate::{
-  package::{vitest::VitestConfigKind, PackageConfig},
+  ts::{
+    package::{PackageConfig, PackageData, RootPackage},
+    vitest::VitestConfigKind,
+    OxlintConfig, TypescriptConfig,
+  },
   Config, *,
 };
 
@@ -83,7 +81,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   }
 
   if let Some(vars) = cli.templates_vars {
-    config.global_templates_vars.extend(vars);
+    config.vars.extend(vars);
   }
 
   match cli.command {

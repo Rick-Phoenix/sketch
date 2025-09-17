@@ -7,9 +7,8 @@ root_dir:
 typescript:
   package_presets:
     frontend:
-      # The name of the project. If empty, it will use
-      # the name in the package.json preset, and if that's
-      # also unset, it will use the base name of the output dir
+      # The name of the package. If this is unset and `dir` is set,
+      # it will use the last segment from it.
       name: "@myproject/frontend"
 
       # The package.json config for this package. Can be a preset id
@@ -18,7 +17,7 @@ typescript:
         devDependencies:
           tailwindcss: "^4.0.0"
 
-      # The directory for this package, starting from the global root_dir
+      # The directory for this package, starting from the `root_dir`
       dir: packages/frontend
 
       # The kind of package to generate. Only relevant if you use
@@ -63,6 +62,6 @@ templates:
     import z from "zod";
     import { sharedSchemas } from "{{ schemas_package }}";
 
-global_templates_vars:
+vars:
   schemas_package: "@myproject/schemas"
   # ANCHOR_END: template_example
