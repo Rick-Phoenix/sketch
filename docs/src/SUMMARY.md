@@ -1,5 +1,9 @@
 # Summary
 
+[Introduction](../../README.md)
+
+# User Guide
+
 - [Configuration](./configuration.md)
     - [Generating Config Files](./config_files_gen.md)
     - [Lsp Integration](./lsp.md)
