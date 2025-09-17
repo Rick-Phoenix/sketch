@@ -11,9 +11,7 @@ use crate::{
   config_elements::*,
   config_setup::extract_config_from_file,
   custom_templating::TemplateOutput,
-  is_default, merge_index_maps, merge_index_sets,
-  moon::MoonConfigKind,
-  overwrite_option,
+  is_default, merge_index_maps, merge_index_sets, overwrite_option,
   package::{vitest::VitestConfig, PackageConfig},
   package_json::{PackageJson, PackageJsonKind, Person, PersonData},
   paths::get_parent_dir,
@@ -56,10 +54,6 @@ pub struct RootPackage {
   )]
   pub package_json: Option<PackageJsonKind>,
 
-  /// Configuration settings for [`moonrepo`](https://moonrepo.dev/).
-  #[arg(skip)]
-  pub moonrepo: Option<MoonConfigKind>,
-
   /// The templates to generate when the root package is generated.
   #[arg(skip)]
   pub generate_templates: Option<Vec<TemplateOutput>>,
@@ -73,7 +67,6 @@ impl Default for RootPackage {
       ts_config: Default::default(),
       generate_templates: Default::default(),
       package_json: Default::default(),
-      moonrepo: None,
     }
   }
 }
@@ -85,39 +78,6 @@ pub struct TypescriptConfig {
   #[merge(skip)]
   #[arg(skip)]
   pub root_package: Option<RootPackage>,
-
-  /// The name of the tsconfig file to use at the root, alongside tsconfig.json.
-  /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// [default: "tsconfig.options.json"]
-  #[merge(strategy = overwrite_option)]
-  #[arg(
-    help = "The name of the tsconfig file to use at the root [default: 'tsconfig.options.json']",
-    value_name = "NAME"
-  )]
-  #[arg(long = "root-tsconfig")]
-  pub root_tsconfig_name: Option<String>,
-
-  /// The name of the tsconfig file to use inside the individual packages, alongside the default tsconfig.json file.
-  /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// [default: "tsconfig.src.json"]
-  #[merge(strategy = overwrite_option)]
-  #[arg(
-    help = "The name of the tsconfig file for individual packages [default: 'tsconfig.src.json']",
-    value_name = "NAME"
-  )]
-  #[arg(long = "project-tsconfig")]
-  pub project_tsconfig_name: Option<String>,
-
-  /// The name of the development tsconfig file (which will only typecheck scripts and tests and configs and generate no files) to use inside the individual packages, alongside the default tsconfig.json file.
-  /// Ignored if moonrepo is not used and if the default tsconfig presets are not used.
-  /// [default: "tsconfig.dev.json"]
-  #[merge(strategy = overwrite_option)]
-  #[arg(
-    help = "The name of the development tsconfig file [default: 'tsconfig.dev.json']",
-    value_name = "NAME"
-  )]
-  #[arg(long = "dev-tsconfig")]
-  pub dev_tsconfig_name: Option<String>,
 
   /// The package manager being used. [default: pnpm].
   #[merge(strategy = overwrite_option)]
@@ -346,9 +306,6 @@ impl Default for TypescriptConfig {
       no_convert_latest_to_range: false,
       package_json_presets: Default::default(),
       package_manager: Default::default(),
-      root_tsconfig_name: None,
-      project_tsconfig_name: None,
-      dev_tsconfig_name: None,
       package_presets: Default::default(),
       vitest_presets: Default::default(),
       catalog: false,

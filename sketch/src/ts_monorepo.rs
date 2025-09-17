@@ -5,7 +5,6 @@ use maplit::btreeset;
 use merge::Merge;
 
 use crate::{
-  moon::{MoonConfig, MoonConfigKind},
   package_json::{PackageJsonKind, Person},
   paths::get_cwd,
   ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
@@ -123,10 +122,7 @@ impl Config {
         ));
       }
     } else {
-      let root_tsconfig_name = typescript
-        .root_tsconfig_name
-        .clone()
-        .unwrap_or_else(|| "tsconfig.options.json".to_string());
+      let root_tsconfig_name = "tsconfig.options.json".to_string();
 
       let root_tsconfig = TsConfig {
         extends: Some(root_tsconfig_name.clone()),
@@ -162,31 +158,6 @@ impl Config {
         .await;
 
       write_to_output!(pnpm_data, "pnpm-workspace.yaml");
-    }
-
-    if let Some(moon_config_kind) = root_package.moonrepo && !matches!(moon_config_kind, MoonConfigKind::Bool(false)) {
-      let moon_config = match moon_config_kind {
-        MoonConfigKind::Bool(_) => MoonConfig::default(),
-        MoonConfigKind::Config(c) => *c
-      };
-
-      let moon_dir = root_dir.join(".moon");
-
-      create_dir_all(&moon_dir).map_err(|e| GenError::DirCreation {
-        path: moon_dir.to_path_buf(),
-        source: e,
-      })?;
-
-      let moon_toolchain = moon_config.toolchain.unwrap_or_default();
-
-      write_to_output!(
-        moon_toolchain,
-        ".moon/toolchain.yml"
-      );
-
-      let moon_tasks = moon_config.tasks.unwrap_or_default();
-
-      write_to_output!(moon_tasks, ".moon/tasks.yml");
     }
 
     if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfig::Bool(false)) {

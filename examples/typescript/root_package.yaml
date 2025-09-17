@@ -33,10 +33,6 @@ typescript:
         "plugins": ["unicorn", "typescript", "oxc"]
       }
 
-    # Setup for moonrepo (can also just be set to `true` to use defaults)
-    moonrepo:
-      toolchain:
-        root_tsconfig_name: tsconfig.options.json
     # ANCHOR_END: all
 
     # ANCHOR: template_example

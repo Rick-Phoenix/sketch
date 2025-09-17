@@ -2,10 +2,14 @@
 # ANCHOR: config
 root_dir = "../output/custom_templates"
 
+# ANCHOR: global_vars
 global_templates_vars = { my_var = 15 }
+# ANCHOR_END: global_vars
 
 # We can define templates directly in the config file
+# ANCHOR: lit_template
 templates = { lit_template = "my_var: {{ my_var }}" }
+# ANCHOR_END: lit_template
 
 # Or as files inside a directory
 templates_dir = "../templates"
@@ -17,17 +21,16 @@ templating_presets.test = [
   # Full path to the template file from templates_dir
   { template = "subdir/nested.j2", output = "new_dir/nested.yaml" },
 
+  # ANCHOR: context_example
   # Only using the global variables
-  { template = "abc.j2", output = "with_global_var.yaml" },
+  { template = "lit_template", output = "with_global_var.yaml" },
 
   # Using a local override
-  { template = "abc.j2", output = "with_override.yaml", context = { my_var = 20 } },
+  { template = "lit_template", output = "with_override.yaml", context = { my_var = 20 } },
+  # ANCHOR_END: context_example
 
   # Defining a literal template
   { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
-
-  # Using a literal template defined in the config file
-  { template = "lit_template", output = "literal_from_config.yaml" },
 ]
 # ANCHOR_END: preset
 

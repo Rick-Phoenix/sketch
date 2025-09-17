@@ -41,7 +41,6 @@ pub mod cli;
 pub mod config;
 pub mod errors;
 pub(crate) mod merging_strategies;
-pub mod moon;
 pub mod package;
 pub mod package_json;
 pub(crate) mod paths;

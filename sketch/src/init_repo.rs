@@ -1,7 +1,4 @@
-use std::{
-  fs::{create_dir_all, File},
-  path::PathBuf,
-};
+use std::fs::{create_dir_all, File};
 
 use askama::Template;
 
@@ -12,17 +9,16 @@ use crate::{
 impl Config {
   pub fn init_repo(self, remote: Option<&str>) -> Result<(), GenError> {
     let root_dir = self.root_dir.unwrap_or_else(|| get_cwd());
-    let output = PathBuf::from(&root_dir);
     let shell = self.shell.as_deref();
 
-    create_dir_all(&output).map_err(|e| GenError::DirCreation {
-      path: output.to_owned(),
+    create_dir_all(&root_dir).map_err(|e| GenError::DirCreation {
+      path: root_dir.to_owned(),
       source: e,
     })?;
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(output, !self.no_overwrite, $($tokens)*)
+        write_file!(root_dir, !self.no_overwrite, $($tokens)*)
       };
     }
 

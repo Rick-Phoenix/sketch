@@ -21,11 +21,6 @@ typescript:
       # The directory for this package, starting from the global root_dir
       dir: packages/frontend
 
-      # If true, it updates the tsconfig.json file at the root,
-      # by adding the new tsconfig.json file to the list of
-      # project references.
-      update_root_tsconfig: false
-
       # The kind of package to generate. Only relevant if you use
       # default tsconfigs.
       kind: library
@@ -33,16 +28,6 @@ typescript:
       # Can be set to true (for a default config), a literal config
       # or to false (which is the default setting) for no oxlint config.
       oxlint: false
-
-      # Generate a moon.yml file.
-      # Can be set to `true` to use a basic default.
-      moonrepo:
-        tasks:
-          test:
-            command: "vitest --config ./tests/vitest.config.ts run"
-            inputs:
-              - "tests/**/*"
-              - "src/**/*"
 
       # Create a vitest setup.
       # Can be set to true to use defaults (which are as below).

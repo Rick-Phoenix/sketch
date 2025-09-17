@@ -29,7 +29,6 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_repo",
     "ts",
     "monorepo",
-    "--moonrepo",
   ])?;
 
   execute_cli(cli).await?;
@@ -44,7 +43,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let options_tsconfig = extract_tsconfig!(ts_repo_root.join("tsconfig.options.json"));
 
-  for dir in [".moon", "packages", "apps", ".out"] {
+  for dir in ["packages", ".out"] {
     assert_dir_exists!(ts_repo_root.join(dir));
   }
 
@@ -76,11 +75,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_tsconfig = extract_tsconfig!(package_dir.join("tsconfig.json"));
   assert_eq!(
-    get_default_package_tsconfig(
-      "../../tsconfig.options.json".to_string(),
-      "tsconfig.src.json",
-      Some("tsconfig.dev.json"),
-    ),
+    get_default_package_tsconfig("../../tsconfig.options.json".to_string(), false),
     package_tsconfig
   );
 
@@ -94,7 +89,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
   let dev_tsconfig = extract_tsconfig!(package_dir.join("tsconfig.dev.json"));
 
   assert_eq!(
-    get_default_dev_tsconfig("tsconfig.src.json", "../../.out/test_package"),
+    get_default_dev_tsconfig("../../.out/test_package"),
     dev_tsconfig
   );
 
@@ -103,7 +98,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(dir.exists() && dir.is_dir());
   }
 
-  for file in ["src/index.ts", "moon.yml"] {
+  for file in ["src/index.ts"] {
     assert!(package_dir.join(file).exists());
   }
 
@@ -128,7 +123,6 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     "--update-root-tsconfig",
     "--oxlint",
     "--no-vitest",
-    "--moonrepo",
     "--package-json",
     "app",
     "apps/app_test",
@@ -143,7 +137,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
   assert!(!app_package_dir.join("tsconfig.dev.json").exists());
 
   // The enabled features
-  for file in [".oxlintrc.json", "moon.yml"] {
+  for file in [".oxlintrc.json"] {
     assert!(app_package_dir.join(file).exists());
   }
 

@@ -182,8 +182,11 @@ The cli automatically looks for <code>sketch.yaml</code> in the cwd. If another 
 <div style="break-before: page; page-break-before: always;"></div><h1 id="generating-config-files"><a class="header" href="#generating-config-files">Generating Config Files</a></h1>
 <p>You can use the <code>sketch new</code> command to generate a new configuration file in the desired output file and format.
 The default is <code>sketch.yaml</code>, but any name is supported as long as the format is either <code>json</code>, <code>toml</code> or <code>yaml</code>, and the configuration file is specified with the <code>-c</code> or <code>--config</code> flag.</p>
-<p>If called with added arguments, it will generate a config with the provided values.
-Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
+<p>If extra arguments are provided, the generated config will populated with the values of these arguments.
+So if we run <code>sketch --templates-dir "/path/to/templates"</code>, <code>templates_dir</code> will be set to that path in the generated config.</p>
+<blockquote>
+<p>⚠️ Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
+</blockquote>
 <p>Command:</p>
 <pre><code class="language-txt">sketch --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
 </code></pre>
@@ -200,18 +203,18 @@ global_templates_vars:
   general: kenobi
 </code></pre>
 <h1 id="repo-setup"><a class="header" href="#repo-setup">Repo Setup</a></h1>
-<p>You can also use the <code>init</code> command, which does a few things to set up a new git repo:</p>
+<p>You can also use the <code>init</code> command to create a new git repo. This command will:</p>
 <ol>
-<li>It creates a new git repo in the specified <code>root_dir</code>.</li>
-<li>If a <code>remote</code> is provided, via flag or config, it also adds that remote as the origin for that repo.</li>
-<li>Unless <code>pre-commit</code> is disabled, it will generate a new .pre-commit-config.yaml file with the repos specified in the config file, or just with the gitleaks repo if none is specified. It will then run <code>pre-commit install</code> to install the given hooks.</li>
+<li>Create a new git repo in the specified <code>root_dir</code>.</li>
+<li>If a <code>--remote</code> is provided, it will also add that remote as the origin/main for the repo.</li>
+<li>Unless <code>pre-commit</code> is disabled, it will generate a new .pre-commit-config.yaml file in the root, with the repos specified in the config file (if there are any, otherwise it will just add the gitleaks repo). It will then run <code>pre-commit install</code> to install the given hooks.</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="lsp-integration"><a class="header" href="#lsp-integration">Lsp Integration</a></h1>
 <p>In order to ensure the best development experience, it is highly recommended to set up your IDE to load the json schema for Sketch's configuration file.</p>
+<p>This will provide type-safety, autocompletion and additional documentation when writing config files.</p>
 <p>Every time a new version is released, the json schema for the configuration file will be updated in the <a href="https://github.com/Rick-Phoenix/sketch/tree/main/schemas">github repo</a>. Each version will have its own distinct schema file, and the <code>latest.json</code> file will track the schema for the latest version.</p>
 <p>You can then use this schema with the <code>yaml</code>, <code>toml</code> or <code>json</code> language servers to get autocompletion, type information and documentation for each element of the config file.</p>
 <p>This can be done by configuring the specific LSP in your editor, or simply by using a special comment at the top of your file that links to the config's json schema.</p>
-<p>This will ensure that you get type-safety, autocompletion and additional documentation when writing config files.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <p>Yaml:</p>
 <pre><code class="language-yaml"># yaml-language-server: $schema=https://github.com/Rick-Phoenix/sketch/blob/main/schemas/latest.json
@@ -228,7 +231,7 @@ global_templates_vars:
 <p>Configuration files can extend one another by using the <code>extends</code> field:</p>
 <pre><code class="language-yaml">extends: ["other_config.yaml"]
 </code></pre>
-<p>Where the path being used is a relative path starting from the parent directory of the original config file.</p>
+<p>Where the path being used can be either an absolute path or a relative path starting from the original config file.</p>
 <p>The merging strategy works as follows:</p>
 <ul>
 <li>For conflicting values, such as opposite booleans, the previous value will be overridden.</li>
@@ -246,16 +249,11 @@ typescript:
   # ...use this kind of version range (patch, minor, exact)
   version_range: patch
 
-  # Only relevant if you use
-  # default tsconfigs or moonrepo
-  root_tsconfig_name: tsconfig.options.json
-
   package_manager: pnpm
 
   pnpm_config:
-    # Default is `packages/*` and `apps/*`.
     # All dirs listed here will be created automatically
-    packages: ["packages/*", "apps/*"]
+    packages: ["packages/*"]
 
   # Use the pnpm catalog for default dependencies
   catalog: false
@@ -301,10 +299,6 @@ typescript:
         "plugins": ["unicorn", "typescript", "oxc"]
       }
 
-    # Setup for moonrepo (can also just be set to `true` to use defaults)
-    moonrepo:
-      toolchain:
-        root_tsconfig_name: tsconfig.options.json
 </code></pre>
 <p>And the package.json file of the root package will be like this:</p>
 <pre><code class="language-json">{
@@ -317,7 +311,7 @@ typescript:
   "scripts": {},
   "devDependencies": {
     "husky": "^9.1.7", 
-    "oxlint": "^1.15.0", 
+    "oxlint": "^1.16.0", 
     "typescript": "^5.9.2"
   },
   "dependencies": {}
@@ -342,12 +336,8 @@ global_templates_vars:
 </code></pre>
 <p>So the final tree structure of the output directory will look like this:</p>
 <pre><code>.
-├── .moon
-│   ├── tasks.yml
-│   └── toolchain.yml
 ├── .out
 ├── .oxlintrc.json
-├── apps
 ├── docker
 │   └── dev.dockerfile
 ├── package.json
@@ -377,11 +367,6 @@ global_templates_vars:
       # The directory for this package, starting from the global root_dir
       dir: packages/frontend
 
-      # If true, it updates the tsconfig.json file at the root,
-      # by adding the new tsconfig.json file to the list of
-      # project references.
-      update_root_tsconfig: false
-
       # The kind of package to generate. Only relevant if you use
       # default tsconfigs.
       kind: library
@@ -390,21 +375,13 @@ global_templates_vars:
       # or to false (which is the default setting) for no oxlint config.
       oxlint: false
 
-      # Generate a moon.yml file.
-      # Can be set to `true` to use a basic default.
-      moonrepo:
-        tasks:
-          test:
-            command: "vitest --config ./tests/vitest.config.ts run"
-            inputs:
-              - "tests/**/*"
-              - "src/**/*"
-
       # Create a vitest setup.
-      # Can be set to true to use defaults.
+      # Can be set to true to use defaults (which are as below).
       vitest:
-        # The path to the generated config file
-        file_path: tests/vitest.config.ts
+        # Where the config file should be generated, starting from
+        # the root of the package.
+        # It defaults to the value of `tests_dir`
+        out_dir: null
 
         # The directory to use for tests
         tests_dir: tests
@@ -443,7 +420,6 @@ global_templates_vars:
 <p>So the final tree structure of the output directory will look like this:</p>
 <pre><code>.
 ├── .oxlintrc.json
-├── moon.yml
 ├── package.json
 ├── src
 │   ├── index.ts
@@ -619,7 +595,7 @@ global_templates_vars:
     "email": "i-may-or-may-not-be-batman@gotham.com"
   },
   "devDependencies": {
-    "oxlint": "^1.15.0", 
+    "oxlint": "^1.16.0", 
     "svelte": "^5.38.10", 
     "tailwindcss": "^4.1.13", 
     "typescript": "^5.9.2", 
@@ -633,6 +609,9 @@ global_templates_vars:
 <h2 id="converting-latest-to-a-range"><a class="header" href="#converting-latest-to-a-range">Converting <code>latest</code> to a range</a></h2>
 <p>By default, all <code>latest</code> versions will be converted to a version range (which can be specified in the config) that starts from the actual latest version for that package.</p>
 <p>This means that you can easily use your presets and ensure that they're always going to be updated, without using <code>latest</code>, which is not very good practice.</p>
+<blockquote>
+<p>⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api.</p>
+</blockquote>
 <pre><code class="language-yaml">typescript:
   # Default
   no_convert_latest_to_range: false
@@ -643,6 +622,7 @@ global_templates_vars:
 <h2 id="adding-dependencies-to-the-catalog"><a class="header" href="#adding-dependencies-to-the-catalog">Adding dependencies to the catalog</a></h2>
 <p>If you set up your package manager to be <code>pnpm</code> (which is the default) and set <code>catalog</code> to <code>true</code>, whenever you try to generate a new package that has dependencies marked with <code>catalog:</code> (either the default catalog or a named one) but that package is absent in the <code>pnpm-workspace.yaml</code> file, then Sketch will add it automatically for you.</p>
 <h3 id="example-2"><a class="header" href="#example-2">Example</a></h3>
+<p>With this config:</p>
 <pre><code class="language-yaml">typescript:
   catalog: true
 
@@ -663,7 +643,6 @@ global_templates_vars:
 </blockquote>
 <p>We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:</p>
 <pre><code class="language-yaml">packages:
-  - 'apps/*'
   - 'packages/*'
 
 catalogs:
@@ -672,7 +651,7 @@ catalogs:
 
 catalog:
   "hono": ^4.9.7
-  "oxlint": ^1.15.0
+  "oxlint": ^1.16.0
   "typescript": ^5.9.2
   "vitest": ^3.2.4
 
@@ -731,16 +710,38 @@ catalog:
     }
   ],
   "devDependencies": {
-    "oxlint": "^1.15.0", 
+    "oxlint": "^1.16.0", 
     "typescript": "^5.9.2", 
     "vitest": "^3.2.4"
   },
   "dependencies": {}
 }
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="custom-templating"><a class="header" href="#custom-templating">Custom Templating</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="templating"><a class="header" href="#templating">Templating</a></h1>
 <p>Sketch can be used to leverage the Tera templating engine to quickly set up all sorts of files or entire project structures.</p>
 <p>This means being able to inject variables into generated content, as well as using all of the functions and filters available in Tera (like extracting envs), plus extra ones added by Sketch (like uuid generation).</p>
+<h1 id="special-variables"><a class="header" href="#special-variables">Special variables</a></h1>
+<p>Sketch provides some special variables prefixed with to get access to some commonly used information. All of the following variables are available in templates, prefixed with <code>sketch_</code> (i.e. <code>sketch_os</code> and so on).</p>
+<ul>
+<li><code>os</code> (env OS)</li>
+<li><code>user</code> (env USER)</li>
+<li><code>home</code> (env HOME)</li>
+<li><code>hostname</code> (env HOSTNAME)</li>
+<li><code>arch</code> (env HOSTTYPE)</li>
+<li><code>xdg_config</code> (env XDG_CONFIG_HOME)</li>
+<li><code>xdg_data</code> (env XDG_DATA_HOME)</li>
+<li><code>xdg_state</code> (env XDG_STATE_HOME)</li>
+<li><code>xdg_cache</code> (env XDG_CACHE_HOME)</li>
+</ul>
+<h1 id="filters-and-functions"><a class="header" href="#filters-and-functions">Filters and functions</a></h1>
+<p>All of the builtin filters and functions for <a href="https://keats.github.io/tera/docs/">Tera</a> are available.</p>
+<p>On top of that, Sketch adds a <code>uuid</code> function that can be used to generate a v4 UUID.</p>
+<h2 id="global-and-local-context"><a class="header" href="#global-and-local-context">Global and Local Context</a></h2>
+<p>Variables are evaluated based on the locality of their context. Variables set via cli with the <code>--set</code> flag have the highest priority, followed by variables defined in a local context (the <code>context</code> field in a template preset) and by global variables defined in the config file.</p>
+<blockquote>
+<p>⚠️ Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="custom-templating"><a class="header" href="#custom-templating">Custom Templating</a></h1>
 <p>Templates can be defined in files or directly within a command. The variables can also be defined in the config file or as part of a command.</p>
 <pre><code class="language-toml">root_dir = "../output/custom_templates"
 
@@ -760,21 +761,20 @@ templating_presets.test = [
   { template = "subdir/nested.j2", output = "new_dir/nested.yaml" },
 
   # Only using the global variables
-  { template = "abc.j2", output = "with_global_var.yaml" },
+  { template = "lit_template", output = "with_global_var.yaml" },
 
   # Using a local override
-  { template = "abc.j2", output = "with_override.yaml", context = { my_var = 20 } },
+  { template = "lit_template", output = "with_override.yaml", context = { my_var = 20 } },
 
   # Defining a literal template
   { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
-
-  # Using a literal template defined in the config file
-  { template = "lit_template", output = "literal_from_config.yaml" },
 ]
 </code></pre>
 <p>The output paths defined in the command or in the preset will be joined to the <code>root_dir</code> setting.</p>
 <p>When we run the command</p>
+<blockquote>
 <p><code>sketch render-preset test</code></p>
+</blockquote>
 <p>The output of the specified <code>root-dir</code> will look like this:</p>
 <pre><code>.
 ├── from_literal.txt
@@ -786,22 +786,8 @@ templating_presets.test = [
 ├── with_global_var.yaml
 └── with_override.yaml
 </code></pre>
-<h2 id="global-and-local-context"><a class="header" href="#global-and-local-context">Global and Local Context</a></h2>
-<p>As you can see from the previous example, the variables provided as a local context override global variables.</p>
-<p><code>with_global_vars.yaml</code> will be like this:</p>
-<pre><code class="language-yaml">my_var: 15
-</code></pre>
-<p>While <code>with_override.yaml</code> will be like this:</p>
-<pre><code class="language-yaml">my_var: 20
-</code></pre>
-<p>But the variables defined from the command always have the greatest priority.</p>
-<p>So if we run this command:</p>
-<p><code>sketch --set my_var=25 render --id lit_template with_cli_override.yaml</code></p>
-<p>The output will be:</p>
-<pre><code class="language-yaml">my_var: 25
-</code></pre>
 <blockquote>
-<p>⚠️ Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.</p>
+<p>ℹ️ Templates can also be rendered to stdout with the --stdout flag.</p>
 </blockquote>
 <h2 id="defining-a-template-in-a-command"><a class="header" href="#defining-a-template-in-a-command">Defining a template in a command</a></h2>
 <p>We can also define a template inside the command itself.</p>
@@ -812,9 +798,6 @@ templating_presets.test = [
 <p>Output:</p>
 <pre><code class="language-txt">they're taking the hobbits to Isengard!
 </code></pre>
-<blockquote>
-<p>ℹ️ Templates can also be rendered to stdout with the --stdout flag.</p>
-</blockquote>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="rendered-commands"><a class="header" href="#rendered-commands">Rendered Commands</a></h1>
 <p>Sketch makes it possible to create shell commands starting from templates, which can be defined in a file or provided via command.</p>
 <h3 id="from-literal-template"><a class="header" href="#from-literal-template">From literal template</a></h3>
@@ -900,15 +883,6 @@ general kenobi.
 <h6 id="options-1"><a class="header" href="#options-1"><strong>Options:</strong></a></h6>
 <ul>
 <li>
-<p><code>--root-tsconfig &lt;NAME&gt;</code> — The name of the tsconfig file to use at the root [default: 'tsconfig.options.json']</p>
-</li>
-<li>
-<p><code>--project-tsconfig &lt;NAME&gt;</code> — The name of the tsconfig file for individual packages [default: 'tsconfig.src.json']</p>
-</li>
-<li>
-<p><code>--dev-tsconfig &lt;NAME&gt;</code> — The name of the development tsconfig file [default: 'tsconfig.dev.json']</p>
-</li>
-<li>
 <p><code>--package-manager &lt;NAME&gt;</code> — The package manager being used. [default: pnpm]</p>
 <p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
 </li>
@@ -939,7 +913,6 @@ general kenobi.
 <li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for the root package. If unset, defaults are used</li>
 <li><code>-p</code>, <code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for the root package</li>
 <li><code>--no-oxlint</code> — Does not generate an oxlint config at the root</li>
-<li><code>--moonrepo</code> — Generate setup for moonrepo</li>
 </ul>
 <h2 id="sketch-ts-package"><a class="header" href="#sketch-ts-package"><code>sketch ts package</code></a></h2>
 <p>Generates a new typescript package</p>
@@ -951,7 +924,7 @@ general kenobi.
 <h6 id="options-3"><a class="header" href="#options-3"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — The package preset to use</li>
-<li><code>--moonrepo</code> — Sets up a basic moon.yml file</li>
+<li><code>--update-root-tsconfig</code> — Whether the tsconfig file at the workspace root should receive a reference to the new package</li>
 <li><code>--no-vitest</code> — Does not set up vitest for this package</li>
 <li><code>--oxlint</code> — Sets up an oxlint config file for this package</li>
 <li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
@@ -959,7 +932,6 @@ general kenobi.
 <li><code>--library</code> — Marks the package as a library</li>
 <li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for this package. If unset, defaults are used</li>
 <li><code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for this package</li>
-<li><code>-u</code>, <code>--update-root-tsconfig</code> — Adds the new package to the references in the root tsconfig</li>
 </ul>
 <h2 id="sketch-init"><a class="header" href="#sketch-init"><code>sketch init</code></a></h2>
 <p>Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</p>

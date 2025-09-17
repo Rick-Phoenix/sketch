@@ -187,16 +187,11 @@ typescript:
   # ...use this kind of version range (patch, minor, exact)
   version_range: patch
 
-  # Only relevant if you use
-  # default tsconfigs or moonrepo
-  root_tsconfig_name: tsconfig.options.json
-
   package_manager: pnpm
 
   pnpm_config:
-    # Default is `packages/*` and `apps/*`.
     # All dirs listed here will be created automatically
-    packages: ["packages/*", "apps/*"]
+    packages: ["packages/*"]
 
   # Use the pnpm catalog for default dependencies
   catalog: false

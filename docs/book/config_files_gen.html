@@ -178,8 +178,11 @@
                         <h1 id="generating-config-files"><a class="header" href="#generating-config-files">Generating Config Files</a></h1>
 <p>You can use the <code>sketch new</code> command to generate a new configuration file in the desired output file and format.
 The default is <code>sketch.yaml</code>, but any name is supported as long as the format is either <code>json</code>, <code>toml</code> or <code>yaml</code>, and the configuration file is specified with the <code>-c</code> or <code>--config</code> flag.</p>
-<p>If called with added arguments, it will generate a config with the provided values.
-Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
+<p>If extra arguments are provided, the generated config will populated with the values of these arguments.
+So if we run <code>sketch --templates-dir "/path/to/templates"</code>, <code>templates_dir</code> will be set to that path in the generated config.</p>
+<blockquote>
+<p>⚠️ Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
+</blockquote>
 <p>Command:</p>
 <pre><code class="language-txt">sketch --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
 </code></pre>
@@ -196,11 +199,11 @@ global_templates_vars:
   general: kenobi
 </code></pre>
 <h1 id="repo-setup"><a class="header" href="#repo-setup">Repo Setup</a></h1>
-<p>You can also use the <code>init</code> command, which does a few things to set up a new git repo:</p>
+<p>You can also use the <code>init</code> command to create a new git repo. This command will:</p>
 <ol>
-<li>It creates a new git repo in the specified <code>root_dir</code>.</li>
-<li>If a <code>remote</code> is provided, via flag or config, it also adds that remote as the origin for that repo.</li>
-<li>Unless <code>pre-commit</code> is disabled, it will generate a new .pre-commit-config.yaml file with the repos specified in the config file, or just with the gitleaks repo if none is specified. It will then run <code>pre-commit install</code> to install the given hooks.</li>
+<li>Create a new git repo in the specified <code>root_dir</code>.</li>
+<li>If a <code>--remote</code> is provided, it will also add that remote as the origin/main for the repo.</li>
+<li>Unless <code>pre-commit</code> is disabled, it will generate a new .pre-commit-config.yaml file in the root, with the repos specified in the config file (if there are any, otherwise it will just add the gitleaks repo). It will then run <code>pre-commit install</code> to install the given hooks.</li>
 </ol>
 
                     </main>

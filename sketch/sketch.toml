@@ -15,7 +15,6 @@ catalog = true
 name = "test_package"
 package_json = "extended"
 dir = "packages/test_package"
-moonrepo = { tasks = { command = "abc" }, config = { data = "abc" } }
 
 [typescript.people]
 Aragorn = { name = "Aragorn", email = "aragorn@middleeath.com", url = "aragorn.middleearth.com" }

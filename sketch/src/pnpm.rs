@@ -28,7 +28,7 @@ impl Default for PnpmWorkspace {
     Self {
       catalog: Default::default(),
       catalogs: Default::default(),
-      packages: btreeset! { "packages/*".to_string(), "apps/*".to_string() },
+      packages: btreeset! { "packages/*".to_string() },
       extra: Default::default(),
     }
   }

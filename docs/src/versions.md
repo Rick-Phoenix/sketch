@@ -6,6 +6,8 @@ By default, all `latest` versions will be converted to a version range (which ca
 
 This means that you can easily use your presets and ensure that they're always going to be updated, without using `latest`, which is not very good practice.
 
+>⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api.
+
 
 ```yaml
 {{#include ../../examples/typescript/packages_versions.yaml:all}}
@@ -17,6 +19,8 @@ This means that you can easily use your presets and ensure that they're always g
 If you set up your package manager to be `pnpm` (which is the default) and set `catalog` to `true`, whenever you try to generate a new package that has dependencies marked with `catalog:` (either the default catalog or a named one) but that package is absent in the `pnpm-workspace.yaml` file, then Sketch will add it automatically for you.
 
 ### Example
+
+With this config:
 
 ```yaml
 {{#include ../../examples/typescript/catalog.yaml:all}}

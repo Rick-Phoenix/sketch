@@ -179,6 +179,9 @@
 <h2 id="converting-latest-to-a-range"><a class="header" href="#converting-latest-to-a-range">Converting <code>latest</code> to a range</a></h2>
 <p>By default, all <code>latest</code> versions will be converted to a version range (which can be specified in the config) that starts from the actual latest version for that package.</p>
 <p>This means that you can easily use your presets and ensure that they're always going to be updated, without using <code>latest</code>, which is not very good practice.</p>
+<blockquote>
+<p>⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api.</p>
+</blockquote>
 <pre><code class="language-yaml">typescript:
   # Default
   no_convert_latest_to_range: false
@@ -189,6 +192,7 @@
 <h2 id="adding-dependencies-to-the-catalog"><a class="header" href="#adding-dependencies-to-the-catalog">Adding dependencies to the catalog</a></h2>
 <p>If you set up your package manager to be <code>pnpm</code> (which is the default) and set <code>catalog</code> to <code>true</code>, whenever you try to generate a new package that has dependencies marked with <code>catalog:</code> (either the default catalog or a named one) but that package is absent in the <code>pnpm-workspace.yaml</code> file, then Sketch will add it automatically for you.</p>
 <h3 id="example"><a class="header" href="#example">Example</a></h3>
+<p>With this config:</p>
 <pre><code class="language-yaml">typescript:
   catalog: true
 
@@ -209,7 +213,6 @@
 </blockquote>
 <p>We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:</p>
 <pre><code class="language-yaml">packages:
-  - 'apps/*'
   - 'packages/*'
 
 catalogs:
@@ -218,7 +221,7 @@ catalogs:
 
 catalog:
   "hono": ^4.9.7
-  "oxlint": ^1.15.0
+  "oxlint": ^1.16.0
   "typescript": ^5.9.2
   "vitest": ^3.2.4
 

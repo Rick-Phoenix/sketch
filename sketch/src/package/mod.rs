@@ -11,7 +11,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
   custom_templating::TemplateOutput,
-  moon::{MoonDotYml, MoonDotYmlKind},
   package::vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
   package_json::{PackageJson, PackageJsonKind},
   paths::{create_parent_dirs, get_cwd, get_relative_path},
@@ -70,10 +69,6 @@ pub struct PackageConfig {
   #[arg(skip)]
   pub kind: Option<PackageKind>,
 
-  /// Configuration for the moon.yml file. It can be a boolean, to use defaults, or a full configuration.
-  #[arg(skip)]
-  pub moonrepo: Option<MoonDotYmlKind>,
-
   /// The configuration for this package's vitest setup. It can be set to false (to disable it), an id (to use a preset) or a literal configuration.
   #[arg(skip)]
   #[merge(strategy = merge_if_not_default)]
@@ -82,11 +77,6 @@ pub struct PackageConfig {
   /// The configuration for this package's oxlint setup. It can be set to true (to use defaults), or to a literal value.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
-
-  /// Adds the new package to the references in the root tsconfig.
-  #[arg(short = 'u', long)]
-  #[merge(strategy = merge::bool::overwrite_false)]
-  pub update_root_tsconfig: bool,
 }
 
 impl Default for PackageConfig {
@@ -95,12 +85,10 @@ impl Default for PackageConfig {
       name: None,
       kind: Default::default(),
       package_json: None,
-      moonrepo: None,
       dir: Default::default(),
       vitest: Default::default(),
       ts_config: None,
       generate_templates: Default::default(),
-      update_root_tsconfig: false,
       oxlint: None,
     }
   }
@@ -113,7 +101,11 @@ pub enum PackageData {
 
 impl Config {
   /// Generate a new typescript package.
-  pub async fn build_package(self, data: PackageData) -> Result<(), GenError> {
+  pub async fn build_package(
+    self,
+    data: PackageData,
+    update_root_tsconfig: bool,
+  ) -> Result<(), GenError> {
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
@@ -242,15 +234,6 @@ impl Config {
         .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
     }
 
-    if let Some(moon_config_kind) = config.moonrepo.as_ref() && !matches!(moon_config_kind, MoonDotYmlKind::Bool(false)) {
-      let moon_config = match moon_config_kind {
-        MoonDotYmlKind::Bool(_) => MoonDotYml::default(),
-        MoonDotYmlKind::Config(moon_dot_yml) => moon_dot_yml.clone(),
-      };
-
-      write_to_output!(moon_config, "moon.yml");
-    }
-
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
 
     let tsconfig_presets = &typescript.tsconfig_presets;
@@ -301,55 +284,22 @@ impl Config {
       .to_string();
 
       let path_to_root_tsconfig = get_relative_path(&output, &root_dir)?
-        .join(
-          typescript
-            .root_tsconfig_name
-            .unwrap_or_else(|| "tsconfig.options.json".to_string()),
-        )
+        .join("tsconfig.options.json")
         .to_string_lossy()
         .to_string();
 
-      let base_tsconfig = get_default_package_tsconfig(
-        path_to_root_tsconfig,
-        typescript
-          .project_tsconfig_name
-          .as_ref()
-          .map_or("tsconfig.src.json", |v| v),
-        (!is_app).then_some(
-          typescript
-            .dev_tsconfig_name
-            .as_ref()
-            .map_or("tsconfig.dev.json", |v| v),
-        ),
-      );
+      let base_tsconfig = get_default_package_tsconfig(path_to_root_tsconfig, is_app);
 
       tsconfig_files.push(("tsconfig.json".to_string(), base_tsconfig));
 
       let src_tsconfig = get_default_src_tsconfig(is_app, &out_dir);
 
-      tsconfig_files.push((
-        typescript
-          .project_tsconfig_name
-          .clone()
-          .unwrap_or_else(|| "tsconfig.src.json".to_string()),
-        src_tsconfig,
-      ));
+      tsconfig_files.push(("tsconfig.src.json".to_string(), src_tsconfig));
 
       if !is_app {
-        let dev_tsconfig = get_default_dev_tsconfig(
-          typescript
-            .project_tsconfig_name
-            .as_ref()
-            .map_or("tsconfig.src.json", |v| v),
-          &out_dir,
-        );
+        let dev_tsconfig = get_default_dev_tsconfig(&out_dir);
 
-        tsconfig_files.push((
-          typescript
-            .dev_tsconfig_name
-            .unwrap_or_else(|| "tsconfig.dev.json".to_string()),
-          dev_tsconfig,
-        ));
+        tsconfig_files.push(("tsconfig.dev.json".to_string(), dev_tsconfig));
       }
     }
 
@@ -362,7 +312,7 @@ impl Config {
       write_to_output!(tsconfig, file);
     }
 
-    if config.update_root_tsconfig {
+    if update_root_tsconfig {
       let root_tsconfig_path = root_dir.join("tsconfig.json");
 
       let root_tsconfig_file =

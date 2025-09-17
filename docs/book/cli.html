@@ -224,15 +224,6 @@
 <h6 id="options-1"><a class="header" href="#options-1"><strong>Options:</strong></a></h6>
 <ul>
 <li>
-<p><code>--root-tsconfig &lt;NAME&gt;</code> — The name of the tsconfig file to use at the root [default: 'tsconfig.options.json']</p>
-</li>
-<li>
-<p><code>--project-tsconfig &lt;NAME&gt;</code> — The name of the tsconfig file for individual packages [default: 'tsconfig.src.json']</p>
-</li>
-<li>
-<p><code>--dev-tsconfig &lt;NAME&gt;</code> — The name of the development tsconfig file [default: 'tsconfig.dev.json']</p>
-</li>
-<li>
 <p><code>--package-manager &lt;NAME&gt;</code> — The package manager being used. [default: pnpm]</p>
 <p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
 </li>
@@ -263,7 +254,6 @@
 <li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for the root package. If unset, defaults are used</li>
 <li><code>-p</code>, <code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for the root package</li>
 <li><code>--no-oxlint</code> — Does not generate an oxlint config at the root</li>
-<li><code>--moonrepo</code> — Generate setup for moonrepo</li>
 </ul>
 <h2 id="sketch-ts-package"><a class="header" href="#sketch-ts-package"><code>sketch ts package</code></a></h2>
 <p>Generates a new typescript package</p>
@@ -275,7 +265,7 @@
 <h6 id="options-3"><a class="header" href="#options-3"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — The package preset to use</li>
-<li><code>--moonrepo</code> — Sets up a basic moon.yml file</li>
+<li><code>--update-root-tsconfig</code> — Whether the tsconfig file at the workspace root should receive a reference to the new package</li>
 <li><code>--no-vitest</code> — Does not set up vitest for this package</li>
 <li><code>--oxlint</code> — Sets up an oxlint config file for this package</li>
 <li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
@@ -283,7 +273,6 @@
 <li><code>--library</code> — Marks the package as a library</li>
 <li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for this package. If unset, defaults are used</li>
 <li><code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for this package</li>
-<li><code>-u</code>, <code>--update-root-tsconfig</code> — Adds the new package to the references in the root tsconfig</li>
 </ul>
 <h2 id="sketch-init"><a class="header" href="#sketch-init"><code>sketch init</code></a></h2>
 <p>Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</p>

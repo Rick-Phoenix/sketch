@@ -36,21 +36,17 @@ pub(crate) fn get_default_root_tsconfig() -> TsConfig {
   }
 }
 
-pub(crate) fn get_default_package_tsconfig(
-  rel_path_to_root_dir: String,
-  project_tsconfig_name: &str,
-  dev_tsconfig_name: Option<&str>,
-) -> TsConfig {
+pub(crate) fn get_default_package_tsconfig(rel_path_to_root_dir: String, is_app: bool) -> TsConfig {
   TsConfig {
     extends: Some(rel_path_to_root_dir),
     files: Some(btreeset![]),
     references: {
       let mut references = btreeset![TsConfigReference {
-        path: project_tsconfig_name.to_string(),
+        path: "tsconfig.src.json".to_string(),
       }];
-      if let Some(dev_tsconfig_name) = dev_tsconfig_name {
+      if !is_app {
         references.insert(TsConfigReference {
-          path: dev_tsconfig_name.to_string(),
+          path: "tsconfig.dev.json".to_string(),
         });
       }
       Some(references)
@@ -59,9 +55,9 @@ pub(crate) fn get_default_package_tsconfig(
   }
 }
 
-pub(crate) fn get_default_dev_tsconfig(project_tsconfig_name: &str, out_dir: &str) -> TsConfig {
+pub(crate) fn get_default_dev_tsconfig(out_dir: &str) -> TsConfig {
   TsConfig {
-    extends: Some(project_tsconfig_name.to_string()),
+    extends: Some("tsconfig.src.json".to_string()),
     include: Some(btreeset![
       "*.ts".to_string(),
       "tests".to_string(),
@@ -69,7 +65,7 @@ pub(crate) fn get_default_dev_tsconfig(project_tsconfig_name: &str, out_dir: &st
       "src".to_string(),
     ]),
     references: Some(btreeset![TsConfigReference {
-      path: project_tsconfig_name.to_string(),
+      path: "tsconfig.src.json".to_string(),
     }]),
     compiler_options: Some(CompilerOptions {
       root_dir: Some(".".to_string()),

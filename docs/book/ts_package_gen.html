@@ -196,11 +196,6 @@
       # The directory for this package, starting from the global root_dir
       dir: packages/frontend
 
-      # If true, it updates the tsconfig.json file at the root,
-      # by adding the new tsconfig.json file to the list of
-      # project references.
-      update_root_tsconfig: false
-
       # The kind of package to generate. Only relevant if you use
       # default tsconfigs.
       kind: library
@@ -209,21 +204,13 @@
       # or to false (which is the default setting) for no oxlint config.
       oxlint: false
 
-      # Generate a moon.yml file.
-      # Can be set to `true` to use a basic default.
-      moonrepo:
-        tasks:
-          test:
-            command: "vitest --config ./tests/vitest.config.ts run"
-            inputs:
-              - "tests/**/*"
-              - "src/**/*"
-
       # Create a vitest setup.
-      # Can be set to true to use defaults.
+      # Can be set to true to use defaults (which are as below).
       vitest:
-        # The path to the generated config file
-        file_path: tests/vitest.config.ts
+        # Where the config file should be generated, starting from
+        # the root of the package.
+        # It defaults to the value of `tests_dir`
+        out_dir: null
 
         # The directory to use for tests
         tests_dir: tests
@@ -262,7 +249,6 @@ global_templates_vars:
 <p>So the final tree structure of the output directory will look like this:</p>
 <pre><code>.
 ├── .oxlintrc.json
-├── moon.yml
 ├── package.json
 ├── src
 │   ├── index.ts

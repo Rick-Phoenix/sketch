@@ -6,7 +6,7 @@ Configuration files can extend one another by using the `extends` field:
 extends: ["other_config.yaml"]
 ```
 
-Where the path being used is a relative path starting from the parent directory of the original config file.
+Where the path being used can be either an absolute path or a relative path starting from the original config file.
 
 The merging strategy works as follows:
 - For conflicting values, such as opposite booleans, the previous value will be overridden.

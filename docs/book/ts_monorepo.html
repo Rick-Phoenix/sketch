@@ -212,10 +212,6 @@
         "plugins": ["unicorn", "typescript", "oxc"]
       }
 
-    # Setup for moonrepo (can also just be set to `true` to use defaults)
-    moonrepo:
-      toolchain:
-        root_tsconfig_name: tsconfig.options.json
 </code></pre>
 <p>And the package.json file of the root package will be like this:</p>
 <pre><code class="language-json">{
@@ -228,7 +224,7 @@
   "scripts": {},
   "devDependencies": {
     "husky": "^9.1.7", 
-    "oxlint": "^1.15.0", 
+    "oxlint": "^1.16.0", 
     "typescript": "^5.9.2"
   },
   "dependencies": {}
@@ -253,12 +249,8 @@ global_templates_vars:
 </code></pre>
 <p>So the final tree structure of the output directory will look like this:</p>
 <pre><code>.
-├── .moon
-│   ├── tasks.yml
-│   └── toolchain.yml
 ├── .out
 ├── .oxlintrc.json
-├── apps
 ├── docker
 │   └── dev.dockerfile
 ├── package.json

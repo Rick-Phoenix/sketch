@@ -177,10 +177,10 @@
                     <main>
                         <h1 id="lsp-integration"><a class="header" href="#lsp-integration">Lsp Integration</a></h1>
 <p>In order to ensure the best development experience, it is highly recommended to set up your IDE to load the json schema for Sketch's configuration file.</p>
+<p>This will provide type-safety, autocompletion and additional documentation when writing config files.</p>
 <p>Every time a new version is released, the json schema for the configuration file will be updated in the <a href="https://github.com/Rick-Phoenix/sketch/tree/main/schemas">github repo</a>. Each version will have its own distinct schema file, and the <code>latest.json</code> file will track the schema for the latest version.</p>
 <p>You can then use this schema with the <code>yaml</code>, <code>toml</code> or <code>json</code> language servers to get autocompletion, type information and documentation for each element of the config file.</p>
 <p>This can be done by configuring the specific LSP in your editor, or simply by using a special comment at the top of your file that links to the config's json schema.</p>
-<p>This will ensure that you get type-safety, autocompletion and additional documentation when writing config files.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <p>Yaml:</p>
 <pre><code class="language-yaml"># yaml-language-server: $schema=https://github.com/Rick-Phoenix/sketch/blob/main/schemas/latest.json

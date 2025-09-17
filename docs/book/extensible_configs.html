@@ -179,7 +179,7 @@
 <p>Configuration files can extend one another by using the <code>extends</code> field:</p>
 <pre><code class="language-yaml">extends: ["other_config.yaml"]
 </code></pre>
-<p>Where the path being used is a relative path starting from the parent directory of the original config file.</p>
+<p>Where the path being used can be either an absolute path or a relative path starting from the original config file.</p>
 <p>The merging strategy works as follows:</p>
 <ul>
 <li>For conflicting values, such as opposite booleans, the previous value will be overridden.</li>

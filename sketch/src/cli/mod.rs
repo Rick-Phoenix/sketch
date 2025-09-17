@@ -24,7 +24,6 @@ use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
 
 use crate::{
-  moon::{MoonConfigKind, MoonDotYmlKind},
   package::{vitest::VitestConfigKind, PackageConfig},
   Config, *,
 };
@@ -102,7 +101,6 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
 
       match command {
         TsCommands::Monorepo {
-          moonrepo,
           no_oxlint,
           root_package_overrides,
           ..
@@ -115,10 +113,6 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
 
           if no_oxlint {
             root_package.oxlint = Some(OxlintConfig::Bool(false));
-          }
-
-          if moonrepo {
-            root_package.moonrepo = Some(MoonConfigKind::Bool(true));
           }
         }
         TsCommands::Package { .. } => {}
@@ -341,10 +335,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           preset,
           package_config,
           install,
-          moonrepo,
           no_vitest,
           oxlint,
           kind,
+          update_root_tsconfig,
         } => {
           let mut package = if let Some(preset) = preset {
             typescript
@@ -365,10 +359,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
           if let Some(kind) = kind {
             package.kind = Some(kind.into());
-          }
-
-          if moonrepo {
-            package.moonrepo = Some(MoonDotYmlKind::Bool(true));
           }
 
           if no_vitest {
@@ -395,7 +385,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           }
 
           config
-            .build_package(PackageData::Config(package.clone()))
+            .build_package(PackageData::Config(package.clone()), update_root_tsconfig)
             .await?;
         }
       }
@@ -527,10 +517,6 @@ enum TsCommands {
     /// Does not generate an oxlint config at the root.
     #[arg(long)]
     no_oxlint: bool,
-
-    /// Generate setup for moonrepo
-    #[arg(long)]
-    moonrepo: bool,
   },
 
   /// Generates a new typescript package
@@ -539,9 +525,10 @@ enum TsCommands {
     #[arg(short, long)]
     preset: Option<String>,
 
-    /// Sets up a basic moon.yml file
+    /// Whether the tsconfig file at the workspace root
+    /// should receive a reference to the new package
     #[arg(long)]
-    moonrepo: bool,
+    update_root_tsconfig: bool,
 
     /// Does not set up vitest for this package
     #[arg(long)]

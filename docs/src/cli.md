@@ -56,9 +56,6 @@ Launches typescript-specific commands
 
 ###### **Options:**
 
-* `--root-tsconfig <NAME>` — The name of the tsconfig file to use at the root [default: 'tsconfig.options.json']
-* `--project-tsconfig <NAME>` — The name of the tsconfig file for individual packages [default: 'tsconfig.src.json']
-* `--dev-tsconfig <NAME>` — The name of the development tsconfig file [default: 'tsconfig.dev.json']
 * `--package-manager <NAME>` — The package manager being used. [default: pnpm]
 
   Possible values: `pnpm`, `npm`, `deno`, `bun`, `yarn`
@@ -88,7 +85,6 @@ Generates a new typescript monorepo
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for the root package. If unset, defaults are used
 * `-p`, `--package-json <ID>` — The id of the package.json preset to use for the root package
 * `--no-oxlint` — Does not generate an oxlint config at the root
-* `--moonrepo` — Generate setup for moonrepo
 
 
 
@@ -105,7 +101,7 @@ Generates a new typescript package
 ###### **Options:**
 
 * `-p`, `--preset <PRESET>` — The package preset to use
-* `--moonrepo` — Sets up a basic moon.yml file
+* `--update-root-tsconfig` — Whether the tsconfig file at the workspace root should receive a reference to the new package
 * `--no-vitest` — Does not set up vitest for this package
 * `--oxlint` — Sets up an oxlint config file for this package
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
@@ -113,7 +109,6 @@ Generates a new typescript package
 * `--library` — Marks the package as a library
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for this package. If unset, defaults are used
 * `--package-json <ID>` — The id of the package.json preset to use for this package
-* `-u`, `--update-root-tsconfig` — Adds the new package to the references in the root tsconfig
 
 
 

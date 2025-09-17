@@ -45,13 +45,13 @@ pub struct TemplateOutput {
 pub(crate) fn get_default_context() -> Context {
   let mut context = Context::default();
 
-  context.insert("__cwd", &current_dir().expect("Could not get the cwd"));
+  context.insert("sketch_cwd", &current_dir().expect("Could not get the cwd"));
 
   macro_rules! add_env_to_context {
     ($name:ident, $env_name:ident) => {
       paste::paste! {
         if let Ok($name) = env::var(stringify!($env_name)) {
-          context.insert(concat!("__", stringify!($name)), &$name);
+          context.insert(concat!("sketch_", stringify!($name)), &$name);
         }
       }
     };
@@ -59,7 +59,7 @@ pub(crate) fn get_default_context() -> Context {
     ($name:ident) => {
       paste::paste! {
         if let Ok($name) = env::var(stringify!([< $name:upper >])) {
-          context.insert(concat!("__", stringify!($name)), &$name);
+          context.insert(concat!("sketch_", stringify!($name)), &$name);
         }
       }
     };
@@ -75,7 +75,7 @@ pub(crate) fn get_default_context() -> Context {
   add_env_to_context!(xdg_cache, XDG_CACHE_HOME);
   add_env_to_context!(xdg_state, XDG_STATE_HOME);
 
-  context.insert("__tmp_dir", &env::temp_dir());
+  context.insert("sketch_tmp_dir", &env::temp_dir());
 
   context
 }
