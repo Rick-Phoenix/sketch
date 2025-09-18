@@ -9,7 +9,7 @@
       "type": "boolean"
     },
     "extends": {
-      "description": "The relative paths, from the current file, to the other config files to merge with the current one.",
+      "description": "The relative paths, from the current file, to the config files to merge with the current one.",
       "type": "array",
       "items": {
         "type": "string"
@@ -17,21 +17,21 @@
       "uniqueItems": true
     },
     "gitignore": {
-      "description": "Settings for the gitignore file. You can either add more entries on top of the defaults, or replace the defaults altogether.",
+      "description": "Settings for the gitignore file to generate in new repos. It can be a list of directives to append to the defaults or a string, to replace the defaults entirely.",
       "$ref": "#/$defs/GitIgnore"
     },
     "no_overwrite": {
-      "description": "Exits with error if a file being created already exists.",
+      "description": "Does not overwrite existing files.",
       "type": "boolean",
       "default": false
     },
     "pre_commit": {
-      "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/).",
+      "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.",
       "$ref": "#/$defs/PreCommitSetting",
       "default": true
     },
     "root_dir": {
-      "description": "The root directory for the project [default: \".\"].",
+      "description": "The base path for the generated files [default: \".\"].",
       "type": [
         "string",
         "null"
@@ -47,7 +47,7 @@
       "default": null
     },
     "templates": {
-      "description": "A map that contains templates defined literally.",
+      "description": "A map that contains template definitions.",
       "type": "object",
       "additionalProperties": {
         "type": "string"
@@ -55,7 +55,7 @@
       "default": {}
     },
     "templates_dir": {
-      "description": "The path to the directory with the template files.",
+      "description": "The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).",
       "type": [
         "string",
         "null"
@@ -85,7 +85,7 @@
       ]
     },
     "vars": {
-      "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set as a template's local context or via a cli command.",
+      "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set in a template's local context or via the cli.",
       "type": "object",
       "additionalProperties": true,
       "default": {}
@@ -1600,7 +1600,7 @@
           "default": null
         },
         "oxlint": {
-          "description": "Oxlint configuration for the root package.",
+          "description": "Oxlint configuration for the root package.\nCan be set to true (to use defaults) or false (to disable it) or to a string defining the configuration to generate.",
           "anyOf": [
             {
               "$ref": "#/$defs/OxlintConfig"
@@ -1876,17 +1876,17 @@
       "type": "object",
       "properties": {
         "catalog": {
-          "description": "Whether to use the pnpm catalog for default dependencies.",
+          "description": "Uses the pnpm catalog for default dependencies.",
           "type": "boolean",
           "default": false
         },
         "no_convert_latest_to_range": {
-          "description": "Whether the dependencies with `latest` should be converted to a version range.",
+          "description": "Does not convert dependencies marked as `latest` to a version range.",
           "type": "boolean",
           "default": false
         },
         "no_default_deps": {
-          "description": "Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)",
+          "description": "Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)",
           "type": "boolean",
           "default": false
         },
@@ -1939,7 +1939,7 @@
           "default": null
         },
         "root_package": {
-          "description": "The configuration for the root typescript package.",
+          "description": "The configuration for the root typescript package to generate in new monorepos.\nCan be empty to use defaults.",
           "anyOf": [
             {
               "$ref": "#/$defs/RootPackage"
@@ -1959,7 +1959,7 @@
           "default": {}
         },
         "version_range": {
-          "description": "The kind of version ranges to use for dependencies that are fetched automatically (such as when a dependency with `catalog:` is listed in a [`PackageJson`] and it's not present in pnpm-workspace.yaml, or when a dependency is set to `latest` and [`TypescriptConfig::convert_latest_to_range`] is set to true).",
+          "description": "The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]",
           "anyOf": [
             {
               "$ref": "#/$defs/VersionRange"

@@ -18,9 +18,9 @@ name = "sketch"
 path = "src/main.rs"
 
 [package.metadata.release]
-tag-message = "chore: Release version {{ version }}"
-tag-name = "v{{ version }}"
-pre-release-hook = ["sh", "-c", "cd .. ; cargo test --all-features;"]
+tag-message = "chore: Release version {{version}}"
+tag-name = "v{{version}}"
+pre-release-hook = ["sh", "-c", "cd .. && ./pre_release.sh"]
 allow-branch = ["main"]
 
 [dev-dependencies]
