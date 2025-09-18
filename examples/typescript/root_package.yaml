@@ -4,13 +4,17 @@ root_dir: ../../sketch/tests/output/ts_examples
 
 # ANCHOR: all
 typescript:
+  # By default, typescript and oxlint would be added to
+  # the root package's dependencies
+  no_default_deps: true
+
   root_package:
     name: workspace
 
     package_json:
       license: Apache-2.0
       devDependencies:
-        husky: latest
+        husky: ^9.0.0
 
     # The tsconfig files to generate at the root.
     # If left empty, defaults will be used.

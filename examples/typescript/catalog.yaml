@@ -4,6 +4,8 @@ root_dir: ../../sketch/tests/output/ts_examples
 
 # ANCHOR: all
 typescript:
+  no_default_deps: true
+
   catalog: true
 
   package_presets:

@@ -6,7 +6,7 @@ By default, all `latest` versions will be converted to a version range (which ca
 
 This means that you can easily use your presets and ensure that they're always going to be updated, without using `latest`, which is not very good practice.
 
->⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api.
+>⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api, causing an error.
 
 
 ```yaml
