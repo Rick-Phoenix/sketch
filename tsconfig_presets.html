@@ -237,20 +237,35 @@
 </code></pre>
 <p>After running the command</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/ts_examples/commands/tsconfig_cmd}}</code></p>
+<p><code>sketch ts package --preset tsconfig-example</code></p>
 </blockquote>
 <p>We get the following files:</p>
 <p><code>tsconfig.json</code></p>
-<pre><code class="language-json">{{#include ../../sketch/tests/output/ts_examples/packages/tsconfig-example/tsconfig.json}}
+<pre><code class="language-json">{
+  "files": []
+}
 </code></pre>
 <p><code>tsconfig.src.json</code></p>
-<pre><code class="language-json">{{#include ../../sketch/tests/output/ts_examples/packages/tsconfig-example/tsconfig.src.json}}
+<pre><code class="language-json">{
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "verbatimModuleSyntax": true
+  }
+}
 </code></pre>
 <blockquote>
 <p>✏️ Note how the two configs have been merged!</p>
 </blockquote>
 <p><code>tsconfig.dev.json</code></p>
-<pre><code class="language-json">{{#include ../../sketch/tests/output/ts_examples/packages/tsconfig-example/tsconfig.dev.json}}
+<pre><code class="language-json">{
+  "include": [
+    "src",
+    "tests"
+  ],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}
 
 </code></pre>
 

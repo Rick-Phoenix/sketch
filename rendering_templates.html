@@ -203,24 +203,24 @@ templates_dir = "../templates"
 </code></pre>
 <p>We can render the contents of <code>nested.j2</code> by running</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/custom_templates/commands/from_template_file_cmd}}</code></p>
+<p><code>sketch render --id subdir/nested.j2 from_template_file.yaml</code></p>
 </blockquote>
 <p>However, we can also render content from any file, by using the <code>-f</code> flag. In this case, the relative paths will be resolved from the cwd.</p>
 <p>Example:</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/custom_templates/commands/from_single_file_cmd}}</code></p>
+<p><code>sketch render -f tests/custom_templates/single_file.j2 from_single_file.yaml</code></p>
 </blockquote>
 <h2 id="from-a-config-definition"><a class="header" href="#from-a-config-definition">From A Config Definition</a></h2>
 <p>Templates can be defined inside the configuration file:</p>
 <pre><code class="language-yaml">templates = { lit_template = "my_var: {{ my_var }}" }
 </code></pre>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/custom_templates/commands/from_config_template_cmd}}</code></p>
+<p><code>sketch render --id lit_template from_config_template.yaml</code></p>
 </blockquote>
 <h2 id="from-literal-definition"><a class="header" href="#from-literal-definition">From Literal Definition</a></h2>
 <p>...or directly as part of the command:</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}</code></p>
+<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
 </blockquote>
 <h1 id="rendering-presets"><a class="header" href="#rendering-presets">Rendering Presets</a></h1>
 <p>Templates can also be defined in groups, which can be rendered all at once starting from the same <code>root_dir</code>.</p>
@@ -242,10 +242,15 @@ templating_presets.test = [
 </code></pre>
 <p>When we run the command</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/custom_templates/commands/render_preset_cmd}}</code></p>
+<p><code>sketch render-preset test</code></p>
 </blockquote>
 <p>These templates will be rendered together, so that the output of the specified <code>root_dir</code> will look like this:</p>
-<pre><code>{{#include ../../sketch/tests/output/custom_templates/render_preset_tree.txt}}
+<pre><code>.
+├── literal_inlined.yaml
+├── new_dir
+│   └── nested.yaml
+├── with_global_var.yaml
+└── with_override.yaml
 </code></pre>
 
                     </main>

@@ -216,13 +216,40 @@
 </code></pre>
 <p>After we run</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/ts_examples/commands/package_json_cmd}}</code></p>
+<p><code>sketch ts package --preset svelte_frontend</code></p>
 </blockquote>
 <p>We get this output in the package.json file:</p>
 <blockquote>
 <p>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages), unless <code>no_default_deps</code> is set to <code>true</code>.</p>
 </blockquote>
-<pre><code class="language-json">{{#include ../../sketch/tests/output/ts_examples/packages/svelte_frontend/package.json}}
+<pre><code class="language-json">{
+  "name": "svelte_frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "packageManager": "pnpm",
+  "scripts": {
+    "build": "vite build", 
+    "dev": "vite dev"
+  },
+  "bugs": {
+    "url": "joker.com"
+  },
+  "author": {
+    "name": "Bruce Wayne",
+    "email": "i-may-or-may-not-be-batman@gotham.com"
+  },
+  "devDependencies": {
+    "oxlint": "^1.16.0", 
+    "svelte": "^5.39.2", 
+    "tailwindcss": "^4.1.13", 
+    "typescript": "^5.9.2", 
+    "vite": "^7.1.6", 
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {}
+}
 </code></pre>
 
                     </main>

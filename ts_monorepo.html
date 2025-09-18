@@ -178,7 +178,7 @@
                         <h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
 <p>Once we have our settings (or not, if we want to use defaults), we can run</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}</code></p>
+<p><code>sketch ts monorepo</code></p>
 </blockquote>
 <p>to create our new Typescript monorepo.</p>
 <p>For example, if we use this config:</p>
@@ -214,7 +214,21 @@
 
 </code></pre>
 <p>And the package.json file of the root package will be like this:</p>
-<pre><code class="language-json">{{#include ../../sketch/tests/output/ts_examples/package.json}}
+<pre><code class="language-json">{
+  "name": "workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm",
+  "scripts": {},
+  "devDependencies": {
+    "husky": "^9.1.7", 
+    "oxlint": "^1.16.0", 
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {}
+}
 </code></pre>
 <p>You can also use the <code>generate_templates</code> field to automatically generate a certain file structure when the monorepo is generated.</p>
 <p>Let's say, for example, that every time that you create a new monorepo, you always want to create a <code>docker</code> directory with a basic <code>dev.dockerfile</code> inside of it, so that you can quickly create a dev environment using docker.</p>
@@ -234,7 +248,15 @@ vars:
   docker_dev_port: 5173
 </code></pre>
 <p>So the final tree structure of the output directory will look like this:</p>
-<pre><code>{{#include ../../sketch/tests/output/ts_examples/tree_output.txt}}
+<pre><code>.
+├── .oxlintrc.json
+├── docker
+│   └── dev.dockerfile
+├── package.json
+├── packages
+├── pnpm-workspace.yaml
+├── tsconfig.json
+└── tsconfig.options.json
 </code></pre>
 <blockquote>
 <p>ℹ️ You can use the <code>-i</code> flag to install dependencies for the root package after creating the new monorepo.</p>

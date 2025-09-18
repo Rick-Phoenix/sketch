@@ -209,10 +209,21 @@
 </code></pre>
 <p>After running</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/ts_examples/commands/catalog_cmd}}</code></p>
+<p><code>sketch ts package --preset with_catalog</code></p>
 </blockquote>
 <p>We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:</p>
-<pre><code class="language-yaml">{{#include ../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
+<pre><code class="language-yaml">packages:
+  - 'packages/*'
+
+catalogs:
+  "svelte":
+    "svelte": ^5.39.2
+
+catalog:
+  "hono": ^4.9.8
+  "oxlint": ^1.16.0
+  "typescript": ^5.9.2
+  "vitest": ^3.2.4
 
 </code></pre>
 

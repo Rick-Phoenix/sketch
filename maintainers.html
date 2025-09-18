@@ -215,10 +215,42 @@
 </code></pre>
 <p>After we run</p>
 <blockquote>
-<p><code>{{#include ../../sketch/tests/output/ts_examples/commands/people_cmd}}</code></p>
+<p><code>sketch ts package --preset people-example</code></p>
 </blockquote>
 <p>We get this <code>package.json</code> file in the root of the new package:</p>
-<pre><code class="language-json">{{#include ../../sketch/tests/output/ts_examples/packages/people-example/package.json}}
+<pre><code class="language-json">{
+  "name": "people-example",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm",
+  "scripts": {},
+  "contributors": [
+    {
+      "name": "Bruce Wayne",
+      "email": "bruce@gotham.com",
+      "url": "brucewayne.com" 
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Bruce Wayne",
+      "email": "bruce@gotham.com",
+      "url": "brucewayne.com" 
+    },
+    {
+      "name": "Clark Kent",
+      "email": "clark-kent@dailyplanet.com",
+      "url": "clarkkent.com" 
+    }
+  ],
+  "devDependencies": {
+    "oxlint": "^1.16.0", 
+    "typescript": "^5.9.2", 
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {}
+}
 </code></pre>
 
                     </main>
@@ -229,9 +261,6 @@
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="templating.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -243,9 +272,6 @@
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="templating.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
-                    </a>
             </nav>
 
         </div>

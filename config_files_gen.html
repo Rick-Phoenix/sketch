@@ -184,10 +184,19 @@ So if we run <code>sketch --templates-dir "/path/to/templates"</code>, <code>tem
 <p>⚠️ Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
 </blockquote>
 <p>Command:</p>
-<pre><code class="language-txt">{{#include ../../sketch/tests/output/generated_configs/with_extras_cmd}}
+<pre><code class="language-txt">sketch --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
 </code></pre>
 <p>Output:</p>
-<pre><code class="language-yaml">{{#include ../../sketch/tests/output/generated_configs/with_extras.yaml}}
+<pre><code class="language-yaml">shell: zsh
+root_dir: tests/output
+templates_dir: tests/templates
+no_overwrite: false
+pre_commit: true
+templates: {}
+templating_presets: {}
+vars:
+  hello: there
+  general: kenobi
 </code></pre>
 <h1 id="repo-setup"><a class="header" href="#repo-setup">Repo Setup</a></h1>
 <p>You can also use the <code>init</code> command to create a new git repo. This command will:</p>
