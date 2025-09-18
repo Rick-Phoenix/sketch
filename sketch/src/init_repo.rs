@@ -1,8 +1,8 @@
-use std::fs::{create_dir_all, File};
+use std::fs::create_dir_all;
 
 use askama::Template;
 
-use crate::{commands::launch_command, paths::get_cwd, Config, GenError};
+use crate::{commands::launch_command, fs::get_cwd, Config, GenError};
 
 impl Config {
   pub fn init_repo(self, remote: Option<&str>) -> Result<(), GenError> {
@@ -16,7 +16,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(out_dir, !self.no_overwrite, $($tokens)*)
+        write_file!(out_dir, self.no_overwrite, $($tokens)*)
       };
     }
 

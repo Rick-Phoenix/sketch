@@ -1,7 +1,4 @@
-use std::{
-  fs::{create_dir_all, File},
-  path::PathBuf,
-};
+use std::{fs::create_dir_all, path::PathBuf};
 
 use askama::Template;
 use clap::Parser;
@@ -17,8 +14,11 @@ use super::{
 };
 use crate::{
   custom_templating::TemplateOutput,
+  fs::{
+    create_parent_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd,
+    get_relative_path, open_file_for_writing,
+  },
   merge_if_not_default, overwrite_option,
-  paths::{create_parent_dirs, get_abs_path, get_cwd, get_relative_path},
   ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
   Config, GenError, Preset,
 };
@@ -198,7 +198,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(output, !self.no_overwrite, $($tokens)*)
+        write_file!(output, self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -259,7 +259,7 @@ impl Config {
 
     if !typescript.no_convert_latest_to_range {
       package_json_data
-        .get_latest_version_range(version_ranges)
+        .convert_latest_to_range(version_ranges)
         .await?;
     }
 
@@ -267,22 +267,19 @@ impl Config {
 
     if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
-      let pnpm_workspace_file = File::open(&pnpm_workspace_path)
-        .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
 
-      let mut pnpm_workspace: PnpmWorkspace = serde_yaml_ng::from_reader(&pnpm_workspace_file)
-        .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
+      let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
       pnpm_workspace
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
         .await;
 
       pnpm_workspace
-        .write_into(
-          &mut File::create(root_dir.join("pnpm-workspace.yaml"))
-            .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?,
-        )
-        .map_err(|e| GenError::PnpmWorkspaceUpdate(e.to_string()))?;
+        .write_into(&mut open_file_for_writing(&pnpm_workspace_path)?)
+        .map_err(|e| GenError::WriteError {
+          path: pnpm_workspace_path,
+          source: e,
+        })?;
     }
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
@@ -361,11 +358,7 @@ impl Config {
     if update_root_tsconfig {
       let root_tsconfig_path = root_dir.join("tsconfig.json");
 
-      let root_tsconfig_file =
-        File::open(&root_tsconfig_path).map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
-
-      let mut root_tsconfig: TsConfig = serde_json::from_reader(root_tsconfig_file)
-        .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
+      let mut root_tsconfig: TsConfig = deserialize_json(&root_tsconfig_path)?;
 
       let path_to_new_tsconfig = get_relative_path(&root_dir, &output.join("tsconfig.json"))?;
 
@@ -376,23 +369,17 @@ impl Config {
       });
 
       root_tsconfig
-        .write_into(
-          &mut File::create(&root_tsconfig_path)
-            .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?,
-        )
-        .map_err(|e| GenError::RootTsConfigUpdate(e.to_string()))?;
+        .write_into(&mut open_file_for_writing(&root_tsconfig_path)?)
+        .map_err(|e| GenError::WriteError {
+          path: root_tsconfig_path,
+          source: e,
+        })?;
     }
 
     let src_dir = output.join("src");
-    create_dir_all(&src_dir).map_err(|e| GenError::DirCreation {
-      path: src_dir.clone(),
-      source: e,
-    })?;
+    create_parent_dirs(&src_dir)?;
 
-    File::create(src_dir.join("index.ts")).map_err(|e| GenError::FileCreation {
-      path: src_dir.join("index.ts"),
-      source: e,
-    })?;
+    let _index_file = open_file_for_writing(&src_dir.join("index.ts"))?;
 
     let vitest_config = match config.vitest {
       VitestConfigKind::Bool(v) => v.then(VitestConfig::default),

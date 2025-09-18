@@ -1,11 +1,11 @@
-use std::fs::{create_dir_all, File};
+use std::fs::create_dir_all;
 
 use askama::Template;
 use maplit::btreeset;
 use merge::Merge;
 
 use crate::{
-  paths::get_cwd,
+  fs::get_cwd,
   ts::{
     package_json::{PackageJsonKind, Person},
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
@@ -33,7 +33,7 @@ impl Config {
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(out_dir, !self.no_overwrite, $($tokens)*)
+        write_file!(out_dir, self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -86,7 +86,7 @@ impl Config {
 
     if !typescript.no_convert_latest_to_range {
       package_json_data
-        .get_latest_version_range(version_ranges)
+        .convert_latest_to_range(version_ranges)
         .await?;
     }
 

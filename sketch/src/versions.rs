@@ -36,7 +36,7 @@ struct NpmApiResponse {
 
 /// Errors occurring when fetching the latest version for a package.
 #[derive(Debug, Error)]
-pub enum GetVersionError {
+pub enum NpmVersionError {
   #[error("An invalid url was used: {source}")]
   InvalidUrl { source: ParseError },
   #[error(transparent)]
@@ -46,9 +46,9 @@ pub enum GetVersionError {
 static CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 /// A helper to get the latest version of an npm package.
-pub async fn get_latest_npm_version(package_name: &str) -> Result<String, GetVersionError> {
+pub async fn get_latest_npm_version(package_name: &str) -> Result<String, NpmVersionError> {
   let url_str = format!("https://registry.npmjs.org/{}/latest", package_name);
-  let url = Url::parse(&url_str).map_err(|e| GetVersionError::InvalidUrl { source: e })?;
+  let url = Url::parse(&url_str).map_err(|e| NpmVersionError::InvalidUrl { source: e })?;
 
   let response = CLIENT
     .get(url)

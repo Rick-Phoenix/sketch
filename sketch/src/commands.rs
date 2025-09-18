@@ -7,7 +7,7 @@ use tera::Context;
 
 use crate::{
   custom_templating::{get_default_context, TemplateData},
-  paths::create_parent_dirs,
+  fs::create_parent_dirs,
   Config, GenError,
 };
 

@@ -222,7 +222,7 @@ impl Default for PackageJson {
 impl PackageJson {
   #[allow(clippy::filter_map_bool_then)]
   /// Turns 'latest' into the actual latest version for a package, pinned to the selected version range.
-  pub async fn get_latest_version_range(
+  pub async fn convert_latest_to_range(
     &mut self,
     range_kind: VersionRange,
   ) -> Result<(), GenError> {
@@ -250,13 +250,12 @@ impl PackageJson {
 
     for (kind, name) in names_to_update {
       let handle = tokio::spawn(async move {
-        let actual_latest =
-          get_latest_npm_version(&name)
-            .await
-            .map_err(|e| GenError::LatestVersionError {
-              package: name.clone(),
-              source: e,
-            })?;
+        let actual_latest = get_latest_npm_version(&name).await.map_err(|e| {
+          GenError::Custom(format!(
+            "Could not get the latest version for npm package '{}': {}",
+            name, e
+          ))
+        })?;
 
         Ok((kind, name, actual_latest))
       });
@@ -371,7 +370,10 @@ mod test {
     Bugs, Directories, Exports, JsModuleType, Man, PackageJson, Person, PersonData, PublishConfig,
     PublishConfigAccess, Repository,
   };
-  use crate::{convert_btreemap_to_json, paths::get_parent_dir, GenError};
+  use crate::{
+    convert_btreemap_to_json,
+    fs::{get_parent_dir, open_file_for_writing},
+  };
 
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
@@ -493,10 +495,7 @@ mod test {
 
     create_dir_all(get_parent_dir(&output_path)).unwrap();
 
-    let mut output_file = File::create(&output_path).map_err(|e| GenError::FileCreation {
-      path: output_path.clone(),
-      source: e,
-    })?;
+    let mut output_file = open_file_for_writing(&output_path)?;
 
     test_package_json.write_into(&mut output_file)?;
 

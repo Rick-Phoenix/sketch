@@ -6,9 +6,9 @@
 mod macros;
 
 pub(crate) mod commands;
+pub(crate) mod fs;
 pub(crate) mod init_repo;
 pub(crate) mod merging_strategies;
-pub(crate) mod paths;
 pub(crate) mod serde_strategies;
 pub(crate) mod templating;
 
@@ -18,10 +18,7 @@ pub mod errors;
 pub mod ts;
 pub mod versions;
 
-use std::{
-  collections::BTreeMap,
-  fs::{create_dir_all, File},
-};
+use std::{collections::BTreeMap, fs::create_dir_all};
 
 #[doc(inline)]
 pub use config::*;
@@ -32,7 +29,7 @@ pub(crate) use merging_strategies::*;
 use serde_json::Value;
 pub(crate) use templating::*;
 
-use crate::{paths::get_abs_path, ts::package_json::PackageJson};
+use crate::{fs::get_abs_path, ts::package_json::PackageJson};
 
 pub(crate) type StringBTreeMap = BTreeMap<String, String>;
 pub(crate) type JsonValueBTreeMap = BTreeMap<String, Value>;

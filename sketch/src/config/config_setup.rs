@@ -1,44 +1,31 @@
-use std::{
-  fs::File,
-  io::Read,
-  path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use crate::{
-  get_abs_path,
-  paths::{create_parent_dirs, get_parent_dir},
-  Config, GenError,
+  fs::{create_parent_dirs, deserialize_json, deserialize_toml, deserialize_yaml, get_parent_dir},
+  get_abs_path, Config, GenError,
 };
 
 pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Config, GenError> {
-  let mut config_file = File::open(config_file_abs_path).map_err(|e| GenError::ReadError {
-    path: config_file_abs_path.to_path_buf(),
-    source: e,
-  })?;
-
   let extension = config_file_abs_path.extension().unwrap_or_else(|| {
     panic!(
-      "Config file '{}' has no extension.",
+      "Config file `{}` has no extension.",
       config_file_abs_path.display()
     )
   });
 
   let mut config: Config = if extension == "yaml" || extension == "yml" {
-    serde_yaml_ng::from_reader(&config_file).map_err(|e| GenError::ConfigParsing(e.to_string()))?
+    deserialize_yaml(config_file_abs_path)?
   } else if extension == "toml" {
-    let mut contents = String::new();
-    config_file
-      .read_to_string(&mut contents)
-      .map_err(|e| GenError::ReadError {
-        path: config_file_abs_path.to_path_buf(),
-        source: e,
-      })?;
-    toml::from_str(&contents).map_err(|e| GenError::ConfigParsing(e.to_string()))?
+    deserialize_toml(config_file_abs_path)?
   } else if extension == "json" {
-    serde_json::from_reader(&config_file).map_err(|e| GenError::ConfigParsing(e.to_string()))?
+    deserialize_json(config_file_abs_path)?
   } else {
-    return Err(GenError::InvalidConfigFormat {
+    return Err(GenError::DeserializationError {
       file: config_file_abs_path.to_path_buf(),
+      error: format!(
+        "Invalid config format for `{}`. Allowed formats are: yaml, toml, json",
+        config_file_abs_path.display()
+      ),
     });
   };
 

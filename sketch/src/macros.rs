@@ -9,7 +9,10 @@ macro_rules! get_contributors {
             $config
               .people
               .get(&name)
-              .ok_or(GenError::PersonNotFound { name })?
+              .ok_or(GenError::Custom(format!(
+                "Typescript individual with id `{}` not found",
+                name
+              )))?
               .clone(),
           )),
           Person::Data(person) => Ok(Person::Data(person)),
@@ -20,22 +23,9 @@ macro_rules! get_contributors {
 }
 
 macro_rules! write_file {
-  ($output:expr, $overwrite:expr, $data:expr, $suffix:expr) => {
+  ($output:expr, $no_overwrite:expr, $data:expr, $suffix:expr) => {
     let path = $output.join($suffix);
-    let mut file = if $overwrite {
-      File::create(&path).map_err(|e| GenError::FileCreation {
-        path: path.clone(),
-        source: e,
-      })?
-    } else {
-      File::create_new(&path).map_err(|e| match e.kind() {
-        std::io::ErrorKind::AlreadyExists => GenError::FileExists { path: path.clone() },
-        _ => GenError::WriteError {
-          path: path.clone(),
-          source: e,
-        },
-      })?
-    };
+    let mut file = crate::fs::open_file_if_overwriting($no_overwrite, &path)?;
 
     $data
       .write_into(&mut file)

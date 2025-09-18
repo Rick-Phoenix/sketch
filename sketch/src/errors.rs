@@ -2,62 +2,54 @@ use std::{io, path::PathBuf};
 
 use thiserror::Error;
 
-use crate::{versions::GetVersionError, Preset};
+use crate::Preset;
 
-/// The errors that can occur while generating new files.
+/// The kinds of errors that can occur during operations.
 #[derive(Debug, Error)]
 pub enum GenError {
-  #[error("Could not get the latest version for '{package}': {source}")]
-  LatestVersionError {
-    package: String,
-    source: GetVersionError,
-  },
-  #[error("Could not create the dir '{path}': {source}")]
+  // I/O errors
+  #[error("Could not create the dir `{path}`: {source}")]
   DirCreation { path: PathBuf, source: io::Error },
-  #[error("Could not create the file '{path}': {source}")]
-  FileCreation { path: PathBuf, source: io::Error },
-  #[error("Failed to parse the configuration: {0}")]
-  ConfigParsing(String),
-  #[error("{kind:?} preset '{name}' not found")]
+
+  #[error("Failed to create or write to the file `{path}`: {source}")]
+  WriteError { path: PathBuf, source: io::Error },
+
+  #[error("Could not read the contents of `{path}`: {source}")]
+  ReadError { path: PathBuf, source: io::Error },
+
+  #[error("Failed to canonicalize the path `{path}`: {source}")]
+  PathCanonicalization { path: PathBuf, source: io::Error },
+
+  // Invalid values
+  #[error("{kind:?} preset `{name}` not found")]
   PresetNotFound { kind: Preset, name: String },
-  #[error("Failed to parse the template '{template}': {source}")]
+
+  #[error("Failed to parse the template `{template}`: {source}")]
   TemplateParsing {
     template: String,
     source: ::tera::Error,
   },
-  #[error("Failed to read the templates directory: {source}")]
-  TemplateDirLoading { source: ::tera::Error },
+
   #[error("Failed to parse the templating context: {source}")]
   TemplateContextParsing { source: ::tera::Error },
-  #[error("Could not create the parent directory for '{path}': {source}")]
-  ParentDirCreation { path: PathBuf, source: io::Error },
-  #[error("Failed to render the template '{template}': {source}")]
+
+  #[error("Failed to render the template `{template}`: {source}")]
   TemplateRendering {
     template: String,
     source: ::tera::Error,
   },
-  #[error("Failed to write to the file '{path}': {source}")]
-  WriteError { path: PathBuf, source: io::Error },
-  #[error("Person '{name}' not found")]
-  PersonNotFound { name: String },
-  #[error("Could not read the contents of '{path}': {source}")]
-  ReadError { path: PathBuf, source: io::Error },
-  #[error("Could not update the tsconfig file in the root of the workspace: {0}")]
-  RootTsConfigUpdate(String),
-  #[error("Could not update the pnpm-workspace.yaml file: {0}")]
-  PnpmWorkspaceUpdate(String),
-  #[error("Failed to canonicalize the path '{path}': {source}")]
-  PathCanonicalization { path: PathBuf, source: io::Error },
-  #[error("Invalid config format for '{file:?}'. Allowed formats are: yaml, toml")]
-  InvalidConfigFormat { file: PathBuf },
-  #[error("The file '{path}' already exists. Set `overwrite` to true in the config to overwrite existing files.")]
-  FileExists { path: PathBuf },
+
   #[error("{0}")]
   CircularDependency(String),
-  #[error("Error while serializing the content for {target}: {error}")]
-  SerializationError { target: String, error: String },
-  #[error("Error while deserializing the contents of {file:?}: {error}")]
+
+  // Serde errors
+  #[error("Error while serializing the content for `{file:?}`: {error}")]
+  SerializationError { file: PathBuf, error: String },
+
+  #[error("Error while deserializing the contents of `{file:?}`: {error}")]
   DeserializationError { file: PathBuf, error: String },
+
+  // Other errors
   #[error("{0}")]
   Custom(String),
 }

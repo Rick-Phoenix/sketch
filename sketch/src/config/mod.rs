@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  custom_templating::TemplateOutput, is_default, merge_index_maps, merge_index_sets,
-  overwrite_option, paths::get_parent_dir, ts::TypescriptConfig, GenError,
+  custom_templating::TemplateOutput, fs::get_parent_dir, is_default, merge_index_maps,
+  merge_index_sets, overwrite_option, ts::TypescriptConfig, GenError,
 };
 
 impl Config {

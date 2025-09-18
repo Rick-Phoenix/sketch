@@ -7,7 +7,6 @@ pub(crate) mod parsers;
 use std::{
   env,
   fs::{exists, read_dir, read_to_string},
-  io::{self, Write},
   path::PathBuf,
 };
 
@@ -21,7 +20,7 @@ use Commands::*;
 use crate::{
   commands::launch_command,
   custom_templating::{TemplateData, TemplateOutput},
-  paths::get_cwd,
+  fs::{get_cwd, serialize_json, serialize_toml, serialize_yaml},
   ts::{
     package::{PackageConfig, PackageData, RootPackage},
     vitest::VitestConfigKind,
@@ -263,51 +262,24 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      let mut output_file = if config.no_overwrite {
-        File::create_new(&output_path).map_err(|e| match e.kind() {
-          io::ErrorKind::AlreadyExists => GenError::FileExists {
-            path: output_path.clone(),
-          },
-          _ => GenError::WriteError {
-            path: output_path.clone(),
-            source: e,
-          },
-        })?
-      } else {
-        File::create(&output_path).map_err(|e| GenError::FileCreation {
-          path: output_path.clone(),
-          source: e,
-        })?
-      };
+      if output_path.exists() && config.no_overwrite {
+        return Err(GenError::Custom(format!(
+          "File `{}` already exists and overwriting is disabled",
+          output_path.display()
+        )));
+      }
 
       match format.as_ref() {
-        "yaml" => serde_yaml_ng::to_writer(output_file, &config).map_err(|e| {
-          GenError::SerializationError {
-            target: "the new config file".to_string(),
-            error: e.to_string(),
-          }
-        })?,
+        "yaml" => serialize_yaml(&config, &output_path)?,
         "toml" => {
-          let content =
-            toml::to_string_pretty(&config).map_err(|e| GenError::SerializationError {
-              target: "the new config file".to_string(),
-              error: e.to_string(),
-            })?;
-
-          output_file
-            .write_all(&content.into_bytes())
-            .map_err(|e| GenError::WriteError {
-              path: output_path.clone(),
-              source: e,
-            })?;
+          serialize_toml(&config, &output_path)?;
         }
-        "json" => serde_json::to_writer_pretty(output_file, &config).map_err(|e| {
-          GenError::SerializationError {
-            target: "the new config file".to_string(),
-            error: e.to_string(),
-          }
-        })?,
-        _ => return Err(GenError::InvalidConfigFormat { file: output_path }),
+        "json" => serialize_json(&config, &output_path)?,
+        _ => {
+          return Err(GenError::Custom(format!(
+            "Invalid config format. Allowed formats are: yaml, toml, json"
+          )))
+        }
       };
     }
     Exec {

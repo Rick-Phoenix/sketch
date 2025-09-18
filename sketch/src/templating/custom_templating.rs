@@ -1,7 +1,5 @@
 use std::{
   env::{self, current_dir},
-  fs::{create_dir_all, File},
-  io::ErrorKind,
   path::PathBuf,
 };
 
@@ -11,7 +9,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tera::{Context, Tera};
 
-use crate::{config::Config, GenError};
+use crate::{
+  config::Config,
+  fs::{create_parent_dirs, get_parent_dir, open_file_if_overwriting},
+  GenError,
+};
 
 /// The types of configuration values for a template's data.
 /// It can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)
@@ -91,7 +93,7 @@ impl Config {
   pub fn initialize_tera(&self) -> Result<Tera, GenError> {
     let mut tera = if let Some(templates_dir) = &self.templates_dir {
       Tera::new(&format!("{}/**/*", templates_dir.display()))
-        .map_err(|e| GenError::TemplateDirLoading { source: e })?
+        .map_err(|e| GenError::Custom(format!("Failed to load the templates directory: {}", e)))?
     } else {
       Tera::default()
     };
@@ -164,31 +166,9 @@ impl Config {
       } else {
         let output_path = output_root.join(template.output);
 
-        create_dir_all(output_path.parent().ok_or(GenError::Custom(format!(
-          "Could not get the parent directory for '{}'",
-          output_path.display()
-        )))?)
-        .map_err(|e| GenError::ParentDirCreation {
-          path: output_path.clone(),
-          source: e,
-        })?;
+        create_parent_dirs(get_parent_dir(&output_path))?;
 
-        let mut output_file = if self.no_overwrite {
-          File::create_new(&output_path).map_err(|e| match e.kind() {
-            ErrorKind::AlreadyExists => GenError::FileExists {
-              path: output_path.clone(),
-            },
-            _ => GenError::WriteError {
-              path: output_path.clone(),
-              source: e,
-            },
-          })?
-        } else {
-          File::create(&output_path).map_err(|e| GenError::FileCreation {
-            path: output_path.clone(),
-            source: e,
-          })?
-        };
+        let mut output_file = open_file_if_overwriting(self.no_overwrite, &output_path)?;
 
         tera
           .render_to(template_name, &local_context, &mut output_file)
