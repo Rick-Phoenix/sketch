@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
   merging_strategies::*,
   templating::render_json_val,
-  versions::{get_latest_version, VersionRange},
+  versions::{get_latest_npm_version, VersionRange},
   GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
 pub mod package_json_elements;
@@ -251,7 +251,7 @@ impl PackageJson {
     for (kind, name) in names_to_update {
       let handle = tokio::spawn(async move {
         let actual_latest =
-          get_latest_version(&name)
+          get_latest_npm_version(&name)
             .await
             .map_err(|e| GenError::LatestVersionError {
               package: name.clone(),

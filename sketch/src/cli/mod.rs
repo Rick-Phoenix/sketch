@@ -176,7 +176,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         .templating_presets
         .get(&id)
         .ok_or(GenError::PresetNotFound {
-          kind: Preset::Templating,
+          kind: Preset::Templates,
           name: id.clone(),
         })?
         .clone();
@@ -375,7 +375,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
               .package_presets
               .get(&preset)
               .ok_or(GenError::PresetNotFound {
-                kind: Preset::Package,
+                kind: Preset::TsPackage,
                 name: preset.clone(),
               })?
               .clone()
@@ -428,7 +428,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 #[derive(Parser, Debug, Clone)]
 #[command(name = "sketch")]
 #[command(version, about, long_about = None)]
-struct Cli {
+pub struct Cli {
   /// Sets a custom config file.
   #[arg(short, long, value_name = "FILE", group = "config-file")]
   pub config: Option<PathBuf>,
@@ -454,7 +454,7 @@ struct Cli {
 
 #[derive(Args, Debug, Clone)]
 #[group(required = true, multiple = false)]
-struct RenderingOutput {
+pub struct RenderingOutput {
   /// The output file (relative from the cwd)
   #[arg(requires = "input")]
   output_path: Option<String>,
@@ -466,7 +466,7 @@ struct RenderingOutput {
 
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
-enum Commands {
+pub enum Commands {
   /// Launches typescript-specific commands.
   Ts {
     #[command(flatten)]
@@ -534,7 +534,7 @@ enum Commands {
 }
 
 #[derive(Subcommand, Debug, Clone)]
-enum TsCommands {
+pub enum TsCommands {
   /// Generates a new typescript monorepo
   Monorepo {
     #[command(flatten)]

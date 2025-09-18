@@ -46,7 +46,7 @@ pub enum GetVersionError {
 static CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
 
 /// A helper to get the latest version of an npm package.
-pub async fn get_latest_version(package_name: &str) -> Result<String, GetVersionError> {
+pub async fn get_latest_npm_version(package_name: &str) -> Result<String, GetVersionError> {
   let url_str = format!("https://registry.npmjs.org/{}/latest", package_name);
   let url = Url::parse(&url_str).map_err(|e| GetVersionError::InvalidUrl { source: e })?;
 

@@ -1,3 +1,10 @@
+pub mod package;
+pub mod package_json;
+pub mod pnpm;
+pub mod ts_config;
+mod ts_monorepo;
+pub mod vitest;
+
 use std::fmt::Display;
 
 use askama::Template;
@@ -17,13 +24,6 @@ use crate::{
   },
   versions::VersionRange,
 };
-
-pub mod package;
-pub mod package_json;
-pub mod pnpm;
-pub mod ts_config;
-mod ts_monorepo;
-pub mod vitest;
 
 impl TypescriptConfig {
   pub fn get_contributor(&self, name: &str) -> Option<Person> {

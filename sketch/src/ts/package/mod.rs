@@ -165,7 +165,7 @@ impl Config {
         .package_presets
         .get(&id)
         .ok_or(GenError::PresetNotFound {
-          kind: Preset::Package,
+          kind: Preset::TsPackage,
           name: id.clone(),
         })?
         .clone(),

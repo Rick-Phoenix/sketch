@@ -10,7 +10,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  versions::{get_latest_version, VersionRange},
+  versions::{get_latest_npm_version, VersionRange},
   OrderedMap, PackageJson, StringBTreeMap,
 };
 
@@ -80,7 +80,7 @@ impl PnpmWorkspace {
         &mut self.catalog
       };
 
-      let version = get_latest_version(&name)
+      let version = get_latest_npm_version(&name)
           .await
           .unwrap_or_else(|e| {
             eprintln!(
@@ -112,7 +112,7 @@ impl PnpmWorkspace {
           &mut self.catalog
         };
 
-        let version = get_latest_version(name)
+        let version = get_latest_npm_version(name)
           .await
           .unwrap_or_else(|e| {
             eprintln!(
