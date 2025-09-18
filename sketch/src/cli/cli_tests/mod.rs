@@ -79,7 +79,7 @@ fn get_clean_example_cmd(
 fn generate_cli_docs() -> Result<(), Box<dyn std::error::Error>> {
   let markdown: String = clap_markdown::help_markdown::<Cli>();
 
-  let mut file = File::create("../docs/src/cli.md")?;
+  let mut file = File::create("../docs/src/cli_docs.md")?;
 
   file.write_all(markdown.as_bytes())?;
 

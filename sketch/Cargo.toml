@@ -18,12 +18,10 @@ name = "sketch"
 path = "src/main.rs"
 
 [package.metadata.release]
-tag-prefix = "sketch-"
-pre-release-hook = [
-  "sh",
-  "-c",
-  "cd .. ; cargo test --all-features; git cliff --latest --prepend CHANGELOG.md --tag \"{{version}}\"; cargo run --bin json-schema \"{{version}}\"",
-]
+tag-message = "chore: Release version {{ version }}"
+tag-name = "v{{ version }}"
+pre-release-hook = ["sh", "-c", "cd .. ; cargo test --all-features;"]
+allow-branch = ["main"]
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"
@@ -31,7 +29,6 @@ assert_cmd = "2.0.17"
 clap-markdown = "0.1.5"
 
 [dependencies]
-document-features = "=0.2.11"
 schemars = { version = "1.0.4", features = ["indexmap2"] }
 askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }

@@ -20,7 +20,7 @@ use crate::{
   merge_if_not_default, overwrite_option,
   paths::{create_parent_dirs, get_abs_path, get_cwd, get_relative_path},
   ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
-  Config, GenError, GenericTemplate, Preset,
+  Config, GenError, Preset,
 };
 
 /// The kind of ts package.
@@ -389,12 +389,10 @@ impl Config {
       source: e,
     })?;
 
-    write_to_output!(
-      GenericTemplate {
-        text: "console.log(\"They're taking the hobbits to Isengard!\");".to_string()
-      },
-      "src/index.ts"
-    );
+    File::create(src_dir.join("index.ts")).map_err(|e| GenError::FileCreation {
+      path: src_dir.join("index.ts"),
+      source: e,
+    })?;
 
     let vitest_config = match config.vitest {
       VitestConfigKind::Bool(v) => v.then(VitestConfig::default),

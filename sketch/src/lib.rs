@@ -1,8 +1,6 @@
 #![allow(clippy::result_large_err)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
-#![doc = include_str!("../../docs/src/cli.md")]
-//! # 🚩 Feature flags
-#![doc = document_features::document_features!()]
+#![doc = include_str!("../README.md")]
 
 #[macro_use]
 mod macros;

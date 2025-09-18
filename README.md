@@ -25,3 +25,7 @@ And speaking of commands, you can use `sketch` to render the output to stdout (s
 `sketch` was initially conceived as a typescript-centric tool, because I needed a way to manage the chaotic nature of typescript projects in a structured, orderly and easily reproducible way, that would also give me enough flexibility to be able to customize how each project piece is defined and generated.
 
 It contains special commands and tools to generate new typescript projects and packages, such as the ability to define reusable, extensible `package.json` and `tsconfig` presets, as well as commonly used configuration files such as those belonging to `oxlint` or `vitest`.
+
+# Documentation
+
+You can find the full documentation in the [dedicated website](https://rick-phoenix.github.io/sketch/).

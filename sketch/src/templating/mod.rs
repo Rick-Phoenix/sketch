@@ -1,15 +1,8 @@
-use askama::Template;
 use serde_json::Value;
 
 pub(crate) mod custom_templating;
 pub(crate) mod filters;
 pub mod templating_presets;
-
-#[derive(Debug, Template)]
-#[template(ext = "txt", source = "{{ text }}")]
-pub(crate) struct GenericTemplate {
-  pub(crate) text: String,
-}
 
 #[cfg(test)]
 pub(crate) fn convert_btreemap_to_json<T>(map: std::collections::BTreeMap<String, T>) -> Value

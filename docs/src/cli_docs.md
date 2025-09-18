@@ -61,7 +61,7 @@ Launches typescript-specific commands
   Possible values: `pnpm`, `npm`, `deno`, `bun`, `yarn`
 
 * `--no-default-deps` — Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
-* `--version-range <KIND>` — The kind of version range to use for dependencies added automatically [default: minor]
+* `--version-range <KIND>` — The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]
 
   Possible values: `patch`, `minor`, `exact`
 
