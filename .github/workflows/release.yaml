@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 
 jobs:
   prepare_release:
@@ -29,8 +29,6 @@ jobs:
           echo "Parsed: Version=$VERSION Major=$MAJOR, Minor=$MINOR, Patch=$PATCH"
 
           echo "DOCS_DEST_DIR=v$MAJOR.$MINOR" >> $GITHUB_ENV
-
-      - uses: dtolnay/rust-toolchain@stable
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v2
@@ -66,7 +64,25 @@ jobs:
       - uses: taiki-e/create-gh-release-action@v1
         with:
           changelog: CHANGELOG.md
+          branch: main
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Generate latest changelog
+      #   id: git-cliff
+      #   uses: orhun/git-cliff-action@v4
+      #   with:
+      #     config: cliff.toml
+      #     args: --latest --tag "${{ github.ref_name }}"
+      #   env:
+      #     OUTPUT: /tmp/CHANGELOG.md
+      #     GITHUB_REPO: ${{ github.repository }}
+      #
+      # - name: Create a release
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     repo_token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: ${{ github.ref_name }}
+      #     body: ${{ steps.git-cliff.outputs.content }}
 
   # upload_assets:
   #   needs: create_release
