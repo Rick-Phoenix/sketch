@@ -54,7 +54,7 @@ pub struct Config {
   /// The base path for the generated files [default: "."].
   #[merge(strategy = overwrite_option)]
   #[arg(long, value_name = "DIR")]
-  pub root_dir: Option<PathBuf>,
+  pub out_dir: Option<PathBuf>,
 
   /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
   #[merge(strategy = overwrite_option)]
@@ -186,7 +186,7 @@ impl Default for Config {
       debug: false,
       gitignore: Default::default(),
       pre_commit: PreCommitSetting::Bool(true),
-      root_dir: None,
+      out_dir: None,
       templates_dir: Default::default(),
       templates: Default::default(),
       vars: Default::default(),

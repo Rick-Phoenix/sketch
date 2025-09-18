@@ -27,7 +27,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let cli = Cli::try_parse_from([
     "sketch",
-    "--root-dir",
+    "--out-dir",
     "tests/output/ts_repo",
     "ts",
     "monorepo",
@@ -53,7 +53,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_cmd = Cli::try_parse_from([
     "sketch",
-    "--root-dir",
+    "--out-dir",
     "tests/output/ts_repo",
     "ts",
     "package",
@@ -117,7 +117,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let app_test = Cli::try_parse_from([
     "sketch",
-    "--root-dir",
+    "--out-dir",
     "tests/output/ts_repo",
     "ts",
     "package",

@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../schemas/latest.json
 
-root_dir:
+out_dir:
   ../../sketch/tests/output/ts_examples
 
   # ANCHOR: all
@@ -17,7 +17,7 @@ typescript:
         devDependencies:
           tailwindcss: "^4.0.0"
 
-      # The directory for this package, starting from the `root_dir`
+      # The directory for this package, starting from the `out_dir`
       dir: packages/frontend
 
       # The kind of package to generate. Only relevant if you use

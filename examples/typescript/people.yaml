@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../schemas/latest.json
 
-root_dir: ../../sketch/tests/output/ts_examples
+out_dir: ../../sketch/tests/output/ts_examples
 
 # ANCHOR: all
 typescript:

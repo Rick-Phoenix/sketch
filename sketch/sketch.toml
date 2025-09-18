@@ -1,6 +1,6 @@
 #:schema ../schemas/latest.json
 
-root_dir = "tests/output"
+out_dir = "tests/output"
 
 vars = { my_var = 15 }
 

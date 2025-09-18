@@ -35,7 +35,7 @@ This document contains the help content for the `sketch` command-line program.
 * `--ignore-config-file` — Ignores any config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--debug` — Activates debugging mode
-* `--root-dir <DIR>` — The base path for the generated files [default: "."]
+* `--out-dir <DIR>` — The base path for the generated files [default: "."]
 * `--templates-dir <DIR>` — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)
 * `--no-overwrite` — Does not overwrite existing files
 * `--dry-run` — Aborts before writing any content to disk
@@ -94,7 +94,7 @@ Generates a new typescript package
 
 ###### **Arguments:**
 
-* `<DIR>` — The new package's directory, starting from the `root_dir`. Defaults to the name of the package
+* `<DIR>` — The new package's directory, starting from the `out_dir`. Defaults to the name of the package
 
 ###### **Options:**
 

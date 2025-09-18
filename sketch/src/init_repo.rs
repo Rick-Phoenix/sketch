@@ -6,17 +6,17 @@ use crate::{commands::launch_command, paths::get_cwd, Config, GenError};
 
 impl Config {
   pub fn init_repo(self, remote: Option<&str>) -> Result<(), GenError> {
-    let root_dir = self.root_dir.unwrap_or_else(|| get_cwd());
+    let out_dir = self.out_dir.unwrap_or_else(|| get_cwd());
     let shell = self.shell.as_deref();
 
-    create_dir_all(&root_dir).map_err(|e| GenError::DirCreation {
-      path: root_dir.to_owned(),
+    create_dir_all(&out_dir).map_err(|e| GenError::DirCreation {
+      path: out_dir.to_owned(),
       source: e,
     })?;
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(root_dir, !self.no_overwrite, $($tokens)*)
+        write_file!(out_dir, !self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -27,7 +27,7 @@ impl Config {
       launch_command(
         shell,
         &["pre-commit", "install"],
-        &root_dir,
+        &out_dir,
         Some("Failed to install the pre-commit hooks"),
       )?;
     }
@@ -35,7 +35,7 @@ impl Config {
     launch_command(
       shell,
       &["git", "init"],
-      &root_dir,
+      &out_dir,
       Some("Failed to initialize a new git repo"),
     )?;
 
@@ -43,7 +43,7 @@ impl Config {
       launch_command(
         shell,
         &["git", "remote", "add", "origin", remote],
-        &root_dir,
+        &out_dir,
         Some("Failed to add the remote to the git repo"),
       )?;
     }

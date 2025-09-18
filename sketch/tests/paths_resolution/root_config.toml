@@ -1,5 +1,5 @@
 extends = ["nested/nested_config.toml"]
 
-root_dir = "../output"
+out_dir = "../output"
 
 vars = { hello = "there" }

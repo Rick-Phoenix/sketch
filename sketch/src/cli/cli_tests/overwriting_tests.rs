@@ -13,7 +13,7 @@ async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
 
   let first_write = Cli::try_parse_from([
     "sketch",
-    "--root-dir",
+    "--out-dir",
     &output_dir.to_string_lossy(),
     "render",
     "--content",
@@ -28,7 +28,7 @@ async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
   cmd
     .args([
       "--no-overwrite",
-      "--root-dir",
+      "--out-dir",
       &output_dir.to_string_lossy(),
       "render",
       "--content",

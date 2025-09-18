@@ -52,7 +52,7 @@ Templates can be defined inside the configuration file:
 
 # Rendering Presets
 
-Templates can also be defined in groups, which can be rendered all at once starting from the same `root_dir`.
+Templates can also be defined in groups, which can be rendered all at once starting from the same `out_dir`.
 
 This is how groups are defined:
 
@@ -64,7 +64,7 @@ When we run the command
 
 >`{{#include ../../sketch/tests/output/custom_templates/commands/render_preset_cmd}}`
 
-These templates will be rendered together, so that the output of the specified `root_dir` will look like this:
+These templates will be rendered together, so that the output of the specified `out_dir` will look like this:
 
 ```
 {{#include ../../sketch/tests/output/custom_templates/render_preset_tree.txt}}

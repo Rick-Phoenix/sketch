@@ -1,4 +1,4 @@
-root_dir = "../output"
+out_dir = "../output"
 
 vars = { my_var = 15 }
 

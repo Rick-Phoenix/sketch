@@ -31,7 +31,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
   let with_extras_cmd = [
     "sketch",
     "--ignore-config-file",
-    "--root-dir",
+    "--out-dir",
     "tests/output",
     "--templates-dir",
     "tests/templates",
@@ -54,7 +54,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
   let with_extras_output = deserialize_yaml!(Config, output_dir.join("with_extras.yaml"));
 
   assert_eq!(
-    with_extras_output.root_dir,
+    with_extras_output.out_dir,
     Some(PathBuf::from("tests/output"))
   );
   assert_eq!(

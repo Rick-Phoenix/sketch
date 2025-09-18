@@ -20,20 +20,20 @@ impl Config {
 
     let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = self.root_dir.clone().unwrap_or_else(|| get_cwd());
+    let out_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
     let root_package = typescript.root_package.unwrap_or_default();
 
-    create_dir_all(&root_dir).map_err(|e| GenError::DirCreation {
-      path: root_dir.to_owned(),
+    create_dir_all(&out_dir).map_err(|e| GenError::DirCreation {
+      path: out_dir.to_owned(),
       source: e,
     })?;
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(root_dir, !self.no_overwrite, $($tokens)*)
+        write_file!(out_dir, !self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -154,8 +154,8 @@ impl Config {
 
       for dir in &pnpm_data.packages {
         let dir = dir.strip_suffix("/*").unwrap_or(dir);
-        create_dir_all(root_dir.join(dir)).map_err(|e| GenError::DirCreation {
-          path: root_dir.to_path_buf(),
+        create_dir_all(out_dir.join(dir)).map_err(|e| GenError::DirCreation {
+          path: out_dir.to_path_buf(),
           source: e,
         })?;
       }
@@ -172,7 +172,7 @@ impl Config {
     }
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {
-      self.generate_templates(&root_dir, templates)?;
+      self.generate_templates(&out_dir, templates)?;
     }
 
     Ok(())

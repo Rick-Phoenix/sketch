@@ -15,7 +15,7 @@ async fn root_dir_resolution() -> Result<(), GenError> {
     .canonicalize()
     .unwrap();
 
-  assert_eq!(config.root_dir.expect("Missing root dir"), abs_path);
+  assert_eq!(config.out_dir.expect("Missing root dir"), abs_path);
 
   Ok(())
 }

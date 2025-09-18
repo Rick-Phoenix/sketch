@@ -139,7 +139,7 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let mut config = get_config_from_cli(cli.clone()).await?;
-  let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
+  let root_dir = config.out_dir.clone().unwrap_or_else(|| get_cwd());
 
   macro_rules! exit_if_dry_run {
     () => {
@@ -348,7 +348,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         TsCommands::Monorepo { install, .. } => {
           exit_if_dry_run!();
 
-          let root_dir = config.root_dir.clone().unwrap_or_else(|| get_cwd());
           let package_manager = typescript.package_manager.unwrap_or_default();
 
           config.create_ts_monorepo().await?;

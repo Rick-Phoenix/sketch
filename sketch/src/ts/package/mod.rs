@@ -80,10 +80,10 @@ impl Default for RootPackage {
 #[merge(strategy = overwrite_option)]
 #[serde(default)]
 pub struct PackageConfig {
-  /// The new package's directory, starting from the [`Config::root_dir`]. Defaults to the name of the package.
+  /// The new package's directory, starting from the [`Config::out_dir`]. Defaults to the name of the package.
   #[arg(
     value_name = "DIR",
-    help = "The new package's directory, starting from the `root_dir`. Defaults to the name of the package"
+    help = "The new package's directory, starting from the `out_dir`. Defaults to the name of the package"
   )]
   pub dir: Option<PathBuf>,
 
@@ -157,7 +157,7 @@ impl Config {
 
     let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = self.root_dir.clone().unwrap_or_else(|| get_cwd());
+    let root_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
 
     let config = match data {
       PackageData::Config(conf) => conf,

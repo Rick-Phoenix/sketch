@@ -23,7 +23,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let literal_template_cmd = [
     "sketch",
-    "--root-dir",
+    "--out-dir",
     &output_dir.to_string_lossy(),
     "--set",
     "general=\"kenobi\"",
@@ -43,7 +43,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_file_cmd = [
     "sketch",
-    "--root-dir",
+    "--out-dir",
     &output_dir.to_string_lossy(),
     "--set",
     "something=\"space\"",

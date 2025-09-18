@@ -54,12 +54,12 @@ pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Co
     config.templates_dir = Some(get_abs_path(&templates_dir)?);
   }
 
-  if let Some(root_dir) = &config.root_dir {
+  if let Some(root_dir) = &config.out_dir {
     let root_dir = parent_dir.join(root_dir);
 
     create_parent_dirs(&root_dir)?;
 
-    config.root_dir = Some(get_abs_path(&root_dir)?);
+    config.out_dir = Some(get_abs_path(&root_dir)?);
   }
 
   Ok(config)

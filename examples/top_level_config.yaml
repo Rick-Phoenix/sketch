@@ -2,7 +2,7 @@
 
 # The root path for the generated files.
 # All output paths will start from this directory.
-root_dir: .
+out_dir: .
 
 # Enables debugging mode
 debug: false
