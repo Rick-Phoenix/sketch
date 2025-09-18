@@ -5,6 +5,15 @@ root_dir:
 
   # ANCHOR: all
 typescript:
+  # By default, typescript and oxlint would be added to
+  # the root package's dependencies
+  no_default_deps: true
+
+  # By default, `latest` would be converted into a version range.
+  # I am disabling it here to not get blasted by the npm API
+  # during tests :)
+  no_convert_latest_to_range: true
+
   package_json_presets:
     # The base from which all the packages from a specific project will start
     base:
@@ -25,7 +34,6 @@ typescript:
         # By default, these will be converted into version ranges
         # starting from the actual latest version for them
         tailwindcss: latest
-        svelte: latest
         vite: latest
 
     # This will inherit the settings from `base` and `frontend`
@@ -33,6 +41,9 @@ typescript:
       extends: ["frontend"]
       # But it can also override values selectively
       license: MIT
+      # Or add new dependencies
+      devDependencies:
+        svelte: latest
 
   package_presets:
     svelte_frontend:
