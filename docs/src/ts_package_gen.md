@@ -18,7 +18,7 @@ To generate the new package.
 
 ## Template rendering
 
-You can use the `generate_templates` field to specify a list of templates that should also be generated whenever a package preset is being generated.
+You can use the `with_templates` field to specify a list of templates that should also be generated whenever a package preset is being generated.
 
 Let's say for example that in a type of package, you always need a `schemas` directory, where you import some common schemas from a shared package and define new ones. 
 

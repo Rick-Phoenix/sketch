@@ -18,7 +18,7 @@ And the package.json file of the root package will be like this:
 {{#include ../../sketch/tests/output/ts_examples/package.json}}
 ```
 
-You can also use the `generate_templates` field to automatically generate a certain file structure when the monorepo is generated. 
+You can also use the `with_templates` field to automatically generate a certain file structure when the monorepo is generated. 
 
 Let's say, for example, that every time that you create a new monorepo, you always want to create a `docker` directory with a basic `dev.dockerfile` inside of it, so that you can quickly create a dev environment using docker. 
 

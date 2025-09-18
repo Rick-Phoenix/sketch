@@ -60,7 +60,7 @@ pub struct RootPackage {
 
   /// The templates to generate when the root package is generated.
   #[arg(skip)]
-  pub generate_templates: Option<Vec<TemplateOutput>>,
+  pub with_templates: Option<Vec<TemplateOutput>>,
 }
 
 impl Default for RootPackage {
@@ -69,7 +69,7 @@ impl Default for RootPackage {
       name: None,
       oxlint: Some(Default::default()),
       ts_config: Default::default(),
-      generate_templates: Default::default(),
+      with_templates: Default::default(),
       package_json: Default::default(),
     }
   }
@@ -110,7 +110,7 @@ pub struct PackageConfig {
   /// The templates to generate when this package is created.
   /// The paths specified for these templates' output paths will be joined to the package's directory.
   #[arg(skip)]
-  pub generate_templates: Option<Vec<TemplateOutput>>,
+  pub with_templates: Option<Vec<TemplateOutput>>,
 
   /// The kind of package [default: 'library'].
   #[arg(skip)]
@@ -135,7 +135,7 @@ impl Default for PackageConfig {
       dir: Default::default(),
       vitest: Default::default(),
       ts_config: None,
-      generate_templates: Default::default(),
+      with_templates: Default::default(),
       oxlint: None,
     }
   }
@@ -428,7 +428,7 @@ impl Config {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
-    if let Some(templates) = config.generate_templates && !templates.is_empty() {
+    if let Some(templates) = config.with_templates && !templates.is_empty() {
       self
         .generate_templates(&output, templates)?;
     }

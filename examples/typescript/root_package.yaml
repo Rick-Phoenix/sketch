@@ -40,7 +40,7 @@ typescript:
     # ANCHOR_END: all
 
     # ANCHOR: template_example
-    generate_templates:
+    with_templates:
       - output: docker/dev.dockerfile
         template:
           name: dev_dockerfile

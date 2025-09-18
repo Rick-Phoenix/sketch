@@ -51,7 +51,7 @@ typescript:
       ts_config: null
       # ANCHOR: template_example
       # Inside the package preset configuration
-      generate_templates:
+      with_templates:
         - output: src/schemas/index.ts
           # This can be a template defined in the config file
           # or file path inside templates_dir

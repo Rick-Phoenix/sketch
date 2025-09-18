@@ -171,7 +171,7 @@ impl Config {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
-    if let Some(templates) = root_package.generate_templates && !templates.is_empty() {
+    if let Some(templates) = root_package.with_templates && !templates.is_empty() {
       self.generate_templates(&root_dir, templates)?;
     }
 
