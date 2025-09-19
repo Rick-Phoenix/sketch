@@ -1,9 +1,11 @@
+#[cfg(test)]
+mod tsconfig_tests;
+
 pub(crate) mod tsconfig_defaults;
 pub(crate) mod tsconfig_elements;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use askama::Template;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
@@ -12,8 +14,7 @@ pub use tsconfig_elements::*;
 
 use crate::{
   cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_btree_maps,
-  merge_optional_btree_sets, merge_optional_nested, overwrite_if_some, templating::filters,
-  GenError, Preset,
+  merge_optional_btree_sets, merge_optional_nested, overwrite_if_some, GenError, Preset,
 };
 
 /// The kind of data for a [`TsConfig`]. It can be a string indicating a preset it, or a full configuration.
@@ -142,8 +143,7 @@ impl TsConfig {
 }
 
 /// Settings for the watch mode in TypeScript.
-#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema, Merge)]
-#[template(path = "ts/tsconfig/watch_options.j2")]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema, Merge)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchOptions {
@@ -173,10 +173,7 @@ pub struct WatchOptions {
 }
 
 /// A struct representing the contents of a `tsconfig.json` file.
-#[derive(
-  Deserialize, Debug, Clone, Serialize, Template, Default, Merge, PartialEq, Eq, JsonSchema,
-)]
-#[template(path = "ts/tsconfig/tsconfig.json.j2")]
+#[derive(Deserialize, Debug, Clone, Serialize, Default, Merge, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 #[merge(strategy = overwrite_if_some)]
@@ -226,8 +223,7 @@ pub struct TsConfig {
 }
 
 /// Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.
-#[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/tsconfig/type_acquisition.j2")]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum TypeAcquisition {
   Bool(bool),

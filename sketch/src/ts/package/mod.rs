@@ -348,7 +348,7 @@ impl Config {
     }
 
     for (file, tsconfig) in tsconfig_files {
-      write_to_output!(tsconfig, file);
+      serialize_json(&tsconfig, &pkg_root.join(file))?;
     }
 
     if update_root_tsconfig {
@@ -365,12 +365,7 @@ impl Config {
         path: path_to_new_tsconfig.to_string_lossy().to_string(),
       });
 
-      root_tsconfig
-        .write_into(&mut open_file_for_writing(&root_tsconfig_path)?)
-        .map_err(|e| GenError::WriteError {
-          path: root_tsconfig_path,
-          source: e,
-        })?;
+      serialize_json(&root_tsconfig, &root_tsconfig_path)?;
     }
 
     let src_dir = pkg_root.join("src");

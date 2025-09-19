@@ -148,7 +148,7 @@ impl Config {
     }
 
     for (file, tsconfig) in tsconfig_files {
-      write_to_output!(tsconfig, file);
+      serialize_json(&tsconfig, &out_dir.join(file))?;
     }
 
     if matches!(package_manager, PackageManager::Pnpm) {

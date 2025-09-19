@@ -3,11 +3,12 @@ use std::{
   path::PathBuf,
 };
 
-use askama::Template;
 use maplit::{btreemap, btreeset};
 use pretty_assertions::assert_eq;
 use serde_json::Value;
-use sketch_it::ts::ts_config::*;
+
+use super::*;
+use crate::fs::serialize_json;
 
 #[test]
 fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
@@ -165,9 +166,7 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 
   create_dir_all(output_path.parent().unwrap()).unwrap();
 
-  let mut output = File::create(&output_path)?;
-
-  ts_config.write_into(&mut output)?;
+  serialize_json(&ts_config, &output_path)?;
 
   // Check that it deserializes correctly
   let result: TsConfig = serde_json::from_reader(File::open(&output_path)?)
