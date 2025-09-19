@@ -7,7 +7,7 @@ use tera::Context;
 
 use crate::{
   custom_templating::{get_default_context, TemplateData},
-  fs::create_parent_dirs,
+  fs::create_all_dirs,
   Config, GenError,
 };
 
@@ -63,7 +63,7 @@ impl Config {
 
     let shell_arg = if shell == "cmd.exe" { "/C" } else { "-c" };
 
-    create_parent_dirs(cwd)?;
+    create_all_dirs(cwd)?;
 
     launch_command(Some(shell), &[shell_arg, &rendered_command], cwd, None)
   }

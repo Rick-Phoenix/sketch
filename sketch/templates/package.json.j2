@@ -1,9 +1,9 @@
 {% import "utils.j2" as utils %}
 
 {
-  "name": "{{ name }}",
+  "name": "{{ name.as_deref().unwrap_or("my-awesome-package") }}",
   "private": {{+ self.private }},
-  "version": "{{ self.version }}",
+  "version": "{{ self.version.as_deref().unwrap_or("0.1.0") }}",
   "type": "{{ self.type_ }}",
   {% call utils::render_optional_string("description", self.description, 2) +%}
   {% call utils::render_optional_string("license", self.license, 2) +%}
@@ -11,7 +11,7 @@
   {% call utils::render_optional_string("main", self.main, 2) +%}
   {% call utils::render_optional_string("browser", self.browser, 2) +%}
   {% call utils::render_optional_string("packageManager", self.package_manager, 2) +%}
-  {% call utils::render_list_if_not_empty("workspaces", self.workspaces, 2) +%}
+  {% call utils::render_optional_list_if_not_empty("workspaces", self.workspaces, 2) +%}
   {% call utils::render_string_object("scripts", self.scripts, 2) +%}
   {% call utils::render_list_if_not_empty("keywords", self.keywords, 2) +%}
   {% call utils::render_list_if_not_empty("files", self.files, 2) +%}

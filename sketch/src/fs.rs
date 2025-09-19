@@ -116,7 +116,7 @@ pub fn open_file_if_overwriting(no_overwrite: bool, path: &Path) -> Result<File,
   }
 }
 
-pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), GenError> {
+pub(crate) fn create_all_dirs(path: &Path) -> Result<(), GenError> {
   create_dir_all(path).map_err(|e| {
     GenError::Custom(format!(
       "Could not create the parent dirs for `{}`: {}",

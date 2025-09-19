@@ -2,7 +2,7 @@ use askama::Template;
 
 use crate::{
   exec::launch_command,
-  fs::{create_parent_dirs, get_cwd},
+  fs::{create_all_dirs, get_cwd},
   Config, GenError,
 };
 
@@ -11,7 +11,7 @@ impl Config {
     let out_dir = self.out_dir.unwrap_or_else(|| get_cwd());
     let shell = self.shell.as_deref();
 
-    create_parent_dirs(&out_dir)?;
+    create_all_dirs(&out_dir)?;
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {

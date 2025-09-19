@@ -46,6 +46,7 @@ pub struct VitestConfig {
 
   /// The path to the setup directory, starting from the `tests_dir`. [default: 'setup']
   pub setup_dir: String,
+
   #[serde(skip)]
   pub(crate) src_rel_path: String,
 }

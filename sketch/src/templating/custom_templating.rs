@@ -11,7 +11,7 @@ use tera::{Context, Tera};
 
 use crate::{
   config::Config,
-  fs::{create_parent_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
+  fs::{create_all_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
   GenError,
 };
 
@@ -121,7 +121,7 @@ impl Config {
       } else {
         let output_path = output_root.join(template.output);
 
-        create_parent_dirs(get_parent_dir(&output_path))?;
+        create_all_dirs(get_parent_dir(&output_path))?;
 
         let mut output_file = open_file_if_overwriting(self.no_overwrite, &output_path)?;
 

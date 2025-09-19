@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::BTreeMap, fmt::Display};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -6,19 +6,19 @@ use serde::{Deserialize, Serialize};
 use crate::JsonValueBTreeMap;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq, JsonSchema)]
-pub struct TsConfigPlugin {
-  pub name: Option<String>,
-  #[serde(flatten)]
-  pub config: Option<JsonValueBTreeMap>,
+pub struct TsPlugin {
+  pub name: String,
+  #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
+  pub extras: JsonValueBTreeMap,
 }
 
-impl PartialOrd for TsConfigPlugin {
+impl PartialOrd for TsPlugin {
   fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
     Some(self.cmp(other))
   }
 }
 
-impl Ord for TsConfigPlugin {
+impl Ord for TsPlugin {
   fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     self.name.cmp(&other.name)
   }

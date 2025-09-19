@@ -1,3 +1,6 @@
+pub(crate) mod tsconfig_defaults;
+pub(crate) mod tsconfig_elements;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use askama::Template;
@@ -5,17 +8,15 @@ use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
-use crate::{
-  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_btree_sets,
-  merge_optional_nested, overwrite_if_some, templating::filters, GenError, OrderedMap, Preset,
-};
-
-pub(crate) mod tsconfig_defaults;
-pub(crate) mod tsconfig_elements;
-
 pub use tsconfig_elements::*;
 
+use crate::{
+  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_btree_maps,
+  merge_optional_btree_sets, merge_optional_nested, overwrite_if_some, templating::filters,
+  GenError, Preset,
+};
+
+/// The kind of data for a [`TsConfig`]. It can be a string indicating a preset it, or a full configuration.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TsConfigKind {
@@ -29,8 +30,8 @@ impl Default for TsConfigKind {
   }
 }
 
-/// A struct representing instructions for outputting a tsconfig file.
-/// The file name will be joined to the root directory of the package that the generated config will belong to.
+/// A struct representing instructions for generating a tsconfig file.
+/// If the output path is relative, it will be joined to the root path of its package.
 #[derive(Deserialize, Debug, Clone, Serialize, PartialEq, JsonSchema)]
 pub struct TsConfigDirective {
   pub output: Option<String>,
@@ -187,11 +188,10 @@ pub struct TsConfig {
   pub include: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
+  #[merge(strategy = merge_optional_btree_sets)]
   pub references: Option<BTreeSet<TsConfigReference>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub type_acquisition: Option<TypeAcquisition>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -221,9 +221,11 @@ pub enum TypeAcquisition {
 #[serde(default)]
 #[merge(strategy = overwrite_if_some)]
 pub struct CompilerOptions {
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub plugins: Option<Vec<OrderedMap>>,
+  pub plugins: Option<BTreeSet<TsPlugin>>,
 
+  #[merge(strategy = merge_optional_btree_maps)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub paths: Option<BTreeMap<String, BTreeSet<String>>>,
 
@@ -257,6 +259,7 @@ pub struct CompilerOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub jsx: Option<Jsx>,
 
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub lib: Option<BTreeSet<Lib>>,
 
@@ -332,12 +335,15 @@ pub struct CompilerOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub preserve_symlinks: Option<bool>,
 
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub root_dirs: Option<BTreeSet<String>>,
 
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub type_roots: Option<BTreeSet<String>>,
 
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub types: Option<BTreeSet<String>>,
 
@@ -540,9 +546,11 @@ pub struct CompilerOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub no_check: Option<bool>,
 
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub custom_conditions: Option<BTreeSet<String>>,
 
+  #[merge(strategy = merge_optional_btree_sets)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub module_suffixes: Option<BTreeSet<String>>,
 

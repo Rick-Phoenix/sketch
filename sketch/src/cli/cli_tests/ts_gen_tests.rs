@@ -113,7 +113,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     }
   }));
 
-  assert_eq!(package_json.name, "test_package");
+  assert_eq!(package_json.name.unwrap(), "test_package");
 
   let app_test = Cli::try_parse_from([
     "sketch",
@@ -145,7 +145,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let app_package_json = extract_package_json!(app_package_dir.join("package.json"));
 
-  assert_eq!(app_package_json.name, "app_test");
+  assert_eq!(app_package_json.name.unwrap(), "app_test");
 
   // Latest should be converted to version range
   let svelte_dep = app_package_json.dev_dependencies.get("svelte").unwrap();

@@ -1,4 +1,4 @@
-use std::{fs::create_dir_all, path::PathBuf};
+use std::path::PathBuf;
 
 use askama::Template;
 use clap::Parser;
@@ -15,8 +15,8 @@ use super::{
 use crate::{
   custom_templating::TemplateOutput,
   fs::{
-    create_parent_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd,
-    get_relative_path, open_file_for_writing,
+    create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
+    open_file_for_writing,
   },
   merge_if_not_default, overwrite_if_some,
   ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
@@ -32,6 +32,7 @@ pub enum PackageKind {
   App,
 }
 
+/// The settings for a typescript monorepo's root package.
 #[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq, JsonSchema)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
@@ -41,7 +42,7 @@ pub struct RootPackage {
   pub name: Option<String>,
 
   /// Oxlint configuration for the root package.
-  /// Can be set to true (to use defaults) or false (to disable it) or to a string defining the configuration to generate.
+  /// It can be set to true/false (to use defaults or to disable it) or to a string defining the entire configuration.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
 
@@ -50,7 +51,7 @@ pub struct RootPackage {
   #[arg(short, long, value_parser = TsConfigDirective::from_cli, value_name = "output=PATH,id=ID")]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
-  /// The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition.
+  /// The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition (or nothing, to use defaults).
   #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
   #[arg(
     help = "The id of the package.json preset to use for the root package",
@@ -58,7 +59,7 @@ pub struct RootPackage {
   )]
   pub package_json: Option<PackageJsonKind>,
 
-  /// The templates to generate when the root package is generated.
+  /// The templates to generate when the root package is generated. Relative paths will resolve from the package's root.
   #[arg(skip)]
   pub with_templates: Option<Vec<TemplateOutput>>,
 }
@@ -99,7 +100,7 @@ pub struct PackageConfig {
   )]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
-  /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition.
+  /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
   #[arg(long, value_parser = PackageJsonKind::from_cli)]
   #[arg(
     help = "The id of the package.json preset to use for this package",
@@ -108,7 +109,7 @@ pub struct PackageConfig {
   pub package_json: Option<PackageJsonKind>,
 
   /// The templates to generate when this package is created.
-  /// The paths specified for these templates' output paths will be joined to the package's directory.
+  /// Relative output paths will be joined to the package's root directory.
   #[arg(skip)]
   pub with_templates: Option<Vec<TemplateOutput>>,
 
@@ -116,12 +117,12 @@ pub struct PackageConfig {
   #[arg(skip)]
   pub kind: Option<PackageKind>,
 
-  /// The configuration for this package's vitest setup. It can be set to false (to disable it), an id (to use a preset) or a literal configuration.
+  /// The configuration for this package's vitest setup. It can be set to true/false (to use defaults or to disable it), or as a customized configuration.
   #[arg(skip)]
   #[merge(strategy = merge_if_not_default)]
   pub vitest: VitestConfigKind,
 
-  /// The configuration for this package's oxlint setup. It can be set to true (to use defaults), or to a literal value.
+  /// The configuration for this package's oxlint setup. It can be set to true/false (to use defaults or to disable it), or to a string defining the contents of the file.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfig>,
 }
@@ -141,13 +142,14 @@ impl Default for PackageConfig {
   }
 }
 
+/// The kinds of Ts package data. Either an id pointing to a stored preset, or a custom configuration.
 pub enum PackageData {
   Preset(String),
   Config(PackageConfig),
 }
 
 impl Config {
-  /// Generate a new typescript package.
+  /// Generates a new typescript package.
   pub async fn build_package(
     self,
     data: PackageData,
@@ -157,7 +159,7 @@ impl Config {
 
     let package_json_presets = &typescript.package_json_presets;
 
-    let root_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
+    let monorepo_root = self.out_dir.clone().unwrap_or_else(|| get_cwd());
 
     let config = match data {
       PackageData::Config(conf) => conf,
@@ -179,26 +181,23 @@ impl Config {
       "my-awesome-package".to_string()
     };
 
-    let mut output = root_dir.join(
+    let mut pkg_root = monorepo_root.join(
       config
         .dir
         .clone()
         .unwrap_or_else(|| package_name.clone().into()),
     );
 
-    create_dir_all(&output).map_err(|e| GenError::DirCreation {
-      path: output.to_owned(),
-      source: e,
-    })?;
+    create_all_dirs(&pkg_root)?;
 
-    output = get_abs_path(&output)?;
+    pkg_root = get_abs_path(&pkg_root)?;
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {
-        write_file!(output, self.no_overwrite, $($tokens)*)
+        write_file!(pkg_root, self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -216,9 +215,10 @@ impl Config {
 
             (id.to_string(), config)
           }
-          PackageJsonKind::Config(package_json_config) => {
-            (package_name.clone(), *package_json_config.clone())
-          }
+          PackageJsonKind::Config(package_json_config) => (
+            format!("__inlined_config_{}", package_name),
+            *package_json_config.clone(),
+          ),
         }
       } else {
         ("__default".to_string(), PackageJson::default())
@@ -255,7 +255,7 @@ impl Config {
       }
     }
 
-    package_json_data.name = package_name.clone();
+    package_json_data.name = Some(package_name.clone());
 
     if !typescript.no_convert_latest_to_range {
       package_json_data
@@ -266,7 +266,7 @@ impl Config {
     write_to_output!(package_json_data, "package.json");
 
     if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
-      let pnpm_workspace_path = root_dir.join("pnpm-workspace.yaml");
+      let pnpm_workspace_path = monorepo_root.join("pnpm-workspace.yaml");
 
       let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
@@ -300,7 +300,9 @@ impl Config {
 
             (id.to_string(), tsconfig)
           }
-          TsConfigKind::Config(ts_config) => (format!("__{}", package_name), *ts_config.clone()),
+          TsConfigKind::Config(ts_config) => {
+            (format!("__inlined_config_{}", package_name), *ts_config)
+          }
         };
 
         if !tsconfig.extend_presets.is_empty() {
@@ -316,8 +318,8 @@ impl Config {
       }
     } else {
       let is_app = matches!(config.kind.unwrap_or_default(), PackageKind::App);
-      let out_dir = {
-        let rel_path_to_root = get_relative_path(&output, &root_dir)?;
+      let ts_out_dir = {
+        let rel_path_to_root = get_relative_path(&pkg_root, &monorepo_root)?;
 
         let root_out_dir = rel_path_to_root.join(".out");
 
@@ -326,21 +328,20 @@ impl Config {
       .to_string_lossy()
       .to_string();
 
-      let path_to_root_tsconfig = get_relative_path(&output, &root_dir)?
-        .join("tsconfig.options.json")
-        .to_string_lossy()
-        .to_string();
+      let path_to_root_tsconfig =
+        get_relative_path(&pkg_root, &monorepo_root)?.join("tsconfig.options.json");
 
-      let base_tsconfig = get_default_package_tsconfig(path_to_root_tsconfig, is_app);
+      let base_tsconfig =
+        get_default_package_tsconfig(path_to_root_tsconfig.to_string_lossy().to_string(), is_app);
 
       tsconfig_files.push(("tsconfig.json".to_string(), base_tsconfig));
 
-      let src_tsconfig = get_default_src_tsconfig(is_app, &out_dir);
+      let src_tsconfig = get_default_src_tsconfig(is_app, &ts_out_dir);
 
       tsconfig_files.push(("tsconfig.src.json".to_string(), src_tsconfig));
 
       if !is_app {
-        let dev_tsconfig = get_default_dev_tsconfig(&out_dir);
+        let dev_tsconfig = get_default_dev_tsconfig(&ts_out_dir);
 
         tsconfig_files.push(("tsconfig.dev.json".to_string(), dev_tsconfig));
       }
@@ -351,11 +352,12 @@ impl Config {
     }
 
     if update_root_tsconfig {
-      let root_tsconfig_path = root_dir.join("tsconfig.json");
+      let root_tsconfig_path = monorepo_root.join("tsconfig.json");
 
       let mut root_tsconfig: TsConfig = deserialize_json(&root_tsconfig_path)?;
 
-      let path_to_new_tsconfig = get_relative_path(&root_dir, &output.join("tsconfig.json"))?;
+      let path_to_new_tsconfig =
+        get_relative_path(&monorepo_root, &pkg_root.join("tsconfig.json"))?;
 
       let root_tsconfig_references = root_tsconfig.references.get_or_insert_default();
 
@@ -371,8 +373,8 @@ impl Config {
         })?;
     }
 
-    let src_dir = output.join("src");
-    create_parent_dirs(&src_dir)?;
+    let src_dir = pkg_root.join("src");
+    create_all_dirs(&src_dir)?;
 
     let _index_file = open_file_for_writing(&src_dir.join("index.ts"))?;
 
@@ -381,12 +383,12 @@ impl Config {
       VitestConfigKind::Config(vitest_config_struct) => Some(vitest_config_struct),
     };
 
-    if let Some(mut vitest) = vitest_config.clone() {
-      let tests_dir = output.join(&vitest.tests_dir);
+    if let Some(mut vitest) = vitest_config {
+      let tests_dir = pkg_root.join(&vitest.tests_dir);
       let tests_setup_dir = tests_dir.join(&vitest.setup_dir);
 
-      create_parent_dirs(&tests_dir)?;
-      create_parent_dirs(&tests_setup_dir)?;
+      create_all_dirs(&tests_dir)?;
+      create_all_dirs(&tests_setup_dir)?;
 
       let file_parent_dir = vitest
         .out_dir
@@ -398,21 +400,22 @@ impl Config {
       let src_rel_path = get_relative_path(&file_parent_dir, &src_dir)?;
 
       vitest.src_rel_path = src_rel_path.to_string_lossy().to_string();
+
       vitest.setup_dir = get_relative_path(&file_parent_dir, &tests_setup_dir)?
         .to_string_lossy()
         .to_string();
 
       write_to_output!(vitest, file_path);
-      write_to_output!(TestsSetupFile {}, tests_setup_dir.join("tests_setup.ts"));
+      write_to_output!(TestsSetupFile, tests_setup_dir.join("tests_setup.ts"));
     }
 
-    if let Some(oxlint_config) = config.oxlint.clone() {
+    if let Some(oxlint_config) = config.oxlint {
       write_to_output!(oxlint_config, ".oxlintrc.json");
     }
 
     if let Some(templates) = config.with_templates && !templates.is_empty() {
       self
-        .generate_templates(&output, templates)?;
+        .generate_templates(&pkg_root, templates)?;
     }
 
     Ok(())

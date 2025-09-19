@@ -142,8 +142,9 @@
   "plugins": [
     {% for plugin in plugins +%}
     {
+      "name": "{{ plugin.name }}",
       {% filter strip_trailing_comma %}
-      {% for (key, val) in plugin +%}
+      {% for (key, val) in plugin.extras +%}
       "{{ key }}": {{+ crate::render_json_val(val, 4) }},
       {% endfor %}
       {% endfilter +%}

@@ -90,10 +90,12 @@ impl Config {
         .await?;
     }
 
-    package_json_data.name = root_package
-      .name
-      .clone()
-      .unwrap_or_else(|| "root".to_string());
+    package_json_data.name = Some(
+      root_package
+        .name
+        .clone()
+        .unwrap_or_else(|| "root".to_string()),
+    );
 
     write_to_output!(package_json_data, "package.json");
 

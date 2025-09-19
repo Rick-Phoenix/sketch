@@ -20,9 +20,7 @@ use Commands::*;
 use crate::{
   custom_templating::{TemplateData, TemplateOutput},
   exec::launch_command,
-  fs::{
-    create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml,
-  },
+  fs::{create_all_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml},
   ts::{
     package::{PackageConfig, PackageData, RootPackage},
     vitest::VitestConfigKind,
@@ -250,7 +248,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       let output_path = get_cwd().join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
 
       if let Some(parent_dir) = output_path.parent() {
-        create_parent_dirs(&parent_dir)?;
+        create_all_dirs(&parent_dir)?;
       }
 
       let format = get_extension(&output_path).to_string_lossy();

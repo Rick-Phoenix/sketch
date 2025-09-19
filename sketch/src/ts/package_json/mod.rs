@@ -1,3 +1,5 @@
+pub mod package_json_elements;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use askama::Template;
@@ -14,8 +16,8 @@ use crate::{
   versions::{get_latest_npm_version, VersionRange},
   GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
-pub mod package_json_elements;
 
+/// Ways of indicating [`PackageJson`] data. It can be an id, pointing to a preset, or a literal configuration.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum PackageJsonKind {
@@ -35,28 +37,29 @@ impl PackageJsonKind {
   }
 }
 
-/// A struct representing the contents of a package.json file.
+/// A struct representing the contents of a `package.json` file.
 #[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq, JsonSchema)]
 #[template(path = "package.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct PackageJson {
-  #[merge(skip)]
-  pub name: String,
+  #[merge(strategy = overwrite_if_some)]
+  pub name: Option<String>,
 
   #[merge(strategy = merge::bool::overwrite_true)]
   pub private: bool,
 
   #[serde(rename = "type")]
   #[merge(skip)]
-  pub type_: JsModuleType,
+  pub type_: JsPackageType,
 
-  #[merge(skip)]
-  pub version: String,
+  #[merge(strategy = overwrite_if_some)]
+  pub version: Option<String>,
 
   #[merge(strategy = merge_btree_maps)]
   pub dependencies: StringBTreeMap,
 
+  // Necessary to have both camelCase and snake_case
   #[serde(alias = "dev_dependencies")]
   #[merge(strategy = merge_btree_maps)]
   pub dev_dependencies: StringBTreeMap,
@@ -64,6 +67,7 @@ pub struct PackageJson {
   #[merge(strategy = merge_btree_maps)]
   pub scripts: StringBTreeMap,
 
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub description: Option<String>,
 
@@ -164,9 +168,9 @@ pub struct PackageJson {
   #[merge(strategy = overwrite_if_some)]
   pub browser: Option<String>,
 
-  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
-  #[merge(skip)]
-  pub workspaces: BTreeSet<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_if_some)]
+  pub workspaces: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(skip)]
@@ -181,10 +185,10 @@ pub struct PackageJson {
 impl Default for PackageJson {
   fn default() -> Self {
     Self {
-      name: "my-awesome-package".to_string(),
+      name: None,
       private: true,
-      type_: JsModuleType::Module,
-      version: "0.1.0".to_string(),
+      type_: JsPackageType::Module,
+      version: None,
       extends: Default::default(),
       dependencies: Default::default(),
       dev_dependencies: Default::default(),
@@ -221,7 +225,7 @@ impl Default for PackageJson {
 
 impl PackageJson {
   #[allow(clippy::filter_map_bool_then)]
-  /// Turns 'latest' into the actual latest version for a package, pinned to the selected version range.
+  /// Converts dependencies marked with `latest` into a version range starting from the latest version fetched with the npm API.
   pub async fn convert_latest_to_range(
     &mut self,
     range_kind: VersionRange,
@@ -283,7 +287,7 @@ impl PackageJson {
         Ok(Err(task_error)) => return Err(task_error),
         Err(join_error) => {
           return Err(GenError::Custom(format!(
-            "An async task failed unexpectedly: {}",
+            "Failed to fetch an npm package's version due to an async task's failure: {}",
             join_error
           )))
         }
@@ -367,7 +371,7 @@ mod test {
   use maplit::{btreemap, btreeset};
 
   use super::{
-    Bugs, Directories, Exports, JsModuleType, Man, PackageJson, Person, PersonData, PublishConfig,
+    Bugs, Directories, Exports, JsPackageType, Man, PackageJson, Person, PersonData, PublishConfig,
     PublishConfigAccess, Repository,
   };
   use crate::{
@@ -379,8 +383,8 @@ mod test {
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
     let test_package_json = PackageJson {
       private: true,
-      type_: JsModuleType::Module,
-      version: "0.1.0".to_string(),
+      type_: JsPackageType::Module,
+      version: Some("0.1.0".to_string()),
       exports: btreemap! {
         ".".to_string() => Exports::Path("src/index.js".to_string()),
         "main".to_string() => Exports::Data {
@@ -411,8 +415,8 @@ mod test {
       cpu: btreeset! { "arm64".to_string(), "x86".to_string() },
       os: btreeset! { "darwin".to_string(), "linux".to_string() },
       engines: btreemap! { "node".to_string() => "23.0.0".to_string(), "deno".to_string() => "2.0.0".to_string() },
-      workspaces: btreeset!["packages".to_string(), "apps".to_string()],
-      name: "my_package".to_string(),
+      workspaces: Some(btreeset!["packages".to_string(), "apps".to_string()]),
+      name: Some("my_package".to_string()),
       dev_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
       dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
       bundle_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },

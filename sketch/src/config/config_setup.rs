@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use crate::{
   fs::{
-    create_parent_dirs, deserialize_json, deserialize_toml, deserialize_yaml, get_extension,
+    create_all_dirs, deserialize_json, deserialize_toml, deserialize_yaml, get_extension,
     get_parent_dir,
   },
   get_abs_path, Config, GenError,
@@ -34,7 +34,7 @@ pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Co
   if let Some(templates_dir) = &config.templates_dir {
     let templates_dir = config_parent_dir.join(templates_dir);
 
-    create_parent_dirs(&templates_dir)?;
+    create_all_dirs(&templates_dir)?;
 
     // Convert to absolute path
     config.templates_dir = Some(get_abs_path(&templates_dir)?);
@@ -43,7 +43,7 @@ pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Co
   if let Some(root_dir) = &config.out_dir {
     let root_dir = config_parent_dir.join(root_dir);
 
-    create_parent_dirs(&root_dir)?;
+    create_all_dirs(&root_dir)?;
 
     // Convert to absolute path
     config.out_dir = Some(get_abs_path(&root_dir)?);
