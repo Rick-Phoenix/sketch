@@ -5,7 +5,7 @@ use maplit::btreeset;
 use merge::Merge;
 
 use crate::{
-  fs::{get_cwd, serialize_json},
+  fs::{get_cwd, serialize_json, serialize_yaml},
   ts::{
     package_json::{PackageJsonKind, Person},
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
@@ -166,7 +166,7 @@ impl Config {
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
         .await;
 
-      write_to_output!(pnpm_data, "pnpm-workspace.yaml");
+      serialize_yaml(&pnpm_data, &out_dir.join("pnpm-workspace.yaml"))?;
     }
 
     if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfig::Bool(false)) {

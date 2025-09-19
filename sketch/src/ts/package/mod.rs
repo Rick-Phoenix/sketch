@@ -16,7 +16,7 @@ use crate::{
   custom_templating::TemplateOutput,
   fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
-    open_file_for_writing, serialize_json,
+    open_file_for_writing, serialize_json, serialize_yaml,
   },
   merge_if_not_default, overwrite_if_some,
   ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
@@ -274,12 +274,7 @@ impl Config {
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
         .await;
 
-      pnpm_workspace
-        .write_into(&mut open_file_for_writing(&pnpm_workspace_path)?)
-        .map_err(|e| GenError::WriteError {
-          path: pnpm_workspace_path,
-          source: e,
-        })?;
+      serialize_yaml(&pnpm_workspace, &pnpm_workspace_path)?;
     }
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();

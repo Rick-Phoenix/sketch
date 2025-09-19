@@ -6,7 +6,6 @@ use std::{
   sync::LazyLock,
 };
 
-use askama::Template;
 pub use pnpm_elements::*;
 use regex::Regex;
 use schemars::JsonSchema;
@@ -18,11 +17,14 @@ use crate::{
 };
 
 /// A struct representing a pnpm-workspace.yaml config. See more: https://pnpm.io/settings
-#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema, Default, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default, Eq)]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
-#[template(path = "ts/pnpm-workspace.yaml.j2")]
 pub struct PnpmWorkspace {
+  /// Glob patterns for the directories containing the packages for this workspace.
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
+  pub packages: BTreeSet<String>,
+
   /// The dependencies to store in the unnamed (default) catalog.
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   pub catalog: StringBTreeMap,
@@ -30,10 +32,6 @@ pub struct PnpmWorkspace {
   /// A map of named catalogs and the dependencies listed in them.
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   pub catalogs: BTreeMap<String, StringBTreeMap>,
-
-  /// Glob patterns for the directories containing the packages for this workspace.
-  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
-  pub packages: BTreeSet<String>,
 
   /// When set to true, pnpm will remove unused catalog entries during installation. See more: https://pnpm.io/settings#cleanupunusedcatalogs
   #[serde(alias = "cleanup_unused_catalogs")]
