@@ -1,0 +1,10 @@
+{% import "utils.j2" as utils %}
+
+{% match self %}
+  {% when Self::Single(str) %}
+"{{ str }}"
+  {% when Self::Map(map) %}
+{% for (key, val) in map +%}
+"{{ key }}": "{{ val }}" {% call utils::optional_comma(!loop.last) %}
+{% endfor +%}
+{% endmatch %}

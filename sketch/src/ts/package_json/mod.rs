@@ -43,135 +43,184 @@ impl PackageJsonKind {
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct PackageJson {
+  /// The name of the package.
   #[merge(strategy = overwrite_if_some)]
   pub name: Option<String>,
 
+  /// If set to true, then npm will refuse to publish it.
   #[merge(strategy = merge::bool::overwrite_true)]
   pub private: bool,
 
+  /// When set to `module`, the type field allows a package to specify all .js files within are ES modules. If the `type` field is omitted or set to `commonjs`, all .js files are treated as CommonJS.
   #[serde(rename = "type")]
   #[merge(skip)]
   pub type_: JsPackageType,
 
+  /// Version must be parsable by node-semver, which is bundled with npm as a dependency.
   #[merge(strategy = overwrite_if_some)]
   pub version: Option<String>,
 
+  /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
   #[merge(strategy = merge_btree_maps)]
   pub dependencies: StringBTreeMap,
 
+  /// Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.
   // Necessary to have both camelCase and snake_case
   #[serde(alias = "dev_dependencies")]
   #[merge(strategy = merge_btree_maps)]
   pub dev_dependencies: StringBTreeMap,
 
+  /// A map of shell scripts to launch from the root of the package.
   #[merge(strategy = merge_btree_maps)]
   pub scripts: StringBTreeMap,
 
+  /// This helps people discover your package, as it's listed in 'npm search'.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub description: Option<String>,
 
+  /// The ids of the [`PackageJson`] presets to extend
   #[serde(skip_serializing)]
   #[merge(strategy = merge_index_sets)]
   pub extends: IndexSet<String>,
 
+  /// The single path for this package's binary, or a map of several binaries.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_if_some)]
+  pub bin: Option<Bin>,
+
+  /// Specifies dependencies that are optional for your project. These dependencies are attempted to be installed during the npm install process, but if they fail to install, the installation process will not fail.
   #[serde(alias = "optional_dependencies")]
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub optional_dependencies: StringBTreeMap,
 
+  /// Specifies dependencies that are required by the package but are expected to be provided by the consumer of the package.
   #[serde(alias = "peer_dependencies")]
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub peer_dependencies: StringBTreeMap,
 
+  /// Array of package names that will be bundled when publishing the package.
   #[serde(alias = "bundle_dependencies")]
-  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub bundle_dependencies: StringBTreeMap,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub bundle_dependencies: Option<BTreeSet<String>>,
 
+  /// Overrides is used to support selective version overrides using npm, which lets you define custom package versions or ranges inside your dependencies. For yarn, use resolutions instead. See: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub overrides: Option<StringBTreeMap>,
+
+  /// Specify the place where your code lives. This is helpful for people who want to contribute.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub repository: Option<Repository>,
 
+  /// Used to inform about ways to help fund development of the package.
+  /// You can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_if_some)]
+  pub funding: Option<Funding>,
+
+  /// This helps people discover your package, as it's listed in 'npm search'.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub keywords: BTreeSet<String>,
 
+  /// The url to the project homepage.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub homepage: Option<String>,
 
+  /// The url to your project's issue tracker and / or the email address to which issues should be reported. These are helpful for people who encounter issues with your package.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub bugs: Option<Bugs>,
 
+  /// You should specify a license for your package so that people know how they are permitted to use it, and any restrictions you're placing on it.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub license: Option<String>,
 
+  /// The author of this package.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub author: Option<Person>,
 
+  /// A list of people who contributed to this package.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub contributors: BTreeSet<Person>,
 
+  /// A list of people who maintains this package.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub maintainers: BTreeSet<Person>,
 
+  /// The 'files' field is an array of files to include in your project. If you name a folder in the array, then it will also include the files inside that folder.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub files: BTreeSet<String>,
 
+  /// The `exports` field is used to restrict external access to non-exported module files, also enables a module to import itself using `name`.
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub exports: BTreeMap<String, Exports>,
 
+  /// Specify either a single file or an array of filenames to put in place for the man program to find.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub man: Option<Man>,
 
+  /// An object that can be used to set configuration parameters used in package scripts that persist across upgrades.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub config: Option<JsonValueBTreeMap>,
 
+  /// Defines which package manager is expected to be used when working on the current project. This field is currently experimental and needs to be opted-in; see https://nodejs.org/api/corepack.html
   #[serde(alias = "package_manager")]
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub package_manager: Option<String>,
 
+  /// A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with "latest", published to the global public registry or that a scoped module is private by default.
   #[serde(alias = "publish_config")]
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub publish_config: Option<PublishConfig>,
 
+  /// Defines which tools and versions are expected to be used.
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
   pub engines: StringBTreeMap,
 
+  /// Specify which operating systems your module will run on.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub os: BTreeSet<String>,
 
+  /// Specify that your code only runs on certain cpu architectures.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub cpu: BTreeSet<String>,
 
+  /// The main field is a module ID that is the primary entry point to your program.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub main: Option<String>,
 
+  /// Specifies the package's entrypoint for packages that work in browsers.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub browser: Option<String>,
 
+  /// Allows packages within a directory to depend on one another using direct linking of local files. Additionally, dependencies within a workspace are hoisted to the workspace root when possible to reduce duplication. Note: It's also a good idea to set `private` to true when using this feature.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub workspaces: Option<BTreeSet<String>>,
 
+  /// Indicates the structure of your package.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(skip)]
   pub directories: Option<Directories>,
@@ -187,6 +236,9 @@ impl Default for PackageJson {
     Self {
       name: None,
       private: true,
+      overrides: None,
+      bin: None,
+      funding: None,
       type_: JsPackageType::Module,
       version: None,
       extends: Default::default(),
@@ -249,7 +301,6 @@ impl PackageJson {
     get_latest!(dependencies, Dependency);
     get_latest!(dev_dependencies, DevDependency);
     get_latest!(optional_dependencies, OptionalDependency);
-    get_latest!(bundle_dependencies, BundleDependency);
     get_latest!(peer_dependencies, PeerDependency);
 
     for (kind, name) in names_to_update {
@@ -281,7 +332,6 @@ impl PackageJson {
               self.optional_dependencies.insert(name, new_version_range)
             }
             DepKind::PeerDependency => self.peer_dependencies.insert(name, new_version_range),
-            DepKind::BundleDependency => self.bundle_dependencies.insert(name, new_version_range),
           }
         }
         Ok(Err(task_error)) => return Err(task_error),

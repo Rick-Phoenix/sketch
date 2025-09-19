@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use url::{ParseError, Url};
 
+/// The kinds of version ranges for a dependency with semantic versioning.
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum VersionRange {
@@ -17,6 +18,7 @@ pub enum VersionRange {
 }
 
 impl VersionRange {
+  /// Takes a version and appends the range prefix to it.
   pub fn create(&self, version: String) -> String {
     if version.starts_with("catalog:") || version == "latest" {
       return version;
@@ -34,7 +36,7 @@ struct NpmApiResponse {
   version: String,
 }
 
-/// Errors occurring when fetching the latest version for a package.
+/// Errors occurring when fetching the latest version for an npm package.
 #[derive(Debug, Error)]
 pub enum NpmVersionError {
   #[error("An invalid url was used: {source}")]

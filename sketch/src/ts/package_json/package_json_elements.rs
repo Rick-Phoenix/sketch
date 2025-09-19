@@ -6,6 +6,35 @@ use serde::{Deserialize, Serialize};
 
 use crate::{filters, StringBTreeMap};
 
+/// You can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.
+#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
+#[template(path = "package_json/funding.j2")]
+#[serde(untagged)]
+pub enum Funding {
+  Url(String),
+  Data(FundingData),
+  List(Vec<FundingData>),
+}
+
+/// Used to inform about ways to help fund development of the package.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
+pub struct FundingData {
+  pub url: String,
+
+  /// The type of funding or the platform through which funding can be provided, e.g. patreon, opencollective, tidelift or github
+  #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+  pub type_: Option<String>,
+}
+
+/// The single path for this package's binary, or a map of several binaries.
+#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
+#[template(path = "package_json/bin.j2")]
+#[serde(untagged)]
+pub enum Bin {
+  Single(String),
+  Map(StringBTreeMap),
+}
+
 /// An enum representing formats for the `repository` field in a `package.json` file.
 #[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
 #[template(path = "repository.j2")]
@@ -27,7 +56,10 @@ pub enum Repository {
 #[template(path = "bugs.j2")]
 pub struct Bugs {
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  /// The url to your project's issue tracker.
   pub url: Option<String>,
+
+  /// The email address to which issues should be reported.
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub email: Option<String>,
 }
@@ -93,18 +125,29 @@ pub enum Exports {
 #[serde(default)]
 #[template(path = "directories.j2")]
 pub struct Directories {
+  /// If you specify a `bin` directory, then all the files in that folder will be used as the `bin` hash.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub bin: Option<String>,
+
+  /// Put markdown files in here. Eventually, these will be displayed nicely, maybe, someday.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub doc: Option<String>,
+
+  /// Put example scripts in here. Someday, it might be exposed in some clever way.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub example: Option<String>,
+
+  /// Tell people where the bulk of your library is. Nothing special is done with the lib folder in any way, but it's useful meta info.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub lib: Option<String>,
+
+  /// A folder that is full of man pages. Sugar to generate a 'man' array by walking the folder.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub man: Option<String>,
+
   #[serde(skip_serializing_if = "Option::is_none")]
   pub test: Option<String>,
+
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[serde(flatten)]
   pub other: StringBTreeMap,
@@ -136,7 +179,7 @@ impl Display for PublishConfigAccess {
   }
 }
 
-/// A struct that represents the `publishConfig` field in a `package.json` file.
+/// A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with "latest", published to the global public registry or that a scoped module is private by default.
 #[derive(Clone, Debug, Serialize, Deserialize, Default, Template, PartialEq, Eq, JsonSchema)]
 #[serde(default)]
 #[template(path = "publish_config.j2")]
@@ -176,5 +219,4 @@ pub(crate) enum DepKind {
   DevDependency,
   OptionalDependency,
   PeerDependency,
-  BundleDependency,
 }

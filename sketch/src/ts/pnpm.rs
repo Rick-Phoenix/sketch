@@ -19,8 +19,11 @@ use crate::{
 #[serde(default)]
 #[template(path = "pnpm-workspace.yaml.j2")]
 pub struct PnpmWorkspace {
+  /// The dependencies to insert in the unnamed (default) catalog.
   pub catalog: StringBTreeMap,
+  /// A map of named catalogs and the dependencies listed in them.
   pub catalogs: BTreeMap<String, StringBTreeMap>,
+  /// Glob patterns for the directories containing the packages for this workspace.
   pub packages: BTreeSet<String>,
   #[serde(flatten)]
   pub extra: OrderedMap,

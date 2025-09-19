@@ -62,7 +62,7 @@
   {% endif +%}
   {% call utils::render_string_object_if_not_empty("peerDependencies", self.peer_dependencies, 2) +%}
   {% call utils::render_string_object_if_not_empty("optionalDependencies", self.optional_dependencies, 2) +%}
-  {% call utils::render_string_object_if_not_empty("bundleDependencies", self.bundle_dependencies, 2) +%}
+  {% call utils::render_optional_list_if_not_empty("bundleDependencies", self.bundle_dependencies, 2) +%}
   {% if let Some(publish_config) = self.publish_config +%}
   "publishConfig": {
     {{+ publish_config | indent(4) +}}
