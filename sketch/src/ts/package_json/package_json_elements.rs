@@ -33,11 +33,11 @@ pub enum Funding {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Template)]
 #[template(path = "ts/package_json/funding_data.j2")]
 pub struct FundingData {
-  pub url: String,
-
   /// The type of funding or the platform through which funding can be provided, e.g. patreon, opencollective, tidelift or github
   #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
   pub type_: Option<String>,
+
+  pub url: String,
 }
 
 /// The single path for this package's binary, or a map of several binaries.
@@ -69,8 +69,8 @@ pub enum Repository {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Template, JsonSchema)]
 #[template(path = "ts/package_json/bugs.j2")]
 pub struct Bugs {
-  #[serde(default, skip_serializing_if = "Option::is_none")]
   /// The url to your project's issue tracker.
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub url: Option<String>,
 
   /// The email address to which issues should be reported.
@@ -106,9 +106,9 @@ pub enum Person {
 pub struct PersonData {
   pub name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub url: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub email: Option<String>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub url: Option<String>,
 }
 
 /// A struct that represents a value in the `exports` object inside a `package.json` file.
@@ -119,18 +119,18 @@ pub enum Exports {
   Path(String),
   Data {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    require: Option<String>,
+    types: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     import: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    require: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     node: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    default: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    types: Option<String>,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(flatten)]
     other: StringBTreeMap,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    default: Option<String>,
   },
 }
 
@@ -143,6 +143,10 @@ pub struct Directories {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub bin: Option<String>,
 
+  /// Tell people where the bulk of your library is. Nothing special is done with the lib folder in any way, but it's useful meta info.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub lib: Option<String>,
+
   /// Put markdown files in here. Eventually, these will be displayed nicely, maybe, someday.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub doc: Option<String>,
@@ -151,14 +155,11 @@ pub struct Directories {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub example: Option<String>,
 
-  /// Tell people where the bulk of your library is. Nothing special is done with the lib folder in any way, but it's useful meta info.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub lib: Option<String>,
-
   /// A folder that is full of man pages. Sugar to generate a 'man' array by walking the folder.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub man: Option<String>,
 
+  /// The tests directory.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub test: Option<String>,
 
