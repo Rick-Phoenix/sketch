@@ -2,6 +2,7 @@ mod pnpm_elements;
 
 use std::{
   collections::{BTreeMap, BTreeSet},
+  path::PathBuf,
   sync::LazyLock,
 };
 
@@ -71,7 +72,7 @@ pub struct PnpmWorkspace {
   /// Specifies a JSON file that lists the only packages permitted to run installation scripts during the pnpm install process. See more: https://pnpm.io/settings#onlybuiltdependenciesfile
   #[serde(alias = "only_built_dependencies_file")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub only_built_dependencies_file: Option<String>,
+  pub only_built_dependencies_file: Option<PathBuf>,
 
   /// A list of package names that should not be built during installation. See more: https://pnpm.io/settings#ignoredbuiltdependencies
   #[serde(alias = "ignored_built_dependencies")]
@@ -108,6 +109,16 @@ pub struct PnpmWorkspace {
   #[serde(alias = "config_dependencies")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub config_dependencies: Option<StringBTreeMap>,
+
+  /// Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig
+  #[serde(alias = "audit_config")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub audit_config: Option<AuditConfig>,
+
+  /// Scripts listed in this array will be required in each project of the workspace. Otherwise, pnpm -r run <script name> will fail. See more: https://pnpm.io/settings#requiredscripts
+  #[serde(alias = "required_scripts")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub required_scripts: Option<BTreeSet<String>>,
 
   /// Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures
   #[serde(alias = "supported_architectures")]
@@ -152,17 +163,7 @@ pub struct PnpmWorkspace {
   /// The directory in which dependencies will be installed (instead of node_modules). See more: https://pnpm.io/settings#modulesdir
   #[serde(alias = "modules_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub modules_dir: Option<String>,
-
-  /// Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig
-  #[serde(alias = "audit_config")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub audit_config: Option<AuditConfig>,
-
-  /// Scripts listed in this array will be required in each project of the workspace. Otherwise, pnpm -r run <script name> will fail. See more: https://pnpm.io/settings#requiredscripts
-  #[serde(alias = "required_scripts")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub required_scripts: Option<BTreeSet<String>>,
+  pub modules_dir: Option<PathBuf>,
 
   /// Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker
   #[serde(alias = "node_linker")]
@@ -181,7 +182,7 @@ pub struct PnpmWorkspace {
   /// The directory with links to the store. See more: https://pnpm.io/settings#virtualstoredir
   #[serde(alias = "virtual_store_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub virtual_store_dir: Option<String>,
+  pub virtual_store_dir: Option<PathBuf>,
 
   /// Sets the maximum allowed length of directory names inside the virtual store directory (node_modules/.pnpm). See more: https://pnpm.io/settings#virtualstoredirmaxlength
   #[serde(alias = "virtual_store_dir_max_length")]
@@ -206,7 +207,7 @@ pub struct PnpmWorkspace {
   /// The location where all the packages are saved on the disk. See more: https://pnpm.io/settings#storedir
   #[serde(alias = "store_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub store_dir: Option<String>,
+  pub store_dir: Option<PathBuf>,
 
   /// By default, if a file in the store has been modified, the content of this file is checked before linking it to a project's node_modules. See more: https://pnpm.io/settings#verifystoreintegrity
   #[serde(alias = "verify_store_integrity")]
@@ -264,7 +265,7 @@ pub struct PnpmWorkspace {
   /// A path to a file containing one or multiple Certificate Authority signing certificates. See more: https://pnpm.io/settings#cafile
   #[serde(rename = "cafile", alias = "ca_file")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub ca_file: Option<String>,
+  pub ca_file: Option<PathBuf>,
 
   /// A client certificate to pass when accessing the registry. See more: https://pnpm.io/settings#cert
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -386,7 +387,7 @@ pub struct PnpmWorkspace {
   /// The location of the npm binary that pnpm uses for some actions, like publishing. See more: https://pnpm.io/settings#npmpath
   #[serde(alias = "npm_path")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub npm_path: Option<String>,
+  pub npm_path: Option<PathBuf>,
 
   /// If this setting is disabled, pnpm will not fail if a different package manager is specified in the packageManager field of package.json. When enabled, only the package name is checked (since pnpm v9.2.0), so you can still run any version of pnpm regardless of the version specified in the packageManager field. See more: https://pnpm.io/settings#packagemanagerstrict
   #[serde(alias = "package_manager_strict")]
@@ -525,22 +526,22 @@ pub struct PnpmWorkspace {
   /// Specify a custom directory to store global packages. See more: https://pnpm.io/settings#globaldir
   #[serde(alias = "global_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub global_dir: Option<String>,
+  pub global_dir: Option<PathBuf>,
 
   /// Allows to set the target directory for the bin files of globally installed packages. See more: https://pnpm.io/settings#globalbindir
   #[serde(alias = "global_bin_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub global_bin_dir: Option<String>,
+  pub global_bin_dir: Option<PathBuf>,
 
   /// The location where all the packages are saved on the disk. See more: https://pnpm.io/settings#statedir
   #[serde(alias = "state_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub state_dir: Option<String>,
+  pub state_dir: Option<PathBuf>,
 
   /// The location of the cache (package metadata and dlx). See more: https://pnpm.io/settings#cachedir
   #[serde(alias = "cache_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub cache_dir: Option<String>,
+  pub cache_dir: Option<PathBuf>,
 
   /// When true, all the output is written to stderr. See more: https://pnpm.io/settings#usestderr
   #[serde(alias = "use_stderr")]
@@ -610,12 +611,12 @@ pub struct PnpmWorkspace {
   /// The location of the local pnpmfile. See more: https://pnpm.io/settings#pnpmfile
   #[serde(rename = "pnpmfile", alias = "pnpm_file")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub pnpm_file: Option<String>,
+  pub pnpm_file: Option<PathBuf>,
 
   /// The location of a global pnpmfile. A global pnpmfile is used by all projects during installation. See more: https://pnpm.io/settings#globalpnpmfile
   #[serde(rename = "globalPnpmfile", alias = "global_pnpm_file")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub global_pnpm_file: Option<String>,
+  pub global_pnpm_file: Option<PathBuf>,
 
   /// .pnpmfile.cjs will be ignored. Useful together with --ignore-scripts when you want to make sure that no script gets executed during install. See more: https://pnpm.io/settings#ignorepnpmfile
   #[serde(rename = "ignorePnpmfile", alias = "ignore_pnpm_file")]
@@ -625,7 +626,7 @@ pub struct PnpmWorkspace {
   /// The generated patch file will be saved to this directory. See more: https://pnpm.io/cli/patch-commit
   #[serde(alias = "patches_dir")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub patches_dir: Option<String>,
+  pub patches_dir: Option<PathBuf>,
 
   /// When true, pnpm will run any pre/post scripts automatically. See more: https://pnpm.io/settings#enableprepostscripts
   #[serde(alias = "enable_pre_post_scripts")]
