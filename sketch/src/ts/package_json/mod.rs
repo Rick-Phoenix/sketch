@@ -70,6 +70,12 @@ pub struct PackageJson {
   #[merge(strategy = merge_btree_maps)]
   pub dev_dependencies: StringBTreeMap,
 
+  /// When a user installs your package, warnings are emitted if packages specified in "peerDependencies" are not already installed. The "peerDependenciesMeta" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.
+  #[serde(alias = "peer_dependencies_meta")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub peer_dependencies_meta: Option<BTreeMap<String, PeerDependencyMeta>>,
+
   /// A map of shell scripts to launch from the root of the package.
   #[merge(strategy = merge_btree_maps)]
   pub scripts: StringBTreeMap,
@@ -243,6 +249,7 @@ impl Default for PackageJson {
       version: None,
       extends: Default::default(),
       dependencies: Default::default(),
+      peer_dependencies_meta: None,
       dev_dependencies: Default::default(),
       scripts: Default::default(),
       metadata: Default::default(),
@@ -428,12 +435,26 @@ mod test {
   use crate::{
     convert_btreemap_to_json,
     fs::{get_parent_dir, open_file_for_writing},
-    ts::package_json::{Bin, Funding, FundingData},
+    ts::package_json::{Bin, Funding, FundingData, PeerDependencyMeta},
   };
 
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
     let test_package_json = PackageJson {
+      peer_dependencies_meta: Some(btreemap! {
+        "abc".to_string() => PeerDependencyMeta { optional: Some(true), extras: btreemap! {
+          "setting".to_string() => convert_btreemap_to_json(btreemap! {
+              "inner".to_string() => "setting".to_string()
+            })
+          }
+        },
+        "abc2".to_string() => PeerDependencyMeta { optional: Some(true), extras: btreemap! {
+          "setting".to_string() => convert_btreemap_to_json(btreemap! {
+            "inner".to_string() => "setting".to_string()
+          })
+        }
+        }
+      }),
       private: true,
       type_: JsPackageType::Module,
       bin: Some(Bin::Map(btreemap! {

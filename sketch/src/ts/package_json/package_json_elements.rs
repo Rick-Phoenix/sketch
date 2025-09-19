@@ -4,7 +4,20 @@ use askama::Template;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{filters, StringBTreeMap};
+use crate::{filters, JsonValueBTreeMap, StringBTreeMap};
+
+/// When a user installs your package, warnings are emitted if packages specified in "peerDependencies" are not already installed. The "peerDependenciesMeta" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Default, Template)]
+#[template(path = "ts/package_json/peer_dependencies_meta.j2")]
+#[serde(default)]
+pub struct PeerDependencyMeta {
+  /// Specifies that this peer dependency is optional and should not be installed automatically.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub optional: Option<bool>,
+
+  #[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
+  pub extras: JsonValueBTreeMap,
+}
 
 /// You can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.
 #[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]

@@ -56,9 +56,7 @@
   ],
   {% endif +%}
   {% call utils::render_optional_json_object("config", self.config, 2) +%}
-  {% call utils::render_string_object_if_not_empty("peerDependencies", self.peer_dependencies, 2) +%}
-  {% call utils::render_string_object_if_not_empty("optionalDependencies", self.optional_dependencies, 2) +%}
-  {% call utils::render_optional_list_if_not_empty("bundleDependencies", self.bundle_dependencies, 2) +%}
+
   {% if let Some(publish_config) = self.publish_config +%}
   "publishConfig": {
     {{+ publish_config | indent(4) +}}
@@ -72,6 +70,16 @@
   {% call utils::render_string_object_if_not_empty("engines", self.engines, 2) +%}
   {% call utils::render_list_if_not_empty("os", self.os, 2) +%}
   {% call utils::render_list_if_not_empty("cpu", self.cpu, 2) +%}
+  {% call utils::render_string_object_if_not_empty("peerDependencies", self.peer_dependencies, 2) +%}
+  {% if let Some(peer_dependencies_meta) = self.peer_dependencies_meta +%}
+  "peerDependenciesMeta": {
+  {% for (dep, meta) in peer_dependencies_meta +%}
+    "{{ dep }}": {{+ meta | indent(2) +}} {% call utils::optional_comma(!loop.last) %}
+  {% endfor +%}    
+  },
+  {% endif +%}
+  {% call utils::render_string_object_if_not_empty("optionalDependencies", self.optional_dependencies, 2) +%}
+  {% call utils::render_optional_list_if_not_empty("bundleDependencies", self.bundle_dependencies, 2) +%}
   {% call utils::render_string_object_if_not_empty("devDependencies", self.dev_dependencies, 2) +%}
   "dependencies": { {% if self.dependencies.is_empty() %} } 
   {% else %}
