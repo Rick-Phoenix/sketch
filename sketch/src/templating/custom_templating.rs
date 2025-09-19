@@ -1,6 +1,6 @@
 use std::{
-  env::{self, current_dir},
-  path::PathBuf,
+  env::{self},
+  path::Path,
 };
 
 use indexmap::IndexMap;
@@ -11,7 +11,7 @@ use tera::{Context, Tera};
 
 use crate::{
   config::Config,
-  fs::{create_parent_dirs, get_parent_dir, open_file_if_overwriting},
+  fs::{create_parent_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
   GenError,
 };
 
@@ -34,8 +34,8 @@ impl TemplateData {
 }
 
 /// The data for outputting a new template.
-/// The output directory will be joined to the root of the package being generated with this template.
-/// The context specified here will override the global context.
+/// Relative output paths will resolve from the [`Config::out_dir`].
+/// The context specified here will override the global context (but not the variables set via cli).
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 pub struct TemplateOutput {
   pub template: TemplateData,
@@ -44,53 +44,8 @@ pub struct TemplateOutput {
   pub context: IndexMap<String, Value>,
 }
 
-pub(crate) fn get_default_context() -> Context {
-  let mut context = Context::default();
-
-  context.insert("sketch_cwd", &current_dir().expect("Could not get the cwd"));
-
-  macro_rules! add_env_to_context {
-    ($name:ident, $env_name:ident) => {
-      paste::paste! {
-        if let Ok($name) = env::var(stringify!($env_name)) {
-          context.insert(concat!("sketch_", stringify!($name)), &$name);
-        }
-      }
-    };
-
-    ($name:ident) => {
-      paste::paste! {
-        if let Ok($name) = env::var(stringify!([< $name:upper >])) {
-          context.insert(concat!("sketch_", stringify!($name)), &$name);
-        }
-      }
-    };
-  }
-
-  add_env_to_context!(os);
-  add_env_to_context!(user);
-  add_env_to_context!(hostname);
-  add_env_to_context!(arch, HOSTTYPE);
-  add_env_to_context!(xdg_config, XDG_CONFIG_HOME);
-  add_env_to_context!(xdg_data, XDG_DATA_HOME);
-  add_env_to_context!(xdg_cache, XDG_CACHE_HOME);
-  add_env_to_context!(xdg_state, XDG_STATE_HOME);
-
-  context.insert("sketch_tmp_dir", &env::temp_dir());
-  context.insert("sketch_home", &env::home_dir());
-
-  context
-}
-
-#[cfg(feature = "uuid")]
-fn tera_uuid(
-  _: &std::collections::HashMap<String, tera::Value>,
-) -> Result<tera::Value, tera::Error> {
-  Ok(uuid::Uuid::new_v4().to_string().into())
-}
-
 impl Config {
-  pub fn initialize_tera(&self) -> Result<Tera, GenError> {
+  pub(crate) fn initialize_tera(&self) -> Result<Tera, GenError> {
     let mut tera = if let Some(templates_dir) = &self.templates_dir {
       Tera::new(&format!("{}/**/*", templates_dir.display()))
         .map_err(|e| GenError::Custom(format!("Failed to load the templates directory: {}", e)))?
@@ -118,7 +73,7 @@ impl Config {
   }
 
   /// A helper to generate custom templates.
-  pub fn generate_templates<T: Into<PathBuf>>(
+  pub fn generate_templates<T: AsRef<Path>>(
     self,
     output_root: T,
     templates: Vec<TemplateOutput>,
@@ -130,7 +85,7 @@ impl Config {
 
     global_context.extend(get_default_context());
 
-    let output_root: PathBuf = output_root.into();
+    let output_root = output_root.as_ref();
 
     for template in templates {
       let mut local_context = global_context.clone();
@@ -181,4 +136,49 @@ impl Config {
 
     Ok(())
   }
+}
+
+pub(crate) fn get_default_context() -> Context {
+  let mut context = Context::default();
+
+  context.insert("sketch_cwd", &get_cwd());
+
+  macro_rules! add_env_to_context {
+    ($name:ident, $env_name:ident) => {
+      paste::paste! {
+        if let Ok($name) = env::var(stringify!($env_name)) {
+          context.insert(concat!("sketch_", stringify!($name)), &$name);
+        }
+      }
+    };
+
+    ($name:ident) => {
+      paste::paste! {
+        if let Ok($name) = env::var(stringify!([< $name:upper >])) {
+          context.insert(concat!("sketch_", stringify!($name)), &$name);
+        }
+      }
+    };
+  }
+
+  add_env_to_context!(os);
+  add_env_to_context!(user);
+  add_env_to_context!(hostname);
+  add_env_to_context!(arch, HOSTTYPE);
+  add_env_to_context!(xdg_config, XDG_CONFIG_HOME);
+  add_env_to_context!(xdg_data, XDG_DATA_HOME);
+  add_env_to_context!(xdg_cache, XDG_CACHE_HOME);
+  add_env_to_context!(xdg_state, XDG_STATE_HOME);
+
+  context.insert("sketch_tmp_dir", &env::temp_dir());
+  context.insert("sketch_home", &env::home_dir());
+
+  context
+}
+
+#[cfg(feature = "uuid")]
+fn tera_uuid(
+  _: &std::collections::HashMap<String, tera::Value>,
+) -> Result<tera::Value, tera::Error> {
+  Ok(uuid::Uuid::new_v4().to_string().into())
 }

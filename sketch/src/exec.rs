@@ -51,7 +51,7 @@ impl Config {
       tera
         .render(&template_name, &context)
         .map_err(|e| GenError::TemplateParsing {
-          template: "command".to_string(),
+          template: template_name,
           source: e,
         })?;
 
@@ -76,6 +76,7 @@ pub(crate) fn launch_command(
   custom_error_message: Option<&str>,
 ) -> Result<(), GenError> {
   let shell = shell.unwrap_or_else(|| default_shell());
+
   let output = Command::new(shell)
     .args(commands)
     .current_dir(cwd)

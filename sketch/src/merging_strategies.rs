@@ -30,14 +30,14 @@ pub(crate) fn merge_btree_maps<T>(left: &mut BTreeMap<String, T>, right: BTreeMa
   left.extend(right)
 }
 
-pub(crate) fn merge_index_maps<T>(left: &mut IndexMap<String, T>, right: IndexMap<String, T>) {
-  left.extend(right)
-}
-
-pub(crate) fn merge_sets<T>(left: &mut BTreeSet<T>, right: BTreeSet<T>)
+pub(crate) fn merge_btree_sets<T>(left: &mut BTreeSet<T>, right: BTreeSet<T>)
 where
   T: Ord,
 {
+  left.extend(right)
+}
+
+pub(crate) fn merge_index_maps<T>(left: &mut IndexMap<String, T>, right: IndexMap<String, T>) {
   left.extend(right)
 }
 
@@ -48,14 +48,16 @@ where
   left.extend(right)
 }
 
-pub(crate) fn overwrite_option<T>(left: &mut Option<T>, right: Option<T>) {
+pub(crate) fn overwrite_if_some<T>(left: &mut Option<T>, right: Option<T>) {
   if let Some(new) = right {
     *left = Some(new)
   }
 }
 
-pub(crate) fn merge_optional_sets<T>(left: &mut Option<BTreeSet<T>>, right: Option<BTreeSet<T>>)
-where
+pub(crate) fn merge_optional_btree_sets<T>(
+  left: &mut Option<BTreeSet<T>>,
+  right: Option<BTreeSet<T>>,
+) where
   T: Ord,
 {
   if let Some(right_data) = right {

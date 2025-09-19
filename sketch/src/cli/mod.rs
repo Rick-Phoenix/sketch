@@ -18,9 +18,11 @@ use serde_json::Value;
 use Commands::*;
 
 use crate::{
-  commands::launch_command,
   custom_templating::{TemplateData, TemplateOutput},
-  fs::{get_cwd, serialize_json, serialize_toml, serialize_yaml},
+  exec::launch_command,
+  fs::{
+    create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml,
+  },
   ts::{
     package::{PackageConfig, PackageData, RootPackage},
     vitest::VitestConfigKind,
@@ -44,7 +46,15 @@ fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
 }
 
 fn get_config_from_xdg() -> Option<PathBuf> {
-  if let Ok(xdg_config) = env::var("XDG_CONFIG_HOME") {
+  let xdg_config = if let Ok(env_val) = env::var("XDG_CONFIG_HOME") {
+    Some(PathBuf::from(env_val))
+  } else if let Some(home) = env::home_dir() {
+    Some(home.join(".config"))
+  } else {
+    None
+  };
+
+  if let Some(xdg_config) = xdg_config {
     let config_dir = PathBuf::from(xdg_config).join("sketch");
 
     if config_dir.is_dir() {
@@ -69,13 +79,20 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   let mut config = Config::default();
 
   if !cli.ignore_config_file {
-    let config_file = get_config_file_path(cli.config);
-
-    if let Some(config_path) = config_file {
-      config.merge(Config::from_file(&config_path)?);
+    let config_path = if let Some(config_file) = get_config_file_path(cli.config) {
+      Some(config_file)
     } else if let Some(config_from_xdg) = get_config_from_xdg() {
-      config.merge(Config::from_file(&config_from_xdg)?);
+      Some(config_from_xdg)
+    } else {
+      None
+    };
+
+    if let Some(config_path) = config_path {
+      eprintln!("Found config file `{}`", config_path.display());
+      config.merge(Config::from_file(&config_path)?);
     }
+  } else if config.debug {
+    eprintln!("`ignore_config_file` detected");
   }
 
   if let Some(overrides) = cli.overrides {
@@ -137,12 +154,15 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 }
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
-  let mut config = get_config_from_cli(cli.clone()).await?;
+  let is_dry_run = cli.dry_run;
+  let command = cli.command.clone();
+
+  let mut config = get_config_from_cli(cli).await?;
   let root_dir = config.out_dir.clone().unwrap_or_else(|| get_cwd());
 
   macro_rules! exit_if_dry_run {
     () => {
-      if cli.dry_run {
+      if is_dry_run {
         eprintln!("Aborting due to dry run...");
         return Ok(());
       }
@@ -154,15 +174,11 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     eprintln!("  config: {:#?}", config);
   }
 
-  match cli.command {
-    Init {
-      remote,
-      no_pre_commit,
-    } => {
+  match command {
+    Init { remote, .. } => {
       if config.debug {
         eprintln!("DEBUG:");
         eprintln!("  remote: {:?}", remote);
-        eprintln!("  no_pre_commit: {}", no_pre_commit);
       }
 
       exit_if_dry_run!();
@@ -180,11 +196,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?
         .clone();
 
-      if config.debug {
-        eprintln!("DEBUG:");
-        eprintln!("  preset: {:#?}", preset);
-      }
-
       exit_if_dry_run!();
 
       config.generate_templates(root_dir, preset)?;
@@ -200,7 +211,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         TemplateData::Id(id)
       } else if let Some(content) = content {
         TemplateData::Content {
-          name: "template_from_cli".to_string(),
+          name: "__from_cli".to_string(),
           content,
         }
       } else if let Some(file) = file {
@@ -210,7 +221,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?;
 
         TemplateData::Content {
-          name: "template_from_cli".to_string(),
+          name: format!("__custom_file_{}", file.display()),
           content: file_content,
         }
       } else {
@@ -227,38 +238,22 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       let template = TemplateOutput {
         output,
-        context: Default::default(),
         template: template_data,
+        context: Default::default(),
       };
-
-      if config.debug {
-        eprintln!("DEBUG:");
-        eprintln!("  template: {:#?}", template);
-      }
 
       exit_if_dry_run!();
 
       config.generate_templates(root_dir, vec![template])?;
     }
     New { output } => {
-      let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
+      let output_path = get_cwd().join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
 
       if let Some(parent_dir) = output_path.parent() {
-        create_dir_all(parent_dir).map_err(|e| GenError::DirCreation {
-          path: parent_dir.to_path_buf(),
-          source: e,
-        })?;
+        create_parent_dirs(&parent_dir)?;
       }
 
-      let format = &output_path
-        .extension()
-        .unwrap_or_else(|| panic!("Output file {} has no extension.", output_path.display()))
-        .to_string_lossy();
-
-      if config.debug {
-        eprintln!("DEBUG:");
-        eprintln!("  output path: {}", output_path.display());
-      }
+      let format = get_extension(&output_path).to_string_lossy();
 
       exit_if_dry_run!();
 
@@ -289,7 +284,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     } => {
       let command = if let Some(literal) = command {
         TemplateData::Content {
-          name: "__command".to_string(),
+          name: "__from_cli".to_string(),
           content: literal,
         }
       } else if let Some(id) = template {
@@ -301,7 +296,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?;
 
         TemplateData::Content {
-          name: format!("__{}", file_path.display()),
+          name: format!("__custom_file_{}", file_path.display()),
           content,
         }
       } else {
@@ -320,7 +315,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         TsCommands::Monorepo { install, .. } => {
           exit_if_dry_run!();
 
-          let package_manager = typescript.package_manager.unwrap_or_default();
+          let package_manager = typescript.package_manager.get_or_insert_default().clone();
 
           config.create_ts_monorepo().await?;
 
@@ -371,12 +366,17 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
             package.oxlint = Some(OxlintConfig::Bool(true));
           }
 
+          if config.debug {
+            eprintln!("DEBUG:");
+            eprintln!("  package: {:#?}", package);
+          }
+
           exit_if_dry_run!();
 
-          let package_dir = package.dir.clone().unwrap_or_else(|| get_cwd());
+          let package_dir = package.dir.get_or_insert_with(|| get_cwd()).clone();
 
           if install {
-            let package_manager = typescript.package_manager.unwrap_or_default();
+            let package_manager = typescript.package_manager.get_or_insert_default().clone();
 
             launch_command(
               None,
@@ -396,12 +396,11 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   Ok(())
 }
 
-/// The struct defining the cli for this crate.
 #[derive(Parser, Debug, Clone)]
 #[command(name = "sketch")]
 #[command(version, about, long_about = None)]
 pub struct Cli {
-  /// Sets a custom config file.
+  /// Sets a custom config file. Any file names `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
   #[arg(short, long, value_name = "FILE", group = "config-file")]
   pub config: Option<PathBuf>,
 
@@ -431,7 +430,7 @@ pub struct RenderingOutput {
   #[arg(requires = "input")]
   output_path: Option<String>,
 
-  /// Output the result to stdout
+  /// Prints the result to stdout
   #[arg(long, requires = "input")]
   stdout: bool,
 }
@@ -448,7 +447,7 @@ pub enum Commands {
     command: TsCommands,
   },
 
-  /// Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config.
+  /// Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config.
   Init {
     /// Does not generate a pre-commit config.
     #[arg(long)]
@@ -459,9 +458,9 @@ pub enum Commands {
     remote: Option<String>,
   },
 
-  /// Generates a new config file with some optional initial values defined via the cli flags.
+  /// Generates a new config file with some optional initial values defined via cli flags.
   New {
-    /// The output file [default: sketch.yaml]
+    /// The output file. Must be an absolute path or a path relative from the cwd [default: sketch.yaml]
     output: Option<PathBuf>,
   },
 
@@ -470,11 +469,11 @@ pub enum Commands {
     #[command(flatten)]
     output: RenderingOutput,
 
-    /// The path to the template file, from the cwd
+    /// The path to the template file, as an absolute path or relative to the cwd
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id of the template to use
+    /// The id of the template to use (a name for config-defined templates, or a relative path for a file inside `templates_dir`)
     #[arg(short, long, group = "input")]
     id: Option<String>,
 
@@ -489,17 +488,17 @@ pub enum Commands {
     id: String,
   },
 
-  /// Renders a template and launches it as a command
+  /// Renders a template and launches it as a shell command
   Exec {
+    /// The literal definition for the template
     #[arg(group = "input")]
-    /// The literal definition for the command's template
     cmd: Option<String>,
 
-    /// The path to the command's template file
+    /// The path to the command's template file, as an absolute path or relative to the cwd
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id of the template to use
+    /// The id of the template to use (a name for config-defined templates, or a relative path for a file inside `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
   },
@@ -507,7 +506,7 @@ pub enum Commands {
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum TsCommands {
-  /// Generates a new typescript monorepo
+  /// Generates a new typescript monorepo inside the `out_dir`
   Monorepo {
     #[command(flatten)]
     root_package_overrides: Option<RootPackage>,
@@ -516,7 +515,7 @@ pub enum TsCommands {
     #[arg(long)]
     no_oxlint: bool,
 
-    /// Install the dependencies at the root after creation.
+    /// Installs the dependencies at the root after creation.
     #[arg(short, long)]
     install: bool,
   },

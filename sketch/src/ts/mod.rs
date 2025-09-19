@@ -15,7 +15,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  merge_index_maps, overwrite_option,
+  merge_index_maps, overwrite_if_some,
   ts::{
     package::{PackageConfig, RootPackage},
     package_json::{PackageJson, Person, PersonData},
@@ -62,7 +62,7 @@ pub struct TypescriptConfig {
   pub root_package: Option<RootPackage>,
 
   /// The package manager being used. [default: pnpm].
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = overwrite_if_some)]
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
@@ -72,7 +72,7 @@ pub struct TypescriptConfig {
   pub no_default_deps: bool,
 
   /// The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = overwrite_if_some)]
   #[arg(value_enum)]
   #[arg(long, value_name = "KIND")]
   pub version_range: Option<VersionRange>,

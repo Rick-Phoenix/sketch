@@ -7,8 +7,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_nested,
-  merge_optional_sets, overwrite_option, templating::filters, GenError, OrderedMap, Preset,
+  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_btree_sets,
+  merge_optional_nested, overwrite_if_some, templating::filters, GenError, OrderedMap, Preset,
 };
 
 pub(crate) mod tsconfig_defaults;
@@ -142,7 +142,7 @@ impl TsConfig {
 
 #[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema, Merge)]
 #[template(path = "watch_options.j2")]
-#[merge(strategy = overwrite_option)]
+#[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -165,7 +165,7 @@ pub struct WatchOptions {
 #[template(path = "tsconfig.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
-#[merge(strategy = overwrite_option)]
+#[merge(strategy = overwrite_if_some)]
 pub struct TsConfig {
   #[merge(strategy = merge_index_sets)]
   #[serde(rename = "extend_presets", skip_serializing)]
@@ -175,23 +175,23 @@ pub struct TsConfig {
   pub extends: Option<String>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_sets)]
+  #[merge(strategy = merge_optional_btree_sets)]
   pub files: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_sets)]
+  #[merge(strategy = merge_optional_btree_sets)]
   pub exclude: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_sets)]
+  #[merge(strategy = merge_optional_btree_sets)]
   pub include: Option<BTreeSet<String>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = overwrite_if_some)]
   pub references: Option<BTreeSet<TsConfigReference>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = overwrite_if_some)]
   pub type_acquisition: Option<TypeAcquisition>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -219,7 +219,7 @@ pub enum TypeAcquisition {
 #[derive(Deserialize, Serialize, Debug, Clone, Default, Merge, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
-#[merge(strategy = overwrite_option)]
+#[merge(strategy = overwrite_if_some)]
 pub struct CompilerOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub plugins: Option<Vec<OrderedMap>>,

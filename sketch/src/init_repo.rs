@@ -1,18 +1,17 @@
-use std::fs::create_dir_all;
-
 use askama::Template;
 
-use crate::{commands::launch_command, fs::get_cwd, Config, GenError};
+use crate::{
+  exec::launch_command,
+  fs::{create_parent_dirs, get_cwd},
+  Config, GenError,
+};
 
 impl Config {
   pub fn init_repo(self, remote: Option<&str>) -> Result<(), GenError> {
     let out_dir = self.out_dir.unwrap_or_else(|| get_cwd());
     let shell = self.shell.as_deref();
 
-    create_dir_all(&out_dir).map_err(|e| GenError::DirCreation {
-      path: out_dir.to_owned(),
-      source: e,
-    })?;
+    create_parent_dirs(&out_dir)?;
 
     macro_rules! write_to_output {
       ($($tokens:tt)*) => {

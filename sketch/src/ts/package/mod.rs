@@ -18,7 +18,7 @@ use crate::{
     create_parent_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd,
     get_relative_path, open_file_for_writing,
   },
-  merge_if_not_default, overwrite_option,
+  merge_if_not_default, overwrite_if_some,
   ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
   Config, GenError, Preset,
 };
@@ -33,7 +33,7 @@ pub enum PackageKind {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq, JsonSchema)]
-#[merge(strategy = overwrite_option)]
+#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct RootPackage {
   /// The name of the root package [default: "root"].
@@ -77,7 +77,7 @@ impl Default for RootPackage {
 
 /// The configuration struct that is used to generate new packages.
 #[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, JsonSchema)]
-#[merge(strategy = overwrite_option)]
+#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {
   /// The new package's directory, starting from the [`Config::out_dir`]. Defaults to the name of the package.
@@ -344,11 +344,6 @@ impl Config {
 
         tsconfig_files.push(("tsconfig.dev.json".to_string(), dev_tsconfig));
       }
-    }
-
-    if self.debug {
-      eprintln!("DEBUG:");
-      eprintln!("  package {:#?}", config);
     }
 
     for (file, tsconfig) in tsconfig_files {

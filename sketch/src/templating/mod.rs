@@ -1,16 +1,7 @@
-use serde_json::Value;
-
 pub(crate) mod custom_templating;
 pub(crate) mod filters;
-pub mod templating_presets;
 
-#[cfg(test)]
-pub(crate) fn convert_btreemap_to_json<T>(map: std::collections::BTreeMap<String, T>) -> Value
-where
-  T: Into<Value>,
-{
-  map.into_iter().collect()
-}
+use serde_json::Value;
 
 pub(crate) fn render_yaml_val(val: &Value, indent: usize) -> String {
   let mut string = String::new();
@@ -111,4 +102,12 @@ pub(crate) fn render_json_val(val: &Value, indent: usize) -> String {
   };
 
   string
+}
+
+#[cfg(test)]
+pub(crate) fn convert_btreemap_to_json<T>(map: std::collections::BTreeMap<String, T>) -> Value
+where
+  T: Into<Value>,
+{
+  map.into_iter().collect()
 }

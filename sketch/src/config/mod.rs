@@ -14,7 +14,7 @@ use serde_json::Value;
 
 use crate::{
   custom_templating::TemplateOutput, fs::get_parent_dir, is_default, merge_index_maps,
-  merge_index_sets, overwrite_option, ts::TypescriptConfig, GenError,
+  merge_index_sets, overwrite_if_some, ts::TypescriptConfig, GenError,
 };
 
 impl Config {
@@ -52,12 +52,12 @@ pub struct Config {
   pub debug: bool,
 
   /// The base path for the generated files [default: "."].
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
   pub out_dir: Option<PathBuf>,
 
   /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
-  #[merge(strategy = overwrite_option)]
+  #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
   pub templates_dir: Option<PathBuf>,
 

@@ -1,5 +1,6 @@
 use std::{
   env::current_dir,
+  ffi::OsStr,
   fs::{create_dir_all, read_to_string, File},
   io::Write,
   path::{Path, PathBuf},
@@ -8,6 +9,12 @@ use std::{
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::GenError;
+
+pub fn get_extension(file: &Path) -> &OsStr {
+  file
+    .extension()
+    .unwrap_or_else(|| panic!("File `{}` has no extension", file.display()))
+}
 
 pub fn serialize_toml<T: Serialize>(item: &T, path: &Path) -> Result<(), GenError> {
   let mut output_file = open_file_for_writing(path)?;
