@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 pub use config_elements::*;
-pub(crate) use config_setup::*;
+use config_setup::extract_config_from_file;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
@@ -51,7 +51,7 @@ pub struct Config {
   #[serde(skip_serializing_if = "is_default")]
   pub debug: bool,
 
-  /// The base path for the generated files [default: "."].
+  /// The base path for the generated files [default: `.`].
   #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
   pub out_dir: Option<PathBuf>,
@@ -71,13 +71,13 @@ pub struct Config {
   #[arg(skip)]
   pub pre_commit: PreCommitSetting,
 
-  /// Settings for the gitignore file to generate in new repos. It can be a list of directives to append to the defaults or a string, to replace the defaults entirely.
+  /// Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.
   #[merge(skip)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "is_default")]
   pub gitignore: GitIgnore,
 
-  /// The relative paths, from the current file, to the config files to merge with the current one.
+  /// The paths (absolute, or relative to the originating config file) to the config files to extend.
   #[merge(strategy = merge_index_sets)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "is_default")]
@@ -112,10 +112,10 @@ impl Config {
     let current_config_file = self.config_file.clone().unwrap();
     let current_dir = get_parent_dir(&current_config_file);
 
-    for rel_path in self.extends.clone() {
+    for rel_path in &self.extends {
       let abs_path =
         current_dir
-          .join(&rel_path)
+          .join(rel_path)
           .canonicalize()
           .map_err(|e| GenError::PathCanonicalization {
             path: rel_path.clone(),
@@ -151,6 +151,7 @@ impl Config {
     Ok(())
   }
 
+  /// Recursively merges a [`Config`] with its extended configs.
   pub fn merge_config_files(mut self) -> Result<Self, GenError> {
     let mut processed_sources: IndexSet<PathBuf> = Default::default();
 

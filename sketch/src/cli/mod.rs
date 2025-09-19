@@ -281,6 +281,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       cmd: command,
       file,
       template,
+      cwd,
     } => {
       let command = if let Some(literal) = command {
         TemplateData::Content {
@@ -305,8 +306,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
+      let cwd = cwd.unwrap_or_else(|| get_cwd());
+
       let shell = config.shell.clone();
-      config.execute_command(shell.as_deref(), &root_dir, command)?;
+      config.execute_command(shell.as_deref(), &cwd, command)?;
     }
     Ts { command, .. } => {
       let typescript = config.typescript.get_or_insert_default();
@@ -488,17 +491,21 @@ pub enum Commands {
     id: String,
   },
 
-  /// Renders a template and launches it as a shell command
+  /// Renders a template and executes it as a shell command
   Exec {
     /// The literal definition for the template
     #[arg(group = "input")]
     cmd: Option<String>,
 
+    /// The cwd for the command to execute. [default: `.`]
+    #[arg(long)]
+    cwd: Option<PathBuf>,
+
     /// The path to the command's template file, as an absolute path or relative to the cwd
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id of the template to use (a name for config-defined templates, or a relative path for a file inside `templates_dir`)
+    /// The id of the template to use (a name for config-defined templates, or a relative path to a file inside `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
   },

@@ -17,7 +17,7 @@ pub mod errors;
 pub mod ts;
 pub mod versions;
 
-use std::{collections::BTreeMap, fs::create_dir_all};
+use std::collections::BTreeMap;
 
 #[doc(inline)]
 pub use config::*;
