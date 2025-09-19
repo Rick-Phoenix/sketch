@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
   merging_strategies::*,
   templating::render_json_val,
+  ts::pnpm::PnpmWorkspace,
   versions::{get_latest_npm_version, VersionRange},
   GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
@@ -41,10 +42,10 @@ impl PackageJsonKind {
 #[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq, JsonSchema)]
 #[template(path = "ts/package_json/package.json.j2")]
 #[serde(rename_all = "camelCase")]
+#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageJson {
   /// The name of the package.
-  #[merge(strategy = overwrite_if_some)]
   pub name: Option<String>,
 
   /// If set to true, then npm will refuse to publish it.
@@ -57,7 +58,6 @@ pub struct PackageJson {
   pub type_: JsPackageType,
 
   /// Version must be parsable by node-semver, which is bundled with npm as a dependency.
-  #[merge(strategy = overwrite_if_some)]
   pub version: Option<String>,
 
   /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
@@ -82,7 +82,6 @@ pub struct PackageJson {
 
   /// This helps people discover your package, as it's listed in 'npm search'.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub description: Option<String>,
 
   /// The ids of the [`PackageJson`] presets to extend
@@ -120,13 +119,11 @@ pub struct PackageJson {
 
   /// Specify the place where your code lives. This is helpful for people who want to contribute.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub repository: Option<Repository>,
 
   /// Used to inform about ways to help fund development of the package.
   /// You can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub funding: Option<Funding>,
 
   /// This helps people discover your package, as it's listed in 'npm search'.
@@ -136,22 +133,18 @@ pub struct PackageJson {
 
   /// The url to the project homepage.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub homepage: Option<String>,
 
   /// The url to your project's issue tracker and / or the email address to which issues should be reported. These are helpful for people who encounter issues with your package.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub bugs: Option<Bugs>,
 
   /// You should specify a license for your package so that people know how they are permitted to use it, and any restrictions you're placing on it.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub license: Option<String>,
 
   /// The author of this package.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub author: Option<Person>,
 
   /// A list of people who contributed to this package.
@@ -176,24 +169,20 @@ pub struct PackageJson {
 
   /// Specify either a single file or an array of filenames to put in place for the man program to find.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub man: Option<Man>,
 
   /// An object that can be used to set configuration parameters used in package scripts that persist across upgrades.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub config: Option<JsonValueBTreeMap>,
 
   /// Defines which package manager is expected to be used when working on the current project. This field is currently experimental and needs to be opted-in; see https://nodejs.org/api/corepack.html
   #[serde(alias = "package_manager")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub package_manager: Option<String>,
 
   /// A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with "latest", published to the global public registry or that a scoped module is private by default.
   #[serde(alias = "publish_config")]
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub publish_config: Option<PublishConfig>,
 
   /// Defines which tools and versions are expected to be used.
@@ -213,23 +202,23 @@ pub struct PackageJson {
 
   /// The main field is a module ID that is the primary entry point to your program.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub main: Option<String>,
 
   /// Specifies the package's entrypoint for packages that work in browsers.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub browser: Option<String>,
 
   /// Allows packages within a directory to depend on one another using direct linking of local files. Additionally, dependencies within a workspace are hoisted to the workspace root when possible to reduce duplication. Note: It's also a good idea to set `private` to true when using this feature.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
   pub workspaces: Option<BTreeSet<String>>,
 
   /// Indicates the structure of your package.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(skip)]
   pub directories: Option<Directories>,
+
+  /// Configuration settings for pnpm.
+  pub pnpm: Option<Box<PnpmWorkspace>>,
 
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[serde(flatten)]
@@ -242,6 +231,7 @@ impl Default for PackageJson {
     Self {
       name: None,
       private: true,
+      pnpm: None,
       overrides: None,
       bin: None,
       funding: None,
@@ -441,6 +431,7 @@ mod test {
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
     let test_package_json = PackageJson {
+      pnpm: None,
       peer_dependencies_meta: Some(btreemap! {
         "abc".to_string() => PeerDependencyMeta { optional: Some(true), extras: btreemap! {
           "setting".to_string() => convert_btreemap_to_json(btreemap! {
@@ -587,6 +578,10 @@ mod test {
       }),
       extends: Default::default(),
     };
+
+    let str = serde_json::to_string_pretty(&test_package_json)?;
+
+    println!("{}", str);
 
     let output_path = PathBuf::from("tests/output/package_json_gen/package.json");
 

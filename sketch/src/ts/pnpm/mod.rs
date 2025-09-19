@@ -18,7 +18,7 @@ use crate::{
 };
 
 /// A struct representing a pnpm-workspace.yaml config. See more: https://pnpm.io/settings
-#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema, Default, Eq)]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
 #[template(path = "ts/pnpm-workspace.yaml.j2")]

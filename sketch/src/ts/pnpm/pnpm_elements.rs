@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{ts::package_json::PeerDependencyMeta, StringBTreeMap};
 
 /// Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 pub enum ResolutionMode {
   /// Dependencies will be resolved to their highest versions.
   #[serde(rename = "highest")]
@@ -22,7 +22,7 @@ pub enum ResolutionMode {
 }
 
 /// Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 pub enum SavePrefix {
   /// Allows patch upgrades.
   #[serde(rename = "~")]
@@ -36,7 +36,7 @@ pub enum SavePrefix {
 }
 
 /// This setting controls how dependencies that are linked from the workspace are added to package.json. See more: https://pnpm.io/settings#saveworkspaceprotocol
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(untagged)]
 pub enum SaveWorkspaceProtocol {
   Bool(bool),
@@ -44,14 +44,14 @@ pub enum SaveWorkspaceProtocol {
 }
 
 /// The enum values for [`SaveWorkspaceProtocol`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum SaveWorkspaceProtocolChoices {
   Rolling,
 }
 
 /// If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry. See more: https://pnpm.io/settings#linkworkspacepackages
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(untagged)]
 pub enum LinkWorkspacePackages {
   Bool(bool),
@@ -59,14 +59,14 @@ pub enum LinkWorkspacePackages {
 }
 
 /// The enum values for [`LinkWorkspacePackages`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum LinkWorkspacePackagesChoices {
   Deep,
 }
 
 /// This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(untagged)]
 pub enum VerifyDepsBeforeRun {
   Bool(bool),
@@ -74,7 +74,7 @@ pub enum VerifyDepsBeforeRun {
 }
 
 /// Allowed enum values for [`VerifyDepsBeforeRun`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum VerifyDepsBeforeRunChoices {
   /// Automatically runs install if node_modules is not up to date.
@@ -88,7 +88,7 @@ pub enum VerifyDepsBeforeRunChoices {
 }
 
 /// Controls colors in the output. See more: https://pnpm.io/settings#no-color
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum Color {
   /// Ignore the difference between terminals and pipes.
@@ -100,7 +100,7 @@ pub enum Color {
 }
 
 /// Any logs at or higher than the given level will be shown. See more: https://pnpm.io/settings#loglevel
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum LogLevel {
   Debug,
@@ -110,7 +110,7 @@ pub enum LogLevel {
 }
 
 /// Controls the way packages are imported from the store (if you want to disable symlinks inside node_modules, then you need to change the nodeLinker setting, not this one). See more: https://pnpm.io/settings#packageimportmethod
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum PackageImportMethod {
   /// Try to clone packages from the store. If cloning is not supported then hardlink packages from the store. If neither cloning nor linking is possible, fall back to copying.
@@ -127,7 +127,7 @@ pub enum PackageImportMethod {
 }
 
 /// Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum NodeLinker {
   /// Dependencies are symlinked from a virtual store at node_modules/.pnpm
@@ -139,7 +139,7 @@ pub enum NodeLinker {
 }
 
 /// Instructions for the runtime, such as the node version to use. See more: https://pnpm.io/settings#executionenvnodeversion
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionEnv {
   /// Specifies which exact Node.js version should be used for the project's runtime.
@@ -148,7 +148,7 @@ pub struct ExecutionEnv {
 }
 
 /// Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct SupportedArchitectures {
   #[serde(alias = "os")]
@@ -162,7 +162,7 @@ pub struct SupportedArchitectures {
 }
 
 /// Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AuditConfig {
   /// A list of CVE IDs that will be ignored by `pnpm audit`.
@@ -175,7 +175,7 @@ pub struct AuditConfig {
 }
 
 /// Configuration for package updates. See more: https://pnpm.io/settings#updateconfig
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateConfig {
   /// A list of packages that should be ignored when running `pnpm outdated` or `pnpm update --latest`.
@@ -184,7 +184,7 @@ pub struct UpdateConfig {
 }
 
 /// Rules for peer dependencies. See more: https://pnpm.io/settings#peerdependencyrules
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PeerDependencyRules {
   /// pnpm will not print warnings about missing peer dependencies from this list.
@@ -204,7 +204,7 @@ pub struct PeerDependencyRules {
 }
 
 /// Package extensions offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PackageExtension {
   /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
@@ -233,7 +233,7 @@ pub struct PackageExtension {
 }
 
 /// Controlls if and how dependencies are added to the default catalog, when running pnpm add. See more: https://pnpm.io/settings#catalogmode
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 pub enum CatalogMode {
   /// (default) - does not automatically add dependencies to the catalog.
   Manual,

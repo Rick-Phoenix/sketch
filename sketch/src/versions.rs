@@ -1,4 +1,4 @@
-use std::{fmt::Display, sync::LazyLock};
+use std::sync::LazyLock;
 
 use clap::ValueEnum;
 use reqwest::Client;
