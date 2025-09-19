@@ -11,6 +11,7 @@ typescript:
   no_default_deps: false
 
   # Use the pnpm catalog for default dependencies
+  # and add missing dependencies to it automatically
   catalog: false
 
   package_manager: pnpm

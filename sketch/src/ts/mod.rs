@@ -77,7 +77,7 @@ pub struct TypescriptConfig {
   #[arg(long, value_name = "KIND")]
   pub version_range: Option<VersionRange>,
 
-  /// Uses the pnpm catalog for default dependencies.
+  /// Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to `pnpm-workspace.yaml`.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub catalog: bool,
