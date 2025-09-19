@@ -4,7 +4,6 @@ use std::{
 };
 
 use askama::Template;
-use indexmap::indexmap;
 use maplit::{btreemap, btreeset};
 use serde_json::Value;
 use sketch_it::ts::ts_config::*;
@@ -124,9 +123,14 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
       strict_builtin_iterator_return: Some(true),
       module_suffixes: Some(btreeset!["abc".to_string(), "abc".to_string()]),
       custom_conditions: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-      plugins: Some(vec![
-        indexmap! { "name".to_string() => Value::String("typescript-svelte-plugin".to_string()), "enabled".to_string() => Value::Bool(true), "assumeIsSvelteProject".to_string() => Value::Bool(true) },
-      ]),
+      plugins: Some(btreeset! {
+        TsPlugin {
+          name: "typescript-svelte-plugin".to_string(),
+          extras: btreemap! {
+            "enabled".to_string() => Value::Bool(true), "assumeIsSvelteProject".to_string() => Value::Bool(true)
+          }
+        }
+      }),
     }),
     extends: Some("tsconfig.options.json".to_string()),
     files: Some(btreeset!["*.ts".to_string(), "*.js".to_string()]),

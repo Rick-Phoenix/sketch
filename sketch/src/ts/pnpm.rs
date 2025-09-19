@@ -56,7 +56,6 @@ impl PnpmWorkspace {
       .iter()
       .chain(package_json.dev_dependencies.iter())
       .chain(package_json.peer_dependencies.iter())
-      .chain(package_json.bundle_dependencies.iter())
       .chain(package_json.optional_dependencies.iter())
       .filter_map(|(name, version)| match CATALOG_REGEX.captures(version) {
         Some(captures) => {

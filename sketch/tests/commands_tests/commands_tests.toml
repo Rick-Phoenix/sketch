@@ -1,4 +1,3 @@
-out_dir = "../output/commands_tests/"
 templates_dir = "."
 
 templates = { cmd_template = "echo \"engine feels good, much {{ condition }} than before... amazing\" > output_from_template_id.txt" }

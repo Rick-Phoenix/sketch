@@ -13,11 +13,12 @@ use crate::{filters, StringBTreeMap};
 pub enum Funding {
   Url(String),
   Data(FundingData),
-  List(Vec<FundingData>),
+  List(Vec<Funding>),
 }
 
 /// Used to inform about ways to help fund development of the package.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Template)]
+#[template(path = "package_json/funding_data.j2")]
 pub struct FundingData {
   pub url: String,
 

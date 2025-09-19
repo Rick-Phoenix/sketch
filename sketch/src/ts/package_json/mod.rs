@@ -110,7 +110,7 @@ pub struct PackageJson {
   /// Overrides is used to support selective version overrides using npm, which lets you define custom package versions or ranges inside your dependencies. For yarn, use resolutions instead. See: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
-  pub overrides: Option<StringBTreeMap>,
+  pub overrides: Option<JsonValueBTreeMap>,
 
   /// Specify the place where your code lives. This is helpful for people who want to contribute.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -427,6 +427,7 @@ mod test {
   use crate::{
     convert_btreemap_to_json,
     fs::{get_parent_dir, open_file_for_writing},
+    ts::package_json::{Bin, Funding, FundingData},
   };
 
   #[test]
@@ -434,6 +435,26 @@ mod test {
     let test_package_json = PackageJson {
       private: true,
       type_: JsPackageType::Module,
+      bin: Some(Bin::Map(btreemap! {
+        "bin1".to_string() => "bin/bin1".to_string(),
+        "bin2".to_string() => "bin/bin2".to_string(),
+      })),
+      funding: Some(Funding::List(vec![
+        Funding::Data(FundingData {
+          url: "website".to_string(),
+          type_: Some("collective".to_string()),
+        }),
+        Funding::Url("website.com".to_string()),
+        Funding::Data(FundingData {
+          url: "website".to_string(),
+          type_: Some("individual".to_string()),
+        }),
+      ])),
+      overrides: Some(btreemap! {
+        "key".to_string() => convert_btreemap_to_json(btreemap! {
+          "override".to_string() => "setting".to_string()
+        })
+      }),
       version: Some("0.1.0".to_string()),
       exports: btreemap! {
         ".".to_string() => Exports::Path("src/index.js".to_string()),
@@ -469,7 +490,7 @@ mod test {
       name: Some("my_package".to_string()),
       dev_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
       dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
-      bundle_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
+      bundle_dependencies: Some(btreeset! { "typescript".to_string(), "vite".to_string() }),
       optional_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
       peer_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
       description: Some("my_test".to_string()),

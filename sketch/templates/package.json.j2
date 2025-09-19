@@ -8,6 +8,8 @@
   {% call utils::render_optional_string("description", self.description, 2) +%}
   {% call utils::render_optional_string("license", self.license, 2) +%}
   {% call utils::render_optional_string("homepage", self.homepage, 2) +%}
+  {% call utils::render_optional_literal("funding", self.funding, 2) +%}
+  {% call utils::render_optional_literal("bin", self.bin, 2) +%}
   {% call utils::render_optional_string("main", self.main, 2) +%}
   {% call utils::render_optional_string("browser", self.browser, 2) +%}
   {% call utils::render_optional_string("packageManager", self.package_manager, 2) +%}
@@ -72,6 +74,7 @@
   "{{ name }}": {{+ self::render_json_val(data, 1) }},
   {% endfor +%}
 
+  {% call utils::render_optional_json_object("overrides", self.overrides, 2) +%}
   {% call utils::render_string_object_if_not_empty("engines", self.engines, 2) +%}
   {% call utils::render_list_if_not_empty("os", self.os, 2) +%}
   {% call utils::render_list_if_not_empty("cpu", self.cpu, 2) +%}

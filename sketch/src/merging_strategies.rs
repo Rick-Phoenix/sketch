@@ -72,12 +72,12 @@ pub(crate) fn merge_optional_btree_sets<T>(
 pub(crate) fn merge_optional_btree_maps<T>(
   left: &mut Option<BTreeMap<String, T>>,
   right: Option<BTreeMap<String, T>>,
-) where
-  T: Ord,
-{
+) {
   if let Some(right_data) = right {
     if let Some(left_data) = left {
-      left_data.extend(right_data);
+      for (key, val) in right_data.into_iter() {
+        left_data.insert(key, val);
+      }
     } else {
       *left = Some(right_data)
     }

@@ -12,6 +12,26 @@
 {% endfilter %}
 {% endmacro %}
 
+{% macro render_optional_json_object(name, val, indent_val) %}
+{% if let Some(v) = val %}
+{%  call render_json_object(name, v, indent_val) %}
+{% endif +%}
+{% endmacro %}
+
+{% macro render_json_object(name, val, indent_val) %}
+{% filter indent(indent_val) +%}
+{% if val.is_empty() +%}
+"{{ name }}": {},
+{% else +%}
+"{{ name }}": {
+{% for (key, val) in val +%}
+  "{{ key }}": {{+ crate::render_json_val(val, 1) }} {% call optional_comma(!loop.last) %}
+{% endfor +%}
+},
+{% endif %}
+{% endfilter %}
+{% endmacro %}
+
 {% macro render_string_object_if_not_empty(name, val, indent_val) %}
 {% if !val.is_empty() %}
 {% call render_string_object(name, val, indent_val) +%}
@@ -26,7 +46,7 @@
 
 {% macro render_optional_string_object(name, val, indent_val) %}
 {% if let Some(v) = val %}
-{%  call render_string_object(name, val, indent_val) %}
+{%  call render_string_object(name, v, indent_val) %}
 {% endif +%}
 {% endmacro %}
 

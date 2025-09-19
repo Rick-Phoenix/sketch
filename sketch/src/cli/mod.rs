@@ -86,7 +86,9 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
     };
 
     if let Some(config_path) = config_path {
-      eprintln!("Found config file `{}`", config_path.display());
+      if config.debug {
+        eprintln!("Found config file `{}`", config_path.display());
+      }
       config.merge(Config::from_file(&config_path)?);
     }
   } else if config.debug {

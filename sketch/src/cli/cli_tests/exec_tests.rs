@@ -23,11 +23,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let literal_template_cmd = [
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "--set",
     "general=\"kenobi\"",
     "exec",
+    "--cwd",
+    &output_dir.to_string_lossy(),
     "echo \"hello there!\\ngeneral {{ general }}.\" > command_output.txt",
   ];
 
@@ -43,11 +43,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_file_cmd = [
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "--set",
     "something=\"space\"",
     "exec",
+    "--cwd",
+    &output_dir.to_string_lossy(),
     "-f",
     "tests/commands_tests/cmd_from_file.j2",
   ];
@@ -72,6 +72,8 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "--set",
     "category=\"gp2\"",
     "exec",
+    "--cwd",
+    &output_dir.to_string_lossy(),
     "-t",
     "cmd_template.j2",
   ];
@@ -97,6 +99,8 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "--set",
     "condition=\"slower\"",
     "exec",
+    "--cwd",
+    &output_dir.to_string_lossy(),
     "-t",
     "cmd_template",
   ])?;

@@ -23,19 +23,19 @@ This document contains the help content for the `sketch` command-line program.
 ###### **Subcommands:**
 
 * `ts` — Launches typescript-specific commands
-* `init` — Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config
-* `new` — Generates a new config file with some optional initial values defined via the cli flags
+* `init` — Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config
+* `new` — Generates a new config file with some optional initial values defined via cli flags
 * `render` — Renders a single template to a file or to stdout
 * `render-preset` — Renders a templating preset defined in the configuration file
-* `exec` — Renders a template and launches it as a command
+* `exec` — Renders a template and executes it as a shell command
 
 ###### **Options:**
 
-* `-c`, `--config <FILE>` — Sets a custom config file
+* `-c`, `--config <FILE>` — Sets a custom config file. Any file names `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
 * `--ignore-config-file` — Ignores any config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--debug` — Activates debugging mode
-* `--out-dir <DIR>` — The base path for the generated files [default: "."]
+* `--out-dir <DIR>` — The base path for the generated files [default: `.`]
 * `--templates-dir <DIR>` — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)
 * `--no-overwrite` — Does not overwrite existing files
 * `--dry-run` — Aborts before writing any content to disk
@@ -51,7 +51,7 @@ Launches typescript-specific commands
 
 ###### **Subcommands:**
 
-* `monorepo` — Generates a new typescript monorepo
+* `monorepo` — Generates a new typescript monorepo inside the `out_dir`
 * `package` — Generates a new typescript package
 
 ###### **Options:**
@@ -65,14 +65,14 @@ Launches typescript-specific commands
 
   Possible values: `patch`, `minor`, `exact`
 
-* `--catalog` — Uses the pnpm catalog for default dependencies
+* `--catalog` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to `pnpm-workspace.yaml`
 * `--no-convert-latest` — Does not convert dependencies marked as `latest` to a version range
 
 
 
 ## `sketch ts monorepo`
 
-Generates a new typescript monorepo
+Generates a new typescript monorepo inside the `out_dir`
 
 **Usage:** `sketch ts monorepo [OPTIONS]`
 
@@ -82,7 +82,7 @@ Generates a new typescript monorepo
 * `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for the root package. If unset, defaults are used
 * `-p`, `--package-json <ID>` — The id of the package.json preset to use for the root package
 * `--no-oxlint` — Does not generate an oxlint config at the root
-* `-i`, `--install` — Install the dependencies at the root after creation
+* `-i`, `--install` — Installs the dependencies at the root after creation
 
 
 
@@ -113,7 +113,7 @@ Generates a new typescript package
 
 ## `sketch init`
 
-Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config
+Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config
 
 **Usage:** `sketch init [OPTIONS]`
 
@@ -126,13 +126,13 @@ Creates a new git repo with a gitignore file. Optionally, it sets up the git rem
 
 ## `sketch new`
 
-Generates a new config file with some optional initial values defined via the cli flags
+Generates a new config file with some optional initial values defined via cli flags
 
 **Usage:** `sketch new [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<OUTPUT>` — The output file [default: sketch.yaml]
+* `<OUTPUT>` — The output file. Must be an absolute path or a path relative from the cwd [default: sketch.yaml]
 
 
 
@@ -148,9 +148,9 @@ Renders a single template to a file or to stdout
 
 ###### **Options:**
 
-* `--stdout` — Output the result to stdout
-* `-f`, `--file <FILE>` — The path to the template file, from the cwd
-* `-i`, `--id <ID>` — The id of the template to use
+* `--stdout` — Prints the result to stdout
+* `-f`, `--file <FILE>` — The path to the template file, as an absolute path or relative to the cwd
+* `-i`, `--id <ID>` — The id of the template to use (a name for config-defined templates, or a relative path for a file inside `templates_dir`)
 * `-c`, `--content <CONTENT>` — The literal definition for the template
 
 
@@ -169,18 +169,19 @@ Renders a templating preset defined in the configuration file
 
 ## `sketch exec`
 
-Renders a template and launches it as a command
+Renders a template and executes it as a shell command
 
 **Usage:** `sketch exec [OPTIONS] [CMD]`
 
 ###### **Arguments:**
 
-* `<CMD>` — The literal definition for the command's template
+* `<CMD>` — The literal definition for the template
 
 ###### **Options:**
 
-* `-f`, `--file <FILE>` — The path to the command's template file
-* `-t`, `--template <TEMPLATE>` — The id of the template to use
+* `--cwd <CWD>` — The cwd for the command to execute. [default: `.`]
+* `-f`, `--file <FILE>` — The path to the command's template file, as an absolute path or relative to the cwd
+* `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file inside `templates_dir`)
 
 
 

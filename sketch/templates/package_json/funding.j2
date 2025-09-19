@@ -1,19 +1,16 @@
 {% import "utils.j2" as utils %}
 
-{% macro render_funding_data(url, type_) %}
-{
-  "url": "{{ url }}" {% call utils::optional_comma(type_.is_some()) %}
-  {% call utils::render_optional_string("type", type_, 2) %}
-}
-{% endmacro %}
-
 {% match self %}
-  {% when Self::Url(str) %}
+  {% when Self::Url(str) +%}
 "{{ str }}"
-  {% when Self::Data(data) %}
-{% call render_funding_data(data.url, data.type_) +%}
+  {% when Self::Data(data) +%}
+{{+ data +}}
   {% when Self::List(list) %}
-{% for data in list +%}
-{% call render_funding_data(data.url, data.type_) +%}
+[
+{% for data in list %}
+  {% filter indent(2) %}
+  {{+ data.render()? }} {% call utils::optional_comma(!loop.last) ~%}
+  {% endfilter %}
 {% endfor +%}
+]
 {% endmatch %}
