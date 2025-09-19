@@ -17,7 +17,7 @@ use crate::{
 /// A struct representing a pnpm-workspace.yaml config.
 #[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(default)]
-#[template(path = "pnpm-workspace.yaml.j2")]
+#[template(path = "ts/pnpm-workspace.yaml.j2")]
 pub struct PnpmWorkspace {
   /// The dependencies to insert in the unnamed (default) catalog.
   pub catalog: StringBTreeMap,

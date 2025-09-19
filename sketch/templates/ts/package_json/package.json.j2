@@ -55,13 +55,7 @@
     {% endfor +%}
   ],
   {% endif +%}
-  {% if let Some(config) = self.config +%}
-  "config": {
-  {% for (key, val) in config +%}
-    "{{ key }}": {{+ crate::render_json_val(val, 2) }} {% call utils::optional_comma(!loop.last) %}
-  {% endfor +%}
-  },
-  {% endif +%}
+  {% call utils::render_optional_json_object("config", self.config, 2) +%}
   {% call utils::render_string_object_if_not_empty("peerDependencies", self.peer_dependencies, 2) +%}
   {% call utils::render_string_object_if_not_empty("optionalDependencies", self.optional_dependencies, 2) +%}
   {% call utils::render_optional_list_if_not_empty("bundleDependencies", self.bundle_dependencies, 2) +%}

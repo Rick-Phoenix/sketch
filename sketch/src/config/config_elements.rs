@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 #[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, JsonSchema)]
-#[template(path = "gitignore.j2")]
+#[template(path = "repo_root/gitignore.j2")]
 #[serde(untagged)]
 /// A definition for a gitignore template. It can be a list of strings (to append to the defaults) or a single string to define the entire content of the file.
 pub enum GitIgnore {
@@ -20,7 +20,7 @@ impl Default for GitIgnore {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Template)]
 #[serde(untagged)]
-#[template(path = "pre-commit-config.yaml.j2")]
+#[template(path = "repo_root/pre-commit-config.yaml.j2")]
 /// The setting for the .pre-commit-config.yaml template. It can be a boolean (to use the defaults with `true` or to disable pre-commit entirely with `false`) or a literal configuration for the file.
 pub enum PreCommitSetting {
   Bool(bool),

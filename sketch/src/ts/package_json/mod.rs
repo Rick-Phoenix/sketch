@@ -39,7 +39,7 @@ impl PackageJsonKind {
 
 /// A struct representing the contents of a `package.json` file.
 #[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq, JsonSchema)]
-#[template(path = "package.json.j2")]
+#[template(path = "ts/package_json/package.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct PackageJson {
@@ -419,6 +419,7 @@ mod test {
 
   use askama::Template;
   use maplit::{btreemap, btreeset};
+  use pretty_assertions::assert_eq;
 
   use super::{
     Bugs, Directories, Exports, JsPackageType, Man, PackageJson, Person, PersonData, PublishConfig,

@@ -149,7 +149,7 @@ impl Display for PackageManager {
 }
 
 #[derive(Debug, Template, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-#[template(path = "oxlint.json.j2")]
+#[template(path = "ts/oxlint.json.j2")]
 #[serde(untagged)]
 pub enum OxlintConfig {
   Bool(bool),

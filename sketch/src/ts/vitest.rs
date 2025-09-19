@@ -31,7 +31,7 @@ impl Default for VitestConfigKind {
 
 /// The data used to generate a new vitest setup.
 #[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
-#[template(path = "vitest.config.ts.j2")]
+#[template(path = "ts/vitest.config.ts.j2")]
 #[serde(default)]
 pub struct VitestConfig {
   /// The path to the tests directory, from the root of the package. [default: 'tests']
@@ -52,7 +52,7 @@ pub struct VitestConfig {
 }
 
 #[derive(Template)]
-#[template(path = "tests_setup.ts.j2")]
+#[template(path = "ts/tests_setup.ts.j2")]
 pub(crate) struct TestsSetupFile;
 
 impl Default for VitestConfig {

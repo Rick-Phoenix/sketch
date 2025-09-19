@@ -9,7 +9,7 @@
   "enable": {{+ enable }},
   {% call utils::render_optional_list("include", include, 2) +%}
   {% call utils::render_optional_list("exclude", exclude, 2) +%}
-  {% call utils::render_optional_bool("disable_filename_based_type_acquisition", disable_filename_based_type_acquisition, 2) +%}
+  {% call utils::render_optional_bool("disableFilenameBasedTypeAcquisition", disable_filename_based_type_acquisition, 2) +%}
   {% endfilter +%}
 }
 {% endmatch %}

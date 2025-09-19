@@ -5,6 +5,7 @@ use std::{
 
 use askama::Template;
 use maplit::{btreemap, btreeset};
+use pretty_assertions::assert_eq;
 use serde_json::Value;
 use sketch_it::ts::ts_config::*;
 

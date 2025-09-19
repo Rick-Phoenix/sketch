@@ -143,7 +143,7 @@ impl TsConfig {
 
 /// Settings for the watch mode in TypeScript.
 #[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema, Merge)]
-#[template(path = "watch_options.j2")]
+#[template(path = "ts/tsconfig/watch_options.j2")]
 #[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchOptions {
@@ -176,7 +176,7 @@ pub struct WatchOptions {
 #[derive(
   Deserialize, Debug, Clone, Serialize, Template, Default, Merge, PartialEq, Eq, JsonSchema,
 )]
-#[template(path = "tsconfig.json.j2")]
+#[template(path = "ts/tsconfig/tsconfig.json.j2")]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 #[merge(strategy = overwrite_if_some)]
@@ -227,7 +227,7 @@ pub struct TsConfig {
 
 /// Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.
 #[derive(Deserialize, Debug, Clone, Serialize, Template, PartialEq, Eq, JsonSchema)]
-#[template(path = "type_acquisition.j2")]
+#[template(path = "ts/tsconfig/type_acquisition.j2")]
 #[serde(untagged)]
 pub enum TypeAcquisition {
   Bool(bool),
@@ -241,6 +241,7 @@ pub enum TypeAcquisition {
 
     /// TypeScript’s type acquisition can infer what types should be added based on filenames in a project. This means that having a file like jquery.js in your project would automatically download the types for JQuery from DefinitelyTyped.
     /// You can disable this via disableFilenameBasedTypeAcquisition. See more: https://www.typescriptlang.org/it/tsconfig/#type-disableFilenameBasedTypeAcquisition
+    #[serde(rename = "disableFilenameBasedTypeAcquisition")]
     disable_filename_based_type_acquisition: Option<bool>,
   },
 }
