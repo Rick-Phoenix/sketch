@@ -8,10 +8,15 @@ use crate::{ts::package_json::PeerDependencyMeta, StringBTreeMap};
 /// Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub enum ResolutionMode {
+  /// Dependencies will be resolved to their highest versions.
   #[serde(rename = "highest")]
   Highest,
+  /// When resolutionMode is set to time-based, dependencies will be resolved the following way:
+  /// Direct dependencies will be resolved to their lowest versions. So if there is foo@^1.1.0 in the dependencies, then 1.1.0 will be installed.
+  /// Subdependencies will be resolved from versions that were published before the last direct dependency was published.
   #[serde(rename = "time-based")]
   TimeBased,
+  /// Direct dependencies will be resolved to their lowest versions.
   #[serde(rename = "lowest-direct")]
   LowestDirect,
 }
@@ -19,10 +24,13 @@ pub enum ResolutionMode {
 /// Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub enum SavePrefix {
+  /// Allows patch upgrades.
   #[serde(rename = "~")]
   Patch,
+  /// Allows minor upgrades.
   #[serde(rename = "^")]
   Minor,
+  /// Does not allow upgrades.
   #[serde(rename = "")]
   Exact,
 }
@@ -57,7 +65,7 @@ pub enum LinkWorkspacePackagesChoices {
   Deep,
 }
 
-/// This setting allows the checking of the state of dependencies before running scripts.
+/// This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum VerifyDepsBeforeRun {
@@ -69,22 +77,29 @@ pub enum VerifyDepsBeforeRun {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum VerifyDepsBeforeRunChoices {
+  /// Automatically runs install if node_modules is not up to date.
   Install,
+  /// Prints a warning if node_modules is not up to date.
   Warn,
+  /// Throws an error if node_modules is not up to date.
   Error,
+  /// Prompts the user for permission to run install if node_modules is not up to date.
   Prompt,
 }
 
-/// Controls colors in the output.
+/// Controls colors in the output. See more: https://pnpm.io/settings#no-color
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum Color {
+  /// Ignore the difference between terminals and pipes.
   Always,
+  /// Output uses colors when the standard output is a terminal or TTY
   Auto,
+  /// Turns off colors. This is the setting used by --no-color.
   Never,
 }
 
-/// Any logs at or higher than the given level will be shown.
+/// Any logs at or higher than the given level will be shown. See more: https://pnpm.io/settings#loglevel
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum LogLevel {
@@ -154,7 +169,7 @@ pub struct AuditConfig {
   #[serde(alias = "ignore_cves")]
   pub ignore_cves: Option<BTreeSet<String>>,
 
-  /// A list of GHSA Codes that will be ignored by "pnpm audit".
+  /// A list of GHSA Codes that will be ignored by `pnpm audit`.
   #[serde(alias = "ignore_ghas")]
   pub ignore_ghas: Option<BTreeSet<String>>,
 }
