@@ -1,8 +1,0 @@
-{% import "utils.j2" as utils %}
-
-{
-  {% filter strip_trailing_comma +%}
-  "url": "{{ url }}",
-  {% call utils::render_optional_string("type", type_, 2) +%}
-  {% endfilter +%}
-}

@@ -17,7 +17,7 @@ typescript:
   package_manager: pnpm
 
   # Configuration for the generated pnpm-workspace.yaml file
-  pnpm_config:
+  pnpm:
     # All dirs listed here will be created automatically
     packages: ["packages/*"]
 

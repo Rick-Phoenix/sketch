@@ -5,7 +5,7 @@ use maplit::btreeset;
 use merge::Merge;
 
 use crate::{
-  fs::get_cwd,
+  fs::{get_cwd, serialize_json},
   ts::{
     package_json::{PackageJsonKind, Person},
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
@@ -97,7 +97,7 @@ impl Config {
         .unwrap_or_else(|| "root".to_string()),
     );
 
-    write_to_output!(package_json_data, "package.json");
+    serialize_json(&package_json_data, &out_dir.join("package.json"))?;
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
     let tsconfig_presets = &typescript.tsconfig_presets;
@@ -152,7 +152,7 @@ impl Config {
     }
 
     if matches!(package_manager, PackageManager::Pnpm) {
-      let mut pnpm_data = typescript.pnpm_config.unwrap_or_default();
+      let mut pnpm_data = typescript.pnpm.unwrap_or_default();
 
       for dir in &pnpm_data.packages {
         let dir = dir.strip_suffix("/*").unwrap_or(dir);

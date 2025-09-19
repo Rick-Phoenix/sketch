@@ -1,14 +1,12 @@
 use std::{collections::BTreeMap, fmt::Display};
 
-use askama::Template;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{filters, JsonValueBTreeMap, StringBTreeMap};
+use crate::{JsonValueBTreeMap, StringBTreeMap};
 
 /// When a user installs your package, warnings are emitted if packages specified in "peerDependencies" are not already installed. The "peerDependenciesMeta" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Default, Template)]
-#[template(path = "ts/package_json/peer_dependencies_meta.j2")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Default)]
 #[serde(default)]
 pub struct PeerDependencyMeta {
   /// Specifies that this peer dependency is optional and should not be installed automatically.
@@ -20,8 +18,7 @@ pub struct PeerDependencyMeta {
 }
 
 /// You can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.
-#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/package_json/funding.j2")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum Funding {
   Url(String),
@@ -30,8 +27,7 @@ pub enum Funding {
 }
 
 /// Used to inform about ways to help fund development of the package.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Template)]
-#[template(path = "ts/package_json/funding_data.j2")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
 pub struct FundingData {
   /// The type of funding or the platform through which funding can be provided, e.g. patreon, opencollective, tidelift or github
   #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
@@ -41,8 +37,7 @@ pub struct FundingData {
 }
 
 /// The single path for this package's binary, or a map of several binaries.
-#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/package_json/bin.j2")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum Bin {
   Single(String),
@@ -50,8 +45,7 @@ pub enum Bin {
 }
 
 /// An enum representing formats for the `repository` field in a `package.json` file.
-#[derive(Debug, Serialize, Deserialize, Template, Clone, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/package_json/repository.j2")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum Repository {
   Path(String),
@@ -66,8 +60,7 @@ pub enum Repository {
 }
 
 /// A struct representing the `bugs` field in a `package.json` file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Template, JsonSchema)]
-#[template(path = "ts/package_json/bugs.j2")]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 pub struct Bugs {
   /// The url to your project's issue tracker.
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -90,19 +83,8 @@ pub enum Person {
 
 /// A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.
 #[derive(
-  Clone,
-  Debug,
-  Serialize,
-  Deserialize,
-  Default,
-  Template,
-  Ord,
-  PartialEq,
-  PartialOrd,
-  Eq,
-  JsonSchema,
+  Clone, Debug, Serialize, Deserialize, Default, Ord, PartialEq, PartialOrd, Eq, JsonSchema,
 )]
-#[template(path = "ts/package_json/person.j2")]
 pub struct PersonData {
   pub name: String,
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -112,8 +94,7 @@ pub struct PersonData {
 }
 
 /// A struct that represents a value in the `exports` object inside a `package.json` file.
-#[derive(Clone, Debug, Serialize, Deserialize, Template, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/package_json/export_path.j2")]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum Exports {
   Path(String),
@@ -135,9 +116,8 @@ pub enum Exports {
 }
 
 /// A struct that represents the value of the `directories` field in a `package.json` file.
-#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, Template, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, JsonSchema)]
 #[serde(default)]
-#[template(path = "ts/package_json/directories.j2")]
 pub struct Directories {
   /// If you specify a `bin` directory, then all the files in that folder will be used as the `bin` hash.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -169,8 +149,7 @@ pub struct Directories {
 }
 
 /// A struct that represents the kinds of values for the `man` field of a `package.json` file.
-#[derive(Clone, Debug, Serialize, Deserialize, Template, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/package_json/man.j2")]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum Man {
   Path(String),
@@ -195,9 +174,8 @@ impl Display for PublishConfigAccess {
 }
 
 /// A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with "latest", published to the global public registry or that a scoped module is private by default.
-#[derive(Clone, Debug, Serialize, Deserialize, Default, Template, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq, Eq, JsonSchema)]
 #[serde(default)]
-#[template(path = "ts/package_json/publish_config.j2")]
 pub struct PublishConfig {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub access: Option<PublishConfigAccess>,

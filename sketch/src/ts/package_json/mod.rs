@@ -2,7 +2,6 @@ pub mod package_json_elements;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use askama::Template;
 use futures::future;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
@@ -12,7 +11,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
   merging_strategies::*,
-  templating::render_json_val,
   ts::pnpm::PnpmWorkspace,
   versions::{get_latest_npm_version, VersionRange},
   GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
@@ -39,8 +37,7 @@ impl PackageJsonKind {
 }
 
 /// A struct representing the contents of a `package.json` file.
-#[derive(Debug, Deserialize, Serialize, Template, Merge, Clone, PartialEq, Eq, JsonSchema)]
-#[template(path = "ts/package_json/package.json.j2")]
+#[derive(Debug, Deserialize, Serialize, Merge, Clone, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
@@ -414,7 +411,6 @@ mod test {
     path::PathBuf,
   };
 
-  use askama::Template;
   use maplit::{btreemap, btreeset};
   use pretty_assertions::assert_eq;
 
@@ -579,17 +575,13 @@ mod test {
       extends: Default::default(),
     };
 
-    let str = serde_json::to_string_pretty(&test_package_json)?;
-
-    println!("{}", str);
-
     let output_path = PathBuf::from("tests/output/package_json_gen/package.json");
 
     create_dir_all(get_parent_dir(&output_path)).unwrap();
 
     let mut output_file = open_file_for_writing(&output_path)?;
 
-    test_package_json.write_into(&mut output_file)?;
+    serde_json::to_writer_pretty(&mut output_file, &test_package_json)?;
 
     let result: PackageJson = serde_json::from_reader(File::open(&output_path)?)?;
 

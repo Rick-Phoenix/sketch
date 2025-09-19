@@ -46,7 +46,7 @@ impl Default for TypescriptConfig {
       version_range: Default::default(),
       tsconfig_presets: Default::default(),
       people: Default::default(),
-      pnpm_config: Default::default(),
+      pnpm: Default::default(),
       root_package: Default::default(),
     }
   }
@@ -110,7 +110,7 @@ pub struct TypescriptConfig {
   /// The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
   #[merge(skip)]
   #[arg(skip)]
-  pub pnpm_config: Option<PnpmWorkspace>,
+  pub pnpm: Option<PnpmWorkspace>,
 }
 
 #[derive(

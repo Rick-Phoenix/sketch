@@ -16,7 +16,7 @@ use crate::{
   custom_templating::TemplateOutput,
   fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
-    open_file_for_writing,
+    open_file_for_writing, serialize_json,
   },
   merge_if_not_default, overwrite_if_some,
   ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
@@ -263,7 +263,7 @@ impl Config {
         .await?;
     }
 
-    write_to_output!(package_json_data, "package.json");
+    serialize_json(&package_json_data, &pkg_root.join("package.json"))?;
 
     if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = monorepo_root.join("pnpm-workspace.yaml");
