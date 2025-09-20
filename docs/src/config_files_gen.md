@@ -8,7 +8,7 @@ So if we run `sketch --templates-dir "/path/to/templates"`, `templates_dir` will
 
 Since the default `sketch.yaml` file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use `--ignore-config-file` to ignore the config file's values.
 
->⚠️ with this command --out-dir is interpreted as a setting for the generated config. Therefore, the path to the new config must be an absolute path or relative to the cwd.
+>⚠️ With this command, `out_dir` is interpreted as a setting for the generated config, not as the output directory as for other commands. Therefore, the path to the new config must be an absolute path or relative to the cwd.
 
 Command:
 

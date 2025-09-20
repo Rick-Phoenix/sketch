@@ -1,5 +1,7 @@
 use askama::Template;
 
+pub mod pre_commit;
+
 use crate::{
   exec::launch_command,
   fs::{create_all_dirs, get_cwd},

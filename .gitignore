@@ -1,5 +1,4 @@
-tsconfig_schema.json
-package_json_schema.json
+*schema.json
 book
 index.html
 CHANGELOG.html

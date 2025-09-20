@@ -8,6 +8,8 @@ extends: ["other_config.yaml"]
 
 Where the path being used can be either an absolute path or a relative path starting from the original config file.
 
+# Merging Logic
+
 The merging strategy works as follows:
 - For conflicting values, such as opposite booleans, the previous value will be overridden.
 - For non-conflicting values such as maps (for example, the global template vars map), the values will be merged.
