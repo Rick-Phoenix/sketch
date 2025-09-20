@@ -32,10 +32,8 @@ typescript:
     # Literal oxlint configuration to generate at the root
     # of the workspace.
     # Can be set to `true` to use defaults.
-    oxlint: |
-      {
-        "plugins": ["unicorn", "typescript", "oxc"]
-      }
+    oxlint:
+      plugins: ["unicorn", "typescript", "oxc"]
 
     # ANCHOR_END: all
 

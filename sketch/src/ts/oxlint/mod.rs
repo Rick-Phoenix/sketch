@@ -2,11 +2,74 @@ pub mod plugins;
 use std::collections::{BTreeMap, BTreeSet};
 
 use indexmap::IndexSet;
+use merge::Merge;
 use plugins::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::JsonValueBTreeMap;
+use crate::{
+  merge_optional_btree_maps, merge_optional_btree_sets, merge_optional_index_sets,
+  merge_optional_vecs, overwrite_if_some, JsonValueBTreeMap,
+};
+
+/// The configuration directives for `oxlint`. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
+#[serde(rename_all = "camelCase")]
+pub struct OxlintConfig {
+  /// Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_index_sets)]
+  pub extends: Option<IndexSet<String>>,
+
+  /// Environments enable and disable collections of global variables.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub env: Option<BTreeMap<String, bool>>,
+
+  /// Enables or disables specific global variables.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub globals: Option<BTreeMap<String, GlobalValue>>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_if_some)]
+  pub categories: Option<Categories>,
+
+  /// Globs to ignore during linting. These are resolved from the configuration file path.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub ignore_patterns: Option<BTreeSet<String>>,
+
+  /// Add, remove, or otherwise reconfigure rules for specific files or groups of files.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_vecs)]
+  pub overrides: Option<Vec<Override>>,
+
+  /// A list of plugins to enable for this config.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub plugins: Option<BTreeSet<Plugin>>,
+
+  /// Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub rules: Option<BTreeMap<String, RuleSetting>>,
+
+  /// Contains the settings for various plugins.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_if_some)]
+  pub settings: Option<PluginsSettings>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub extras: Option<JsonValueBTreeMap>,
+}
+
+impl Default for OxlintConfigSetting {
+  fn default() -> Self {
+    Self::Bool(true)
+  }
+}
 
 /// Settings for generating an `oxlint` configuration file.
 /// It can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.
@@ -100,8 +163,9 @@ pub struct Override {
 }
 
 /// Configure the behavior of linter plugins.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
 #[serde(rename_all = "camelCase")]
+#[merge(strategy = overwrite_if_some)]
 pub struct PluginsSettings {
   /// Settings for the Jsdoc plugin.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,53 +183,4 @@ pub struct PluginsSettings {
   /// Settings for the react plugin.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub react: Option<ReactPluginSettings>,
-}
-
-/// The configuration directives for `oxlint`. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct OxlintConfig {
-  /// Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub extends: Option<IndexSet<String>>,
-
-  /// Environments enable and disable collections of global variables.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub env: Option<BTreeMap<String, bool>>,
-
-  /// Enables or disables specific global variables.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub globals: Option<BTreeMap<String, GlobalValue>>,
-
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub categories: Option<Categories>,
-
-  /// Globs to ignore during linting. These are resolved from the configuration file path.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub ignore_patterns: Option<BTreeSet<String>>,
-
-  /// Add, remove, or otherwise reconfigure rules for specific files or groups of files.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub overrides: Option<Vec<Override>>,
-
-  /// A list of plugins to enable for this config.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub plugins: Option<BTreeSet<Plugin>>,
-
-  /// Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub rules: Option<BTreeMap<String, RuleSetting>>,
-
-  /// Contains the settings for various plugins.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub settings: Option<PluginsSettings>,
-
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub extras: Option<JsonValueBTreeMap>,
-}
-
-impl Default for OxlintConfigSetting {
-  fn default() -> Self {
-    Self::Bool(true)
-  }
 }

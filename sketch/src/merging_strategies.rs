@@ -48,6 +48,23 @@ where
   left.extend(right)
 }
 
+pub(crate) fn merge_optional_index_sets<T>(
+  left: &mut Option<IndexSet<T>>,
+  right: Option<IndexSet<T>>,
+) where
+  T: Eq + Hash,
+{
+  if let Some(right_data) = right {
+    if let Some(left_data) = left {
+      for item in right_data.into_iter() {
+        left_data.insert(item);
+      }
+    } else {
+      *left = Some(right_data)
+    }
+  }
+}
+
 pub(crate) fn overwrite_if_some<T>(left: &mut Option<T>, right: Option<T>) {
   if let Some(new) = right {
     *left = Some(new)
@@ -78,6 +95,16 @@ pub(crate) fn merge_optional_btree_maps<T>(
       for (key, val) in right_data.into_iter() {
         left_data.insert(key, val);
       }
+    } else {
+      *left = Some(right_data)
+    }
+  }
+}
+
+pub(crate) fn merge_optional_vecs<T>(left: &mut Option<Vec<T>>, right: Option<Vec<T>>) {
+  if let Some(right_data) = right {
+    if let Some(left_data) = left {
+      left_data.extend(right_data);
     } else {
       *left = Some(right_data)
     }

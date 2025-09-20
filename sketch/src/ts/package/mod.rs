@@ -78,7 +78,7 @@ pub struct PackageConfig {
   #[merge(strategy = merge_if_not_default)]
   pub vitest: VitestConfigKind,
 
-  /// The configuration for this package's oxlint setup. It can be set to true/false (to use defaults or to disable it), or to a string defining the contents of the file.
+  /// The configuration for this package's oxlint setup. It can be set to true/false (to use defaults or to disable it), or to a literal configuration.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfigSetting>,
 }

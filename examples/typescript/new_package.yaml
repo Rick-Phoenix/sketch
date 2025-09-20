@@ -24,8 +24,9 @@ typescript:
       # default tsconfigs.
       kind: library
 
-      # Can be set to true (for a default config), a literal config
-      # or to false (which is the default setting) for no oxlint config.
+      # Generates an oxlint config file in the root.
+      # Can be set to true/false to use defaults or to disable it, or to
+      # a literal configuration.
       oxlint: false
 
       # Create a vitest setup.

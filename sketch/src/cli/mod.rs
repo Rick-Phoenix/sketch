@@ -543,7 +543,7 @@ pub enum TsCommands {
     #[arg(long)]
     no_vitest: bool,
 
-    /// Sets up an oxlint config file for this package
+    /// If an oxlint config is not defined or enabled, this will generate one with the default values.
     #[arg(long)]
     oxlint: bool,
 

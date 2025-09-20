@@ -213,7 +213,6 @@ pub struct TsConfig {
 
   /// Settings for the watch mode in TypeScript.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_nested)]
   pub watch_options: Option<WatchOptions>,
 
   /// Instructs the TypeScript compiler how to compile .ts files.
