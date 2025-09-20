@@ -7,7 +7,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-  package_json::{PackageJson, PackageJsonKind},
+  package_json::PackageJsonData,
   pnpm::PnpmWorkspace,
   ts_config::{tsconfig_defaults::*, TsConfig, TsConfigDirective, TsConfigKind},
   vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
@@ -19,7 +19,7 @@ use crate::{
     open_file_for_writing, serialize_json, serialize_yaml,
   },
   merge_if_not_default, overwrite_if_some,
-  ts::{oxlint::OxlintConfigSetting, package_json::Person, ts_config, PackageManager},
+  ts::{oxlint::OxlintConfigSetting, ts_config, PackageManager},
   Config, GenError, Preset,
 };
 
@@ -57,12 +57,12 @@ pub struct PackageConfig {
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
   /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
-  #[arg(long, value_parser = PackageJsonKind::from_cli)]
+  #[arg(long, value_parser = PackageJsonData::from_cli)]
   #[arg(
     help = "The id of the package.json preset to use for this package",
     value_name = "ID"
   )]
-  pub package_json: Option<PackageJsonKind>,
+  pub package_json: Option<PackageJsonData>,
 
   /// The templates to generate when this package is created.
   /// Relative output paths will be joined to the package's root directory.
@@ -157,37 +157,29 @@ impl Config {
       };
     }
 
-    let (package_json_id, mut package_json_data) =
-      if let Some(package_json_config) = config.package_json.as_ref() {
-        match package_json_config {
-          PackageJsonKind::Id(id) => {
-            let config = package_json_presets
-              .get(id)
-              .ok_or(GenError::PresetNotFound {
-                kind: Preset::PackageJson,
-                name: id.clone(),
-              })?
-              .clone();
+    let (package_json_id, package_json_preset) = match config.package_json.unwrap_or_default() {
+      PackageJsonData::Id(id) => (
+        id.clone(),
+        package_json_presets
+          .get(&id)
+          .ok_or(GenError::PresetNotFound {
+            kind: Preset::PackageJson,
+            name: id,
+          })?
+          .clone(),
+      ),
+      PackageJsonData::Config(package_json) => ("__inlined_definition".to_string(), package_json),
+    };
 
-            (id.to_string(), config)
-          }
-          PackageJsonKind::Config(package_json_config) => (
-            format!("__inlined_config_{}", package_name),
-            *package_json_config.clone(),
-          ),
-        }
-      } else {
-        ("__default".to_string(), PackageJson::default())
-      };
-
-    package_json_data = package_json_data.merge_configs(&package_json_id, package_json_presets)?;
+    let mut package_json_data = package_json_preset.process_data(
+      package_json_id.as_str(),
+      package_json_presets,
+      &typescript.people,
+    )?;
 
     if package_json_data.package_manager.is_none() {
       package_json_data.package_manager = Some(package_manager.to_string());
     }
-
-    get_contributors!(package_json_data, typescript, contributors);
-    get_contributors!(package_json_data, typescript, maintainers);
 
     if !typescript.no_default_deps {
       let mut default_deps = vec!["typescript", "oxlint"];

@@ -74,13 +74,17 @@ Launches typescript-specific commands
 
 Generates a new typescript monorepo inside the `out_dir`
 
-**Usage:** `sketch ts monorepo [OPTIONS]`
+**Usage:** `sketch ts monorepo [OPTIONS] [DIR]`
+
+###### **Arguments:**
+
+* `<DIR>` — The new package's directory, starting from the `out_dir`. Defaults to the name of the package
 
 ###### **Options:**
 
-* `-n`, `--name <NAME>` — The name of the root package [default: "root"]
-* `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for the root package. If unset, defaults are used
-* `-p`, `--package-json <ID>` — The id of the package.json preset to use for the root package
+* `-n`, `--name <NAME>` — The name of the new package. If `dir` is set, it defaults to the last segment of it
+* `-t`, `--ts-config <output=PATH,id=ID>` — One or many tsconfig files for this package. If unset, defaults are used
+* `--package-json <ID>` — The id of the package.json preset to use for this package
 * `--no-oxlint` — Does not generate an oxlint config at the root
 * `-i`, `--install` — Installs the dependencies at the root after creation
 
@@ -101,7 +105,7 @@ Generates a new typescript package
 * `-p`, `--preset <PRESET>` — The package preset to use
 * `--update-root-tsconfig` — Whether the tsconfig file at the workspace root should receive a reference to the new package
 * `--no-vitest` — Does not set up vitest for this package
-* `--oxlint` — Sets up an oxlint config file for this package
+* `--oxlint` — If an oxlint config is not defined or enabled, this will generate one with the default values
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `--app` — Marks the package as an application (only relevant for default tsconfigs)
 * `--library` — Marks the package as a library (only relevant for default tsconfigs)

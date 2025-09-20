@@ -1,13 +1,12 @@
 use std::fs::create_dir_all;
 
 use maplit::btreeset;
-use merge::Merge;
 
 use crate::{
   fs::{create_all_dirs, get_cwd, serialize_json, serialize_yaml},
   ts::{
     oxlint::OxlintConfigSetting,
-    package_json::{PackageJsonKind, Person},
+    package_json::PackageJsonData,
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
     PackageManager,
   },
@@ -28,35 +27,30 @@ impl Config {
 
     create_all_dirs(&out_dir)?;
 
-    let mut package_json_data = match root_package.package_json.unwrap_or_default() {
-      PackageJsonKind::Id(id) => package_json_presets
-        .get(&id)
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::PackageJson,
-          name: id,
-        })?
-        .clone(),
-      PackageJsonKind::Config(package_json) => *package_json,
+    let (package_json_id, package_json_preset) = match root_package.package_json.unwrap_or_default()
+    {
+      PackageJsonData::Id(id) => (
+        id.clone(),
+        package_json_presets
+          .get(&id)
+          .ok_or(GenError::PresetNotFound {
+            kind: Preset::PackageJson,
+            name: id,
+          })?
+          .clone(),
+      ),
+      PackageJsonData::Config(package_json) => ("__inlined_definition".to_string(), package_json),
     };
 
-    for preset in package_json_data.extends.clone() {
-      let target = package_json_presets
-        .get(&preset)
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::PackageJson,
-          name: preset,
-        })?
-        .clone();
-
-      package_json_data.merge(target);
-    }
+    let mut package_json_data = package_json_preset.process_data(
+      package_json_id.as_str(),
+      package_json_presets,
+      &typescript.people,
+    )?;
 
     if package_json_data.package_manager.is_none() {
       package_json_data.package_manager = Some(package_manager.to_string());
     }
-
-    get_contributors!(package_json_data, typescript, contributors);
-    get_contributors!(package_json_data, typescript, maintainers);
 
     if !typescript.no_default_deps {
       for dep in ["typescript", "oxlint"] {

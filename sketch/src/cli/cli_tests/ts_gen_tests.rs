@@ -7,7 +7,7 @@ use super::reset_testing_dir;
 use crate::{
   cli::{execute_cli, Cli},
   ts::{
-    package_json::{PackageJson, Person},
+    package_json::PackageJson,
     pnpm::PnpmWorkspace,
     ts_config::{
       tsconfig_defaults::{
@@ -106,12 +106,10 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_json = deserialize_json!(PackageJson, package_dir.join("package.json"));
 
-  assert!(package_json.contributors.iter().any(|p| {
-    match p {
-      Person::Id(_) => panic!("found person with id in generated package.json"),
-      Person::Data(person_data) => person_data.name == "Legolas",
-    }
-  }));
+  assert!(package_json
+    .contributors
+    .iter()
+    .any(|p| p.name == "Legolas"));
 
   assert_eq!(package_json.name.unwrap(), "test_package");
 

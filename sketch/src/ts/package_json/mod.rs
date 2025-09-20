@@ -16,21 +16,110 @@ use crate::{
   GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
 
-/// Ways of indicating [`PackageJson`] data. It can be an id, pointing to a preset, or a literal configuration.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, JsonSchema)]
-#[serde(untagged)]
-pub enum PackageJsonKind {
-  Id(String),
-  Config(Box<PackageJson>),
-}
-
-impl Default for PackageJsonKind {
-  fn default() -> Self {
-    Self::Config(PackageJson::default().into())
+impl Extensible for PackageJsonPreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extends
   }
 }
 
-impl PackageJsonKind {
+fn get_person_data(id: &str, store: &IndexMap<String, PersonData>) -> Result<PersonData, GenError> {
+  Ok(
+    store
+      .get(id)
+      .ok_or(GenError::Custom(format!(
+        "Person with id `{}` not found.",
+        id
+      )))?
+      .clone(),
+  )
+}
+
+impl PackageJsonPreset {
+  pub fn process_data(
+    self,
+    current_id: &str,
+    store: &IndexMap<String, PackageJsonPreset>,
+    people: &IndexMap<String, PersonData>,
+  ) -> Result<PackageJson, GenError> {
+    let merged_preset = if self.extends.is_empty() {
+      self
+    } else {
+      let mut processed_ids: IndexSet<String> = IndexSet::new();
+      merge_presets(
+        Preset::PackageJson,
+        current_id,
+        self,
+        store,
+        &mut processed_ids,
+      )?
+    };
+
+    let mut package_json = merged_preset.config;
+
+    macro_rules! get_people {
+      ($target:ident) => {
+        let mut $target: BTreeSet<PersonData> = Default::default();
+        for person in merged_preset.$target {
+          let data = match person {
+            Person::Id(id) => get_person_data(id.as_str(), people)?,
+            Person::Data(person_data) => person_data,
+          };
+
+          $target.insert(data);
+        }
+
+        package_json.$target = $target;
+      };
+    }
+
+    if let Some(author) = merged_preset.author {
+      let author_data = match author {
+        Person::Id(id) => get_person_data(id.as_str(), people)?,
+        Person::Data(person_data) => person_data,
+      };
+
+      package_json.author = Some(author_data);
+    };
+
+    get_people!(contributors);
+    get_people!(maintainers);
+
+    Ok(package_json)
+  }
+}
+
+/// A [`PackageJson`] preset, that holds all of the data of a [`PackageJson`], plus the ability to extend other presets and refer to authors and maintainers by their id.
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, JsonSchema, Merge, Default)]
+#[serde(default)]
+pub struct PackageJsonPreset {
+  #[merge(strategy = merge_index_sets)]
+  pub extends: IndexSet<String>,
+  #[merge(strategy = overwrite_if_some)]
+  pub author: Option<Person>,
+  #[merge(strategy = merge_btree_sets)]
+  pub contributors: BTreeSet<Person>,
+  #[merge(strategy = merge_btree_sets)]
+  pub maintainers: BTreeSet<Person>,
+  #[serde(flatten)]
+  #[merge(strategy = merge_nested)]
+  pub config: PackageJson,
+}
+
+/// Ways of indicating [`PackageJson`] data. It can be an id, pointing to a preset, or a literal configuration.
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, JsonSchema)]
+#[serde(untagged)]
+pub enum PackageJsonData {
+  Id(String),
+  Config(PackageJsonPreset),
+}
+
+impl Default for PackageJsonData {
+  fn default() -> Self {
+    Self::Config(PackageJsonPreset::default().into())
+  }
+}
+
+impl PackageJsonData {
   pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
     Ok(Self::Id(s.trim().to_string()))
   }
@@ -42,11 +131,6 @@ impl PackageJsonKind {
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageJson {
-  /// The ids of the [`PackageJson`] presets to extend (absent in a real `package.json` file, added by `sketch`)
-  #[serde(skip_serializing)]
-  #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
-
   /// The name of the package.
   pub name: Option<String>,
 
@@ -72,7 +156,7 @@ pub struct PackageJson {
 
   /// The author of this package.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub author: Option<Person>,
+  pub author: Option<PersonData>,
 
   /// You should specify a license for your package so that people know how they are permitted to use it, and any restrictions you're placing on it.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -182,12 +266,12 @@ pub struct PackageJson {
   /// A list of people who contributed to this package.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
-  pub contributors: BTreeSet<Person>,
+  pub contributors: BTreeSet<PersonData>,
 
   /// A list of people who maintains this package.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
-  pub maintainers: BTreeSet<Person>,
+  pub maintainers: BTreeSet<PersonData>,
 
   /// Specify either a single file or an array of filenames to put in place for the man program to find.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -234,7 +318,6 @@ impl Default for PackageJson {
       funding: None,
       type_: JsPackageType::Module,
       version: None,
-      extends: Default::default(),
       dependencies: Default::default(),
       peer_dependencies_meta: None,
       dev_dependencies: Default::default(),
@@ -341,67 +424,67 @@ impl PackageJson {
     Ok(())
   }
 
-  fn aggregate_extended_configs(
-    &self,
-    is_initial: bool,
-    base: &mut Self,
-    store: &IndexMap<String, PackageJson>,
-    processed_ids: &mut IndexSet<String>,
-  ) -> Result<(), GenError> {
-    for id in &self.extends {
-      let was_absent = processed_ids.insert(id.clone());
-
-      if !was_absent {
-        let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
-
-        return Err(GenError::CircularDependency(format!(
-          "Found circular dependency for package_json '{}'. The full processed chain is: {}",
-          id,
-          chain.join(" -> ")
-        )));
-      }
-
-      let target = store
-        .get(id.as_str())
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::PackageJson,
-          name: id.to_string(),
-        })?
-        .clone();
-
-      target.aggregate_extended_configs(false, base, store, processed_ids)?;
-
-      base.merge(target);
-    }
-
-    if !is_initial {
-      base.merge(self.clone());
-    }
-
-    Ok(())
-  }
-
-  pub fn merge_configs(
-    self,
-    initial_id: &str,
-    store: &IndexMap<String, PackageJson>,
-  ) -> Result<Self, GenError> {
-    if self.extends.is_empty() {
-      return Ok(self);
-    }
-
-    let mut processed_ids: IndexSet<String> = Default::default();
-
-    processed_ids.insert(initial_id.to_string());
-
-    let mut extended = Self::default();
-
-    self.aggregate_extended_configs(true, &mut extended, store, &mut processed_ids)?;
-
-    extended.merge(self);
-
-    Ok(extended)
-  }
+  //   fn aggregate_extended_configs(
+  //     &self,
+  //     is_initial: bool,
+  //     base: &mut Self,
+  //     store: &IndexMap<String, PackageJson>,
+  //     processed_ids: &mut IndexSet<String>,
+  //   ) -> Result<(), GenError> {
+  //     for id in &self.extends {
+  //       let was_absent = processed_ids.insert(id.clone());
+  //
+  //       if !was_absent {
+  //         let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
+  //
+  //         return Err(GenError::CircularDependency(format!(
+  //           "Found circular dependency for package_json '{}'. The full processed chain is: {}",
+  //           id,
+  //           chain.join(" -> ")
+  //         )));
+  //       }
+  //
+  //       let target = store
+  //         .get(id.as_str())
+  //         .ok_or(GenError::PresetNotFound {
+  //           kind: Preset::PackageJson,
+  //           name: id.to_string(),
+  //         })?
+  //         .clone();
+  //
+  //       target.aggregate_extended_configs(false, base, store, processed_ids)?;
+  //
+  //       base.merge(target);
+  //     }
+  //
+  //     if !is_initial {
+  //       base.merge(self.clone());
+  //     }
+  //
+  //     Ok(())
+  //   }
+  //
+  //   pub fn merge_configs(
+  //     self,
+  //     initial_id: &str,
+  //     store: &IndexMap<String, PackageJson>,
+  //   ) -> Result<Self, GenError> {
+  //     if self.extends.is_empty() {
+  //       return Ok(self);
+  //     }
+  //
+  //     let mut processed_ids: IndexSet<String> = Default::default();
+  //
+  //     processed_ids.insert(initial_id.to_string());
+  //
+  //     let mut extended = Self::default();
+  //
+  //     self.aggregate_extended_configs(true, &mut extended, store, &mut processed_ids)?;
+  //
+  //     extended.merge(self);
+  //
+  //     Ok(extended)
+  //   }
 }
 
 #[cfg(test)]
@@ -415,7 +498,7 @@ mod test {
   use pretty_assertions::assert_eq;
 
   use super::{
-    Bugs, Directories, Exports, JsPackageType, Man, PackageJson, Person, PersonData, PublishConfig,
+    Bugs, Directories, Exports, JsPackageType, Man, PackageJson, PersonData, PublishConfig,
     PublishConfigAccess, Repository,
   };
   use crate::{
@@ -478,11 +561,11 @@ mod test {
       },
       main: Some("dist/index.js".to_string()),
       browser: Some("dist/index.js".to_string()),
-      author: Some(Person::Data(PersonData {
+      author: Some(PersonData {
         url: Some("abc".to_string()),
         name: "abc".to_string(),
         email: Some("abc".to_string()),
-      })),
+      }),
       license: Some("Apache-2.0".to_string()),
       bugs: Some(Bugs {
         url: Some("abc".to_string()),
@@ -537,28 +620,28 @@ mod test {
         }),
       }),
       contributors: btreeset! {
-        Person::Data(PersonData {
+        PersonData {
           name: "legolas".to_string(),
           url: Some("legolas.com".to_string()),
           email: Some("legolas@middleearth.com".to_string()),
-        }),
-        Person::Data(PersonData {
+        },
+        PersonData {
           name: "aragorn".to_string(),
           url: Some("aragorn.com".to_string()),
           email: Some("aragorn@middleearth.com".to_string()),
-        })
+        }
       },
       maintainers: btreeset! {
-        Person::Data(PersonData {
+        PersonData {
           name: "legolas".to_string(),
           url: Some("legolas.com".to_string()),
           email: Some("legolas@middleearth.com".to_string()),
-        }),
-        Person::Data(PersonData {
+        },
+        PersonData {
           name: "aragorn".to_string(),
           url: Some("aragorn.com".to_string()),
           email: Some("aragorn@middleearth.com".to_string()),
-        })
+        }
       },
       directories: Some(Directories {
         man: Some("abc".to_string()),
@@ -572,7 +655,6 @@ mod test {
           "hello there".to_string() => "general kenobi".to_string(),
         },
       }),
-      extends: Default::default(),
     };
 
     let output_path = PathBuf::from("tests/output/package_json_gen/package.json");

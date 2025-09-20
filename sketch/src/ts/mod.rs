@@ -19,7 +19,7 @@ use crate::{
   ts::{
     oxlint::OxlintConfig,
     package::PackageConfig,
-    package_json::{PackageJson, Person, PersonData},
+    package_json::{PackageJsonPreset, Person, PersonData},
     pnpm::PnpmWorkspace,
     ts_config::TsConfig,
   },
@@ -97,7 +97,7 @@ pub struct TypescriptConfig {
   /// A map containing [`PackageJson`] presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  pub package_json_presets: IndexMap<String, PackageJson>,
+  pub package_json_presets: IndexMap<String, PackageJsonPreset>,
 
   /// A map containing [`TsConfig`] presets.
   #[merge(strategy = merge_index_maps)]

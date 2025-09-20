@@ -8,7 +8,7 @@ use super::{get_clean_example_cmd, reset_testing_dir};
 use crate::{
   cli::{cli_tests::get_tree_output, execute_cli, Cli},
   ts::{
-    package_json::{PackageJson, Person, PersonData},
+    package_json::{PackageJson, PersonData},
     ts_config::{CompilerOptions, TsConfig},
   },
 };
@@ -115,11 +115,11 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
   assert_eq!(extended.license.unwrap(), "MIT");
   assert_eq!(
     extended.author.unwrap(),
-    Person::Data(PersonData {
+    PersonData {
       name: "Bruce Wayne".to_string(),
       email: Some("i-may-or-may-not-be-batman@gotham.com".to_string()),
       ..Default::default()
-    })
+    }
   );
   assert_eq!(extended.scripts.get("dev").unwrap(), "vite dev");
   assert_eq!(extended.scripts.get("build").unwrap(), "vite build");
