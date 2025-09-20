@@ -1,10 +1,8 @@
-mod config_elements;
 mod config_setup;
 
 use std::path::PathBuf;
 
 use clap::Parser;
-pub use config_elements::*;
 use config_setup::extract_config_from_file;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
@@ -13,8 +11,15 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  custom_templating::TemplateOutput, fs::get_parent_dir, is_default, merge_index_maps,
-  merge_index_sets, overwrite_if_some, ts::TypescriptConfig, GenError,
+  custom_templating::TemplateOutput,
+  fs::get_parent_dir,
+  init_repo::{
+    gitignore::GitIgnore,
+    pre_commit::{PreCommitPreset, PreCommitSetting},
+  },
+  is_default, merge_index_maps, merge_index_sets, overwrite_if_some,
+  ts::TypescriptConfig,
+  GenError,
 };
 
 impl Config {
@@ -92,6 +97,11 @@ pub struct Config {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub templating_presets: IndexMap<String, Vec<TemplateOutput>>,
+
+  /// A map that contains pre-commit presets.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
@@ -180,6 +190,7 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      pre_commit_presets: Default::default(),
       config_file: None,
       templating_presets: Default::default(),
       typescript: None,

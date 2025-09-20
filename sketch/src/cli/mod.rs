@@ -21,6 +21,7 @@ use crate::{
   custom_templating::{TemplateData, TemplateOutput},
   exec::launch_command,
   fs::{create_all_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml},
+  init_repo::pre_commit::PreCommitSetting,
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},

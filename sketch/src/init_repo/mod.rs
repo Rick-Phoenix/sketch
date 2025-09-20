@@ -1,10 +1,11 @@
 use askama::Template;
 
+pub mod gitignore;
 pub mod pre_commit;
 
 use crate::{
   exec::launch_command,
-  fs::{create_all_dirs, get_cwd},
+  fs::{create_all_dirs, get_cwd, serialize_yaml},
   Config, GenError,
 };
 
@@ -24,7 +25,7 @@ impl Config {
     write_to_output!(self.gitignore, ".gitignore");
 
     if self.pre_commit.is_enabled() {
-      write_to_output!(&self.pre_commit, ".pre-commit-config.yaml");
+      serialize_yaml(&self.pre_commit, &out_dir.join(".pre-commit-config.yaml"))?;
       launch_command(
         shell,
         &["pre-commit", "install"],

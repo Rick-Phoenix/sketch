@@ -43,4 +43,5 @@ pub enum Preset {
   TsConfig,
   Templates,
   Oxlint,
+  PreCommit,
 }

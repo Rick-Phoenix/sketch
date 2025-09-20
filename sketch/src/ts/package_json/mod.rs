@@ -427,6 +427,7 @@ impl PackageJson {
 
 #[cfg(test)]
 mod test {
+
   use std::{
     fs::{create_dir_all, File},
     path::PathBuf,
@@ -434,16 +435,23 @@ mod test {
 
   use maplit::{btreemap, btreeset};
   use pretty_assertions::assert_eq;
+  use serde_json::Value;
 
   use super::{
     Bugs, Directories, Exports, JsPackageType, Man, PackageJson, PersonData, PublishConfig,
     PublishConfigAccess, Repository,
   };
   use crate::{
-    convert_btreemap_to_json,
     fs::{get_parent_dir, open_file_for_writing},
     ts::package_json::{Bin, Funding, FundingData, PeerDependencyMeta},
   };
+
+  fn convert_btreemap_to_json<T>(map: std::collections::BTreeMap<String, T>) -> Value
+  where
+    T: Into<Value>,
+  {
+    map.into_iter().collect()
+  }
 
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {

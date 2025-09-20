@@ -2,18 +2,64 @@ mod pre_commit_elements;
 
 use std::collections::BTreeSet;
 
+use indexmap::{IndexMap, IndexSet};
+use merge::Merge;
 use pre_commit_elements::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::StringBTreeMap;
+use crate::{
+  merge_btree_sets, merge_index_sets, merge_nested, merge_optional_btree_maps,
+  merge_optional_btree_sets, merge_presets, overwrite_if_some, Extensible, GenError, Preset,
+  StringBTreeMap,
+};
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge, Default)]
+#[serde(default)]
+pub struct PreCommitPreset {
+  #[merge(strategy = merge_index_sets)]
+  pub extends: IndexSet<String>,
+
+  #[serde(flatten)]
+  #[merge(strategy = merge_nested)]
+  pub config: PreCommitConfig,
+}
+
+impl Extensible for PreCommitPreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extends
+  }
+}
+
+impl PreCommitPreset {
+  pub fn process_data(
+    self,
+    id: &str,
+    store: &IndexMap<String, PreCommitPreset>,
+  ) -> Result<PreCommitConfig, GenError> {
+    if self.extends.is_empty() {
+      return Ok(self.config);
+    }
+
+    let mut processed_ids: IndexSet<String> = IndexSet::new();
+
+    let merged_preset = merge_presets(Preset::PreCommit, id, self, store, &mut processed_ids)?;
+
+    Ok(merged_preset.config)
+  }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge, Default)]
+#[merge(strategy = overwrite_if_some)]
 pub struct PreCommitConfig {
+  #[merge(strategy = merge_btree_sets)]
   pub repos: BTreeSet<Repo>,
   pub ci: Option<CiSettings>,
+  #[merge(strategy = merge_optional_btree_sets)]
   pub default_install_hook_types: Option<BTreeSet<String>>,
+  #[merge(strategy = merge_optional_btree_maps)]
   pub default_language_version: Option<StringBTreeMap>,
+  #[merge(strategy = merge_optional_btree_sets)]
   pub default_stages: Option<BTreeSet<Stage>>,
   pub files: Option<String>,
   pub exclude: Option<String>,
