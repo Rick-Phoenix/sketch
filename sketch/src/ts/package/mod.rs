@@ -231,7 +231,7 @@ impl Config {
 
     if let Some(tsconfig_directives) = config.ts_config.clone() {
       for directive in tsconfig_directives {
-        let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
+        let (id, tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
             let tsconfig = tsconfig_presets
               .get(&id)
@@ -244,13 +244,11 @@ impl Config {
             (id.to_string(), tsconfig)
           }
           TsConfigKind::Config(ts_config) => {
-            (format!("__inlined_config_{}", package_name), *ts_config)
+            (format!("__inlined_config_{}", package_name), ts_config)
           }
         };
 
-        if !tsconfig.extend_presets.is_empty() {
-          tsconfig = tsconfig.merge_configs(&id, tsconfig_presets)?;
-        }
+        let tsconfig = tsconfig.process_data(id.as_str(), tsconfig_presets)?;
 
         tsconfig_files.push((
           directive

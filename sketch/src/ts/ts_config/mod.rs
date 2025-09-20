@@ -13,21 +13,57 @@ use serde::{Deserialize, Serialize};
 pub use tsconfig_elements::*;
 
 use crate::{
-  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_optional_btree_maps,
-  merge_optional_btree_sets, merge_optional_nested, overwrite_if_some, GenError, Preset,
+  cli::parsers::parse_key_value_pairs, merge_index_sets, merge_nested, merge_optional_btree_maps,
+  merge_optional_btree_sets, merge_optional_nested, merge_presets, overwrite_if_some, Extensible,
+  GenError, Preset,
 };
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, Default, Merge)]
+#[serde(default)]
+pub struct TsConfigPreset {
+  #[merge(strategy = merge_index_sets)]
+  pub extend_presets: IndexSet<String>,
+
+  #[serde(flatten)]
+  #[merge(strategy = merge_nested)]
+  pub tsconfig: TsConfig,
+}
+
+impl Extensible for TsConfigPreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extend_presets
+  }
+}
+
+impl TsConfigPreset {
+  pub fn process_data(
+    self,
+    id: &str,
+    store: &IndexMap<String, TsConfigPreset>,
+  ) -> Result<TsConfig, GenError> {
+    if self.extend_presets.is_empty() {
+      return Ok(self.tsconfig);
+    }
+
+    let mut processed_ids: IndexSet<String> = IndexSet::new();
+
+    let merged_preset = merge_presets(Preset::TsConfig, id, self, store, &mut processed_ids)?;
+
+    Ok(merged_preset.tsconfig)
+  }
+}
 
 /// The kind of data for a [`TsConfig`]. It can be a string indicating a preset it, or a full configuration.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TsConfigKind {
   Id(String),
-  Config(Box<TsConfig>),
+  Config(TsConfigPreset),
 }
 
 impl Default for TsConfigKind {
   fn default() -> Self {
-    Self::Config(TsConfig::default().into())
+    Self::Config(TsConfigPreset::default())
   }
 }
 
@@ -78,70 +114,6 @@ impl TsConfigDirective {
   }
 }
 
-impl TsConfig {
-  fn aggregate_extended_configs(
-    &self,
-    is_initial: bool,
-    base: &mut TsConfig,
-    store: &IndexMap<String, TsConfig>,
-    processed_ids: &mut IndexSet<String>,
-  ) -> Result<(), GenError> {
-    for id in self.extend_presets.clone() {
-      let was_absent = processed_ids.insert(id.clone());
-
-      if !was_absent {
-        let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
-
-        return Err(GenError::CircularDependency(format!(
-          "Found circular dependency for tsconfig '{}'. The full processed chain is: {}",
-          id,
-          chain.join(" -> ")
-        )));
-      }
-
-      let target = store
-        .get(id.as_str())
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::TsConfig,
-          name: id.to_string(),
-        })?
-        .clone();
-
-      target.aggregate_extended_configs(false, base, store, processed_ids)?;
-
-      base.merge(target);
-    }
-
-    if !is_initial {
-      base.merge(self.clone());
-    }
-
-    Ok(())
-  }
-
-  pub fn merge_configs(
-    self,
-    initial_id: &str,
-    store: &IndexMap<String, TsConfig>,
-  ) -> Result<TsConfig, GenError> {
-    if self.extend_presets.is_empty() {
-      return Ok(self);
-    }
-
-    let mut processed_ids: IndexSet<String> = Default::default();
-
-    processed_ids.insert(initial_id.to_string());
-
-    let mut extended = TsConfig::default();
-
-    self.aggregate_extended_configs(true, &mut extended, store, &mut processed_ids)?;
-
-    extended.merge(self);
-
-    Ok(extended)
-  }
-}
-
 /// Settings for the watch mode in TypeScript.
 #[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema, Merge)]
 #[merge(strategy = overwrite_if_some)]
@@ -178,11 +150,6 @@ pub struct WatchOptions {
 #[serde(default)]
 #[merge(strategy = overwrite_if_some)]
 pub struct TsConfig {
-  /// The ids of the config presets to extend. (not available in tsconfig.json files, added by `sketch`)
-  #[merge(strategy = merge_index_sets)]
-  #[serde(rename = "extend_presets", skip_serializing)]
-  pub extend_presets: IndexSet<String>,
-
   /// Path to base configuration file to inherit from (requires TypeScript version 2.1 or later), or array of base files, with the rightmost files having the greater priority (requires TypeScript version 5.0 or later).
   #[serde(skip_serializing_if = "Option::is_none")]
   pub extends: Option<String>,

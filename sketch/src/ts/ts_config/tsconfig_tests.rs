@@ -13,7 +13,6 @@ use crate::fs::serialize_json;
 #[test]
 fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
   let ts_config = TsConfig {
-    extend_presets: Default::default(),
     compiler_options: Some(CompilerOptions {
       out_dir: Some("out".to_string()),
       allow_js: Some(true),

@@ -75,12 +75,9 @@ impl Config {
         .await?;
     }
 
-    package_json_data.name = Some(
-      root_package
-        .name
-        .clone()
-        .unwrap_or_else(|| "root".to_string()),
-    );
+    let root_package_name = root_package.name.unwrap_or_else(|| "root".to_string());
+
+    package_json_data.name = Some(root_package_name.clone());
 
     serialize_json(&package_json_data, &out_dir.join("package.json"))?;
 
@@ -89,7 +86,7 @@ impl Config {
 
     if let Some(root_tsconfigs) = root_package.ts_config {
       for directive in root_tsconfigs {
-        let (id, mut tsconfig) = match directive.config.unwrap_or_default() {
+        let (id, tsconfig_data) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {
             let tsconfig = tsconfig_presets
               .get(&id)
@@ -101,18 +98,18 @@ impl Config {
 
             (id, tsconfig)
           }
-          TsConfigKind::Config(ts_config) => ("__root".to_string(), *ts_config),
+          TsConfigKind::Config(data) => {
+            (format!("__inlined_definition_{}", root_package_name), data)
+          }
         };
 
-        if !tsconfig.extend_presets.is_empty() {
-          tsconfig = tsconfig.merge_configs(&id, tsconfig_presets)?;
-        }
+        let tsconfig_data = tsconfig_data.process_data(id.as_str(), tsconfig_presets)?;
 
         tsconfig_files.push((
           directive
             .output
             .unwrap_or_else(|| "tsconfig.json".to_string()),
-          tsconfig,
+          tsconfig_data,
         ));
       }
     } else {
