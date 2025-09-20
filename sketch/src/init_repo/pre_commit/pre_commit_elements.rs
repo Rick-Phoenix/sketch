@@ -1,7 +1,16 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, sync::LazyLock};
 
+use maplit::btreeset;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use super::{Hook, Repo};
+
+pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::UriRepo {
+  repo: Some("https://github.com/gitleaks/gitleaks".to_string()),
+  rev: Some("v8.28.0".to_string()),
+  hooks: Some(btreeset! { Hook { id: "gitleaks".to_string(), ..Default::default() } }),
+});
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "snake_case")]

@@ -6,7 +6,8 @@ pub mod pre_commit;
 use crate::{
   exec::launch_command,
   fs::{create_all_dirs, get_cwd, serialize_yaml},
-  Config, GenError,
+  init_repo::pre_commit::{PreCommitPreset, PreCommitSetting},
+  Config, GenError, Preset,
 };
 
 impl Config {
@@ -25,7 +26,28 @@ impl Config {
     write_to_output!(self.gitignore, ".gitignore");
 
     if self.pre_commit.is_enabled() {
-      serialize_yaml(&self.pre_commit, &out_dir.join(".pre-commit-config.yaml"))?;
+      let (pre_commit_id, pre_commit_preset) = match self.pre_commit {
+        PreCommitSetting::Id(id) => (
+          id.clone(),
+          self
+            .pre_commit_presets
+            .get(id.as_str())
+            .ok_or(GenError::PresetNotFound {
+              kind: Preset::PreCommit,
+              name: id.clone(),
+            })?
+            .clone(),
+        ),
+        PreCommitSetting::Bool(_) => ("__default".to_string(), PreCommitPreset::default()),
+        PreCommitSetting::Config(pre_commit_config) => {
+          ("__inlined_definition".to_string(), pre_commit_config)
+        }
+      };
+
+      let pre_commit_config =
+        pre_commit_preset.process_data(&pre_commit_id, &self.pre_commit_presets)?;
+
+      serialize_yaml(&pre_commit_config, &out_dir.join(".pre-commit-config.yaml"))?;
       launch_command(
         shell,
         &["pre-commit", "install"],

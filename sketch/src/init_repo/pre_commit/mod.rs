@@ -3,6 +3,7 @@ mod pre_commit_elements;
 use std::collections::BTreeSet;
 
 use indexmap::{IndexMap, IndexSet};
+use maplit::btreeset;
 use merge::Merge;
 use pre_commit_elements::*;
 use schemars::JsonSchema;
@@ -49,7 +50,23 @@ impl PreCommitPreset {
   }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge, Default)]
+impl Default for PreCommitConfig {
+  fn default() -> Self {
+    Self {
+      repos: btreeset! { GITLEAKS_REPO.clone() },
+      ci: None,
+      default_install_hook_types: None,
+      default_language_version: None,
+      default_stages: None,
+      files: None,
+      exclude: None,
+      fail_fast: None,
+      minimum_pre_commit_version: None,
+    }
+  }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge)]
 #[merge(strategy = overwrite_if_some)]
 pub struct PreCommitConfig {
   #[merge(strategy = merge_btree_sets)]
@@ -110,7 +127,7 @@ pub enum LocalRepo {
   Local,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
 pub struct Hook {
   pub id: String,
   pub additional_dependencies: Option<BTreeSet<String>>,
@@ -151,7 +168,8 @@ impl Ord for Hook {
 #[serde(untagged)]
 pub enum PreCommitSetting {
   Bool(bool),
-  Config(PreCommitConfig),
+  Id(String),
+  Config(PreCommitPreset),
 }
 
 impl Default for PreCommitSetting {
