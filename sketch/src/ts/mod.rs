@@ -1,3 +1,4 @@
+pub mod oxlint;
 pub mod package;
 pub mod package_json;
 pub mod pnpm;
@@ -7,7 +8,6 @@ pub mod vitest;
 
 use std::fmt::Display;
 
-use askama::Template;
 use clap::{Parser, ValueEnum};
 use indexmap::IndexMap;
 use merge::Merge;
@@ -145,19 +145,5 @@ impl Display for PackageManager {
         write!(f, "yarn")
       }
     }
-  }
-}
-
-#[derive(Debug, Template, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-#[template(path = "ts/oxlint.json.j2")]
-#[serde(untagged)]
-pub enum OxlintConfig {
-  Bool(bool),
-  Text(String),
-}
-
-impl Default for OxlintConfig {
-  fn default() -> Self {
-    Self::Bool(true)
   }
 }
