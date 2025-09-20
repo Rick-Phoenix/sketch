@@ -1,19 +1,55 @@
 pub mod plugins;
 use std::collections::{BTreeMap, BTreeSet};
 
-use indexmap::IndexSet;
+use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use plugins::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  merge_optional_btree_maps, merge_optional_btree_sets, merge_optional_index_sets,
-  merge_optional_vecs, overwrite_if_some, JsonValueBTreeMap,
+  merge_index_sets, merge_nested, merge_optional_btree_maps, merge_optional_btree_sets,
+  merge_optional_index_sets, merge_optional_vecs, merge_presets, overwrite_if_some, Extensible,
+  GenError, JsonValueBTreeMap, Preset,
 };
 
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, Merge)]
+#[serde(default)]
+pub struct OxlintPreset {
+  #[merge(strategy = merge_index_sets)]
+  pub extend_presets: IndexSet<String>,
+
+  #[serde(flatten)]
+  #[merge(strategy = merge_nested)]
+  pub config: OxlintConfig,
+}
+
+impl Extensible for OxlintPreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extend_presets
+  }
+}
+
+impl OxlintPreset {
+  pub fn process_data(
+    self,
+    id: &str,
+    store: &IndexMap<String, OxlintPreset>,
+  ) -> Result<OxlintConfig, GenError> {
+    if self.extend_presets.is_empty() {
+      return Ok(self.config);
+    }
+
+    let mut processed_ids: IndexSet<String> = IndexSet::new();
+
+    let merged_preset = merge_presets(Preset::Oxlint, id, self, store, &mut processed_ids)?;
+
+    Ok(merged_preset.config)
+  }
+}
+
 /// The configuration directives for `oxlint`. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct OxlintConfig {
   /// Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.
@@ -71,13 +107,20 @@ impl Default for OxlintConfigSetting {
   }
 }
 
+impl OxlintConfigSetting {
+  pub fn is_enabled(&self) -> bool {
+    !matches!(self, Self::Bool(false))
+  }
+}
+
 /// Settings for generating an `oxlint` configuration file.
 /// It can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum OxlintConfigSetting {
   Bool(bool),
-  Config(OxlintConfig),
+  Id(String),
+  Config(OxlintPreset),
 }
 
 /// Settings for global variables.

@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=../../schemas/latest.json
+
+# ANCHOR: all
+out_dir: ../../sketch/tests/output/ts_examples
+
+typescript:
+  no_default_deps: true
+
+  # `package.json` presets
+  package_json_presets:
+    # Defining some reusable fields such as some common scripts and dependencies
+    frontend:
+      description: I am the base preset
+      scripts:
+        build: vite build
+        dev: vite dev
+      devDependencies:
+        tailwindcss: "*"
+        vite: "*"
+
+    svelte_frontend:
+      extends: ["frontend"]
+      # Adding new fields
+      license: MIT
+      # Overriding others
+      description: I am the frontend preset
+      # And merging dependencies
+      devDependencies:
+        svelte: "*"
+
+  # Tsconfig presets
+  tsconfig_presets:
+    base:
+      references:
+        - path: /some/path
+      include:
+        - src
+      compilerOptions:
+        noEmit: true
+        verbatimModuleSyntax: true
+
+    extended:
+      # Renamed to avoid conflict with the `extends` field
+      extend_presets:
+        - base
+      # Unlike in real tsconfigs with `extends`, references are merged here,
+      # and so are all other collections such as `files` or `include`.
+      references:
+        - path: /other/path
+      include:
+        - tests
+      compilerOptions:
+        # Whereas other fields are overwritten
+        noEmit: false
+
+  # Oxlint presets
+  oxlint_presets:
+    base:
+      ignorePatterns:
+        - "**/node_modules/**"
+
+    extended:
+      # Renamed to avoid collisions with oxlint's own `extends` field
+      extend_presets:
+        - base
+      ignorePatterns:
+        - .cache
+
+  # Packages presets
+  package_presets:
+    example:
+      name: example
+      dir: packages/extending_presets_example
+
+      # For every preset, we can either refer to them
+      # by their id...
+      package_json: svelte_frontend
+
+      # ...or we can inline a preset definition
+      oxlint:
+        extend_presets:
+          - extended
+        ignorePatterns:
+          - .output
+
+      # We can define one or many tsconfig files
+      ts_config:
+        # Can be omitted, would default to `tsconfig.json`
+        - output: tsconfig.json
+          config:
+            # Once again creating a new config here with some extras
+            extend_presets:
+              - extended
+            include:
+              - scripts
+      # ANCHOR_END: all
+      vitest: false

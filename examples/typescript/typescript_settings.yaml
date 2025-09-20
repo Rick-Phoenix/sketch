@@ -30,6 +30,9 @@ typescript:
   # A map containing extensible tsconfig presets
   tsconfig_presets: {}
 
+  # A map containing extensible oxlint presets
+  oxlint_presets: {}
+
   # A map of contributors and maintainers, which can be referred to
   # in package.json presets with their ID
   people: {}

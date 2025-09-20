@@ -42,4 +42,5 @@ pub enum Preset {
   TsPackage,
   TsConfig,
   Templates,
+  Oxlint,
 }

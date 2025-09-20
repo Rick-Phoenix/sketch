@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
   merge_index_maps, overwrite_if_some,
   ts::{
-    oxlint::OxlintConfig,
+    oxlint::OxlintPreset,
     package::PackageConfig,
     package_json::{PackageJsonPreset, Person, PersonData},
     pnpm::PnpmWorkspace,
@@ -107,7 +107,7 @@ pub struct TypescriptConfig {
   /// A map containing `oxlint` config presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  pub oxlint_presets: IndexMap<String, OxlintConfig>,
+  pub oxlint_presets: IndexMap<String, OxlintPreset>,
 
   /// A map of [`PackageConfig`] presets.
   #[merge(strategy = merge_index_maps)]

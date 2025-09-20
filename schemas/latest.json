@@ -4,21 +4,44 @@
   "description": "The global configuration struct.",
   "type": "object",
   "properties": {
+    "typescript": {
+      "description": "The configuration for typescript projects.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TypescriptConfig"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "shell": {
+      "description": "The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
+    },
     "debug": {
       "description": "Activates debugging mode.",
       "type": "boolean"
     },
-    "extends": {
-      "description": "The relative paths, from the current file, to the config files to merge with the current one.",
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
+    "out_dir": {
+      "description": "The base path for the generated files [default: `.`].",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
     },
-    "gitignore": {
-      "description": "Settings for the gitignore file to generate in new repos. It can be a list of directives to append to the defaults or a string, to replace the defaults entirely.",
-      "$ref": "#/$defs/GitIgnore"
+    "templates_dir": {
+      "description": "The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).",
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": null
     },
     "no_overwrite": {
       "description": "Does not overwrite existing files.",
@@ -30,21 +53,17 @@
       "$ref": "#/$defs/PreCommitSetting",
       "default": true
     },
-    "root_dir": {
-      "description": "The base path for the generated files [default: \".\"].",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
+    "gitignore": {
+      "description": "Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.",
+      "$ref": "#/$defs/GitIgnore"
     },
-    "shell": {
-      "description": "The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
+    "extends": {
+      "description": "The paths (absolute, or relative to the originating config file) to the config files to extend.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
     },
     "templates": {
       "description": "A map that contains template definitions.",
@@ -53,14 +72,6 @@
         "type": "string"
       },
       "default": {}
-    },
-    "templates_dir": {
-      "description": "The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
     },
     "templating_presets": {
       "description": "A map that contains templating presets.",
@@ -73,17 +84,6 @@
       },
       "default": {}
     },
-    "typescript": {
-      "description": "The configuration for typescript projects.",
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TypescriptConfig"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
     "vars": {
       "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set in a template's local context or via the cli.",
       "type": "object",
@@ -92,260 +92,729 @@
     }
   },
   "$defs": {
-    "Bugs": {
-      "description": "A struct representing the `bugs` field in a package.json file.",
+    "TypescriptConfig": {
       "type": "object",
       "properties": {
-        "email": {
+        "root_package": {
+          "description": "The configuration for the root typescript package to generate in new monorepos.\nCan be empty to use defaults.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "package_manager": {
+          "description": "The package manager being used. [default: pnpm].",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageManager"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "no_default_deps": {
+          "description": "Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)",
+          "type": "boolean",
+          "default": false
+        },
+        "version_range": {
+          "description": "The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VersionRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "catalog": {
+          "description": "Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to `pnpm-workspace.yaml`.",
+          "type": "boolean",
+          "default": false
+        },
+        "no_convert_latest_to_range": {
+          "description": "Does not convert dependencies marked as `latest` to a version range.",
+          "type": "boolean",
+          "default": false
+        },
+        "people": {
+          "description": "A map of individual [`PersonData`] that can be referenced in [`PackageJson::contributors`] or [`PackageJson::maintainers`].",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PersonData"
+          },
+          "default": {}
+        },
+        "package_json_presets": {
+          "description": "A map containing [`PackageJson`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PackageJsonPreset"
+          },
+          "default": {}
+        },
+        "tsconfig_presets": {
+          "description": "A map containing [`TsConfig`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/TsConfigPreset"
+          },
+          "default": {}
+        },
+        "oxlint_presets": {
+          "description": "A map containing `oxlint` config presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/OxlintPreset"
+          },
+          "default": {}
+        },
+        "package_presets": {
+          "description": "A map of [`PackageConfig`] presets.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/PackageConfig"
+          },
+          "default": {}
+        },
+        "pnpm": {
+          "description": "The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PnpmWorkspace"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      }
+    },
+    "PackageConfig": {
+      "description": "The configuration struct that is used to generate new packages.",
+      "type": "object",
+      "properties": {
+        "dir": {
+          "description": "The new package's directory, starting from the [`Config::out_dir`]. Defaults to the name of the package.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "name": {
+          "description": "The name of the new package. If `dir` is set, it defaults to the last segment of it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "ts_config": {
+          "description": "A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/TsConfigDirective"
+          },
+          "default": null
+        },
+        "package_json": {
+          "description": "The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageJsonData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "with_templates": {
+          "description": "The templates to generate when this package is created.\nRelative output paths will be joined to the package's root directory.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/TemplateOutput"
+          },
+          "default": null
+        },
+        "kind": {
+          "description": "The kind of package [default: 'library'].",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "vitest": {
+          "description": "The configuration for this package's vitest setup. It can be set to true/false (to use defaults or to disable it), or as a customized configuration.",
+          "$ref": "#/$defs/VitestConfigKind",
+          "default": true
+        },
+        "oxlint": {
+          "description": "The configuration for this package's oxlint setup. It can be set to true/false (to use defaults or to disable it), or to a literal configuration.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OxlintConfigSetting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      }
+    },
+    "TsConfigDirective": {
+      "description": "A struct representing instructions for generating a tsconfig file.\nIf the output path is relative, it will be joined to the root path of its package.",
+      "type": "object",
+      "properties": {
+        "output": {
           "type": [
             "string",
             "null"
           ]
         },
-        "url": {
-          "type": [
-            "string",
-            "null"
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TsConfigKind"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       }
     },
+    "TsConfigKind": {
+      "description": "The kind of data for a [`TsConfig`]. It can be a string indicating a preset it, or a full configuration.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/TsConfigPreset"
+        }
+      ]
+    },
+    "TsConfigPreset": {
+      "description": "A struct representing the contents of a `tsconfig.json` file.",
+      "type": "object",
+      "properties": {
+        "extend_presets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "extends": {
+          "description": "Path to base configuration file to inherit from (requires TypeScript version 2.1 or later), or array of base files, with the rightmost files having the greater priority (requires TypeScript version 5.0 or later).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "description": "If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. When a 'files' property is specified, only those files and those specified by 'include' are included.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "exclude": {
+          "description": "Specifies a list of files to be excluded from compilation. The 'exclude' property only affects the files included via the 'include' property and not the 'files' property. Glob patterns require TypeScript version 2.0 or later.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "include": {
+          "description": "Specifies a list of glob patterns that match files to be included in compilation. If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. Requires TypeScript version 2.0 or later.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "references": {
+          "description": "Referenced projects. Requires TypeScript version 3.0 or later.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/TsConfigReference"
+          }
+        },
+        "typeAcquisition": {
+          "description": "Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TypeAcquisition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "watchOptions": {
+          "description": "Settings for the watch mode in TypeScript.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WatchOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "compilerOptions": {
+          "description": "Instructs the TypeScript compiler how to compile .ts files.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CompilerOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TsConfigReference": {
+      "description": "A reference to a Typescript project. Requires TypeScript version 3.0 or later.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Path to referenced tsconfig or to folder containing tsconfig.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ]
+    },
+    "TypeAcquisition": {
+      "description": "Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enable": {
+              "description": "Enable auto type acquisition",
+              "type": "boolean"
+            },
+            "include": {
+              "description": "Specifies a list of type declarations to be included in auto type acquisition. Ex. [\"jquery\", \"lodash\"]",
+              "type": [
+                "array",
+                "null"
+              ],
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "description": "Specifies a list of type declarations to be excluded from auto type acquisition. Ex. [\"jquery\", \"lodash\"]",
+              "type": [
+                "array",
+                "null"
+              ],
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "disableFilenameBasedTypeAcquisition": {
+              "description": "TypeScript’s type acquisition can infer what types should be added based on filenames in a project. This means that having a file like jquery.js in your project would automatically download the types for JQuery from DefinitelyTyped.\nYou can disable this via disableFilenameBasedTypeAcquisition. See more: https://www.typescriptlang.org/it/tsconfig/#type-disableFilenameBasedTypeAcquisition",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "enable"
+          ]
+        }
+      ]
+    },
+    "WatchOptions": {
+      "description": "Settings for the watch mode in TypeScript.",
+      "type": "object",
+      "properties": {
+        "watchFile": {
+          "description": "Specify how the TypeScript watch mode works. See more: https://www.typescriptlang.org/tsconfig#watchFile",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WatchFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "watchDirectory": {
+          "description": "Specify how directories are watched on systems that lack recursive file-watching functionality. See more: https://www.typescriptlang.org/tsconfig#watchDirectory",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WatchDirectory"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fallbackPolling": {
+          "description": "Specify what approach the watcher should use if the system runs out of native file watchers. See more: https://www.typescriptlang.org/tsconfig#fallbackPolling",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FallbackPolling"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "synchronousWatchDirectory": {
+          "description": "Synchronously call callbacks and update the state of directory watchers on platforms that don`t support recursive watching natively. See more: https://www.typescriptlang.org/tsconfig#synchronousWatchDirectory",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "excludeDirectories": {
+          "description": "Remove a list of directories from the watch process. See more: https://www.typescriptlang.org/tsconfig#excludeDirectories",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludeFiles": {
+          "description": "Remove a list of files from the watch mode's processing. See more: https://www.typescriptlang.org/tsconfig#excludeFiles",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "WatchFile": {
+      "description": "Specify how the TypeScript watch mode works. See more: https://www.typescriptlang.org/tsconfig#watchFile",
+      "type": "string",
+      "enum": [
+        "fixedPollingInterval",
+        "priorityPollingInterval",
+        "dynamicPriorityPolling",
+        "useFsEvents",
+        "useFsEventsOnParentDirectory",
+        "fixedChunkSizePolling"
+      ]
+    },
+    "WatchDirectory": {
+      "description": "Specify how directories are watched on systems that lack recursive file-watching functionality. See more: https://www.typescriptlang.org/tsconfig#watchDirectory",
+      "type": "string",
+      "enum": [
+        "useFsEvents",
+        "fixedPollingInterval",
+        "dynamicPriorityPolling",
+        "fixedChunkSizePolling"
+      ]
+    },
+    "FallbackPolling": {
+      "description": "Specify what approach the watcher should use if the system runs out of native file watchers. See more: https://www.typescriptlang.org/tsconfig#fallbackPolling",
+      "type": "string",
+      "enum": [
+        "fixedPollingInterval",
+        "priorityPollingInterval",
+        "dynamicPriorityPolling",
+        "fixedInterval",
+        "priorityInterval",
+        "dynamicPriority",
+        "fixedChunkSize"
+      ]
+    },
     "CompilerOptions": {
+      "description": "Instructs the TypeScript compiler how to compile .ts files.",
       "type": "object",
       "properties": {
         "allowArbitraryExtensions": {
+          "description": "Enable importing files with any extension, provided a declaration file is present. See more: https://www.typescriptlang.org/tsconfig#allowArbitraryExtensions",
           "type": [
             "boolean",
             "null"
           ]
         },
         "allowImportingTsExtensions": {
+          "description": "Allow imports to include TypeScript file extensions. Requires either '--noEmit' or '--emitDeclarationOnly' to be set. See more: https://www.typescriptlang.org/tsconfig#allowImportingTsExtensions",
           "type": [
             "boolean",
             "null"
           ]
         },
         "allowJs": {
+          "description": "Allow JavaScript files to be imported inside your project, instead of just .ts and .tsx files. See more: https://www.typescriptlang.org/tsconfig/#allowJs",
           "type": [
             "boolean",
             "null"
           ]
         },
         "allowSyntheticDefaultImports": {
+          "description": "Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility.See more: https://www.typescriptlang.org/tsconfig#esModuleInterop",
           "type": [
             "boolean",
             "null"
           ]
         },
         "allowUmdGlobalAccess": {
+          "description": "Allow accessing UMD globals from modules. See more: https://www.typescriptlang.org/tsconfig#allowUmdGlobalAccess",
           "type": [
             "boolean",
             "null"
           ]
         },
         "allowUnreachableCode": {
+          "description": "Disable error reporting for unreachable code. See more: https://www.typescriptlang.org/tsconfig#allowUnreachableCode",
           "type": [
             "boolean",
             "null"
           ]
         },
         "allowUnusedLabels": {
+          "description": "Disable error reporting for unused labels. See more: https://www.typescriptlang.org/tsconfig#allowUnusedLabels",
           "type": [
             "boolean",
             "null"
           ]
         },
         "alwaysStrict": {
+          "description": "Ensures that your files are parsed in the ECMAScript strict mode, and emit “use strict” for each source file. See more: https://www.typescriptlang.org/tsconfig/#alwaysStrict",
           "type": [
             "boolean",
             "null"
           ]
         },
         "assumeChangesOnlyAffectDirectDependencies": {
+          "description": "Have recompiles in '--incremental' and '--watch' assume that changes within a file will only affect files directly depending on it. Requires TypeScript version 3.8 or later. See more: https://www.typescriptlang.org/tsconfig/#assumeChangesOnlyAffectDirectDependencies",
           "type": [
             "boolean",
             "null"
           ]
         },
         "baseUrl": {
+          "description": "Specify the base directory to resolve non-relative module names. See more: https://www.typescriptlang.org/tsconfig#baseUrl",
           "type": [
             "string",
             "null"
           ]
         },
         "checkJs": {
+          "description": "Enable error reporting in type-checked JavaScript files. See more: https://www.typescriptlang.org/tsconfig#checkJs",
           "type": [
             "boolean",
             "null"
           ]
         },
         "composite": {
+          "description": "Enable constraints that allow a TypeScript project to be used with project references. See more: https://www.typescriptlang.org/tsconfig#composite",
           "type": [
             "boolean",
             "null"
           ]
         },
         "customConditions": {
+          "description": "Conditions to set in addition to the resolver-specific defaults when resolving imports. See more: https://www.typescriptlang.org/tsconfig#customConditions",
           "type": [
             "array",
             "null"
           ],
+          "uniqueItems": true,
           "items": {
             "type": "string"
-          },
-          "uniqueItems": true
+          }
         },
         "declaration": {
+          "description": "Generate .d.ts files from TypeScript and JavaScript files in your project. See more: https://www.typescriptlang.org/tsconfig#declaration",
           "type": [
             "boolean",
             "null"
           ]
         },
         "declarationDir": {
+          "description": "Specify the output directory for generated declaration files. See more: https://www.typescriptlang.org/tsconfig#declarationDir",
           "type": [
             "string",
             "null"
           ]
         },
         "declarationMap": {
+          "description": "Create sourcemaps for d.ts files. See more: https://www.typescriptlang.org/tsconfig#declarationMap",
           "type": [
             "boolean",
             "null"
           ]
         },
         "disableReferencedProjectLoad": {
+          "description": "Reduce the number of projects loaded automatically by TypeScript. See more: https://www.typescriptlang.org/tsconfig#disableReferencedProjectLoad",
           "type": [
             "boolean",
             "null"
           ]
         },
         "disableSizeLimit": {
+          "description": "Remove the 20mb cap on total source code size for JavaScript files in the TypeScript language server.See more: https://www.typescriptlang.org/tsconfig#disableSizeLimit",
           "type": [
             "boolean",
             "null"
           ]
         },
         "disableSolutionSearching": {
+          "description": "Opt a project out of multi-project reference checking when editing. See more: https://www.typescriptlang.org/tsconfig#disableSolutionSearching",
           "type": [
             "boolean",
             "null"
           ]
         },
         "disableSourceOfProjectReferenceRedirect": {
+          "description": "Disable preferring source files instead of declaration files when referencing composite projects. See more: https://www.typescriptlang.org/tsconfig#disableSourceOfProjectReferenceRedirect",
           "type": [
             "boolean",
             "null"
           ]
         },
         "downlevelIteration": {
+          "description": "Emit more compliant, but verbose and less performant JavaScript for iteration. See more: https://www.typescriptlang.org/tsconfig#downlevelIteration",
           "type": [
             "boolean",
             "null"
           ]
         },
         "emitBOM": {
+          "description": "Emit a UTF-8 Byte Order Mark (BOM) in the beginning of output files. See more: https://www.typescriptlang.org/tsconfig#emitBOM",
           "type": [
             "boolean",
             "null"
           ]
         },
         "emitDeclarationOnly": {
+          "description": "Only output d.ts files and not JavaScript files.See more: https://www.typescriptlang.org/tsconfig#emitDeclarationOnly",
           "type": [
             "boolean",
             "null"
           ]
         },
         "emitDecoratorMetadata": {
+          "description": "Emit design-type metadata for decorated declarations in source files. See more: https://www.typescriptlang.org/tsconfig#emitDecoratorMetadata",
           "type": [
             "boolean",
             "null"
           ]
         },
         "erasableSyntaxOnly": {
+          "description": "Do not allow runtime constructs that are not part of ECMAScript. See more: https://www.typescriptlang.org/tsconfig#erasableSyntaxOnly",
           "type": [
             "boolean",
             "null"
           ]
         },
         "esModuleInterop": {
+          "description": "Emit additional JavaScript to ease support for importing CommonJS modules. This enables `allowSyntheticDefaultImports` for type compatibility.See more: https://www.typescriptlang.org/tsconfig#esModuleInterop",
           "type": [
             "boolean",
             "null"
           ]
         },
         "exactOptionalPropertyTypes": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "experimentalDecorators": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "explainFiles": {
+          "description": "Differentiate between undefined and not present when type checking. See more: https://www.typescriptlang.org/tsconfig#exactOptionalPropertyTypes",
           "type": [
             "boolean",
             "null"
           ]
         },
         "extendedDiagnostics": {
+          "description": "Output more detailed compiler performance information after building. See more: https://www.typescriptlang.org/tsconfig#extendedDiagnostics",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "experimentalDecorators": {
+          "description": "Enable experimental support for TC39 stage 2 draft decorators. See more: https://www.typescriptlang.org/tsconfig#experimentalDecorators",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "explainFiles": {
+          "description": "Print names of files which TypeScript sees as a part of your project and the reason they are part of the compilation. See more: https://www.typescriptlang.org/tsconfig/#explainFiles",
           "type": [
             "boolean",
             "null"
           ]
         },
         "forceConsistentCasingInFileNames": {
+          "description": "Ensure that casing is correct in imports. See more: https://www.typescriptlang.org/tsconfig#forceConsistentCasingInFileNames",
           "type": [
             "boolean",
             "null"
           ]
         },
         "generateTrace": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "importHelpers": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "incremental": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "inlineSourceMap": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "inlineSources": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "isolatedDeclarations": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "isolatedModules": {
+          "description": "Generates an event trace and a list of types. See more: https://www.typescriptlang.org/tsconfig/#generateTrace",
           "type": [
             "boolean",
             "null"
           ]
         },
         "jsx": {
+          "description": "Specify what JSX code is generated. See more: https://www.typescriptlang.org/tsconfig/#jsx",
           "anyOf": [
             {
               "$ref": "#/$defs/Jsx"
@@ -356,58 +825,67 @@
           ]
         },
         "jsxFactory": {
+          "description": "Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. See more: https://www.typescriptlang.org/tsconfig#jsxFactory",
           "type": [
             "string",
             "null"
           ]
         },
         "jsxFragmentFactory": {
+          "description": "Specify the JSX Fragment reference used for fragments when targeting React JSX emit e.g. 'React.Fragment' or 'Fragment'. See more: https://www.typescriptlang.org/tsconfig#jsxFragmentFactory",
           "type": [
             "string",
             "null"
           ]
         },
         "jsxImportSource": {
+          "description": "Specify module specifier used to import the JSX factory functions when using `jsx: react-jsx`. See more: https://www.typescriptlang.org/tsconfig#jsxImportSource",
           "type": [
             "string",
             "null"
           ]
         },
         "lib": {
+          "description": "Specify a set of bundled library declaration files that describe the target runtime environment. See more: https://www.typescriptlang.org/tsconfig#lib",
           "type": [
             "array",
             "null"
           ],
+          "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Lib"
-          },
-          "uniqueItems": true
+          }
         },
         "libReplacement": {
+          "description": "Enable lib replacement. See more: https://www.typescriptlang.org/tsconfig#libReplacement",
           "type": [
             "boolean",
             "null"
           ]
         },
         "listEmittedFiles": {
+          "description": "Print names of generated files part of the compilation to the terminal. See more: https://www.typescriptlang.org/tsconfig/#listEmittedFiles",
           "type": [
             "boolean",
             "null"
           ]
         },
         "listFiles": {
+          "description": "Print all of the files read during the compilation.See more: https://www.typescriptlang.org/tsconfig#listFiles",
           "type": [
             "boolean",
             "null"
           ]
         },
         "mapRoot": {
+          "description": "Specify the location where debugger should locate map files instead of generated locations. See more: https://www.typescriptlang.org/tsconfig#mapRoot",
           "type": [
             "string",
             "null"
           ]
         },
         "maxNodeModuleJsDepth": {
+          "description": "Specify the maximum folder depth used for checking JavaScript files from `node_modules`. Only applicable with `allowJs`. See more: https://www.typescriptlang.org/tsconfig#maxNodeModuleJsDepth",
           "type": [
             "integer",
             "null"
@@ -416,6 +894,7 @@
           "minimum": 0
         },
         "module": {
+          "description": "Specify what module code is generated. See more: https://www.typescriptlang.org/tsconfig#module",
           "anyOf": [
             {
               "$ref": "#/$defs/Module"
@@ -426,6 +905,7 @@
           ]
         },
         "moduleDetection": {
+          "description": "Specify how TypeScript determine a file as module. See more: https://www.typescriptlang.org/tsconfig/#moduleDetection",
           "anyOf": [
             {
               "$ref": "#/$defs/ModuleDetection"
@@ -435,7 +915,19 @@
             }
           ]
         },
+        "moduleSuffixes": {
+          "description": "Provides a way to override the default list of file name suffixes to search when resolving a module. See more: https://www.typescriptlang.org/tsconfig/#moduleSuffixes",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
         "moduleResolution": {
+          "description": "Log paths used during the `moduleResolution` process. See more: https://www.typescriptlang.org/tsconfig#traceResolution",
           "anyOf": [
             {
               "$ref": "#/$defs/ModuleResolution"
@@ -445,17 +937,8 @@
             }
           ]
         },
-        "moduleSuffixes": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
         "newLine": {
+          "description": "Set the newline character for emitting files. See more: https://www.typescriptlang.org/tsconfig#newLine",
           "anyOf": [
             {
               "$ref": "#/$defs/NewLine"
@@ -466,309 +949,379 @@
           ]
         },
         "noCheck": {
+          "description": "Disable full type checking (only critical parse and emit errors will be reported). See more: https://www.typescriptlang.org/tsconfig#noCheck",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noEmit": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "noEmitHelpers": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "noEmitOnError": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "noErrorTruncation": {
+          "description": "Disable emitting file from a compilation. See more: https://www.typescriptlang.org/tsconfig#noEmit",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noFallthroughCasesInSwitch": {
+          "description": "Enable error reporting for fallthrough cases in switch statements. See more: https://www.typescriptlang.org/tsconfig#noFallthroughCasesInSwitch",
           "type": [
             "boolean",
             "null"
           ]
         },
-        "noImplicitAny": {
+        "noEmitHelpers": {
+          "description": "Disable generating custom helper functions like `__extends` in compiled output. See more: https://www.typescriptlang.org/tsconfig#noEmitHelpers",
           "type": [
             "boolean",
             "null"
           ]
         },
-        "noImplicitOverride": {
+        "noEmitOnError": {
+          "description": "Disable emitting files if any type checking errors are reported. See more: https://www.typescriptlang.org/tsconfig#noEmitOnError",
           "type": [
             "boolean",
             "null"
           ]
         },
-        "noImplicitReturns": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "noImplicitThis": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "noImplicitUseStrict": {
+        "noErrorTruncation": {
+          "description": "Disable truncating types in error messages. See more: https://www.typescriptlang.org/tsconfig#noErrorTruncation",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noLib": {
+          "description": "Disable including any library files, including the default lib.d.ts. See more: https://www.typescriptlang.org/tsconfig#noLib",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitAny": {
+          "description": "Enable error reporting for expressions and declarations with an implied `any` type. See more: https://www.typescriptlang.org/tsconfig#noImplicitAny",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitOverride": {
+          "description": "Ensure overriding members in derived classes are marked with an override modifier. See more: https://www.typescriptlang.org/tsconfig#noImplicitOverride",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitReturns": {
+          "description": "Enable error reporting for codepaths that do not explicitly return in a function. See more: https://www.typescriptlang.org/tsconfig#noImplicitReturns",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitThis": {
+          "description": "Enable error reporting when `this` is given the type `any`. See more: https://www.typescriptlang.org/tsconfig#noImplicitThis",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "noImplicitUseStrict": {
+          "description": "Disable adding 'use strict' directives in emitted JavaScript files. See more: https://www.typescriptlang.org/tsconfig#noImplicitUseStrict",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noPropertyAccessFromIndexSignature": {
+          "description": "Enforces using indexed accessors for keys declared using an indexed type. See more: https://www.typescriptlang.org/tsconfig#noPropertyAccessFromIndexSignature",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noResolve": {
+          "description": "Disallow `import`s, `require`s or `<reference>`s from expanding the number of files TypeScript should add to a project. See more: https://www.typescriptlang.org/tsconfig#noResolve",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noStrictGenericChecks": {
+          "description": "Disable strict checking of generic signatures in function types. See more: https://www.typescriptlang.org/tsconfig#noStrictGenericChecks",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noUncheckedIndexedAccess": {
+          "description": "Add `undefined` to a type when accessed using an index. See more: https://www.typescriptlang.org/tsconfig#noUncheckedIndexedAccess",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noUncheckedSideEffectsImports": {
+          "description": "Check side effect imports. See more: https://www.typescriptlang.org/tsconfig#noUncheckedSideEffectImports",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noUnusedLocals": {
+          "description": "Enable error reporting when a local variable isn't read. See more: https://www.typescriptlang.org/tsconfig#noUnusedLocals",
           "type": [
             "boolean",
             "null"
           ]
         },
         "noUnusedParameters": {
+          "description": "Raise an error when a function parameter isn't read. See more: https://www.typescriptlang.org/tsconfig#noUnusedParameters",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "incremental": {
+          "description": "Save .tsbuildinfo files to allow for incremental compilation of projects. See more: https://www.typescriptlang.org/tsconfig#incremental",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "inlineSources": {
+          "description": "Include source code in the sourcemaps inside the emitted JavaScript. See more: https://www.typescriptlang.org/tsconfig#inlineSources",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "inlineSourceMap": {
+          "description": "Include sourcemap files inside the emitted JavaScript. See more: https://www.typescriptlang.org/tsconfig#inlineSourceMap",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "importHelpers": {
+          "description": "Allow importing helper functions from tslib once per project, instead of including them per-file. See more: https://www.typescriptlang.org/tsconfig#importHelpers",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "isolatedDeclarations": {
+          "description": "Require sufficient annotation on exports so other tools can trivially generate declaration files. See more: https://www.typescriptlang.org/tsconfig#isolatedDeclarations",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "isolatedModules": {
+          "description": "Ensure that each file can be safely transpiled without relying on other imports. See more: https://www.typescriptlang.org/tsconfig#isolatedModules",
           "type": [
             "boolean",
             "null"
           ]
         },
         "outDir": {
+          "description": "Specify an output folder for all emitted files. See more: https://www.typescriptlang.org/tsconfig#outDir",
           "type": [
             "string",
             "null"
           ]
         },
         "outFile": {
+          "description": "Specify a file that bundles all outputs into one JavaScript file. If `declaration` is true, also designates a file that bundles all .d.ts output. See more: https://www.typescriptlang.org/tsconfig#outFile",
           "type": [
             "string",
             "null"
           ]
         },
         "paths": {
+          "description": "Specify a set of entries that re-map imports to additional lookup locations. See more: https://www.typescriptlang.org/tsconfig/#paths",
           "type": [
             "object",
             "null"
           ],
           "additionalProperties": {
             "type": "array",
+            "uniqueItems": true,
             "items": {
               "type": "string"
-            },
-            "uniqueItems": true
+            }
           }
         },
         "plugins": {
+          "description": "Specify a list of language service plugins to include. See more: https://www.typescriptlang.org/tsconfig#plugins",
           "type": [
             "array",
             "null"
           ],
+          "uniqueItems": true,
           "items": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/$defs/TsPlugin"
           }
         },
         "preserveConstEnums": {
+          "description": "Disable erasing `const enum` declarations in generated code. See more: https://www.typescriptlang.org/tsconfig#preserveConstEnums",
           "type": [
             "boolean",
             "null"
           ]
         },
         "preserveSymlinks": {
+          "description": "Disable resolving symlinks to their realpath. This correlates to the same flag in node. See more: https://www.typescriptlang.org/tsconfig#preserveSymlinks",
           "type": [
             "boolean",
             "null"
           ]
         },
         "preserveWatchOutput": {
+          "description": "Disable wiping the console in watch mode. See more: https://www.typescriptlang.org/tsconfig#preserveWatchOutput",
           "type": [
             "boolean",
             "null"
           ]
         },
         "pretty": {
+          "description": "Enable color and formatting in output to make compiler errors easier to read. See more: https://www.typescriptlang.org/tsconfig#pretty",
           "type": [
             "boolean",
             "null"
           ]
         },
         "reactNamespace": {
+          "description": "Specify the object invoked for `createElement`. This only applies when targeting `react` JSX emit.See more: https://www.typescriptlang.org/tsconfig#reactNamespace",
           "type": [
             "string",
             "null"
           ]
         },
         "removeComments": {
+          "description": "Disable emitting comments. See more: https://www.typescriptlang.org/tsconfig#removeComments",
           "type": [
             "boolean",
             "null"
           ]
         },
         "resolveJsonModule": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "resolvePackageJsonExports": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "resolvePackageJsonImports": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "rewriteRelativeImportsExtensions": {
+          "description": "Enable importing .json files. See more: https://www.typescriptlang.org/tsconfig#resolveJsonModule",
           "type": [
             "boolean",
             "null"
           ]
         },
         "rootDir": {
+          "description": "Specify the root folder within your source files. See more: https://www.typescriptlang.org/tsconfig#rootDir",
           "type": [
             "string",
             "null"
           ]
         },
         "rootDirs": {
+          "description": "Specify the root folder within your source files.See more: https://www.typescriptlang.org/tsconfig#rootDir",
           "type": [
             "array",
             "null"
           ],
+          "uniqueItems": true,
           "items": {
             "type": "string"
-          },
-          "uniqueItems": true
+          }
         },
         "skipDefaultLibCheck": {
+          "description": "Skip type checking .d.ts files that are included with TypeScript. See more: https://www.typescriptlang.org/tsconfig#skipDefaultLibCheck",
           "type": [
             "boolean",
             "null"
           ]
         },
         "skipLibCheck": {
+          "description": "Skip type checking all .d.ts files. See more: https://www.typescriptlang.org/tsconfig#skipLibCheck",
           "type": [
             "boolean",
             "null"
           ]
         },
         "sourceMap": {
+          "description": "Create source map files for emitted JavaScript files. See more: https://www.typescriptlang.org/tsconfig#sourceMap",
           "type": [
             "boolean",
             "null"
           ]
         },
         "sourceRoot": {
+          "description": "Specify the root path for debuggers to find the reference source code. See more: https://www.typescriptlang.org/tsconfig#sourceRoot",
           "type": [
             "string",
             "null"
           ]
         },
         "strict": {
+          "description": "Enable all strict type checking options. See more: https://www.typescriptlang.org/tsconfig#strict",
           "type": [
             "boolean",
             "null"
           ]
         },
         "strictBindCallApply": {
+          "description": "Check that the arguments for `bind`, `call`, and `apply` methods match the original function. See more: https://www.typescriptlang.org/tsconfig#strictBindCallApply",
           "type": [
             "boolean",
             "null"
           ]
         },
         "strictBuiltinIteratorReturn": {
+          "description": "Built-in iterators are instantiated with a 'TReturn' type of 'undefined' instead of 'any'. See more: https://www.typescriptlang.org/tsconfig#strictBuiltinIteratorReturn",
           "type": [
             "boolean",
             "null"
           ]
         },
         "strictFunctionTypes": {
+          "description": "When assigning functions, check to ensure parameters and the return values are subtype-compatible. See more: https://www.typescriptlang.org/tsconfig#strictFunctionTypes",
           "type": [
             "boolean",
             "null"
           ]
         },
         "strictNullChecks": {
+          "description": "When type checking, take into account `null` and `undefined`. See more: https://www.typescriptlang.org/tsconfig#strictNullChecks",
           "type": [
             "boolean",
             "null"
           ]
         },
         "strictPropertyInitialization": {
+          "description": "Check for class properties that are declared but not set in the constructor.\\n\\nSee more: https://www.typescriptlang.org/tsconfig#strictPropertyInitialization",
           "type": [
             "boolean",
             "null"
           ]
         },
         "stripInternal": {
+          "description": "Disable emitting declarations that have `@internal` in their JSDoc comments. See more: https://www.typescriptlang.org/tsconfig#stripInternal",
           "type": [
             "boolean",
             "null"
           ]
         },
         "suppressExcessPropertyErrors": {
+          "description": "Disable reporting of excess property errors during the creation of object literals. See more: https://www.typescriptlang.org/tsconfig#suppressExcessPropertyErrors",
           "type": [
             "boolean",
             "null"
           ]
         },
         "suppressImplicitAnyIndexErrors": {
+          "description": "Suppress `noImplicitAny` errors when indexing objects that lack index signatures. See more: https://www.typescriptlang.org/tsconfig#suppressImplicitAnyIndexErrors",
           "type": [
             "boolean",
             "null"
           ]
         },
         "target": {
+          "description": "Set the JavaScript language version for emitted JavaScript and include compatible library declarations. See more: https://www.typescriptlang.org/tsconfig#target",
           "anyOf": [
             {
               "$ref": "#/$defs/Target"
@@ -779,50 +1332,78 @@
           ]
         },
         "traceResolution": {
+          "description": "Log paths used during the `moduleResolution` process. See more: https://www.typescriptlang.org/tsconfig#traceResolution",
           "type": [
             "boolean",
             "null"
           ]
         },
         "tsBuildInfoFile": {
+          "description": "Specify the folder for .tsbuildinfo incremental compilation files. See more: https://www.typescriptlang.org/tsconfig#tsBuildInfoFile",
           "type": [
             "string",
             "null"
           ]
         },
-        "typeRoots": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
         "types": {
+          "description": "Specify type package names to be included without being referenced in a source file. See more: https://www.typescriptlang.org/tsconfig#types",
           "type": [
             "array",
             "null"
           ],
+          "uniqueItems": true,
           "items": {
             "type": "string"
-          },
-          "uniqueItems": true
+          }
+        },
+        "typeRoots": {
+          "description": "Specify multiple folders that act like `./node_modules/@types`. See more: https://www.typescriptlang.org/tsconfig#typeRoots",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "resolvePackageJsonExports": {
+          "description": "Use the package.json 'exports' field when resolving package imports. See more: https://www.typescriptlang.org/tsconfig#resolvePackageJsonExports",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resolvePackageJsonImports": {
+          "description": "Use the package.json 'imports' field when resolving imports. See more: https://www.typescriptlang.org/tsconfig#resolvePackageJsonImports",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rewriteRelativeImportsExtensions": {
+          "description": "Rewrite '.ts', '.tsx', '.mts', and '.cts' file extensions in relative import paths to their JavaScript equivalent in output files. See more: https://www.typescriptlang.org/tsconfig#rewriteRelativeImportExtensions",
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "useDefineForClassFields": {
+          "description": "Emit ECMAScript-standard-compliant class fields.See more: https://www.typescriptlang.org/tsconfig#useDefineForClassFields",
           "type": [
             "boolean",
             "null"
           ]
         },
         "useUnknownInCatchVariables": {
+          "description": "Default catch clause variables as `unknown` instead of `any`. See more: https://www.typescriptlang.org/tsconfig#useUnknownInCatchVariables",
           "type": [
             "boolean",
             "null"
           ]
         },
         "verbatimModuleSyntax": {
+          "description": "Do not transform or elide any imports or exports not marked as type-only, ensuring they are written in the output file's format based on the 'module' setting. See more: https://www.typescriptlang.org/tsconfig#verbatimModuleSyntax",
           "type": [
             "boolean",
             "null"
@@ -830,168 +1411,113 @@
         }
       }
     },
-    "Directories": {
-      "description": "A struct that matches the value of the `directories` field in a package.json file.",
-      "type": "object",
-      "properties": {
-        "bin": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "doc": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "example": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "lib": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "man": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "test": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "Exports": {
-      "description": "A struct matching a value in the `exports` object inside a package.json file.",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "default": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "import": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "node": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "require": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "types": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          },
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      ]
-    },
-    "FallbackPolling": {
-      "type": "string",
-      "enum": [
-        "fixedPollingInterval",
-        "priorityPollingInterval",
-        "dynamicPriorityPolling"
-      ]
-    },
-    "GitIgnore": {
-      "anyOf": [
-        {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        {
-          "type": "string"
-        }
-      ]
-    },
-    "JsModuleType": {
-      "type": "string",
-      "enum": [
-        "module",
-        "CommonJs"
-      ]
-    },
     "Jsx": {
-      "type": "string",
-      "enum": [
-        "react",
-        "react-jsx",
-        "react-jsxdev",
-        "react-native",
-        "preserve"
+      "description": "Specify what JSX code is generated. See more: https://www.typescriptlang.org/tsconfig/#jsx",
+      "oneOf": [
+        {
+          "description": "Emit .js files with JSX changed to the equivalent React.createElement calls",
+          "type": "string",
+          "const": "react"
+        },
+        {
+          "description": "Emit .js files with the JSX changed to _jsx calls optimized for production",
+          "type": "string",
+          "const": "react-jsx"
+        },
+        {
+          "description": "Emit .js files with the JSX changed to _jsx calls for development only",
+          "type": "string",
+          "const": "react-jsxdev"
+        },
+        {
+          "description": "Emit .js files with the JSX unchanged",
+          "type": "string",
+          "const": "react-native"
+        },
+        {
+          "description": "Emit .jsx files with the JSX unchanged",
+          "type": "string",
+          "const": "preserve"
+        }
       ]
     },
     "Lib": {
-      "type": "string",
-      "enum": [
-        "Es5",
-        "Es2015",
-        "Es6",
-        "Es2016",
-        "Es7",
-        "Es2017",
-        "Es2018",
-        "Es2019",
-        "Es2020",
-        "EsNext",
-        "Dom",
-        "WebWorker",
-        "ScriptHost"
-      ]
-    },
-    "Man": {
-      "description": "A struct that matches the possible values for the `man` field of a package.json file.",
-      "anyOf": [
+      "description": "Specify a set of bundled library declaration files that describe the target runtime environment. See more: https://www.typescriptlang.org/tsconfig#lib",
+      "oneOf": [
         {
-          "type": "string"
+          "description": "Core definitions for all ES5 functionality",
+          "type": "string",
+          "const": "Es5"
         },
         {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "description": "Additional APIs available in ES2015 (also known as ES6) - array.find, Promise, Proxy, Symbol, Map, Set, Reflect, etc.",
+          "type": "string",
+          "const": "Es2015"
+        },
+        {
+          "description": "Additional APIs available in ES2016 - array.include, etc.",
+          "type": "string",
+          "const": "Es2016"
+        },
+        {
+          "description": "Additional APIs available in ES2017 - Object.entries, Object.values, Atomics, SharedArrayBuffer, date.formatToParts, typed arrays, etc.",
+          "type": "string",
+          "const": "Es2017"
+        },
+        {
+          "description": "Additional APIs available in ES2018 - async iterables, promise.finally, Intl.PluralRules, regexp.groups, etc.",
+          "type": "string",
+          "const": "Es2018"
+        },
+        {
+          "description": "Additional APIs available in ES2019 - array.flat, array.flatMap, Object.fromEntries, string.trimStart, string.trimEnd, etc.",
+          "type": "string",
+          "const": "Es2019"
+        },
+        {
+          "description": "Additional APIs available in ES2020 - string.matchAll, etc.",
+          "type": "string",
+          "const": "Es2020"
+        },
+        {
+          "description": "Additional APIs available in ES2021 - promise.any, string.replaceAll etc.",
+          "type": "string",
+          "const": "Es2021"
+        },
+        {
+          "description": "Additional APIs available in ES2022 - array.at, RegExp.hasIndices, etc.",
+          "type": "string",
+          "const": "Es2022"
+        },
+        {
+          "description": "Additional APIs available in ES2023 - array.with, array.findLast, array.findLastIndex, array.toSorted, array.toReversed, etc.",
+          "type": "string",
+          "const": "Es2023"
+        },
+        {
+          "description": "Additional APIs available in ESNext - This changes as the JavaScript specification evolves",
+          "type": "string",
+          "const": "EsNext"
+        },
+        {
+          "description": "DOM definitions - window, document, etc.",
+          "type": "string",
+          "const": "Dom"
+        },
+        {
+          "description": "APIs available in WebWorker contexts",
+          "type": "string",
+          "const": "WebWorker"
+        },
+        {
+          "description": "APIs for the Windows Script Hosting System",
+          "type": "string",
+          "const": "ScriptHost"
         }
       ]
     },
     "Module": {
+      "description": "Specify what module code is generated. See more: https://www.typescriptlang.org/tsconfig#module",
       "type": "string",
       "enum": [
         "None",
@@ -1012,631 +1538,67 @@
       ]
     },
     "ModuleDetection": {
-      "type": "string",
-      "enum": [
-        "auto",
-        "legacy",
-        "force"
+      "description": "Specify how TypeScript determine a file as module. See more: https://www.typescriptlang.org/tsconfig/#moduleDetection",
+      "oneOf": [
+        {
+          "description": "TypeScript will not only look for import and export statements, but it will also check whether the \"type\" field in a package.json is set to \"module\" when running with module: nodenext or node16, and check whether the current file is a JSX file when running under jsx: react-jsx",
+          "type": "string",
+          "const": "auto"
+        },
+        {
+          "description": "The same behavior as 4.6 and prior, usings import and export statements to determine whether a file is a module.",
+          "type": "string",
+          "const": "legacy"
+        },
+        {
+          "description": "Ensures that every non-declaration file is treated as a module.",
+          "type": "string",
+          "const": "force"
+        }
       ]
     },
     "ModuleResolution": {
-      "type": "string",
-      "enum": [
-        "node",
-        "node16",
-        "nodenext",
-        "bundler"
+      "oneOf": [
+        {
+          "description": "When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code",
+          "type": "string",
+          "const": "node16"
+        },
+        {
+          "description": "When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code",
+          "type": "string",
+          "const": "nodenext"
+        },
+        {
+          "description": "For use with bundlers. Like node16 and nodenext, this mode supports package.json \"imports\" and \"exports\", but unlike the Node.js resolution modes, bundler never requires file extensions on relative paths in imports.",
+          "type": "string",
+          "const": "bundler"
+        }
       ]
     },
     "NewLine": {
+      "description": "Set the newline character for emitting files. See more: https://www.typescriptlang.org/tsconfig#newLine",
       "type": "string",
       "enum": [
         "lf",
         "crlf"
       ]
     },
-    "OxlintConfig": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "string"
-        }
-      ]
-    },
-    "PackageConfig": {
-      "description": "The configuration struct that is used to generate new packages.",
+    "TsPlugin": {
+      "description": "A Typescript plugin definition.",
       "type": "object",
       "properties": {
-        "dir": {
-          "description": "The new package's directory, starting from the [`Config::root_dir`]. Defaults to the name of the package.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
-        "generate_templates": {
-          "description": "The templates to generate when this package is created.\nThe paths specified for these templates' output paths will be joined to the package's directory.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "default": null,
-          "items": {
-            "$ref": "#/$defs/TemplateOutput"
-          }
-        },
-        "kind": {
-          "description": "The kind of package [default: 'library'].",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageKind"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "name": {
-          "description": "The name of the new package. If `dir` is set, it defaults to the last segment of it.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
-        "oxlint": {
-          "description": "The configuration for this package's oxlint setup. It can be set to true (to use defaults), or to a literal value.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/OxlintConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "package_json": {
-          "description": "The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageJsonKind"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "ts_config": {
-          "description": "A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "default": null,
-          "items": {
-            "$ref": "#/$defs/TsConfigDirective"
-          }
-        },
-        "vitest": {
-          "description": "The configuration for this package's vitest setup. It can be set to false (to disable it), an id (to use a preset) or a literal configuration.",
-          "$ref": "#/$defs/VitestConfigKind",
-          "default": true
-        }
-      }
-    },
-    "PackageJson": {
-      "description": "A struct representing the contents of a package.json file.",
-      "type": "object",
-      "properties": {
-        "author": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Person"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "browser": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "bugs": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Bugs"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "bundleDependencies": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "config": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
-        },
-        "contributors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Person"
-          },
-          "uniqueItems": true
-        },
-        "cpu": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "dependencies": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
-        },
-        "description": {
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
-        "devDependencies": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
-        },
-        "directories": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Directories"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "engines": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "exports": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Exports"
-          }
-        },
-        "extends": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true,
-          "writeOnly": true
-        },
-        "files": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "homepage": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "keywords": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "license": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "main": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "maintainers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Person"
-          },
-          "uniqueItems": true
-        },
-        "man": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Man"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "name": {
-          "type": "string",
-          "default": "my-awesome-package"
-        },
-        "optionalDependencies": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "os": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "packageManager": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "peerDependencies": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "private": {
-          "type": "boolean",
-          "default": true
-        },
-        "publishConfig": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PublishConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "repository": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Repository"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "scripts": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
-        },
-        "type": {
-          "$ref": "#/$defs/JsModuleType",
-          "default": "module"
-        },
-        "version": {
-          "type": "string",
-          "default": "0.1.0"
-        },
-        "workspaces": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        }
-      },
-      "additionalProperties": true
-    },
-    "PackageJsonKind": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/PackageJson"
-        }
-      ]
-    },
-    "PackageKind": {
-      "description": "The kind of ts package.",
-      "type": "string",
-      "enum": [
-        "library",
-        "app"
-      ]
-    },
-    "PackageManager": {
-      "type": "string",
-      "enum": [
-        "pnpm",
-        "npm",
-        "deno",
-        "bun",
-        "yarn"
-      ]
-    },
-    "Person": {
-      "description": "The possible values used for representing an individual in a package.json file, which can be used to populate the `contributors` and `maintainers` fields.\nIf a plain string is used, it will be interpreted as an id for a [`Person`] that is stored in the global config.",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/PersonData"
-        }
-      ]
-    },
-    "PersonData": {
-      "description": "A struct that matches how an individual's information is represented in a package.json file in the author, maintainers and contributors fields.",
-      "type": "object",
-      "properties": {
-        "email": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "name": {
           "type": "string"
-        },
-        "url": {
-          "type": [
-            "string",
-            "null"
-          ]
         }
       },
       "required": [
         "name"
-      ]
-    },
-    "PnpmWorkspace": {
-      "description": "A struct representing a pnpm-workspace.yaml config. Some widely used fields such as catalog, catalogs and packages are included directly. Everything else is flattened in the `extra` field.",
-      "type": "object",
-      "properties": {
-        "catalog": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "default": {}
-        },
-        "catalogs": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          },
-          "default": {}
-        },
-        "packages": {
-          "type": "array",
-          "default": [
-            "packages/*"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        }
-      },
+      ],
       "additionalProperties": true
     },
-    "PreCommitConfig": {
-      "type": "object",
-      "properties": {
-        "repos": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/PreCommitRepo"
-          }
-        }
-      },
-      "required": [
-        "repos"
-      ]
-    },
-    "PreCommitRepo": {
-      "type": "object",
-      "properties": {
-        "hooks": {
-          "type": "array",
-          "items": true
-        },
-        "path": {
-          "type": "string"
-        },
-        "rev": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "required": [
-        "path",
-        "hooks"
-      ]
-    },
-    "PreCommitSetting": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "$ref": "#/$defs/PreCommitConfig"
-        }
-      ]
-    },
-    "PublishConfig": {
-      "description": "A struct that matches the `publishConfig` field in a package.json file.",
-      "type": "object",
-      "properties": {
-        "access": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PublishConfigAccess"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "registry": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tag": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "PublishConfigAccess": {
-      "type": "string",
-      "enum": [
-        "public",
-        "restricted"
-      ]
-    },
-    "Repository": {
-      "description": "An enum representing valid formats for the `repository` field in a package.json file.",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "directory": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "type": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "url": {
-              "type": [
-                "string",
-                "null"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    "RootPackage": {
-      "type": "object",
-      "properties": {
-        "generate_templates": {
-          "description": "The templates to generate when the root package is generated.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "default": null,
-          "items": {
-            "$ref": "#/$defs/TemplateOutput"
-          }
-        },
-        "name": {
-          "description": "The name of the root package [default: \"root\"].",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
-        "oxlint": {
-          "description": "Oxlint configuration for the root package.\nCan be set to true (to use defaults) or false (to disable it) or to a string defining the configuration to generate.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/OxlintConfig"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": true
-        },
-        "package_json": {
-          "description": "The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageJsonKind"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "ts_config": {
-          "description": "A list of [`TsConfigDirective`]s for the root package. They can be preset ids or literal configurations. If unset, defaults are used.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "default": null,
-          "items": {
-            "$ref": "#/$defs/TsConfigDirective"
-          }
-        }
-      }
-    },
     "Target": {
+      "description": "Set the JavaScript language version for emitted JavaScript and include compatible library declarations. See more: https://www.typescriptlang.org/tsconfig#target",
       "type": "string",
       "enum": [
         "Es3",
@@ -1652,16 +1614,2122 @@
         "EsNext"
       ]
     },
+    "PackageJsonData": {
+      "description": "Ways of indicating [`PackageJson`] data. It can be an id, pointing to a preset, or a literal configuration.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PackageJsonPreset"
+        }
+      ]
+    },
+    "PackageJsonPreset": {
+      "description": "A [`PackageJson`] preset, that holds all of the data of a [`PackageJson`], plus the ability to extend other presets and refer to authors and maintainers by their id.",
+      "type": "object",
+      "properties": {
+        "extends": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "author": {
+          "description": "The author of this package.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PersonData"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "contributors": {
+          "description": "A list of people who contributed to this package.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/PersonData"
+          }
+        },
+        "maintainers": {
+          "description": "A list of people who maintains this package.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/PersonData"
+          }
+        },
+        "name": {
+          "description": "The name of the package.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "private": {
+          "description": "If set to true, then npm will refuse to publish it.",
+          "type": "boolean",
+          "default": true
+        },
+        "workspaces": {
+          "description": "Allows packages within a directory to depend on one another using direct linking of local files. Additionally, dependencies within a workspace are hoisted to the workspace root when possible to reduce duplication. Note: It's also a good idea to set `private` to true when using this feature.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "description": "When set to `module`, the type field allows a package to specify all .js files within are ES modules. If the `type` field is omitted or set to `commonjs`, all .js files are treated as CommonJS.",
+          "$ref": "#/$defs/JsPackageType",
+          "default": "module"
+        },
+        "version": {
+          "description": "Version must be parsable by node-semver, which is bundled with npm as a dependency.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "description": {
+          "description": "This helps people discover your package, as it's listed in 'npm search'.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "license": {
+          "description": "You should specify a license for your package so that people know how they are permitted to use it, and any restrictions you're placing on it.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "funding": {
+          "description": "Used to inform about ways to help fund development of the package.\nYou can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Funding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository": {
+          "description": "Specify the place where your code lives. This is helpful for people who want to contribute.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Repository"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "description": "This helps people discover your package, as it's listed in 'npm search'.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "homepage": {
+          "description": "The url to the project homepage.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scripts": {
+          "description": "A map of shell scripts to launch from the root of the package.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "bin": {
+          "description": "The single path for this package's binary, or a map of several binaries.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "description": "The 'files' field is an array of files to include in your project. If you name a folder in the array, then it will also include the files inside that folder.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "exports": {
+          "description": "The `exports` field is used to restrict external access to non-exported module files, also enables a module to import itself using `name`.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Exports"
+          }
+        },
+        "packageManager": {
+          "description": "Defines which package manager is expected to be used when working on the current project. This field is currently experimental and needs to be opted-in; see https://nodejs.org/api/corepack.html",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pnpm": {
+          "description": "Configuration settings for pnpm.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PnpmWorkspace"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dependencies": {
+          "description": "Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "overrides": {
+          "description": "Overrides is used to support selective version overrides using npm, which lets you define custom package versions or ranges inside your dependencies. For yarn, use resolutions instead. See: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "devDependencies": {
+          "description": "Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "peerDependencies": {
+          "description": "Specifies dependencies that are required by the package but are expected to be provided by the consumer of the package.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "peerDependenciesMeta": {
+          "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/PeerDependencyMeta"
+          }
+        },
+        "optionalDependencies": {
+          "description": "Specifies dependencies that are optional for your project. These dependencies are attempted to be installed during the npm install process, but if they fail to install, the installation process will not fail.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "bundleDependencies": {
+          "description": "Array of package names that will be bundled when publishing the package.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "main": {
+          "description": "The main field is a module ID that is the primary entry point to your program.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "browser": {
+          "description": "Specifies the package's entrypoint for packages that work in browsers.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "directories": {
+          "description": "Indicates the structure of your package.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Directories"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bugs": {
+          "description": "The url to your project's issue tracker and / or the email address to which issues should be reported. These are helpful for people who encounter issues with your package.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Bugs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "man": {
+          "description": "Specify either a single file or an array of filenames to put in place for the man program to find.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Man"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "config": {
+          "description": "An object that can be used to set configuration parameters used in package scripts that persist across upgrades.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "publishConfig": {
+          "description": "A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with \"latest\", published to the global public registry or that a scoped module is private by default.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PublishConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "engines": {
+          "description": "Defines which tools and versions are expected to be used.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "os": {
+          "description": "Specify which operating systems your module will run on.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "cpu": {
+          "description": "Specify that your code only runs on certain cpu architectures.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "Person": {
+      "description": "The kinds of values used for representing an individual in a `package.json` file, which can be used to populate the `contributors` and `maintainers` fields.\nIf a plain string is used, it will be interpreted as an id for a [`PersonData`] that is stored in the global config.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PersonData"
+        }
+      ]
+    },
+    "PersonData": {
+      "description": "A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "JsPackageType": {
+      "description": "The type of JS package.",
+      "type": "string",
+      "enum": [
+        "module",
+        "CommonJs"
+      ]
+    },
+    "Funding": {
+      "description": "You can specify an object containing a URL that provides up-to-date information about ways to help fund development of your package, a string URL, or an array of objects and string URLs.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/FundingData"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Funding"
+          }
+        }
+      ]
+    },
+    "FundingData": {
+      "description": "Used to inform about ways to help fund development of the package.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The type of funding or the platform through which funding can be provided, e.g. patreon, opencollective, tidelift or github",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ]
+    },
+    "Repository": {
+      "description": "An enum representing formats for the `repository` field in a `package.json` file.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "directory": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Bin": {
+      "description": "The single path for this package's binary, or a map of several binaries.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "Exports": {
+      "description": "A struct that represents a value in the `exports` object inside a `package.json` file.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "types": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "import": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "require": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "node": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "default": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "PnpmWorkspace": {
+      "description": "A struct representing a pnpm-workspace.yaml config. See more: https://pnpm.io/settings",
+      "type": "object",
+      "properties": {
+        "packages": {
+          "description": "Glob patterns for the directories containing the packages for this workspace.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "catalog": {
+          "description": "The dependencies to store in the unnamed (default) catalog.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "catalogs": {
+          "description": "A map of named catalogs and the dependencies listed in them.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "cleanupUnusedCatalogs": {
+          "description": "When set to true, pnpm will remove unused catalog entries during installation. See more: https://pnpm.io/settings#cleanupunusedcatalogs",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "onlyBuiltDependencies": {
+          "description": "A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts. See more: https://pnpm.io/settings#onlybuiltdependencies",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "overrides": {
+          "description": "This field allows you to instruct pnpm to override any dependency in the dependency graph. This is useful for enforcing all your packages to use a single version of a dependency, backporting a fix, replacing a dependency with a fork, or removing an unused dependency. See more: https://pnpm.io/settings#overrides",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "packageExtensions": {
+          "description": "The packageExtensions fields offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/PackageExtension"
+          }
+        },
+        "peerDependencyRules": {
+          "description": "Rules for peer dependencies. See more: https://pnpm.io/settings#peerdependencyrules",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PeerDependencyRules"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "neverBuiltDependencies": {
+          "description": "A list of dependencies to run builds for. See more: https://pnpm.io/settings#neverbuiltdependencies",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "dangerouslyAllowAllBuilds": {
+          "description": "If set to true, all build scripts (e.g. preinstall, install, postinstall) from dependencies will run automatically, without requiring approval. See more: https://pnpm.io/settings#dangerouslyallowallbuilds",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "onlyBuiltDependenciesFile": {
+          "description": "Specifies a JSON file that lists the only packages permitted to run installation scripts during the pnpm install process. See more: https://pnpm.io/settings#onlybuiltdependenciesfile",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ignoredBuiltDependencies": {
+          "description": "A list of package names that should not be built during installation. See more: https://pnpm.io/settings#ignoredbuiltdependencies",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowedDeprecatedVersions": {
+          "description": "A list of deprecated versions that the warnings are suppressed. See more: https://pnpm.io/settings#alloweddeprecatedversions",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "patchedDependencies": {
+          "description": "A list of dependencies that are patched. See more: https://pnpm.io/settings#patcheddependencies",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "allowUnusedPatches": {
+          "description": "When true, installation won't fail if some of the patches from the `patchedDependencies` field were not applied. Previously named `allowNonAppliedPatches`. See more: https://pnpm.io/settings#allowunusedpatches",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignorePatchFailures": {
+          "description": "Default is undefined. Errors out when a patch with an exact version or version range fails. Ignores failures from name-only patches. When true, prints a warning instead of failing when any patch cannot be applied. When false, errors out for any patch failure.\nSee more: https://pnpm.io/settings#ignorepatchfailures",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "updateConfig": {
+          "description": "Configuration for package updates. See more: https://pnpm.io/settings#updateconfig",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UpdateConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "configDependencies": {
+          "description": "Config dependencies allow you to share and centralize configuration files, settings, and hooks across multiple projects. They are installed before all regular dependencies ('dependencies', 'devDependencies', 'optionalDependencies'), making them ideal for setting up custom hooks, patches, and catalog entries. See more: https://pnpm.io/config-dependencies",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "auditConfig": {
+          "description": "Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AuditConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "requiredScripts": {
+          "description": "Scripts listed in this array will be required in each project of the workspace. Otherwise, pnpm -r run <script name> will fail. See more: https://pnpm.io/settings#requiredscripts",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "supportedArchitectures": {
+          "description": "Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SupportedArchitectures"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ignoredOptionalDependencies": {
+          "description": "A list of optional dependencies that the install should be skipped. See more: https://pnpm.io/settings#ignoredoptionaldependencies",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "executionEnv": {
+          "description": "Instructions for the runtime, such as the node version to use. See more: https://pnpm.io/settings#executionenvnodeversion",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExecutionEnv"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hoist": {
+          "description": "When true, all dependencies are hoisted to node_modules/.pnpm/node_modules. See more: https://pnpm.io/settings#hoist",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "hoistWorkspacePackages": {
+          "description": "When true, packages from the workspaces are symlinked to either <workspace_root>/node_modules/.pnpm/node_modules or to <workspace_root>/node_modules depending on other hoisting settings (hoistPattern and publicHoistPattern). See more: https://pnpm.io/settings#hoistworkspacepackages",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "hoistPattern": {
+          "description": "Tells pnpm which packages should be hoisted to node_modules/.pnpm/node_modules. See more: https://pnpm.io/settings#hoistpattern",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "publicHoistPattern": {
+          "description": "Unlike hoistPattern, which hoists dependencies to a hidden modules directory inside the virtual store, publicHoistPattern hoists dependencies matching the pattern to the root modules directory. See more: https://pnpm.io/settings#publichoistpattern",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "shamefullyHoist": {
+          "description": "By default, pnpm creates a semistrict node_modules, meaning dependencies have access to undeclared dependencies but modules outside of node_modules do not. See more: https://pnpm.io/settings#shamefullyhoist",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "modulesDir": {
+          "description": "The directory in which dependencies will be installed (instead of node_modules). See more: https://pnpm.io/settings#modulesdir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nodeLinker": {
+          "description": "Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NodeLinker"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "symlink": {
+          "description": "When symlink is set to false, pnpm creates a virtual store directory without any symlinks. It is a useful setting together with nodeLinker=pnp. See more: https://pnpm.io/settings#symlink",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enableModulesDir": {
+          "description": "When false, pnpm will not write any files to the modules directory (node_modules). See more: https://pnpm.io/settings#enablemodulesdir",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "virtualStoreDir": {
+          "description": "The directory with links to the store. See more: https://pnpm.io/settings#virtualstoredir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "virtualStoreDirMaxLength": {
+          "description": "Sets the maximum allowed length of directory names inside the virtual store directory (node_modules/.pnpm). See more: https://pnpm.io/settings#virtualstoredirmaxlength",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "packageImportMethod": {
+          "description": "Controls the way packages are imported from the store (if you want to disable symlinks inside node_modules, then you need to change the nodeLinker setting, not this one). See more: https://pnpm.io/settings#packageimportmethod",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageImportMethod"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modulesCacheMaxAge": {
+          "description": "The time in minutes after which orphan packages from the modules directory should be removed. See more: https://pnpm.io/settings#modulescachemaxage",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "dlxCacheMaxAge": {
+          "description": "The time in minutes after which dlx cache expires. See more: https://pnpm.io/settings#dlxcachemaxage",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "storeDir": {
+          "description": "The location where all the packages are saved on the disk. See more: https://pnpm.io/settings#storedir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verifyStoreIntegrity": {
+          "description": "By default, if a file in the store has been modified, the content of this file is checked before linking it to a project's node_modules. See more: https://pnpm.io/settings#verifystoreintegrity",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictStorePkgContentCheck": {
+          "description": "Some registries allow the exact same content to be published under different package names and/or versions. See more: https://pnpm.io/settings#strictstorepkgcontentcheck",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "enableGlobalVirtualStore": {
+          "description": "When enabled, node_modules contains only symlinks to a central virtual store, rather than to node_modules/.pnpm. See more: https://pnpm.io/settings#enableglobalvirtualstore",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "lockfile": {
+          "description": "When set to false, pnpm won't read or generate a pnpm-lock.yaml file. See more: https://pnpm.io/settings#lockfile",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "preferFrozenLockfile": {
+          "description": "When set to true and the available pnpm-lock.yaml satisfies the package.json dependencies directive, a headless installation is performed. See more: https://pnpm.io/settings#preferfrozenlockfile",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "lockfileIncludeTarballUrl": {
+          "description": "Add the full URL to the package's tarball to every entry in pnpm-lock.yaml. See more: https://pnpm.io/settings#lockfileincludetarballurl",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gitBranchLockfile": {
+          "description": "When set to true, the generated lockfile name after installation will be named based on the current branch name to completely avoid merge conflicts. See more: https://pnpm.io/settings#gitbranchlockfile",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "mergeGitBranchLockfilesBranchPattern": {
+          "description": "This configuration matches the current branch name to determine whether to merge all git branch lockfile files. See more: https://pnpm.io/settings#mergegitbranchlockfilesbranchpattern",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "peersSuffixMaxLength": {
+          "description": "Max length of the peer IDs suffix added to dependency keys in the lockfile. If the suffix is longer, it is replaced with a hash. See more: https://pnpm.io/settings#peerssuffixmaxlength",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "registry": {
+          "description": "The base URL of the npm package registry (trailing slash included). See more: https://pnpm.io/settings#registry",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ca": {
+          "description": "The Certificate Authority signing certificate that is trusted for SSL connections to the registry. See more: https://pnpm.io/settings#ca",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cafile": {
+          "description": "A path to a file containing one or multiple Certificate Authority signing certificates. See more: https://pnpm.io/settings#cafile",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cert": {
+          "description": "A client certificate to pass when accessing the registry. See more: https://pnpm.io/settings#cert",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "A client key to pass when accessing the registry. See more: https://pnpm.io/settings#key",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gitShallowHosts": {
+          "description": "When fetching dependencies that are Git repositories, if the host is listed in this setting, pnpm will use shallow cloning to fetch only the needed commit, not all the history. See more: https://pnpm.io/settings#gitshallowhosts",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "httpsProxy": {
+          "description": "A proxy to use for outgoing HTTPS requests. If the HTTPS_PROXY, https_proxy, HTTP_PROXY or http_proxy environment variables are set, their values will be used instead. See more: https://pnpm.io/settings#https-proxy",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "proxy": {
+          "description": "A proxy to use for outgoing http requests. If the HTTP_PROXY or http_proxy environment variables are set, proxy settings will be honored by the underlying request library. See more: https://pnpm.io/settings#proxy",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "localAddress": {
+          "description": "The IP address of the local interface to use when making connections to the npm registry. See more: https://pnpm.io/settings#local-address",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxsockets": {
+          "description": "The maximum number of connections to use per origin (protocol/host/port combination). See more: https://pnpm.io/settings#maxsockets",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "noproxy": {
+          "description": "A comma-separated string of domain extensions that a proxy should not be used for. See more: https://pnpm.io/settings#noproxy",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "strictSsl": {
+          "description": "Whether or not to do SSL key validation when making requests to the registry via HTTPS. See more: https://pnpm.io/settings#strict-ssl",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "networkConcurrency": {
+          "description": "Controls the maximum number of HTTP(S) requests to process simultaneously. See more: https://pnpm.io/settings#networkconcurrency",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "fetchRetries": {
+          "description": "How many times to retry if pnpm fails to fetch from the registry. See more: https://pnpm.io/settings#fetchretries",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "fetchRetryFactor": {
+          "description": "The exponential factor for retry backoff. See more: https://pnpm.io/settings#fetchretryfactor",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "fetchRetryMinTimeout": {
+          "description": "The minimum (base) timeout for retrying requests. See more: https://pnpm.io/settings#fetchretrymintimeout",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "fetchRetryMaxTimeout": {
+          "description": "The maximum fallback timeout to ensure the retry factor does not make requests too long. See more: https://pnpm.io/settings#fetchretrymaxtimeout",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "fetchTimeout": {
+          "description": "The maximum amount of time to wait for HTTP requests to complete. See more: https://pnpm.io/settings#fetchtimeout",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "autoInstallPeers": {
+          "description": "When true, any missing non-optional peer dependencies are automatically installed. See more: https://pnpm.io/settings#autoinstallpeers",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dedupePeerDependents": {
+          "description": "When this setting is set to true, packages with peer dependencies will be deduplicated after peers resolution. See more: https://pnpm.io/settings#dedupepeerdependents",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strictPeerDependencies": {
+          "description": "If this is enabled, commands will fail if there is a missing or invalid peer dependency in the tree.\nSee more: https://pnpm.io/settings#strictpeerdependencies",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resolvePeersFromWorkspaceRoot": {
+          "description": "When enabled, dependencies of the root workspace project are used to resolve peer dependencies of any projects in the workspace. See more: https://pnpm.io/settings#resolvepeersfromworkspaceroot",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "color": {
+          "description": "Controls colors in the output. See more: https://pnpm.io/settings#no-color",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loglevel": {
+          "description": "Any logs at or higher than the given level will be shown. See more: https://pnpm.io/settings#loglevel",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LogLevel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "useBetaCli": {
+          "description": "Experimental option that enables beta features of the CLI. See more: https://pnpm.io/settings#usebetacli",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "recursiveInstall": {
+          "description": "If this is enabled, the primary behaviour of pnpm install becomes that of pnpm install -r, meaning the install is performed on all workspace or subdirectory packages. See more: https://pnpm.io/settings#recursiveinstall",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "engineStrict": {
+          "description": "If this is enabled, pnpm will not install any package that claims to not be compatible with the current Node version. See more: https://pnpm.io/settings#enginestrict",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "npmPath": {
+          "description": "The location of the npm binary that pnpm uses for some actions, like publishing. See more: https://pnpm.io/settings#npmpath",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packageManagerStrict": {
+          "description": "If this setting is disabled, pnpm will not fail if a different package manager is specified in the packageManager field of package.json. When enabled, only the package name is checked (since pnpm v9.2.0), so you can still run any version of pnpm regardless of the version specified in the packageManager field. See more: https://pnpm.io/settings#packagemanagerstrict",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "packageManagerStrictVersion": {
+          "description": "When enabled, pnpm will fail if its version doesn't exactly match the version specified in the packageManager field of package.json. See more: https://pnpm.io/settings#packagemanagerstrictversion",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "managePackageManagerVersions": {
+          "description": "When enabled, pnpm will automatically download and run the version of pnpm specified in the packageManager field of package.json. See more: https://pnpm.io/settings#managepackagemanagerversions",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreScripts": {
+          "description": "Do not execute any scripts defined in the project package.json and its dependencies. See more: https://pnpm.io/settings#ignorescripts",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreDepScripts": {
+          "description": "Do not execute any scripts of the installed packages. Scripts of the projects are executed. See more: https://pnpm.io/settings#ignoredepscripts",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "childConcurrency": {
+          "description": "The maximum number of child processes to allocate simultaneously to build node_modules. See more: https://pnpm.io/settings#childconcurrency",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "sizeEffectsCache": {
+          "description": "Use and cache the results of (pre/post)install hooks. See more: https://pnpm.io/settings#sideeffectscache",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sizeEffectsCacheReadOnly": {
+          "description": "Only use the side effects cache if present, do not create it for new packages. See more: https://pnpm.io/settings#sideeffectscachereadonly",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "unsafePerm": {
+          "description": "Set to true to enable UID/GID switching when running package scripts. If set explicitly to false, then installing as a non-root user will fail. See more: https://pnpm.io/settings#unsafeperm",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "nodeOptions": {
+          "description": "Options to pass through to Node.js via the NODE_OPTIONS environment variable. See more: https://pnpm.io/settings#nodeoptions",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verifyDepsBeforeRun": {
+          "description": "This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VerifyDepsBeforeRun"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strictDepBuilds": {
+          "description": "When strictDepBuilds is enabled, the installation will exit with a non-zero exit code if any dependencies have unreviewed build scripts (aka postinstall scripts). See more: https://pnpm.io/settings#strictdepbuilds",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "useNodeVersion": {
+          "description": "Specifies which exact Node.js version should be used for the project's runtime. See more: https://pnpm.io/settings#usenodeversion",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nodeVersion": {
+          "description": "The Node.js version to use when checking a package's engines setting. See more: https://pnpm.io/settings#nodeversion",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "linkWorkspacePackages": {
+          "description": "If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry. See more: https://pnpm.io/settings#linkworkspacepackages",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LinkWorkspacePackages"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "injectWorkspacePackages": {
+          "description": "Enables hard-linking of all local workspace dependencies instead of symlinking them. See more: https://pnpm.io/settings#injectworkspacepackages",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "syncInjectedDepsAfterScripts": {
+          "description": "Injected workspace dependencies are collections of hardlinks, which don't add or remove the files when their sources change. See more: https://pnpm.io/settings#syncinjecteddepsafterscripts",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "preferWorkspacePackages": {
+          "description": "If this is enabled, local packages from the workspace are preferred over packages from the registry, even if there is a newer version of the package in the registry. See more: https://pnpm.io/settings#preferworkspacepackages",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sharedWorkspaceLockfile": {
+          "description": "If this is enabled, pnpm creates a single pnpm-lock.yaml file in the root of the workspace. See more: https://pnpm.io/settings#sharedworkspacelockfile",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "saveWorkspaceProtocol": {
+          "description": "This setting controls how dependencies that are linked from the workspace are added to package.json. See more: https://pnpm.io/settings#saveworkspaceprotocol",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SaveWorkspaceProtocol"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includeWorkspaceRoot": {
+          "description": "When executing commands recursively in a workspace, execute them on the root workspace project as well. See more: https://pnpm.io/settings#includeworkspaceroot",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreWorkspaceCycles": {
+          "description": "When set to true, no workspace cycle warnings will be printed. See more: https://pnpm.io/settings#ignoreworkspacecycles",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreWorkspaceRootCheck": {
+          "description": "Adding a new dependency to the root workspace package fails, unless the --ignore-workspace-root-check or -w flag is used.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "disallowWorkspaceCycles": {
+          "description": "When set to true, installation will fail if the workspace has cycles. See more: https://pnpm.io/settings#disallowworkspacecycles",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "forceLegacyDeploy": {
+          "description": "By default, pnpm deploy will try creating a dedicated lockfile from a shared lockfile for deployment. If this setting is set to true, the legacy deploy behavior will be used. See more: https://pnpm.io/settings#forcelegacydeploy",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "savePrefix": {
+          "description": "Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SavePrefix"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tag": {
+          "description": "If you pnpm add a package and you don't provide a specific version, then it will install the package at the version registered under the tag from this setting. See more: https://pnpm.io/settings#tag",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "globalDir": {
+          "description": "Specify a custom directory to store global packages. See more: https://pnpm.io/settings#globaldir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "globalBinDir": {
+          "description": "Allows to set the target directory for the bin files of globally installed packages. See more: https://pnpm.io/settings#globalbindir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stateDir": {
+          "description": "The location where all the packages are saved on the disk. See more: https://pnpm.io/settings#statedir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cacheDir": {
+          "description": "The location of the cache (package metadata and dlx). See more: https://pnpm.io/settings#cachedir",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "useStderr": {
+          "description": "When true, all the output is written to stderr. See more: https://pnpm.io/settings#usestderr",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "updateNotifier": {
+          "description": "When true, pnpm will check for updates to the installed packages and notify the user. See more: https://pnpm.io/settings#updatenotifier",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "preferSymlinkedExecutabled": {
+          "description": "Create symlinks to executables in node_modules/.bin instead of command shims. This setting is ignored on Windows, where only command shims work. See more: https://pnpm.io/settings#prefersymlinkedexecutables",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreCompatibilityDb": {
+          "description": "During installation the dependencies of some packages are automatically patched. If you want to disable this, set this config to false. See more: https://pnpm.io/settings#ignorecompatibilitydb",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resolutionMode": {
+          "description": "Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResolutionMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registrySupportsTimeField": {
+          "description": "Set this to true if the registry that you are using returns the `time` field in the abbreviated metadata. See more: https://pnpm.io/settings#registrysupportstimefield",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "extendNodePath": {
+          "description": "When false, the NODE_PATH environment variable is not set in the command shims. See more: https://pnpm.io/settings#extendnodepath",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "deployAllFiles": {
+          "description": "When deploying a package or installing a local package, all files of the package are copied. See more: https://pnpm.io/settings#deployallfiles",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dedupeDirectDeps": {
+          "description": "When set to true, dependencies that are already symlinked to the root node_modules directory of the workspace will not be symlinked to subproject node_modules directories. See more: https://pnpm.io/settings#dedupedirectdeps",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dedupeInjectedDeps": {
+          "description": "When this setting is enabled, dependencies that are injected will be symlinked from the workspace whenever possible. See more: https://pnpm.io/settings#dedupeinjecteddeps",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "optimisticRepeatInstall": {
+          "description": "When enabled, a fast check will be performed before proceeding to installation. This way a repeat install or an install on a project with everything up-to-date becomes a lot faster. See more: https://pnpm.io/settings#optimisticrepeatinstall",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gitChecks": {
+          "description": "Check if current branch is your publish branch, clean, and up-to-date with remote. See more: https://pnpm.io/cli/publish#configuration",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "publishBranch": {
+          "description": "The primary branch of the repository which is used for publishing the latest changes. See more: https://pnpm.io/cli/publish#configuration",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pnpmfile": {
+          "description": "The location of the local pnpmfile. See more: https://pnpm.io/settings#pnpmfile",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "globalPnpmfile": {
+          "description": "The location of a global pnpmfile. A global pnpmfile is used by all projects during installation. See more: https://pnpm.io/settings#globalpnpmfile",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ignorePnpmfile": {
+          "description": ".pnpmfile.cjs will be ignored. Useful together with --ignore-scripts when you want to make sure that no script gets executed during install. See more: https://pnpm.io/settings#ignorepnpmfile",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "patchesDir": {
+          "description": "The generated patch file will be saved to this directory. See more: https://pnpm.io/cli/patch-commit",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enablePrePostScripts": {
+          "description": "When true, pnpm will run any pre/post scripts automatically. See more: https://pnpm.io/settings#enableprepostscripts",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "scriptShell": {
+          "description": "The shell to use for scripts run with the pnpm run command. See more: https://pnpm.io/settings#scriptshell",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shellEmulator": {
+          "description": "When true, pnpm will use a JavaScript implementation of a bash-like shell to execute scripts. See more: https://pnpm.io/settings#shellemulator",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "saveExact": {
+          "description": "Saved dependencies will be configured with an exact version rather than using pnpm's default semver range operator. See more: https://pnpm.io/cli/add#--save-exact--e",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "minimumReleaseAge": {
+          "description": "It specifies the number of minutes that must pass after a version is published before pnpm will install it. For example, setting `minimumReleaseAge: 1440` ensures that only packages released at least one day ago can be installed. See more: https://pnpm.io/settings#minimumreleaseage",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "minimumReleaseAgeExclude": {
+          "description": "If you set `minimumReleaseAge` but need to disable this restriction for certain dependencies, you can list them under the `minimumReleaseAgeExclude` setting. See more: https://pnpm.io/settings#minimumreleaseageexclude",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "PackageExtension": {
+      "description": "Package extensions offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions",
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "description": "Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "devDependencies": {
+          "description": "Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "optionalDependencies": {
+          "description": "Specifies dependencies that are optional for your project. These dependencies are attempted to be installed during the npm install process, but if they fail to install, the installation process will not fail.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "peerDependencies": {
+          "description": "Specifies dependencies that are required by the package but are expected to be provided by the consumer of the package.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "peerDependenciesMeta": {
+          "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/PeerDependencyMeta"
+          }
+        }
+      }
+    },
+    "PeerDependencyMeta": {
+      "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
+      "type": "object",
+      "properties": {
+        "optional": {
+          "description": "Specifies that this peer dependency is optional and should not be installed automatically.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "PeerDependencyRules": {
+      "description": "Rules for peer dependencies. See more: https://pnpm.io/settings#peerdependencyrules",
+      "type": "object",
+      "properties": {
+        "ignoreMissing": {
+          "description": "pnpm will not print warnings about missing peer dependencies from this list.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "allowedVersions": {
+          "description": "Unmet peer dependency warnings will not be printed for peer dependencies of the specified range.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "allowAny": {
+          "description": "A list of package name patterns, any peer dependency matching the pattern will be resolved from any version, regardless of the range specified in peerDependencies.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "UpdateConfig": {
+      "description": "Configuration for package updates. See more: https://pnpm.io/settings#updateconfig",
+      "type": "object",
+      "properties": {
+        "ignoreDependencies": {
+          "description": "A list of packages that should be ignored when running `pnpm outdated` or `pnpm update --latest`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AuditConfig": {
+      "description": "Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig",
+      "type": "object",
+      "properties": {
+        "ignoreCves": {
+          "description": "A list of CVE IDs that will be ignored by `pnpm audit`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignoreGhas": {
+          "description": "A list of GHSA Codes that will be ignored by `pnpm audit`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SupportedArchitectures": {
+      "description": "Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures",
+      "type": "object",
+      "properties": {
+        "os": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "cpu": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "libc": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExecutionEnv": {
+      "description": "Instructions for the runtime, such as the node version to use. See more: https://pnpm.io/settings#executionenvnodeversion",
+      "type": "object",
+      "properties": {
+        "nodeVersion": {
+          "description": "Specifies which exact Node.js version should be used for the project's runtime.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "NodeLinker": {
+      "description": "Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker",
+      "oneOf": [
+        {
+          "description": "Dependencies are symlinked from a virtual store at node_modules/.pnpm",
+          "type": "string",
+          "const": "isolated"
+        },
+        {
+          "description": "A flat node_modules without symlinks is created.",
+          "type": "string",
+          "const": "hoisted"
+        },
+        {
+          "description": "No node_modules. Plug'n'Play is an innovative strategy for Node that is used by Yarn Berry. It is recommended to also set symlink setting to false when using pnp as your linker.",
+          "type": "string",
+          "const": "pnp"
+        }
+      ]
+    },
+    "PackageImportMethod": {
+      "description": "Controls the way packages are imported from the store (if you want to disable symlinks inside node_modules, then you need to change the nodeLinker setting, not this one). See more: https://pnpm.io/settings#packageimportmethod",
+      "oneOf": [
+        {
+          "description": "Try to clone packages from the store. If cloning is not supported then hardlink packages from the store. If neither cloning nor linking is possible, fall back to copying.",
+          "type": "string",
+          "const": "auto"
+        },
+        {
+          "description": "Hard link packages from the store.",
+          "type": "string",
+          "const": "hardlink"
+        },
+        {
+          "description": "Try to clone packages from the store. If cloning is not supported then fall back to copying.",
+          "type": "string",
+          "const": "clone-or-copy"
+        },
+        {
+          "description": "Copy packages from the store.",
+          "type": "string",
+          "const": "copy"
+        },
+        {
+          "description": "Clone (AKA copy-on-write or reference link) packages from the store.",
+          "type": "string",
+          "const": "clone"
+        }
+      ]
+    },
+    "Color": {
+      "description": "Controls colors in the output. See more: https://pnpm.io/settings#no-color",
+      "oneOf": [
+        {
+          "description": "Ignore the difference between terminals and pipes.",
+          "type": "string",
+          "const": "always"
+        },
+        {
+          "description": "Output uses colors when the standard output is a terminal or TTY",
+          "type": "string",
+          "const": "auto"
+        },
+        {
+          "description": "Turns off colors. This is the setting used by --no-color.",
+          "type": "string",
+          "const": "never"
+        }
+      ]
+    },
+    "LogLevel": {
+      "description": "Any logs at or higher than the given level will be shown. See more: https://pnpm.io/settings#loglevel",
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "warn",
+        "error"
+      ]
+    },
+    "VerifyDepsBeforeRun": {
+      "description": "This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/VerifyDepsBeforeRunChoices"
+        }
+      ]
+    },
+    "VerifyDepsBeforeRunChoices": {
+      "description": "Allowed enum values for [`VerifyDepsBeforeRun`]",
+      "oneOf": [
+        {
+          "description": "Automatically runs install if node_modules is not up to date.",
+          "type": "string",
+          "const": "install"
+        },
+        {
+          "description": "Prints a warning if node_modules is not up to date.",
+          "type": "string",
+          "const": "warn"
+        },
+        {
+          "description": "Throws an error if node_modules is not up to date.",
+          "type": "string",
+          "const": "error"
+        },
+        {
+          "description": "Prompts the user for permission to run install if node_modules is not up to date.",
+          "type": "string",
+          "const": "prompt"
+        }
+      ]
+    },
+    "LinkWorkspacePackages": {
+      "description": "If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry. See more: https://pnpm.io/settings#linkworkspacepackages",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/LinkWorkspacePackagesChoices"
+        }
+      ]
+    },
+    "LinkWorkspacePackagesChoices": {
+      "description": "The enum values for [`LinkWorkspacePackages`]",
+      "type": "string",
+      "enum": [
+        "deep"
+      ]
+    },
+    "SaveWorkspaceProtocol": {
+      "description": "This setting controls how dependencies that are linked from the workspace are added to package.json. See more: https://pnpm.io/settings#saveworkspaceprotocol",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/SaveWorkspaceProtocolChoices"
+        }
+      ]
+    },
+    "SaveWorkspaceProtocolChoices": {
+      "description": "The enum values for [`SaveWorkspaceProtocol`]",
+      "type": "string",
+      "enum": [
+        "rolling"
+      ]
+    },
+    "SavePrefix": {
+      "description": "Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix",
+      "oneOf": [
+        {
+          "description": "Allows patch upgrades.",
+          "type": "string",
+          "const": "~"
+        },
+        {
+          "description": "Allows minor upgrades.",
+          "type": "string",
+          "const": "^"
+        },
+        {
+          "description": "Does not allow upgrades.",
+          "type": "string",
+          "const": ""
+        }
+      ]
+    },
+    "ResolutionMode": {
+      "description": "Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode",
+      "oneOf": [
+        {
+          "description": "Dependencies will be resolved to their highest versions.",
+          "type": "string",
+          "const": "highest"
+        },
+        {
+          "description": "When resolutionMode is set to time-based, dependencies will be resolved the following way:\nDirect dependencies will be resolved to their lowest versions. So if there is foo@^1.1.0 in the dependencies, then 1.1.0 will be installed.\nSubdependencies will be resolved from versions that were published before the last direct dependency was published.",
+          "type": "string",
+          "const": "time-based"
+        },
+        {
+          "description": "Direct dependencies will be resolved to their lowest versions.",
+          "type": "string",
+          "const": "lowest-direct"
+        }
+      ]
+    },
+    "Directories": {
+      "description": "A struct that represents the value of the `directories` field in a `package.json` file.",
+      "type": "object",
+      "properties": {
+        "bin": {
+          "description": "If you specify a `bin` directory, then all the files in that folder will be used as the `bin` hash.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lib": {
+          "description": "Tell people where the bulk of your library is. Nothing special is done with the lib folder in any way, but it's useful meta info.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doc": {
+          "description": "Put markdown files in here. Eventually, these will be displayed nicely, maybe, someday.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "example": {
+          "description": "Put example scripts in here. Someday, it might be exposed in some clever way.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "man": {
+          "description": "A folder that is full of man pages. Sugar to generate a 'man' array by walking the folder.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "test": {
+          "description": "The tests directory.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "Bugs": {
+      "description": "A struct representing the `bugs` field in a `package.json` file.",
+      "type": "object",
+      "properties": {
+        "url": {
+          "description": "The url to your project's issue tracker.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "email": {
+          "description": "The email address to which issues should be reported.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Man": {
+      "description": "A struct that represents the kinds of values for the `man` field of a `package.json` file.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "PublishConfig": {
+      "description": "A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with \"latest\", published to the global public registry or that a scoped module is private by default.",
+      "type": "object",
+      "properties": {
+        "access": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PublishConfigAccess"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "PublishConfigAccess": {
+      "description": "The values that can be used to define `access` in a [`PublishConfig`]",
+      "type": "string",
+      "enum": [
+        "public",
+        "restricted"
+      ]
+    },
+    "TemplateOutput": {
+      "description": "The data for outputting a new template.\nRelative output paths will resolve from the [`Config::out_dir`].\nThe context specified here will override the global context (but not the variables set via cli).",
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/$defs/TemplateData"
+        },
+        "output": {
+          "type": "string"
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "required": [
+        "template",
+        "output"
+      ]
+    },
     "TemplateData": {
       "description": "The types of configuration values for a template's data.\nIt can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)",
       "anyOf": [
         {
           "type": "object",
           "properties": {
-            "content": {
+            "name": {
               "type": "string"
             },
-            "name": {
+            "content": {
               "type": "string"
             }
           },
@@ -1675,342 +3743,13 @@
         }
       ]
     },
-    "TemplateOutput": {
-      "description": "The data for outputting a new template.\nThe output directory will be joined to the root of the package being generated with this template.\nThe context specified here will override the global context.",
-      "type": "object",
-      "properties": {
-        "context": {
-          "type": "object",
-          "additionalProperties": true,
-          "default": {}
-        },
-        "output": {
-          "type": "string"
-        },
-        "template": {
-          "$ref": "#/$defs/TemplateData"
-        }
-      },
-      "required": [
-        "template",
-        "output"
-      ]
-    },
-    "TsConfig": {
-      "type": "object",
-      "properties": {
-        "compilerOptions": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/CompilerOptions"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "exclude": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "extend_presets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true,
-          "writeOnly": true
-        },
-        "extends": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "files": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "include": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
-        },
-        "references": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/$defs/TsConfigReference"
-          },
-          "uniqueItems": true
-        },
-        "typeAcquisition": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TypeAcquisition"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "watchOptions": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/WatchOptions"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "TsConfigDirective": {
-      "description": "A struct representing instructions for outputting a tsconfig file.\nThe file name will be joined to the root directory of the package that the generated config will belong to.",
-      "type": "object",
-      "properties": {
-        "config": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/TsConfigKind"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "output": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "TsConfigKind": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/TsConfig"
-        }
-      ]
-    },
-    "TsConfigReference": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "path"
-      ]
-    },
-    "TypeAcquisition": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "disable_filename_based_type_acquisition": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
-            "enable": {
-              "type": "boolean"
-            },
-            "exclude": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "type": "string"
-              },
-              "uniqueItems": true
-            },
-            "include": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "type": "string"
-              },
-              "uniqueItems": true
-            }
-          },
-          "required": [
-            "enable"
-          ]
-        }
-      ]
-    },
-    "TypescriptConfig": {
-      "type": "object",
-      "properties": {
-        "catalog": {
-          "description": "Uses the pnpm catalog for default dependencies.",
-          "type": "boolean",
-          "default": false
-        },
-        "no_convert_latest_to_range": {
-          "description": "Does not convert dependencies marked as `latest` to a version range.",
-          "type": "boolean",
-          "default": false
-        },
-        "no_default_deps": {
-          "description": "Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)",
-          "type": "boolean",
-          "default": false
-        },
-        "package_json_presets": {
-          "description": "A map containing [`PackageJson`] presets.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/PackageJson"
-          },
-          "default": {}
-        },
-        "package_manager": {
-          "description": "The package manager being used. [default: pnpm].",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageManager"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "package_presets": {
-          "description": "A map of [`PackageConfig`] presets.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/PackageConfig"
-          },
-          "default": {}
-        },
-        "people": {
-          "description": "A map of individual [`PersonData`] that can be referenced in [`PackageJson::contributors`] or [`PackageJson::maintainers`].",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/PersonData"
-          },
-          "default": {}
-        },
-        "pnpm_config": {
-          "description": "The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PnpmWorkspace"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "root_package": {
-          "description": "The configuration for the root typescript package to generate in new monorepos.\nCan be empty to use defaults.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/RootPackage"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "tsconfig_presets": {
-          "description": "A map containing [`TsConfig`] presets.",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/TsConfig"
-          },
-          "default": {}
-        },
-        "version_range": {
-          "description": "The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/VersionRange"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        }
-      }
-    },
-    "VersionRange": {
+    "PackageKind": {
+      "description": "The kind of ts package.",
       "type": "string",
       "enum": [
-        "patch",
-        "minor",
-        "exact"
+        "library",
+        "app"
       ]
-    },
-    "VitestConfig": {
-      "description": "The data used to generate a new vitest setup.",
-      "type": "object",
-      "properties": {
-        "out_dir": {
-          "description": "The directory where the config file should be placed, starting from the root of the package.\nIf unset, the `tests_dir` will be used.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
-        "plugins": {
-          "description": "A list of plugins, which will be set up in the config file.",
-          "type": "array",
-          "default": [],
-          "items": {
-            "type": "string"
-          }
-        },
-        "setup_dir": {
-          "description": "The path to the setup directory, starting from the `tests_dir`. [default: 'setup']",
-          "type": "string",
-          "default": "setup"
-        },
-        "tests_dir": {
-          "description": "The path to the tests directory, from the root of the package. [default: 'tests']",
-          "type": "string",
-          "default": "tests"
-        }
-      }
     },
     "VitestConfigKind": {
       "description": "The types of configuration for generating a vitest setup.\nCan be set to:\n- True or false to use the default or disable generation altogether.\n- A string, indicating a preset stored in the global config\n- A object, with a literal definition",
@@ -2023,77 +3762,255 @@
         }
       ]
     },
-    "WatchDirectory": {
-      "type": "string",
-      "enum": [
-        "fixedPollingInterval",
-        "dynamicPriorityPolling",
-        "useFsEvents"
-      ]
-    },
-    "WatchFile": {
-      "type": "string",
-      "enum": [
-        "fixedPollingInterval",
-        "priorityPollingInterval",
-        "dynamicPriorityPolling",
-        "useFsEvents",
-        "useFsEventsOnParentDirectory"
-      ]
-    },
-    "WatchOptions": {
+    "VitestConfig": {
+      "description": "The data used to generate a new vitest setup.",
       "type": "object",
       "properties": {
-        "excludeDirectories": {
+        "tests_dir": {
+          "description": "The path to the tests directory, from the root of the package. [default: 'tests']",
+          "type": "string",
+          "default": "tests"
+        },
+        "out_dir": {
+          "description": "The directory where the config file should be placed, starting from the root of the package.\nIf unset, the `tests_dir` will be used.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "plugins": {
+          "description": "A list of plugins, which will be set up in the config file.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "setup_dir": {
+          "description": "The path to the setup directory, starting from the `tests_dir`. [default: 'setup']",
+          "type": "string",
+          "default": "setup"
+        }
+      }
+    },
+    "OxlintConfigSetting": {
+      "description": "Settings for generating an `oxlint` configuration file.\nIt can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/OxlintPreset"
+        }
+      ]
+    },
+    "OxlintPreset": {
+      "description": "The configuration directives for `oxlint`. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html",
+      "type": "object",
+      "properties": {
+        "extend_presets": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "extends": {
+          "description": "Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.",
           "type": [
             "array",
             "null"
           ],
+          "uniqueItems": true,
           "items": {
             "type": "string"
-          },
-          "uniqueItems": true
+          }
         },
-        "excludeFiles": {
+        "env": {
+          "description": "Environments enable and disable collections of global variables.",
           "type": [
-            "array",
+            "object",
             "null"
           ],
-          "items": {
-            "type": "string"
-          },
-          "uniqueItems": true
+          "additionalProperties": {
+            "type": "boolean"
+          }
         },
-        "fallbackPolling": {
+        "globals": {
+          "description": "Enables or disables specific global variables.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/GlobalValue"
+          }
+        },
+        "categories": {
           "anyOf": [
             {
-              "$ref": "#/$defs/FallbackPolling"
+              "$ref": "#/$defs/Categories"
             },
             {
               "type": "null"
             }
           ]
         },
-        "synchronousWatchDirectory": {
+        "ignorePatterns": {
+          "description": "Globs to ignore during linting. These are resolved from the configuration file path.",
           "type": [
-            "boolean",
+            "array",
             "null"
-          ]
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
         },
-        "watchDirectory": {
+        "overrides": {
+          "description": "Add, remove, or otherwise reconfigure rules for specific files or groups of files.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/Override"
+          }
+        },
+        "plugins": {
+          "description": "A list of plugins to enable for this config.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Plugin"
+          }
+        },
+        "rules": {
+          "description": "Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/RuleSetting"
+          }
+        },
+        "settings": {
+          "description": "Contains the settings for various plugins.",
           "anyOf": [
             {
-              "$ref": "#/$defs/WatchDirectory"
+              "$ref": "#/$defs/PluginsSettings"
             },
             {
               "type": "null"
             }
           ]
         },
-        "watchFile": {
+        "extras": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        }
+      }
+    },
+    "GlobalValue": {
+      "description": "Settings for global variables.",
+      "oneOf": [
+        {
+          "description": "Disallows overwriting a global variable.",
+          "type": "string",
+          "const": "readonly"
+        },
+        {
+          "description": "Allows the global variable to be overwritten.",
+          "type": "string",
+          "const": "writeable"
+        },
+        {
+          "description": "Disables a global variable entirely.",
+          "type": "string",
+          "const": "off"
+        }
+      ]
+    },
+    "Categories": {
+      "description": "Configure an entire category of rules all at once.Rules enabled or disabled this way will be overwritten by individual rules in the `rules` field.",
+      "type": "object",
+      "properties": {
+        "correctness": {
           "anyOf": [
             {
-              "$ref": "#/$defs/WatchFile"
+              "$ref": "#/$defs/RuleEnforcement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nursery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleEnforcement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pedantic": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleEnforcement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "perf": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleEnforcement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "restriction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleEnforcement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleEnforcement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suspicious": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleEnforcement"
             },
             {
               "type": "null"
@@ -2101,6 +4018,513 @@
           ]
         }
       }
+    },
+    "RuleEnforcement": {
+      "description": "The enforcement setting for a linting rule.",
+      "oneOf": [
+        {
+          "description": "Disables the rule.",
+          "type": "string",
+          "const": "off"
+        },
+        {
+          "description": "Violating the rule triggers a warning.",
+          "type": "string",
+          "const": "warn"
+        },
+        {
+          "description": "Violating the rule causes an error.",
+          "type": "string",
+          "const": "error"
+        }
+      ]
+    },
+    "Override": {
+      "description": "Settings to override for a group of files.",
+      "type": "object",
+      "properties": {
+        "files": {
+          "description": "A list of glob patterns to override.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "plugins": {
+          "description": "Optionally change what plugins are enabled for this override. When omitted, the base config's plugins are used.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Plugin"
+          }
+        },
+        "globals": {
+          "description": "Enables or disables specific global variables.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/GlobalValue"
+          }
+        },
+        "env": {
+          "description": "Environments enable and disable collections of global variables.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "rules": {
+          "description": "Override settings for specific rules.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/RuleSetting"
+          }
+        }
+      },
+      "required": [
+        "files"
+      ]
+    },
+    "Plugin": {
+      "description": "Ways of referring to a plugin.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Plugins"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Plugins": {
+      "description": "The plugins for oxlint. See more: https://oxc.rs/docs/guide/usage/linter/plugins.html",
+      "type": "string",
+      "enum": [
+        "eslint",
+        "import",
+        "jest",
+        "jsdoc",
+        "jsx-a11y",
+        "nextjs",
+        "node",
+        "oxc",
+        "promise",
+        "react",
+        "react-perf",
+        "regex",
+        "typescript",
+        "unicorn",
+        "vitest",
+        "vue"
+      ]
+    },
+    "RuleSetting": {
+      "description": "The settings for an individual rule. Can be a single value such as `warn` or `error`, or an array with the rule enforcement value as the first value, and the rule-specific settings in an object right after that. (example: [\"allow\", { \"setting1\": true }])",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RuleEnforcement"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "$ref": "#/$defs/RuleEnforcement"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 1,
+          "maxItems": 1
+        }
+      ]
+    },
+    "PluginsSettings": {
+      "description": "Configure the behavior of linter plugins.",
+      "type": "object",
+      "properties": {
+        "jsdoc": {
+          "description": "Settings for the Jsdoc plugin.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsDocPluginSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "jsx-a11y": {
+          "description": "Settings for the jsx-a11y plugin.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/JsxA11yPluginSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next": {
+          "description": "Settings for the nextjs plugin.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NextPluginSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "react": {
+          "description": "Settings for the react plugin.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReactPluginSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "JsDocPluginSettings": {
+      "description": "Settings for the Jsdoc plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-jsdoc",
+      "type": "object",
+      "properties": {
+        "augmentsExtendsReplacesDocs": {
+          "description": "Only for `require-(yields|returns|description|example|param|throws)` rules.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "exemptDestructuredRootsFromChekcs": {
+          "description": "Only for `require-param-type` and `require-param-description` rule.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreInternal": {
+          "description": "For all rules but NOT apply to `empty-tags` rule.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignorePrivate": {
+          "description": "For all rules but NOT apply to `check-access` and `empty-tags` rule.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ignoreReplacesDocs": {
+          "description": "Only for `require-(yields|returns|description|example|param|throws)` rules.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "implementsReplacesDocs": {
+          "description": "Only for `require-(yields|returns|description|example|param|throws)` rules.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "overrideReplacesDocs": {
+          "description": "Only for `require-(yields|returns|description|example|param|throws)` rules.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "tagNamePreference": {
+          "description": "Specifies allows custom tags for Jsdoc annotations.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/TagNamePreference"
+          }
+        }
+      }
+    },
+    "TagNamePreference": {
+      "description": "Specifies allows custom tags for Jsdoc annotations.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            },
+            "replacement": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "message",
+            "replacement"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "message"
+          ]
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "JsxA11yPluginSettings": {
+      "description": "Settings for the jsx-a11y plugin. See more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y#configurations",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Map of attribute names to their DOM equivalents.This is useful for non-React frameworks that use different attribute names.\n\nExample:\n```json\n{\n  \"settings\\\":\n  {\n    \"jsx-a11y\":\n    {\n      \"attributes\": {\n        \"for\": [\n          \"htmlFor\",\n          \"for\"\n        ]\n      }\n    }\n  }\n}\n```",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "components": {
+          "description": "To have your custom components be checked as DOM elements, you can\\nprovide a mapping of your component names to the DOM element name.\n\nExample:\n```json\n{\n  \"settings\": {\n    \"jsx-a11y\": {\n      \"components\": {\n        \"Link\": \"a\",\n        \"IconButton\": \"button\"\n      }\n    }\n  }\n}\n```",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "polymorphicPropName": {
+          "description": "An optional setting that define the prop your code uses to create polymorphic components.\nThis setting will be used to determine the element type in rules that\nrequire semantic context.\n\nFor example, if you set the `polymorphicPropName` to `as`, then this element:\n\n```jsx\n<Box as=\"h3\">Hello</Box>\n```\n\nWill be treated as an `h3`. If not set, this component will be treated\nas a `Box`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "NextPluginSettings": {
+      "description": "Settings for the nextjs plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-next",
+      "type": "object",
+      "properties": {
+        "rootDir": {
+          "description": "The root directory of the Next.js project.\n\nThis is particularly useful when you have a monorepo and your Next.js\nproject is in a subfolder.\n\nExample:\n\n```json\n{\n  \"settings\": {\n    \"next\": {\n      \"rootDir\": \"apps/dashboard/\"\n    }\n  }\n}\n```",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OneOrManyStrings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "OneOrManyStrings": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "ReactPluginSettings": {
+      "description": "Settings for the react plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-react",
+      "type": "object",
+      "properties": {
+        "formComponents": {
+          "description": "Components used as alternatives to `<form>` for forms, such as `<Formik>`.\n\nExample:\n\n```jsonc\n{\n  \"settings\": {\n    \"react\": {\n      \"formComponents\": [\n        \"CustomForm\",\n        // OtherForm is considered a form component and has an endpoint attribute\n        { \"name\": \"OtherForm\", \"formAttribute\": \"endpoint\" },\n        // allows specifying multiple properties if necessary\n        { \"name\": \"Form\", \"formAttribute\": [\"registerEndpoint\", \"loginEndpoint\"] }\n      ]\n    }\n  }\n}\n```",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/CustomComponent"
+          }
+        },
+        "linkComponents": {
+          "description": "Components used as alternatives to `<a>` for linking, such as `<Link>`.\n\nExample:\n\n```jsonc\n{\n  \"settings\": {\n    \"react\": {\n      \"linkComponents\": [\n        \"HyperLink\",\n        // Use `linkAttribute` for components that use a different prop name\n        // than `href`.\n        { \"name\": \"MyLink\", \"linkAttribute\": \"to\" },\n        // allows specifying multiple properties if necessary\n        { \"name\": \"Link\", \"linkAttribute\": [\"to\", \"href\"] }\n      ]\n    }\n  }\n}\n```",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/CustomComponent"
+          }
+        }
+      }
+    },
+    "CustomComponent": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "attribute": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "attribute"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "attributes": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "name",
+            "attributes"
+          ]
+        }
+      ]
+    },
+    "PackageManager": {
+      "type": "string",
+      "enum": [
+        "pnpm",
+        "npm",
+        "deno",
+        "bun",
+        "yarn"
+      ]
+    },
+    "VersionRange": {
+      "description": "The kinds of version ranges for a dependency with semantic versioning.",
+      "type": "string",
+      "enum": [
+        "patch",
+        "minor",
+        "exact"
+      ]
+    },
+    "PreCommitSetting": {
+      "description": "The setting for the .pre-commit-config.yaml template. It can be a boolean (to use the defaults with `true` or to disable pre-commit entirely with `false`) or a literal configuration for the file.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/PreCommitConfig"
+        }
+      ]
+    },
+    "PreCommitConfig": {
+      "description": "Configuration for .pre-commit-config.yaml.",
+      "type": "object",
+      "properties": {
+        "repos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PreCommitRepo"
+          }
+        }
+      },
+      "required": [
+        "repos"
+      ]
+    },
+    "PreCommitRepo": {
+      "description": "Configuration for a .pre-commit-config.yaml repo.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "rev": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hooks": {
+          "type": "array",
+          "items": true
+        }
+      },
+      "required": [
+        "path",
+        "hooks"
+      ]
+    },
+    "GitIgnore": {
+      "description": "A definition for a gitignore template. It can be a list of strings (to append to the defaults) or a single string to define the entire content of the file.",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
     }
   }
 }

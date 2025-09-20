@@ -2,6 +2,7 @@
 mod tests_macros;
 mod examples_tests;
 mod exec_tests;
+mod extending_presets_tests;
 mod generated_configs_tests;
 mod overwriting_tests;
 mod rendering_tests;
