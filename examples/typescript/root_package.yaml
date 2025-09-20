@@ -8,6 +8,21 @@ typescript:
   # the root package's dependencies
   no_default_deps: true
 
+  # Pnpm is the default, and if selected, it will generate
+  # a pnpm-workspace.yaml file
+  package_manager: pnpm
+
+  # Customized configuration for `pnpm-workspace.yaml`
+  pnpm:
+    # All the dirs listed here will be created automatically
+    # when new monorepos are created
+    packages:
+      - packages/*
+      - apps/*
+    onlyBuiltDependencies:
+      - esbuild
+    minimumReleaseAge: 1440
+
   root_package:
     name: workspace
 
@@ -34,20 +49,19 @@ typescript:
     # Can be set to `true` to use defaults.
     oxlint:
       plugins: ["unicorn", "typescript", "oxc"]
-
     # ANCHOR_END: all
 
-    # ANCHOR: template_example
-    with_templates:
-      - output: docker/dev.dockerfile
-        template:
-          name: dev_dockerfile
-          content: |
-            FROM node:23-alpine
+  # ANCHOR: template_example
+  with_templates:
+    - output: docker/dev.dockerfile
+      template:
+        name: dev_dockerfile
+        content: |
+          FROM node:23-alpine
 
-            COPY . .
-            EXPOSE {{ docker_dev_port }}
-            CMD ["npm", "run", "dev"]
+          COPY . .
+          EXPOSE {{ docker_dev_port }}
+          CMD ["npm", "run", "dev"]
 
 vars:
   docker_dev_port: 5173

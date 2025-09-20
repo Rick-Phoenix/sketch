@@ -19,7 +19,6 @@
     - [Generating A Monorepo](./ts_monorepo.md)
     - [Generating A Package](./ts_package_gen.md)
     - [Presets](./ts/ts_presets.md)
-    - [TsConfig Presets](./tsconfig_presets.md)
     - [Package.json Presets](./package_json_presets.md)
         - [Handling Dependencies](./versions.md)
         - [Maintainers Information](./maintainers.md)

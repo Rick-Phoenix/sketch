@@ -16,16 +16,16 @@ use crate::{
 };
 
 #[tokio::test]
-async fn extending_presets() -> Result<(), Box<dyn std::error::Error>> {
+async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples/typescript");
-  let out_dir = PathBuf::from("tests/output/ts_examples/packages/extending_presets_example");
+  let out_dir = PathBuf::from("tests/output/presets/packages/extending_presets_example");
 
   reset_testing_dir(&out_dir);
 
   let oxlint_test = Cli::try_parse_from([
     "sketch",
     "-c",
-    path_to_str!(examples_dir.join("extending_presets.yaml")),
+    path_to_str!(examples_dir.join("presets.yaml")),
     "ts",
     "package",
     "--preset",

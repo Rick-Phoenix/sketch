@@ -1,14 +1,9 @@
-use std::{fs::File, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
-use maplit::btreeset;
-use pretty_assertions::assert_eq;
 
 use super::{get_clean_example_cmd, reset_testing_dir};
-use crate::{
-  cli::{cli_tests::get_tree_output, execute_cli, Cli},
-  ts::ts_config::{CompilerOptions, TsConfig},
-};
+use crate::cli::{cli_tests::get_tree_output, execute_cli, Cli};
 
 #[tokio::test]
 async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
@@ -40,53 +35,6 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
   execute_cli(monorepo_setup).await?;
 
   get_tree_output(&output_dir, "tree_output.txt")?;
-
-  let tsconfigs_cmd = [
-    "sketch",
-    "-c",
-    path_to_str!(examples_dir.join("tsconfig_presets.yaml")),
-    "ts",
-    "package",
-    "--preset",
-    "tsconfig-example",
-  ];
-
-  write_command!(tsconfigs_cmd, 1..3, "tsconfig_cmd");
-
-  let tsconfigs_example = Cli::try_parse_from(tsconfigs_cmd)?;
-
-  execute_cli(tsconfigs_example).await?;
-
-  let tsconfigs_output = output_dir.join("packages/tsconfig-example");
-
-  let tsconfig_with_override =
-    deserialize_json!(TsConfig, tsconfigs_output.join("tsconfig.src.json"));
-
-  assert_eq!(
-    tsconfig_with_override,
-    TsConfig {
-      compiler_options: Some(CompilerOptions {
-        verbatim_module_syntax: Some(true),
-        emit_declaration_only: Some(true),
-        ..Default::default()
-      }),
-      ..Default::default()
-    }
-  );
-
-  let extended_preset = deserialize_json!(TsConfig, tsconfigs_output.join("tsconfig.dev.json"));
-
-  assert_eq!(
-    extended_preset,
-    TsConfig {
-      include: Some(btreeset! { "src".to_string(), "tests".to_string() }),
-      compiler_options: Some(CompilerOptions {
-        no_emit: Some(true),
-        ..Default::default()
-      }),
-      ..Default::default()
-    }
-  );
 
   let people_cmd = [
     "sketch",
