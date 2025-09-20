@@ -1,15 +1,15 @@
 use std::fs::create_dir_all;
 
-use askama::Template;
 use maplit::btreeset;
 use merge::Merge;
 
 use crate::{
-  fs::{get_cwd, serialize_json, serialize_yaml},
+  fs::{create_all_dirs, get_cwd, serialize_json, serialize_yaml},
   ts::{
+    oxlint::OxlintConfigSetting,
     package_json::{PackageJsonKind, Person},
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
-    OxlintConfig, PackageManager,
+    PackageManager,
   },
   Config, GenError, Preset,
 };
@@ -26,16 +26,7 @@ impl Config {
     let version_ranges = typescript.version_range.unwrap_or_default();
     let root_package = typescript.root_package.unwrap_or_default();
 
-    create_dir_all(&out_dir).map_err(|e| GenError::DirCreation {
-      path: out_dir.to_owned(),
-      source: e,
-    })?;
-
-    macro_rules! write_to_output {
-      ($($tokens:tt)*) => {
-        write_file!(out_dir, self.no_overwrite, $($tokens)*)
-      };
-    }
+    create_all_dirs(&out_dir)?;
 
     let mut package_json_data = match root_package.package_json.unwrap_or_default() {
       PackageJsonKind::Id(id) => package_json_presets
@@ -169,8 +160,8 @@ impl Config {
       serialize_yaml(&pnpm_data, &out_dir.join("pnpm-workspace.yaml"))?;
     }
 
-    if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfig::Bool(false)) {
-      write_to_output!(oxlint_config, ".oxlintrc.json");
+    if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfigSetting::Bool(false)) {
+      serialize_json(&oxlint_config, &out_dir.join(".oxlintrc.json"))?;
     }
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {

@@ -8,11 +8,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::JsonValueBTreeMap;
 
+/// Settings for generating an `oxlint` configuration file.
+/// It can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum OxlintConfigSetting {
   Bool(bool),
-  Text(String),
+  Config(OxlintConfig),
 }
 
 /// Settings for global variables.

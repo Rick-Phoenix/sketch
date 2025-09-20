@@ -22,9 +22,10 @@ use crate::{
   exec::launch_command,
   fs::{create_all_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml},
   ts::{
-    package::{PackageConfig, PackageData, RootPackage},
+    oxlint::OxlintConfigSetting,
+    package::{PackageConfig, PackageData},
     vitest::VitestConfigKind,
-    OxlintConfig, TypescriptConfig,
+    TypescriptConfig,
   },
   Config, *,
 };
@@ -138,7 +139,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
           }
 
           if no_oxlint {
-            root_package.oxlint = Some(OxlintConfig::Bool(false));
+            root_package.oxlint = Some(OxlintConfigSetting::Bool(false));
           }
         }
         TsCommands::Package { .. } => {}
@@ -365,8 +366,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
             package.vitest = VitestConfigKind::Bool(false);
           }
 
-          if oxlint {
-            package.oxlint = Some(OxlintConfig::Bool(true));
+          if oxlint && package.oxlint.is_none() {
+            package.oxlint = Some(OxlintConfigSetting::Bool(true));
           }
 
           if config.debug {
@@ -516,7 +517,7 @@ pub enum TsCommands {
   /// Generates a new typescript monorepo inside the `out_dir`
   Monorepo {
     #[command(flatten)]
-    root_package_overrides: Option<RootPackage>,
+    root_package_overrides: Option<PackageConfig>,
 
     /// Does not generate an oxlint config at the root.
     #[arg(long)]

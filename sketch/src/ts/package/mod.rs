@@ -19,7 +19,7 @@ use crate::{
     open_file_for_writing, serialize_json, serialize_yaml,
   },
   merge_if_not_default, overwrite_if_some,
-  ts::{package_json::Person, ts_config, OxlintConfig, PackageManager},
+  ts::{oxlint::OxlintConfigSetting, package_json::Person, ts_config, PackageManager},
   Config, GenError, Preset,
 };
 
@@ -30,50 +30,6 @@ pub enum PackageKind {
   #[default]
   Library,
   App,
-}
-
-/// The settings for a typescript monorepo's root package.
-#[derive(Debug, Clone, Serialize, Deserialize, Parser, Merge, PartialEq, JsonSchema)]
-#[merge(strategy = overwrite_if_some)]
-#[serde(default)]
-pub struct RootPackage {
-  /// The name of the root package [default: "root"].
-  #[arg(short, long)]
-  pub name: Option<String>,
-
-  /// Oxlint configuration for the root package.
-  /// It can be set to true/false (to use defaults or to disable it) or to a string defining the entire configuration.
-  #[arg(skip)]
-  pub oxlint: Option<OxlintConfig>,
-
-  /// A list of [`TsConfigDirective`]s for the root package. They can be preset ids or literal configurations. If unset, defaults are used.
-  #[arg(help = "One or many tsconfig files for the root package. If unset, defaults are used")]
-  #[arg(short, long, value_parser = TsConfigDirective::from_cli, value_name = "output=PATH,id=ID")]
-  pub ts_config: Option<Vec<TsConfigDirective>>,
-
-  /// The [`PackageJsonKind`] to use for the root package. It can be a preset id or a literal definition (or nothing, to use defaults).
-  #[arg(short, long, value_parser = PackageJsonKind::from_cli)]
-  #[arg(
-    help = "The id of the package.json preset to use for the root package",
-    value_name = "ID"
-  )]
-  pub package_json: Option<PackageJsonKind>,
-
-  /// The templates to generate when the root package is generated. Relative paths will resolve from the package's root.
-  #[arg(skip)]
-  pub with_templates: Option<Vec<TemplateOutput>>,
-}
-
-impl Default for RootPackage {
-  fn default() -> Self {
-    Self {
-      name: None,
-      oxlint: Some(Default::default()),
-      ts_config: Default::default(),
-      with_templates: Default::default(),
-      package_json: Default::default(),
-    }
-  }
 }
 
 /// The configuration struct that is used to generate new packages.
@@ -124,7 +80,7 @@ pub struct PackageConfig {
 
   /// The configuration for this package's oxlint setup. It can be set to true/false (to use defaults or to disable it), or to a string defining the contents of the file.
   #[arg(skip)]
-  pub oxlint: Option<OxlintConfig>,
+  pub oxlint: Option<OxlintConfigSetting>,
 }
 
 impl Default for PackageConfig {
@@ -400,7 +356,7 @@ impl Config {
     }
 
     if let Some(oxlint_config) = config.oxlint {
-      write_to_output!(oxlint_config, ".oxlintrc.json");
+      serialize_json(&oxlint_config, &pkg_root.join(".oxlintrc.json"))?;
     }
 
     if let Some(templates) = config.with_templates && !templates.is_empty() {

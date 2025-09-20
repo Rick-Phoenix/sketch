@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
   merge_index_maps, overwrite_if_some,
   ts::{
-    package::{PackageConfig, RootPackage},
+    package::PackageConfig,
     package_json::{PackageJson, Person, PersonData},
     pnpm::PnpmWorkspace,
     ts_config::TsConfig,
@@ -59,7 +59,7 @@ pub struct TypescriptConfig {
   /// Can be empty to use defaults.
   #[merge(skip)]
   #[arg(skip)]
-  pub root_package: Option<RootPackage>,
+  pub root_package: Option<PackageConfig>,
 
   /// The package manager being used. [default: pnpm].
   #[merge(strategy = overwrite_if_some)]
