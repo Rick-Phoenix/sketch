@@ -119,11 +119,14 @@ Generates a new typescript package
 
 Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config
 
-**Usage:** `sketch init [OPTIONS]`
+**Usage:** `sketch init [OPTIONS] <>`
 
 ###### **Options:**
 
+* `-p`, `--preset <PRESET>`
 * `--no-pre-commit` — Does not generate a pre-commit config
+* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
+* `--gitignore <GITIGNORE>` — Selects a gitignore preset
 * `--remote <REMOTE>` — The link to the git remote to use
 
 

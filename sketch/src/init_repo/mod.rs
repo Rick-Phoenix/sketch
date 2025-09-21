@@ -9,7 +9,7 @@ use crate::{
   exec::launch_command,
   fs::{create_all_dirs, get_cwd, serialize_yaml, write_file},
   init_repo::{
-    gitignore::GitIgnoreSetting,
+    gitignore::{GitIgnore, GitIgnoreSetting, DEFAULT_GITIGNORE},
     pre_commit::{PreCommitPreset, PreCommitSetting},
   },
   Config, GenError, Preset,
@@ -18,7 +18,7 @@ use crate::{
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default)]
 pub struct RepoPreset {
   /// Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.
-  pub gitignore: GitIgnoreSetting,
+  pub gitignore: Option<GitIgnoreSetting>,
   /// Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.
   pub pre_commit: PreCommitSetting,
   /// A set of templates to generate when this preset is used.
@@ -32,17 +32,21 @@ impl Config {
 
     create_all_dirs(&out_dir)?;
 
-    let gitignore = match preset.gitignore {
-      GitIgnoreSetting::Id(id) => self
-        .gitignore_presets
-        .get(&id)
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::Gitignore,
-          name: id.clone(),
-        })?
-        .clone()
-        .process_data(&id, &self.gitignore_presets)?,
-      GitIgnoreSetting::Config(git_ignore) => git_ignore,
+    let gitignore = if let Some(data) = preset.gitignore {
+      match data {
+        GitIgnoreSetting::Id(id) => self
+          .gitignore_presets
+          .get(&id)
+          .ok_or(GenError::PresetNotFound {
+            kind: Preset::Gitignore,
+            name: id.clone(),
+          })?
+          .clone()
+          .process_data(&id, &self.gitignore_presets)?,
+        GitIgnoreSetting::Config(git_ignore) => git_ignore,
+      }
+    } else {
+      GitIgnore::String(DEFAULT_GITIGNORE.trim().to_string())
     };
 
     write_file(

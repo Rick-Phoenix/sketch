@@ -192,11 +192,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           PreCommitSetting::default()
         };
 
-        let gitignore = if let Some(id) = new_config.gitignore {
-          GitIgnoreSetting::Id(id)
-        } else {
-          GitIgnoreSetting::default()
-        };
+        let gitignore = new_config.gitignore.map(|id| GitIgnoreSetting::Id(id));
 
         RepoPreset {
           pre_commit,

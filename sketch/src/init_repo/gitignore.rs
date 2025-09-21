@@ -59,18 +59,18 @@ pub enum GitIgnoreSetting {
   Config(GitIgnore),
 }
 
-impl Default for GitIgnoreSetting {
-  fn default() -> Self {
-    Self::Config(GitIgnore::default())
-  }
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 /// A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).
 pub enum GitIgnore {
   List(Vec<String>),
   String(String),
+}
+
+impl Default for GitIgnore {
+  fn default() -> Self {
+    Self::String(Default::default())
+  }
 }
 
 impl GitIgnore {
@@ -93,19 +93,16 @@ impl Display for GitIgnore {
   }
 }
 
-impl Default for GitIgnore {
-  fn default() -> Self {
-    Self::String(
-      r###"
-      # Caches
+pub(crate) const DEFAULT_GITIGNORE: &str = r###"
+      # caches
       .task
       .cache 
 
-      # Build Output
+      # build output
       target
       *.js.map
       *.d.ts 
-      *.tsbuildInfo
+      *.tsbuildinfo
       .out
       .output
       .vercel
@@ -115,45 +112,40 @@ impl Default for GitIgnore {
       dist
       build
 
-      # Llm Files
+      # llm files
       llms.txt
       llms.md
 
-      # Node Modules
+      # node modules
       node_modules
 
-      # Env
+      # env
       .env
       .env.*
       !.env.example
       !.env.test
 
-      # Temporary Files
+      # temporary files
       *.tmp
       *.swp
       *.swo
       vite.config.js.timestamp-*
       vite.config.ts.timestamp-*
 
-      # Logs
+      # logs
       logs/
       *.log
       pnpm-debug.log*
 
-      # Operating System Generated Files
-      .DS_Store
-      Thumbs.db
+      # operating system generated files
+      .ds_store
+      thumbs.db
       desktop.ini
 
-      # Test Reports & Coverage
+      # test reports & coverage
       coverage/
       lcov-report/
       *.lcov
       .nyc_output/
 
-    "###
-        .trim()
-        .to_string(),
-    )
-  }
-}
+    "###;
