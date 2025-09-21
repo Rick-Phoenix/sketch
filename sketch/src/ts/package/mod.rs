@@ -147,9 +147,9 @@ impl Config {
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
 
-    macro_rules! write_to_output {
+    macro_rules! write_pkg_template {
       ($($tokens:tt)*) => {
-        write_file!(pkg_root, self.no_overwrite, $($tokens)*)
+        write_template!(pkg_root, self.no_overwrite, $($tokens)*)
       };
     }
 
@@ -337,8 +337,8 @@ impl Config {
         .to_string_lossy()
         .to_string();
 
-      write_to_output!(vitest, file_path);
-      write_to_output!(TestsSetupFile, tests_setup_dir.join("tests_setup.ts"));
+      write_pkg_template!(vitest, file_path);
+      write_pkg_template!(TestsSetupFile, tests_setup_dir.join("tests_setup.ts"));
     }
 
     if let Some(oxlint_config) = config.oxlint && oxlint_config.is_enabled() {

@@ -21,7 +21,7 @@ use crate::{
   custom_templating::{TemplateData, TemplateOutput},
   exec::launch_command,
   fs::{create_all_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml},
-  init_repo::pre_commit::PreCommitSetting,
+  init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},
@@ -106,11 +106,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   }
 
   match cli.command {
-    Init { no_pre_commit, .. } => {
-      if no_pre_commit {
-        config.pre_commit = PreCommitSetting::Bool(false);
-      }
-    }
+    Init { .. } => {}
 
     RenderPreset { .. } => {}
 
@@ -177,15 +173,43 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
-    Init { remote, .. } => {
-      if config.debug {
-        eprintln!("DEBUG:");
-        eprintln!("  remote: {:?}", remote);
-      }
+    Init { remote, input } => {
+      let preset = if let Some(id) = input.preset {
+        config
+          .repo_presets
+          .get(&id)
+          .ok_or(GenError::PresetNotFound {
+            kind: Preset::Repo,
+            name: id.clone(),
+          })?
+          .clone()
+      } else if let Some(new_config) = input.config {
+        let pre_commit = if new_config.no_pre_commit {
+          PreCommitSetting::Bool(false)
+        } else if let Some(preset_id) = new_config.pre_commit {
+          PreCommitSetting::Id(preset_id)
+        } else {
+          PreCommitSetting::default()
+        };
+
+        let gitignore = if let Some(id) = new_config.gitignore {
+          GitIgnoreSetting::Id(id)
+        } else {
+          GitIgnoreSetting::default()
+        };
+
+        RepoPreset {
+          pre_commit,
+          gitignore,
+          ..Default::default()
+        }
+      } else {
+        panic!("No preset selected")
+      };
 
       exit_if_dry_run!();
 
-      config.init_repo(remote.as_deref())?;
+      config.init_repo(preset, remote.as_deref())?;
     }
 
     RenderPreset { id } => {
@@ -440,6 +464,31 @@ pub struct RenderingOutput {
   stdout: bool,
 }
 
+#[derive(Args, Debug, Clone)]
+#[group(required = true, multiple = false)]
+pub struct RepoConfigInput {
+  #[arg(short, long)]
+  preset: Option<String>,
+
+  #[command(flatten)]
+  config: Option<RepoConfig>,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct RepoConfig {
+  /// Does not generate a pre-commit config.
+  #[arg(long, group = "pre-commit")]
+  no_pre_commit: bool,
+
+  /// Selects a pre-commit preset.
+  #[arg(long, group = "pre-commit")]
+  pre_commit: Option<String>,
+
+  /// Selects a gitignore preset.
+  #[arg(long)]
+  gitignore: Option<String>,
+}
+
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
@@ -454,9 +503,8 @@ pub enum Commands {
 
   /// Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config.
   Init {
-    /// Does not generate a pre-commit config.
-    #[arg(long)]
-    no_pre_commit: bool,
+    #[command(flatten)]
+    input: RepoConfigInput,
 
     /// The link to the git remote to use.
     #[arg(long)]

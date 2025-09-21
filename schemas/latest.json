@@ -48,15 +48,6 @@
       "type": "boolean",
       "default": false
     },
-    "pre_commit": {
-      "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.",
-      "$ref": "#/$defs/PreCommitSetting",
-      "default": true
-    },
-    "gitignore": {
-      "description": "Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.",
-      "$ref": "#/$defs/GitIgnore"
-    },
     "extends": {
       "description": "The paths (absolute, or relative to the originating config file) to the config files to extend.",
       "type": "array",
@@ -89,6 +80,22 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/PreCommitPreset"
+      },
+      "default": {}
+    },
+    "gitignore_presets": {
+      "description": "A map that contains gitignore presets.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/GitignorePreset"
+      },
+      "default": {}
+    },
+    "repo_presets": {
+      "description": "A map that contains presets for git repos.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/RepoPreset"
       },
       "default": {}
     },
@@ -4471,23 +4478,12 @@
         "exact"
       ]
     },
-    "PreCommitSetting": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/PreCommitPreset"
-        }
-      ]
-    },
     "PreCommitPreset": {
+      "description": "The definition for a pre-commit configuration or preset.",
       "type": "object",
       "properties": {
         "extends": {
+          "description": "The ids of the extended configurations.",
           "type": "array",
           "uniqueItems": true,
           "items": {
@@ -4496,6 +4492,7 @@
           "default": []
         },
         "repos": {
+          "description": "Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": "array",
           "uniqueItems": true,
           "items": {
@@ -4503,6 +4500,7 @@
           }
         },
         "ci": {
+          "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
           "anyOf": [
             {
               "$ref": "#/$defs/CiSettings"
@@ -4513,6 +4511,7 @@
           ]
         },
         "default_install_hook_types": {
+          "description": "A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "array",
             "null"
@@ -4523,6 +4522,7 @@
           }
         },
         "default_language_version": {
+          "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "object",
             "null"
@@ -4532,6 +4532,7 @@
           }
         },
         "default_stages": {
+          "description": "The default stages of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "array",
             "null"
@@ -4542,24 +4543,28 @@
           }
         },
         "files": {
+          "description": "A file include pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "string",
             "null"
           ]
         },
         "exclude": {
+          "description": "A file exclude pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "string",
             "null"
           ]
         },
         "fail_fast": {
+          "description": "Whether stop running hooks after a first failure https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "boolean",
             "null"
           ]
         },
         "minimum_pre_commit_version": {
+          "description": "A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "string",
             "null"
@@ -4571,8 +4576,10 @@
       ]
     },
     "Repo": {
+      "description": "A pre-commit repo.",
       "anyOf": [
         {
+          "description": "Hooks for checking the pre-commit configuration itself. https://pre-commit.com/#meta-hooks",
           "type": "object",
           "properties": {
             "repo": {
@@ -4594,12 +4601,14 @@
           ]
         },
         {
+          "description": "Hooks for the local repo https://pre-commit.com/#repository-local-hooks",
           "type": "object",
           "properties": {
             "repo": {
               "$ref": "#/$defs/LocalRepo"
             },
             "hooks": {
+              "description": "A list of local hooks\\nhttps://pre-commit.com/#2-add-a-pre-commit-configuration",
               "type": [
                 "array",
                 "null"
@@ -4615,21 +4624,25 @@
           ]
         },
         {
+          "description": "A remote repo",
           "type": "object",
           "properties": {
             "repo": {
+              "description": "A repository url https://pre-commit.com/#2-add-a-pre-commit-configuration",
               "type": [
                 "string",
                 "null"
               ]
             },
             "rev": {
+              "description": "A revision or tag to clone at https://pre-commit.com/#2-add-a-pre-commit-configuration",
               "type": [
                 "string",
                 "null"
               ]
             },
             "hooks": {
+              "description": "A list of hook mappings https://pre-commit.com/#pre-commit-configyaml---hooks.",
               "type": [
                 "array",
                 "null"
@@ -4675,12 +4688,15 @@
       ]
     },
     "Hook": {
+      "description": "Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks",
       "type": "object",
       "properties": {
         "id": {
+          "description": "An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": "string"
         },
         "additional_dependencies": {
+          "description": "A list of additional_dependencies of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "array",
             "null"
@@ -4691,18 +4707,21 @@
           }
         },
         "alias": {
+          "description": "An additional identifier of the current hook for `pre-commit run <hookid>` https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "string",
             "null"
           ]
         },
         "always_run": {
+          "description": "Run the current hook when no files matched https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "boolean",
             "null"
           ]
         },
         "args": {
+          "description": "List of additional parameters to pass to the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "array",
             "null"
@@ -4712,18 +4731,21 @@
           }
         },
         "entry": {
+          "description": "A command of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "string",
             "null"
           ]
         },
         "exclude": {
+          "description": "Exclude files that were matched by files.",
           "type": [
             "string",
             "null"
           ]
         },
         "exclude_types": {
+          "description": "A list of file types to exclude of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "array",
             "null"
@@ -4734,18 +4756,21 @@
           }
         },
         "description": {
+          "description": "Description of the hook. used for metadata purposes only.",
           "type": [
             "string",
             "null"
           ]
         },
         "files": {
+          "description": "The pattern of files to run on.",
           "type": [
             "string",
             "null"
           ]
         },
         "language": {
+          "description": "A language the current hook is written in https://pre-commit.com/#pre-commit-configyaml---hooks",
           "anyOf": [
             {
               "$ref": "#/$defs/Language"
@@ -4756,18 +4781,21 @@
           ]
         },
         "language_version": {
+          "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
           "type": [
             "string",
             "null"
           ]
         },
         "log_file": {
+          "description": "A log file of the current hook",
           "type": [
             "string",
             "null"
           ]
         },
         "minimum_pre_commit_version": {
+          "description": "Allows one to indicate a minimum compatible pre-commit version.",
           "type": [
             "integer",
             "null"
@@ -4776,24 +4804,28 @@
           "minimum": 0
         },
         "name": {
+          "description": "Name of the hook - shown during hook execution.",
           "type": [
             "string",
             "null"
           ]
         },
         "pass_filenames": {
+          "description": "Whether to pass filenames to the current hook or not https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "boolean",
             "null"
           ]
         },
         "require_serial": {
+          "description": "If true this hook will execute using a single process instead of in parallel.",
           "type": [
             "boolean",
             "null"
           ]
         },
         "stages": {
+          "description": "A stage of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "array",
             "null"
@@ -4804,6 +4836,7 @@
           }
         },
         "types": {
+          "description": "List of file types to run on (AND).",
           "type": [
             "array",
             "null"
@@ -4814,6 +4847,7 @@
           }
         },
         "types_or": {
+          "description": "List of file types to run on (OR).",
           "type": [
             "array",
             "null"
@@ -4824,6 +4858,7 @@
           }
         },
         "verbose": {
+          "description": "Display an output of the current hook even it passes https://pre-commit.com/#pre-commit-configyaml---hooks",
           "type": [
             "boolean",
             "null"
@@ -5127,33 +5162,39 @@
       ]
     },
     "CiSettings": {
+      "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
       "type": "object",
       "properties": {
         "autofix_commit_msg": {
+          "description": "A commit message for pull request autofixes https://pre-commit.ci/#configuration",
           "type": [
             "string",
             "null"
           ]
         },
         "autofix_prs": {
+          "description": "Whether to autofix pull requests https://pre-commit.ci/#configuration",
           "type": [
             "boolean",
             "null"
           ]
         },
         "autoupdate_branch": {
+          "description": "A branch to send pull request's autoupdate to https://pre-commit.ci/#configuration",
           "type": [
             "string",
             "null"
           ]
         },
         "autoupdate_commit_msg": {
+          "description": "A commit message for autoupdate pull requests https://pre-commit.ci/#configuration",
           "type": [
             "string",
             "null"
           ]
         },
         "autoupdate_schedule": {
+          "description": "An autoupdate frequency https://pre-commit.ci/#configuration",
           "anyOf": [
             {
               "$ref": "#/$defs/AutoUpdateSchedule"
@@ -5164,6 +5205,7 @@
           ]
         },
         "skip": {
+          "description": "List of skipped hook's ids https://pre-commit.ci/#configuration",
           "type": [
             "array",
             "null"
@@ -5174,6 +5216,7 @@
           }
         },
         "submodules": {
+          "description": "Whether to recursively check out submodules https://pre-commit.ci/#configuration",
           "type": [
             "boolean",
             "null"
@@ -5189,8 +5232,26 @@
         "quarterly"
       ]
     },
+    "GitignorePreset": {
+      "type": "object",
+      "properties": {
+        "extends": {
+          "description": "The ids of the extended configurations.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "config": {
+          "$ref": "#/$defs/GitIgnore",
+          "default": "# Caches\n      .task\n      .cache \n\n      # Build Output\n      target\n      *.js.map\n      *.d.ts \n      *.tsbuildInfo\n      .out\n      .output\n      .vercel\n      .netlify\n      .wrangler\n      .svelte-kit\n      dist\n      build\n\n      # Llm Files\n      llms.txt\n      llms.md\n\n      # Node Modules\n      node_modules\n\n      # Env\n      .env\n      .env.*\n      !.env.example\n      !.env.test\n\n      # Temporary Files\n      *.tmp\n      *.swp\n      *.swo\n      vite.config.js.timestamp-*\n      vite.config.ts.timestamp-*\n\n      # Logs\n      logs/\n      *.log\n      pnpm-debug.log*\n\n      # Operating System Generated Files\n      .DS_Store\n      Thumbs.db\n      desktop.ini\n\n      # Test Reports & Coverage\n      coverage/\n      lcov-report/\n      *.lcov\n      .nyc_output/"
+        }
+      }
+    },
     "GitIgnore": {
-      "description": "A definition for a gitignore template. It can be a list of strings (to append to the defaults) or a single string to define the entire content of the file.",
+      "description": "A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).",
       "anyOf": [
         {
           "type": "array",
@@ -5200,6 +5261,58 @@
         },
         {
           "type": "string"
+        }
+      ]
+    },
+    "RepoPreset": {
+      "type": "object",
+      "properties": {
+        "gitignore": {
+          "description": "Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.",
+          "$ref": "#/$defs/GitIgnoreSetting"
+        },
+        "pre_commit": {
+          "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.",
+          "$ref": "#/$defs/PreCommitSetting"
+        },
+        "with_templates": {
+          "description": "A set of templates to generate when this preset is used.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/TemplateOutput"
+          }
+        }
+      },
+      "required": [
+        "gitignore",
+        "pre_commit"
+      ]
+    },
+    "GitIgnoreSetting": {
+      "description": "Settings for a .gitignore file. It can be a preset id or a literal configuration.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/GitIgnore"
+        }
+      ]
+    },
+    "PreCommitSetting": {
+      "description": "Settings for [`pre-commit`](https://pre-commit.com)  Can be a preset id, a newly defined configuration, or a boolean to use defaults or to disable pre-commit.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PreCommitPreset"
         }
       ]
     }

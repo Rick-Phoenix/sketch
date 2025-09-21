@@ -24,7 +24,7 @@ pub struct GitignorePreset {
   pub extends: IndexSet<String>,
 
   #[merge(strategy = merge_gitignore)]
-  pub config: GitIgnore,
+  pub content: GitIgnore,
 }
 
 impl Extensible for GitignorePreset {
@@ -40,14 +40,14 @@ impl GitignorePreset {
     store: &IndexMap<String, GitignorePreset>,
   ) -> Result<GitIgnore, GenError> {
     if self.extends.is_empty() {
-      return Ok(self.config);
+      return Ok(self.content);
     }
 
     let mut processed_ids: IndexSet<String> = IndexSet::new();
 
     let merged_preset = merge_presets(Preset::Gitignore, id, self, store, &mut processed_ids)?;
 
-    Ok(merged_preset.config)
+    Ok(merged_preset.content)
   }
 }
 

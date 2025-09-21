@@ -96,6 +96,17 @@ pub fn open_file_for_writing(path: &Path) -> Result<File, GenError> {
   })
 }
 
+pub fn write_file(path: &Path, content: &str, no_overwrite: bool) -> Result<(), GenError> {
+  let mut file = open_file_if_overwriting(no_overwrite, path)?;
+
+  file
+    .write_all(content.as_bytes())
+    .map_err(|e| GenError::WriteError {
+      path: path.to_path_buf(),
+      source: e,
+    })
+}
+
 pub fn open_file_if_overwriting(no_overwrite: bool, path: &Path) -> Result<File, GenError> {
   if !no_overwrite {
     File::create(&path).map_err(|e| GenError::WriteError {

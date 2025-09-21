@@ -13,10 +13,7 @@ use serde_json::Value;
 use crate::{
   custom_templating::TemplateOutput,
   fs::get_parent_dir,
-  init_repo::{
-    gitignore::GitIgnore,
-    pre_commit::{PreCommitPreset, PreCommitSetting},
-  },
+  init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
   is_default, merge_index_maps, merge_index_sets, overwrite_if_some,
   ts::TypescriptConfig,
   GenError,
@@ -71,17 +68,6 @@ pub struct Config {
   #[arg(long)]
   pub no_overwrite: bool,
 
-  /// Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.
-  #[merge(skip)]
-  #[arg(skip)]
-  pub pre_commit: PreCommitSetting,
-
-  /// Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.
-  #[merge(skip)]
-  #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
-  pub gitignore: GitIgnore,
-
   /// The paths (absolute, or relative to the originating config file) to the config files to extend.
   #[merge(strategy = merge_index_sets)]
   #[arg(skip)]
@@ -102,6 +88,16 @@ pub struct Config {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
+
+  /// A map that contains gitignore presets.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub gitignore_presets: IndexMap<String, GitignorePreset>,
+
+  /// A map that contains presets for git repos.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub repo_presets: IndexMap<String, RepoPreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
@@ -190,14 +186,14 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      repo_presets: Default::default(),
+      gitignore_presets: Default::default(),
       pre_commit_presets: Default::default(),
       config_file: None,
       templating_presets: Default::default(),
       typescript: None,
       shell: None,
       debug: false,
-      gitignore: Default::default(),
-      pre_commit: PreCommitSetting::Bool(true),
       out_dir: None,
       templates_dir: Default::default(),
       templates: Default::default(),

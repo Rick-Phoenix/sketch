@@ -44,4 +44,6 @@ pub enum Preset {
   Templates,
   Oxlint,
   PreCommit,
+  Repo,
+  Gitignore,
 }

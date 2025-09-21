@@ -3,9 +3,24 @@
 # ANCHOR: all
 out_dir: ../../sketch/tests/output/presets
 
+# Gitignore presets
+gitignore_presets:
+  # Can be a string
+  base:
+    content: |
+      *.env
+      dist
+  # Or a list of strings
+  ts:
+    extends:
+      - base
+    content:
+      - "*.tsBuildInfo"
+      - node_modules
+
 # Pre-commit presets
 pre_commit_presets:
-  basic:
+  base:
     repos:
       - repo: https://github.com/gitleaks/gitleaks
         rev: v8.28.0
@@ -14,8 +29,9 @@ pre_commit_presets:
 
   # Hooks specific to typescript projects
   typescript:
+    # Extending the base preset
     extends:
-      - basic
+      - base
     repos:
       - repo: local
         hooks:
@@ -25,6 +41,30 @@ pre_commit_presets:
             language: system
             files: '\.svelte$|\.js$|\.ts$'
             types: [file]
+
+# Templating presets
+templating_presets:
+  # All the files in this group will be generated together
+  docker:
+    # Relative paths are joined with `out_dir`
+    - output: dockerfile
+      template: |
+        name: dev_dockerfile
+        content: |
+          FROM node:23-alpine
+
+          COPY . .
+          EXPOSE {{ docker_dev_port }}
+          CMD ["npm", "run", "dev"]
+      # Optional local context variables
+      context:
+        docker_dev_port: 5173
+    - output: compose.yaml
+      template: |
+        services:
+          myservice:
+            build: .
+            restart: unless-stopped
 
 typescript:
   no_default_deps: true

@@ -31,6 +31,13 @@ Toml:
 ```toml
 #:schema https://github.com/Rick-Phoenix/sketch/blob/main/schemas/latest.json
 ```
+
 # External Configs
 
-All sub-configs such as those belonging to `pnpm`, `oxlint`, as well as `package.json` or `tsconfig.json` files are all **fully typed**, which means that autocompletion and type safety for them is available when writing a configuration file and using the json schema as described above.
+As of now, these external configurations defined with sketch are all fully typed and documented, so they benefit from the same lsp integration as the rest of the other settings:
+
+- `.pre-commit-config.yaml`
+- `.oxlintrc.json`
+- `pnpm-workspace.yaml`
+- `package.json`
+- `tsconfig.json`
