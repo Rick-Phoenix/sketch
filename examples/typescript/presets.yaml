@@ -20,6 +20,7 @@ gitignore_presets:
 
 # Pre-commit presets
 pre_commit_presets:
+  # Commonly used repo
   base:
     repos:
       - repo: https://github.com/gitleaks/gitleaks

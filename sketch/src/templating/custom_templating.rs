@@ -10,6 +10,7 @@ use serde_json::Value;
 use tera::{Context, Tera};
 
 use crate::{
+  cli::parsers::parse_key_value_pairs,
   config::Config,
   fs::{create_all_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
   GenError,
@@ -42,6 +43,40 @@ pub struct TemplateOutput {
   pub output: String,
   #[serde(default)]
   pub context: IndexMap<String, Value>,
+}
+
+impl TemplateOutput {
+  pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
+    let pairs = parse_key_value_pairs("TemplateOutput", s)?;
+
+    let mut output: Option<String> = None;
+    let mut template: Option<TemplateData> = None;
+
+    for (key, val) in pairs {
+      match key {
+        "output" => {
+          if !val.is_empty() {
+            output = Some(val.to_string())
+          }
+        }
+        "id" => {
+          if !val.is_empty() {
+            template = Some(TemplateData::Id(val.to_string()))
+          }
+        }
+        _ => return Err(format!("Invalid key for TemplateOutput: {}", key)),
+      };
+    }
+
+    let output = output.ok_or_else(|| "Missing template output from command")?;
+    let template = template.ok_or_else(|| "Missing template id from command")?;
+
+    Ok(TemplateOutput {
+      template,
+      output,
+      context: Default::default(),
+    })
+  }
 }
 
 impl Config {

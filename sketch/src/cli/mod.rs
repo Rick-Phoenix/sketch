@@ -197,7 +197,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         RepoPreset {
           pre_commit,
           gitignore,
-          ..Default::default()
+          with_templates: new_config.with_templates,
         }
       } else {
         panic!("No preset selected")
@@ -483,6 +483,9 @@ pub struct RepoConfig {
   /// Selects a gitignore preset.
   #[arg(long)]
   gitignore: Option<String>,
+
+  #[arg(short = 't', long = "--with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
+  with_templates: Option<Vec<TemplateOutput>>,
 }
 
 /// The cli commands.

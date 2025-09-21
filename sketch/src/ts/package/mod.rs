@@ -13,10 +13,17 @@ use super::{
   vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
 };
 use crate::{
-  custom_templating::TemplateOutput, fs::{
+  custom_templating::TemplateOutput,
+  fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
     open_file_for_writing, serialize_json, serialize_yaml,
-  }, merge_if_not_default,  overwrite_if_some, ts::{oxlint::{OxlintConfigSetting, OxlintPreset}, ts_config, PackageManager}, Config, GenError, Preset
+  },
+  merge_if_not_default, overwrite_if_some,
+  ts::{
+    oxlint::{OxlintConfigSetting, OxlintPreset},
+    ts_config, PackageManager,
+  },
+  Config, GenError, Preset,
 };
 
 /// The kind of ts package.
@@ -62,7 +69,7 @@ pub struct PackageConfig {
 
   /// The templates to generate when this package is created.
   /// Relative output paths will be joined to the package's root directory.
-  #[arg(skip)]
+  #[arg(short = 't', long = "--with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
   pub with_templates: Option<Vec<TemplateOutput>>,
 
   /// The kind of package [default: 'library'].
@@ -344,7 +351,7 @@ impl Config {
     if let Some(oxlint_config) = config.oxlint && oxlint_config.is_enabled() {
       let (id, oxlint_config) = match oxlint_config {
         OxlintConfigSetting::Bool(_) => ("__default".to_string(), OxlintPreset::default()),
-        OxlintConfigSetting::Id(id) => (id.clone(), typescript.oxlint_presets.get(id.as_str()).ok_or(GenError::PresetNotFound { kind: Preset::Oxlint, name: id.clone() })?.clone()), 
+        OxlintConfigSetting::Id(id) => (id.clone(), typescript.oxlint_presets.get(id.as_str()).ok_or(GenError::PresetNotFound { kind: Preset::Oxlint, name: id.clone() })?.clone()),
         OxlintConfigSetting::Config(oxlint_preset) => (format!("__inlined_definition_{}", package_name), oxlint_preset),
       };
 
