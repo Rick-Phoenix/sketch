@@ -84,6 +84,14 @@
       },
       "default": {}
     },
+    "pre_commit_presets": {
+      "description": "A map that contains pre-commit presets.",
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/PreCommitPreset"
+      },
+      "default": {}
+    },
     "vars": {
       "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set in a template's local context or via the cli.",
       "type": "object",
@@ -4464,52 +4472,721 @@
       ]
     },
     "PreCommitSetting": {
-      "description": "The setting for the .pre-commit-config.yaml template. It can be a boolean (to use the defaults with `true` or to disable pre-commit entirely with `false`) or a literal configuration for the file.",
       "anyOf": [
         {
           "type": "boolean"
         },
         {
-          "$ref": "#/$defs/PreCommitConfig"
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PreCommitPreset"
         }
       ]
     },
-    "PreCommitConfig": {
-      "description": "Configuration for .pre-commit-config.yaml.",
+    "PreCommitPreset": {
       "type": "object",
       "properties": {
+        "extends": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
         "repos": {
           "type": "array",
+          "uniqueItems": true,
           "items": {
-            "$ref": "#/$defs/PreCommitRepo"
+            "$ref": "#/$defs/Repo"
           }
+        },
+        "ci": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CiSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "default_install_hook_types": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "default_language_version": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "default_stages": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Stage"
+          }
+        },
+        "files": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exclude": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fail_fast": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "minimum_pre_commit_version": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
         "repos"
       ]
     },
-    "PreCommitRepo": {
-      "description": "Configuration for a .pre-commit-config.yaml repo.",
+    "Repo": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "$ref": "#/$defs/MetaRepo"
+            },
+            "hooks": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/MetaRepoHook"
+              }
+            }
+          },
+          "required": [
+            "repo"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "$ref": "#/$defs/LocalRepo"
+            },
+            "hooks": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Hook"
+              }
+            }
+          },
+          "required": [
+            "repo"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "repo": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "rev": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "hooks": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Hook"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MetaRepo": {
+      "type": "string",
+      "enum": [
+        "meta"
+      ]
+    },
+    "MetaRepoHook": {
       "type": "object",
       "properties": {
-        "path": {
+        "id": {
+          "$ref": "#/$defs/MetaRepoId"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "MetaRepoId": {
+      "type": "string",
+      "enum": [
+        "check-hooks-apply",
+        "check-useless-excludes",
+        "identity"
+      ]
+    },
+    "LocalRepo": {
+      "type": "string",
+      "enum": [
+        "local"
+      ]
+    },
+    "Hook": {
+      "type": "object",
+      "properties": {
+        "id": {
           "type": "string"
         },
-        "rev": {
+        "additional_dependencies": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "alias": {
           "type": [
             "string",
             "null"
           ]
         },
-        "hooks": {
-          "type": "array",
-          "items": true
+        "always_run": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "args": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "entry": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exclude": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exclude_types": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/FileType"
+          }
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "language": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Language"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "log_file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minimum_pre_commit_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pass_filenames": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "require_serial": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "stages": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Stage"
+          }
+        },
+        "types": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/FileType"
+          }
+        },
+        "types_or": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/FileType"
+          }
+        },
+        "verbose": {
+          "type": [
+            "boolean",
+            "null"
+          ]
         }
       },
       "required": [
-        "path",
-        "hooks"
+        "id"
+      ]
+    },
+    "FileType": {
+      "type": "string",
+      "enum": [
+        "adobe-illustrator",
+        "alpm",
+        "apinotes",
+        "asar",
+        "asciidor",
+        "ash",
+        "asm",
+        "aspectj",
+        "audio",
+        "avif",
+        "awk",
+        "babelrc",
+        "bash",
+        "batch",
+        "bats",
+        "bazel",
+        "bazelrc",
+        "bib",
+        "binary",
+        "bitmap",
+        "bowerrc",
+        "browserslistrc",
+        "bzip2",
+        "c",
+        "c#",
+        "c++",
+        "c2hd",
+        "cbsd",
+        "clojure",
+        "clojurescript",
+        "cmake",
+        "codespellrc",
+        "coffee",
+        "coveragerc",
+        "crystal",
+        "csh",
+        "cson",
+        "csproj",
+        "css",
+        "csslintrc",
+        "csv",
+        "cuda",
+        "cython",
+        "dart",
+        "dash",
+        "def",
+        "diff",
+        "directory",
+        "dockerfile",
+        "dotenv",
+        "dtd",
+        "editor-config",
+        "edn",
+        "ejs",
+        "eot",
+        "eps",
+        "erb",
+        "executable",
+        "expect",
+        "file",
+        "fish",
+        "flake8",
+        "gdscript",
+        "geojson",
+        "gherkin",
+        "gif",
+        "gitattributes",
+        "gitconfig",
+        "gitignore",
+        "gitlint",
+        "gitmodules",
+        "go",
+        "go-mod",
+        "go-sum",
+        "gotimpl",
+        "gpx",
+        "graphql",
+        "gyb",
+        "gyp",
+        "gzip",
+        "handlebars",
+        "haskell",
+        "hcl",
+        "header",
+        "hgrc",
+        "html",
+        "icalendar",
+        "icns",
+        "icon",
+        "idl",
+        "idris",
+        "image",
+        "inc",
+        "ini",
+        "inl",
+        "ino",
+        "inx",
+        "jade",
+        "jar",
+        "java",
+        "java-properties",
+        "javascript",
+        "jenkins",
+        "jinja",
+        "jpeg",
+        "jshintrc",
+        "json",
+        "json5",
+        "jsonnet",
+        "jsx",
+        "jupyter",
+        "kml",
+        "kotlin",
+        "ksh",
+        "lean",
+        "lektor",
+        "lektorproject",
+        "less",
+        "liquid",
+        "literate-haskell",
+        "lua",
+        "mailmap",
+        "makefile",
+        "manifest",
+        "map",
+        "markdown",
+        "mdx",
+        "mention-bot",
+        "meson",
+        "mib",
+        "modulemap",
+        "musescore",
+        "myst",
+        "ngdoc",
+        "nim",
+        "nimble",
+        "nix",
+        "non-executable",
+        "npmignore",
+        "nunjucks",
+        "objective-c",
+        "objective-c++",
+        "ocaml",
+        "otf",
+        "p12",
+        "pdbrc",
+        "pdf",
+        "pem",
+        "perl",
+        "php",
+        "pkgbuild",
+        "plain-text",
+        "plantuml",
+        "plist",
+        "png",
+        "pofile",
+        "powershell",
+        "prettierignore",
+        "prisma",
+        "proto",
+        "puppet",
+        "purescript",
+        "pyi",
+        "pylintrc",
+        "pypirc",
+        "pyproj",
+        "python",
+        "python2",
+        "python3",
+        "pyz",
+        "qml",
+        "r",
+        "relax-ng",
+        "rst",
+        "ruby",
+        "rust",
+        "salt",
+        "sass",
+        "sbt",
+        "scala",
+        "scheme",
+        "scss",
+        "sh",
+        "shell",
+        "sln",
+        "socket",
+        "solidity",
+        "spec",
+        "sql",
+        "stylus",
+        "svelte",
+        "svg",
+        "swf",
+        "swift",
+        "swiftdeps",
+        "symlink",
+        "system-verilog",
+        "tar",
+        "tcsh",
+        "terraform",
+        "tex",
+        "text",
+        "thrift",
+        "tiff",
+        "toml",
+        "ts",
+        "tsv",
+        "tsx",
+        "ttf",
+        "twig",
+        "twisted",
+        "tsxprofile",
+        "urdf",
+        "vb",
+        "vbproj",
+        "vcxproj",
+        "vdx",
+        "verilog",
+        "vhdl",
+        "vim",
+        "vtl",
+        "vue",
+        "wav",
+        "webp",
+        "wheel",
+        "wky",
+        "woff",
+        "woff2",
+        "wsgi",
+        "xhtml",
+        "xml",
+        "xquery",
+        "xsd",
+        "xsl",
+        "yaml",
+        "yamllint",
+        "yang",
+        "yin",
+        "zcml",
+        "zig",
+        "zip",
+        "zpt",
+        "zsh"
+      ]
+    },
+    "Language": {
+      "type": "string",
+      "enum": [
+        "conda",
+        "coursier",
+        "dart",
+        "docker",
+        "docker_image",
+        "dotnet",
+        "fail",
+        "golang",
+        "lua",
+        "node",
+        "perl",
+        "python",
+        "python_venv",
+        "r",
+        "ruby",
+        "rust",
+        "swift",
+        "pygrep",
+        "script",
+        "system"
+      ]
+    },
+    "Stage": {
+      "type": "string",
+      "enum": [
+        "commit",
+        "merge-commit",
+        "push",
+        "prepare-commit-msg",
+        "commit-msg",
+        "post-checkout",
+        "post-commit",
+        "post-merge",
+        "post-rewrite",
+        "pre-commit",
+        "pre-merge-commit",
+        "pre-push",
+        "pre-rebase",
+        "manual"
+      ]
+    },
+    "CiSettings": {
+      "type": "object",
+      "properties": {
+        "autofix_commit_msg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autofix_prs": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "autoupdate_branch": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoupdate_commit_msg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoupdate_schedule": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoUpdateSchedule"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skip": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "submodules": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "AutoUpdateSchedule": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly",
+        "quarterly"
       ]
     },
     "GitIgnore": {

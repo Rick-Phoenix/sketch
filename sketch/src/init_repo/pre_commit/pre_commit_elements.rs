@@ -315,13 +315,27 @@ pub enum AutoUpdateSchedule {
   Quarterly,
 }
 
+/// pre-commit.ci specific settings https://pre-commit.ci/#configuration
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct CiSettings {
+  /// A commit message for pull request autofixes https://pre-commit.ci/#configuration
   pub autofix_commit_msg: Option<String>,
+
+  /// Whether to autofix pull requests https://pre-commit.ci/#configuration
   pub autofix_prs: Option<bool>,
+
+  /// A branch to send pull request's autoupdate to https://pre-commit.ci/#configuration
   pub autoupdate_branch: Option<String>,
+
+  /// A commit message for autoupdate pull requests https://pre-commit.ci/#configuration
   pub autoupdate_commit_msg: Option<String>,
+
+  /// An autoupdate frequency https://pre-commit.ci/#configuration
   pub autoupdate_schedule: Option<AutoUpdateSchedule>,
+
+  /// List of skipped hook's ids https://pre-commit.ci/#configuration
   pub skip: Option<BTreeSet<String>>,
+
+  /// Whether to recursively check out submodules https://pre-commit.ci/#configuration
   pub submodules: Option<bool>,
 }

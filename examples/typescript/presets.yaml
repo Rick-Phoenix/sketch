@@ -3,6 +3,29 @@
 # ANCHOR: all
 out_dir: ../../sketch/tests/output/presets
 
+# Pre-commit presets
+pre_commit_presets:
+  basic:
+    repos:
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.28.0
+        hooks:
+          - id: gitleaks
+
+  # Hooks specific to typescript projects
+  typescript:
+    extends:
+      - basic
+    repos:
+      - repo: local
+        hooks:
+          - id: oxlint
+            name: oxlint
+            entry: oxlint
+            language: system
+            files: '\.svelte$|\.js$|\.ts$'
+            types: [file]
+
 typescript:
   no_default_deps: true
 
@@ -66,7 +89,7 @@ typescript:
       ignorePatterns:
         - .cache
 
-  # Packages presets
+  # Package presets
   package_presets:
     example:
       name: example

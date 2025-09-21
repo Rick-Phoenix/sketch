@@ -25,6 +25,13 @@ impl Config {
 
     write_to_output!(self.gitignore, ".gitignore");
 
+    launch_command(
+      shell,
+      &["git", "init"],
+      &out_dir,
+      Some("Failed to initialize a new git repo"),
+    )?;
+
     if self.pre_commit.is_enabled() {
       let (pre_commit_id, pre_commit_preset) = match self.pre_commit {
         PreCommitSetting::Id(id) => (
@@ -48,6 +55,7 @@ impl Config {
         pre_commit_preset.process_data(&pre_commit_id, &self.pre_commit_presets)?;
 
       serialize_yaml(&pre_commit_config, &out_dir.join(".pre-commit-config.yaml"))?;
+
       launch_command(
         shell,
         &["pre-commit", "install"],
@@ -55,13 +63,6 @@ impl Config {
         Some("Failed to install the pre-commit hooks"),
       )?;
     }
-
-    launch_command(
-      shell,
-      &["git", "init"],
-      &out_dir,
-      Some("Failed to initialize a new git repo"),
-    )?;
 
     if let Some(remote) = remote {
       launch_command(
