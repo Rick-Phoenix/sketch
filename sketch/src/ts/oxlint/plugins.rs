@@ -95,36 +95,47 @@ pub enum TagNamePreference {
 }
 
 /// Settings for the Jsdoc plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-jsdoc
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct JsDocPluginSettings {
   /// Only for `require-(yields|returns|description|example|param|throws)` rules.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub augments_extends_replaces_docs: Option<bool>,
 
   /// Only for `require-param-type` and `require-param-description` rule.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub exempt_destructured_roots_from_chekcs: Option<bool>,
 
   /// For all rules but NOT apply to `empty-tags` rule.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_internal: Option<bool>,
 
   /// For all rules but NOT apply to `check-access` and `empty-tags` rule.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_private: Option<bool>,
+
   /// Only for `require-(yields|returns|description|example|param|throws)` rules.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_replaces_docs: Option<bool>,
 
   /// Only for `require-(yields|returns|description|example|param|throws)` rules.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub implements_replaces_docs: Option<bool>,
 
   /// Only for `require-(yields|returns|description|example|param|throws)` rules.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub override_replaces_docs: Option<bool>,
 
   /// Specifies allows custom tags for Jsdoc annotations.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub tag_name_preference: Option<BTreeMap<String, TagNamePreference>>,
 }
 
 /// Settings for the jsx-a11y plugin. See more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y#configurations
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct JsxA11yPluginSettings {
   /// Map of attribute names to their DOM equivalents.This is useful for non-React frameworks that use different attribute names.
   ///
@@ -145,6 +156,7 @@ pub struct JsxA11yPluginSettings {
   ///   }
   /// }
   /// ```
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub attributes: Option<BTreeMap<String, BTreeSet<String>>>,
 
   /// To have your custom components be checked as DOM elements, you can\nprovide a mapping of your component names to the DOM element name.
@@ -162,6 +174,7 @@ pub struct JsxA11yPluginSettings {
   ///   }
   /// }
   /// ```
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub components: Option<BTreeMap<String, String>>,
 
   /// An optional setting that define the prop your code uses to create polymorphic components.
@@ -176,11 +189,12 @@ pub struct JsxA11yPluginSettings {
   ///
   /// Will be treated as an `h3`. If not set, this component will be treated
   /// as a `Box`.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub polymorphic_prop_name: Option<String>,
 }
 
 /// Settings for the nextjs plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-next
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct NextPluginSettings {
   /// The root directory of the Next.js project.
@@ -199,6 +213,7 @@ pub struct NextPluginSettings {
   ///   }
   /// }
   /// ```
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub root_dir: Option<OneOrManyStrings>,
 }
 
@@ -210,8 +225,9 @@ pub enum OneOrManyStrings {
 }
 
 /// Settings for the react plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-react
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct ReactPluginSettings {
   /// Components used as alternatives to `<form>` for forms, such as `<Formik>`.
   ///
@@ -232,6 +248,7 @@ pub struct ReactPluginSettings {
   ///   }
   /// }
   /// ```
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub form_components: Option<Vec<CustomComponent>>,
 
   /// Components used as alternatives to `<a>` for linking, such as `<Link>`.
@@ -254,6 +271,7 @@ pub struct ReactPluginSettings {
   ///   }
   /// }
   /// ```
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub link_components: Option<Vec<CustomComponent>>,
 }
 

@@ -2,6 +2,7 @@ pub mod plugins;
 use std::collections::{BTreeMap, BTreeSet};
 
 use indexmap::{IndexMap, IndexSet};
+use maplit::btreeset;
 use merge::Merge;
 use plugins::*;
 use schemars::JsonSchema;
@@ -49,8 +50,9 @@ impl OxlintPreset {
 }
 
 /// The configuration directives for `oxlint`. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct OxlintConfig {
   /// Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -99,6 +101,25 @@ pub struct OxlintConfig {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
   pub extras: Option<JsonValueBTreeMap>,
+}
+
+impl Default for OxlintConfig {
+  fn default() -> Self {
+    Self {
+      extends: Default::default(),
+      env: Default::default(),
+      globals: Default::default(),
+      categories: Default::default(),
+      ignore_patterns: Default::default(),
+      overrides: Default::default(),
+      plugins: Some(
+        btreeset! { Plugin::Known(Plugins::Oxc), Plugin::Known(Plugins::Typescript), Plugin::Known( Plugins::Unicorn) },
+      ),
+      rules: Default::default(),
+      settings: Default::default(),
+      extras: Default::default(),
+    }
+  }
 }
 
 impl Default for OxlintConfigSetting {
@@ -158,7 +179,8 @@ pub enum RuleSetting {
 }
 
 /// Configure an entire category of rules all at once.Rules enabled or disabled this way will be overwritten by individual rules in the `rules` field.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[serde(default)]
 pub struct Categories {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub correctness: Option<RuleEnforcement>,
@@ -183,7 +205,8 @@ pub struct Categories {
 }
 
 /// Settings to override for a group of files.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[serde(default)]
 pub struct Override {
   /// A list of glob patterns to override.
   pub files: BTreeSet<String>,
@@ -206,7 +229,8 @@ pub struct Override {
 }
 
 /// Configure the behavior of linter plugins.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
+#[serde(default)]
 #[serde(rename_all = "camelCase")]
 #[merge(strategy = overwrite_if_some)]
 pub struct PluginsSettings {

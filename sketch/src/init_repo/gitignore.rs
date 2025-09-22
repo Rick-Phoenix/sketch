@@ -97,58 +97,57 @@ impl Display for GitIgnore {
 }
 
 pub(crate) const DEFAULT_GITIGNORE: &str = r###"
-      # caches
-      .task
-      .cache 
+# caches
+.task
+.cache 
 
-      # build output
-      target
-      *.js.map
-      *.d.ts 
-      *.tsbuildinfo
-      .out
-      .output
-      .vercel
-      .netlify
-      .wrangler
-      .svelte-kit
-      dist
-      build
+# build output
+target
+*.js.map
+*.d.ts 
+*.tsbuildinfo
+.out
+.output
+.vercel
+.netlify
+.wrangler
+.svelte-kit
+dist
+build
 
-      # llm files
-      llms.txt
-      llms.md
+# llm files
+llms.txt
+llms.md
 
-      # node modules
-      node_modules
+# node modules
+node_modules
 
-      # env
-      .env
-      .env.*
-      !.env.example
-      !.env.test
+# env
+.env
+.env.*
+!.env.example
+!.env.test
 
-      # temporary files
-      *.tmp
-      *.swp
-      *.swo
-      vite.config.js.timestamp-*
-      vite.config.ts.timestamp-*
+# temporary files
+*.tmp
+*.swp
+*.swo
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
 
-      # logs
-      logs/
-      *.log
-      pnpm-debug.log*
+# logs
+logs/
+*.log
+pnpm-debug.log*
 
-      # operating system generated files
-      .ds_store
-      thumbs.db
-      desktop.ini
+# operating system generated files
+.ds_store
+thumbs.db
+desktop.ini
 
-      # test reports & coverage
-      coverage/
-      lcov-report/
-      *.lcov
-      .nyc_output/
-
-    "###;
+# test reports & coverage
+coverage/
+lcov-report/
+*.lcov
+.nyc_output/
+"###;
