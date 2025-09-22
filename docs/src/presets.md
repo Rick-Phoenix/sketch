@@ -29,7 +29,6 @@ For those presets that are extensible, merging them works like this:
 
 # Examples
 
-Typescript-related presets are explained in more detail in the [typescript] section.
 ```yaml
 {{#include ../../examples/typescript/presets.yaml:all}}
 ```

@@ -90,6 +90,7 @@ templating_presets:
 typescript:
   no_default_deps: true
 
+  # ANCHOR: package_json
   # `package.json` presets
   package_json_presets:
     # Defining some reusable fields such as some common scripts and dependencies
@@ -111,6 +112,8 @@ typescript:
       # And merging dependencies
       devDependencies:
         svelte: "*"
+
+    # ANCHOR_END: package_json
 
   # ANCHOR: tsconfig
   # Tsconfig presets
@@ -137,8 +140,10 @@ typescript:
       compilerOptions:
         # Whereas other fields are overwritten
         noEmit: false
+
     # ANCHOR_END: tsconfig
 
+  # ANCHOR: oxlint
   # Oxlint presets
   oxlint_presets:
     base:
@@ -151,6 +156,8 @@ typescript:
         - base
       ignorePatterns:
         - .cache
+
+  # ANCHOR_END: oxlint
 
   # ANCHOR: package
   # Package presets
