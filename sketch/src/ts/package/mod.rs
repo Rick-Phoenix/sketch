@@ -16,7 +16,7 @@ use crate::{
   custom_templating::TemplateOutput,
   fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
-    open_file_for_writing, serialize_json, serialize_yaml,
+    open_file_if_overwriting, serialize_json, serialize_yaml,
   },
   merge_if_not_default, merge_optional_vecs, overwrite_if_some,
   ts::{
@@ -115,6 +115,7 @@ impl Config {
     data: PackageData,
     update_root_tsconfig: bool,
   ) -> Result<(), GenError> {
+    let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
@@ -157,7 +158,7 @@ impl Config {
 
     macro_rules! write_pkg_template {
       ($($tokens:tt)*) => {
-        write_template!(pkg_root, self.no_overwrite, $($tokens)*)
+        write_template!(pkg_root, overwrite, $($tokens)*)
       };
     }
 
@@ -215,7 +216,11 @@ impl Config {
         .await?;
     }
 
-    serialize_json(&package_json_data, &pkg_root.join("package.json"))?;
+    serialize_json(
+      &package_json_data,
+      &pkg_root.join("package.json"),
+      overwrite,
+    )?;
 
     if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path = monorepo_root.join("pnpm-workspace.yaml");
@@ -226,7 +231,7 @@ impl Config {
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
         .await;
 
-      serialize_yaml(&pnpm_workspace, &pnpm_workspace_path)?;
+      serialize_yaml(&pnpm_workspace, &pnpm_workspace_path, overwrite)?;
     }
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
@@ -293,7 +298,7 @@ impl Config {
     }
 
     for (file, tsconfig) in tsconfig_files {
-      serialize_json(&tsconfig, &pkg_root.join(file))?;
+      serialize_json(&tsconfig, &pkg_root.join(file), overwrite)?;
     }
 
     if update_root_tsconfig {
@@ -310,13 +315,13 @@ impl Config {
         path: path_to_new_tsconfig.to_string_lossy().to_string(),
       });
 
-      serialize_json(&root_tsconfig, &root_tsconfig_path)?;
+      serialize_json(&root_tsconfig, &root_tsconfig_path, overwrite)?;
     }
 
     let src_dir = pkg_root.join("src");
     create_all_dirs(&src_dir)?;
 
-    let _index_file = open_file_for_writing(&src_dir.join("index.ts"))?;
+    let _index_file = open_file_if_overwriting(overwrite, &src_dir.join("index.ts"))?;
 
     let vitest_config = match config.vitest {
       VitestConfigKind::Bool(v) => v.then(VitestConfig::default),
@@ -358,7 +363,7 @@ impl Config {
 
       let merged_config = oxlint_config.process_data(id.as_str(), &typescript.oxlint_presets)?;
 
-      serialize_json(&merged_config, &pkg_root.join(".oxlintrc.json"))?;
+      serialize_json(&merged_config, &pkg_root.join(".oxlintrc.json"), overwrite)?;
     }
 
     if let Some(templates) = config.with_templates && !templates.is_empty() {

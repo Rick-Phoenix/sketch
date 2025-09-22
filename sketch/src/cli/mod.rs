@@ -158,6 +158,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let mut config = get_config_from_cli(cli).await?;
   let root_dir = config.out_dir.clone().unwrap_or_else(|| get_cwd());
 
+  let overwrite = !config.no_overwrite;
+
   macro_rules! exit_if_dry_run {
     () => {
       if is_dry_run {
@@ -284,21 +286,14 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      if output_path.exists() && config.no_overwrite {
-        return Err(GenError::Custom(format!(
-          "File `{}` already exists and overwriting is disabled",
-          output_path.display()
-        )));
-      }
-
       let new_config = Config::default();
 
       match format.as_ref() {
-        "yaml" => serialize_yaml(&new_config, &output_path)?,
+        "yaml" => serialize_yaml(&new_config, &output_path, overwrite)?,
         "toml" => {
-          serialize_toml(&new_config, &output_path)?;
+          serialize_toml(&new_config, &output_path, overwrite)?;
         }
-        "json" => serialize_json(&new_config, &output_path)?,
+        "json" => serialize_json(&new_config, &output_path, overwrite)?,
         _ => {
           return Err(GenError::Custom(format!(
             "Invalid config format. Allowed formats are: yaml, toml, json"

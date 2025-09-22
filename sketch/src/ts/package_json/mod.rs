@@ -442,7 +442,7 @@ mod test {
     PublishConfigAccess, Repository,
   };
   use crate::{
-    fs::{get_parent_dir, open_file_for_writing},
+    fs::{get_parent_dir, serialize_json},
     ts::package_json::{Bin, Funding, FundingData, PeerDependencyMeta},
   };
 
@@ -607,9 +607,7 @@ mod test {
 
     create_dir_all(get_parent_dir(&output_path)).unwrap();
 
-    let mut output_file = open_file_for_writing(&output_path)?;
-
-    serde_json::to_writer_pretty(&mut output_file, &test_package_json)?;
+    serialize_json(&test_package_json, &output_path, true)?;
 
     let result: PackageJson = serde_json::from_reader(File::open(&output_path)?)?;
 

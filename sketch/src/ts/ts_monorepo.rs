@@ -15,6 +15,7 @@ use crate::{
 
 impl Config {
   pub async fn create_ts_monorepo(self) -> Result<(), GenError> {
+    let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
@@ -79,7 +80,7 @@ impl Config {
 
     package_json_data.name = Some(root_package_name.clone());
 
-    serialize_json(&package_json_data, &out_dir.join("package.json"))?;
+    serialize_json(&package_json_data, &out_dir.join("package.json"), overwrite)?;
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
     let tsconfig_presets = &typescript.ts_config_presets;
@@ -130,7 +131,7 @@ impl Config {
     }
 
     for (file, tsconfig) in tsconfig_files {
-      serialize_json(&tsconfig, &out_dir.join(file))?;
+      serialize_json(&tsconfig, &out_dir.join(file), overwrite)?;
     }
 
     if matches!(package_manager, PackageManager::Pnpm) {
@@ -148,11 +149,11 @@ impl Config {
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
         .await;
 
-      serialize_yaml(&pnpm_data, &out_dir.join("pnpm-workspace.yaml"))?;
+      serialize_yaml(&pnpm_data, &out_dir.join("pnpm-workspace.yaml"), overwrite)?;
     }
 
     if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfigSetting::Bool(false)) {
-      serialize_json(&oxlint_config, &out_dir.join(".oxlintrc.json"))?;
+      serialize_json(&oxlint_config, &out_dir.join(".oxlintrc.json"), overwrite)?;
     }
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {

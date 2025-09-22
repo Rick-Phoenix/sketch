@@ -16,8 +16,12 @@ pub fn get_extension(file: &Path) -> &OsStr {
     .unwrap_or_else(|| panic!("File `{}` has no extension", file.display()))
 }
 
-pub fn serialize_toml<T: Serialize>(item: &T, path: &Path) -> Result<(), GenError> {
-  let mut output_file = open_file_for_writing(path)?;
+pub fn serialize_toml<T: Serialize>(
+  item: &T,
+  path: &Path,
+  overwrite: bool,
+) -> Result<(), GenError> {
+  let mut output_file = open_file_if_overwriting(overwrite, path)?;
 
   let content = toml::to_string_pretty(item).map_err(|e| GenError::SerializationError {
     file: path.to_path_buf(),
@@ -34,8 +38,12 @@ pub fn serialize_toml<T: Serialize>(item: &T, path: &Path) -> Result<(), GenErro
   Ok(())
 }
 
-pub fn serialize_yaml<T: Serialize>(item: &T, path: &Path) -> Result<(), GenError> {
-  let output_file = open_file_for_writing(path)?;
+pub fn serialize_yaml<T: Serialize>(
+  item: &T,
+  path: &Path,
+  overwrite: bool,
+) -> Result<(), GenError> {
+  let output_file = open_file_if_overwriting(overwrite, path)?;
 
   serde_yaml_ng::to_writer(output_file, item).map_err(|e| GenError::SerializationError {
     file: path.to_path_buf(),
@@ -43,8 +51,12 @@ pub fn serialize_yaml<T: Serialize>(item: &T, path: &Path) -> Result<(), GenErro
   })
 }
 
-pub fn serialize_json<T: Serialize>(item: &T, path: &Path) -> Result<(), GenError> {
-  let output_file = open_file_for_writing(path)?;
+pub fn serialize_json<T: Serialize>(
+  item: &T,
+  path: &Path,
+  overwrite: bool,
+) -> Result<(), GenError> {
+  let output_file = open_file_if_overwriting(overwrite, path)?;
 
   serde_json::to_writer_pretty(output_file, item).map_err(|e| GenError::SerializationError {
     file: path.to_path_buf(),
@@ -65,7 +77,7 @@ pub fn deserialize_toml<T: DeserializeOwned>(path: &Path) -> Result<T, GenError>
 }
 
 pub fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, GenError> {
-  let file = open_file(path)?;
+  let file = read_file(path)?;
 
   serde_json::from_reader(file).map_err(|e| GenError::DeserializationError {
     file: path.to_path_buf(),
@@ -74,7 +86,7 @@ pub fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, GenError>
 }
 
 pub fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, GenError> {
-  let file = open_file(path)?;
+  let file = read_file(path)?;
 
   serde_yaml_ng::from_reader(file).map_err(|e| GenError::DeserializationError {
     file: path.to_path_buf(),
@@ -82,22 +94,15 @@ pub fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, GenError>
   })
 }
 
-pub fn open_file(path: &Path) -> Result<File, GenError> {
+pub fn read_file(path: &Path) -> Result<File, GenError> {
   File::open(path).map_err(|e| GenError::ReadError {
     path: path.to_path_buf(),
     source: e,
   })
 }
 
-pub fn open_file_for_writing(path: &Path) -> Result<File, GenError> {
-  File::create(path).map_err(|e| GenError::WriteError {
-    path: path.to_path_buf(),
-    source: e,
-  })
-}
-
-pub fn write_file(path: &Path, content: &str, no_overwrite: bool) -> Result<(), GenError> {
-  let mut file = open_file_if_overwriting(no_overwrite, path)?;
+pub fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), GenError> {
+  let mut file = open_file_if_overwriting(overwrite, path)?;
 
   file
     .write_all(content.as_bytes())
@@ -107,8 +112,8 @@ pub fn write_file(path: &Path, content: &str, no_overwrite: bool) -> Result<(), 
     })
 }
 
-pub fn open_file_if_overwriting(no_overwrite: bool, path: &Path) -> Result<File, GenError> {
-  if !no_overwrite {
+pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, GenError> {
+  if overwrite {
     File::create(&path).map_err(|e| GenError::WriteError {
       path: path.to_path_buf(),
       source: e,

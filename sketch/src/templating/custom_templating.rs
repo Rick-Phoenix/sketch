@@ -113,6 +113,7 @@ impl Config {
     output_root: T,
     templates: Vec<TemplateOutput>,
   ) -> Result<(), GenError> {
+    let overwrite = !self.no_overwrite;
     let mut tera = self.initialize_tera()?;
 
     let mut global_context = Context::from_serialize(self.vars)
@@ -158,7 +159,7 @@ impl Config {
 
         create_all_dirs(get_parent_dir(&output_path))?;
 
-        let mut output_file = open_file_if_overwriting(self.no_overwrite, &output_path)?;
+        let mut output_file = open_file_if_overwriting(overwrite, &output_path)?;
 
         tera
           .render_to(template_name, &local_context, &mut output_file)

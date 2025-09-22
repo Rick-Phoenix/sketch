@@ -165,7 +165,7 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 
   create_dir_all(output_path.parent().unwrap()).unwrap();
 
-  serialize_json(&ts_config, &output_path)?;
+  serialize_json(&ts_config, &output_path, true)?;
 
   // Check that it deserializes correctly
   let result: TsConfig = serde_json::from_reader(File::open(&output_path)?)

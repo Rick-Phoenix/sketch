@@ -28,6 +28,7 @@ pub struct RepoPreset {
 impl Config {
   pub fn init_repo(self, preset: RepoPreset, remote: Option<&str>) -> Result<(), GenError> {
     let out_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
+    let overwrite = !self.no_overwrite;
 
     create_all_dirs(&out_dir)?;
 
@@ -51,7 +52,7 @@ impl Config {
     write_file(
       &out_dir.join(".gitignore"),
       &gitignore.to_string(),
-      self.no_overwrite,
+      overwrite,
     )?;
 
     launch_command(
@@ -83,7 +84,11 @@ impl Config {
       let pre_commit_config =
         pre_commit_preset.process_data(&pre_commit_id, &self.pre_commit_presets)?;
 
-      serialize_yaml(&pre_commit_config, &out_dir.join(".pre-commit-config.yaml"))?;
+      serialize_yaml(
+        &pre_commit_config,
+        &out_dir.join(".pre-commit-config.yaml"),
+        overwrite,
+      )?;
 
       launch_command(
         "pre-commit",

@@ -1,7 +1,7 @@
 macro_rules! write_template {
-  ($output:expr, $no_overwrite:expr, $data:expr, $suffix:expr) => {
+  ($output:expr, $overwrite:expr, $data:expr, $suffix:expr) => {
     let path = $output.join($suffix);
-    let mut file = crate::fs::open_file_if_overwriting($no_overwrite, &path)?;
+    let mut file = crate::fs::open_file_if_overwriting($overwrite, &path)?;
 
     $data
       .write_into(&mut file)
