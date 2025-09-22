@@ -276,7 +276,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       config.generate_templates(root_dir, vec![template])?;
     }
     New { output } => {
-      let output_path = root_dir.join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
+      let output_path = get_cwd().join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
 
       if let Some(parent_dir) = output_path.parent() {
         create_all_dirs(&parent_dir)?;

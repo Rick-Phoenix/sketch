@@ -8,14 +8,13 @@
 
 -------
 
-- [Configuration](./configuration.md)
-    - [Generating Config Files](./config_files_gen.md)
-    - [Lsp Integration](./lsp.md)
-    - [Extensible Configurations](./extensible_configs.md)
+- [Configuration](./configuration/configuration.md)
+    - [Lsp Integration](./configuration/lsp.md)
 - [Templating](./templating.md)
     - [Rendering Templates](./rendering_templates.md)
     - [Executing Templates](./executing_templates.md)
 - [Presets](./presets.md)
+- [Git Repo](./git/git_summary.md)
 - [Typescript](./typescript.md)
     - [Generating A Monorepo](./ts_monorepo.md)
     - [Generating A Package](./ts_package_gen.md)

@@ -34,7 +34,7 @@ Toml:
 
 # External Configs
 
-As of now, these external configurations defined with sketch are all fully typed and documented, so they benefit from the same lsp integration as the rest of the other settings:
+As of now, these external configurations defined with sketch are all **fully typed and documented**, so they benefit from the same lsp integration as the rest of the other settings:
 
 - `.pre-commit-config.yaml`
 - `.oxlintrc.json`

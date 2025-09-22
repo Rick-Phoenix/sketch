@@ -13,7 +13,9 @@ use crate::fs::serialize_json;
 #[test]
 fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
   let ts_config = TsConfig {
+    extras: None,
     compiler_options: Some(CompilerOptions {
+      extras: None,
       out_dir: Some("out".to_string()),
       allow_js: Some(true),
       check_js: Some(true),
@@ -152,6 +154,7 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
       disable_filename_based_type_acquisition: Some(true),
     }),
     watch_options: Some(WatchOptions {
+      extras: None,
       watch_file: Some(WatchFile::UseFsEventsOnParentDirectory),
       watch_directory: Some(WatchDirectory::UseFsEvents),
       fallback_polling: Some(FallbackPolling::DynamicPriorityPolling),

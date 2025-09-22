@@ -4,17 +4,30 @@
 # All output paths will start from this directory.
 out_dir: .
 
+# The relative path from the config file (or from the cwd, if set via the cli flag)
+# to the directory containing templates.
+templates_dir: null
+
+# A map of template definitions.
+templates: {}
+
+# The configuration for typescript-related commands.
+typescript: null
+
+# Various kinds of presets
+pre_commit_presets: {}
+
+gitignore_presets: {}
+
+templating_presets: {}
+
+git_presets: {}
+
 # Enables debugging mode
 debug: false
 
 # Extends other configuration files
 extends: []
-
-# Settings for the .gitignore file generated via the `init` command.
-# This can be:
-# - A list of directives (to add to the defaults)
-# - A literal string (to replace defaults)
-gitignore: []
 
 # Variables for templates
 vars: {}
@@ -22,26 +35,5 @@ vars: {}
 # Do not overwrite existing files
 no_overwrite: false
 
-# The pre-commit settings, used for the .pre-commit-config file
-# generated with the `init` command.
-# Can be:
-# - A boolean, to use defaults or disable it altogether
-# - A list of repos to populate the config with
-# The default setting includes just the gitleaks repo.
-pre_commit: true
-
 # The shell to use for the `exec` command. Defaults to `cmd.exe` on windows and `sh` elsewhere.
 shell: null
-
-# A map of template definitions.
-templates: {}
-
-# A map of templating presets.
-templating_presets: {}
-
-# The relative path from the config file (or from the cwd, if set via the cli flag)
-# to the directory containing templates.
-templates_dir: null
-
-# The configuration for typescript-related commands.
-typescript: null
