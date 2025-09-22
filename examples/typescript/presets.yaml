@@ -3,6 +3,7 @@
 out_dir: ../../sketch/tests/output/presets
 
 # ANCHOR: all
+# ANCHOR: templates
 templates:
   dockerfile: |
     FROM node:23-alpine
@@ -16,7 +17,8 @@ templates:
       myservice:
         build: .
         restart: unless-stopped
-
+# ANCHOR_END: templates
+# ANCHOR: git
 # Gitignore presets
 gitignore_presets:
   # Can be a string
@@ -27,6 +29,7 @@ gitignore_presets:
   # Or a list of strings
   ts:
     extends:
+      # When being merged, the new entries are placed at the top
       - base
     content:
       - "*.tsBuildInfo"
@@ -65,10 +68,11 @@ git_presets:
     pre_commit: typescript
 
     # Templates that will be generated with this preset
-    # in the new repo's root
+    # starting from the new repo's root
     with_templates:
       - template: dockerfile
         output: Dockerfile
+# ANCHOR_END: git
 
 # Templating presets
 templating_presets:
@@ -108,6 +112,7 @@ typescript:
       devDependencies:
         svelte: "*"
 
+  # ANCHOR: tsconfig
   # Tsconfig presets
   ts_config_presets:
     base:
@@ -132,6 +137,7 @@ typescript:
       compilerOptions:
         # Whereas other fields are overwritten
         noEmit: false
+    # ANCHOR_END: tsconfig
 
   # Oxlint presets
   oxlint_presets:
@@ -146,6 +152,7 @@ typescript:
       ignorePatterns:
         - .cache
 
+  # ANCHOR: package
   # Package presets
   package_presets:
     example:
@@ -173,6 +180,7 @@ typescript:
               - extended
             include:
               - scripts
+      # ANCHOR_END: package
 
       # Templates to generate in the new package's root
       with_templates:

@@ -53,6 +53,7 @@ typescript:
 
   # ANCHOR: template_example
   with_templates:
+    # Relative path from the root of the package
     - output: docker/dev.dockerfile
       template:
         name: dev_dockerfile

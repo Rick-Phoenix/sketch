@@ -44,12 +44,16 @@ typescript:
         # (starting from tests_dir)
         setup_dir: setup
 
-        # Can use a list of plugins which will be set up in the config file
+        # A list of plugins that will be set up in the config file
         plugins: []
       # ANCHOR_END: all
 
-      # Use the default tsconfigs
+      # Using the default tsconfigs, which are:
+      # - A `tsconfig.json` file only references other files
+      # - A `tsconfig.src.json` file that has `noEmit` for apps and `emitDeclarationOnly` for libraries
+      # - (Only for libraries) A separate `tsconfig.dev.json` file for typechecking tests, configs and scripts
       ts_config: null
+
       # ANCHOR: template_example
       # Inside the package preset configuration
       with_templates:

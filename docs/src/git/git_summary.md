@@ -1,7 +1,24 @@
-# Repo Setup
+# Generating A Git Repo
 
-You can also use the `init` command to create a new git repo. This command will:
+The `sketch repo` command allows you to generate a new git repository, starting from a preset stored in one of your configuration files.
 
-1. Create a new git repo in the specified `out_dir`.
-2. If a `--remote` is provided, it will also add that remote as the origin/main for the repo.
-3. Unless `pre-commit` is disabled, it will generate a new .pre-commit-config.yaml file in the root, with the repos specified in the config file (if there are any, otherwise it will just add the gitleaks repo). It will then run `pre-commit install` to install the given hooks.
+A git preset uses (or defines) a preset for its `gitignore` file and, optionally, for [`pre-commit`](https://pre-commit.com), as well as a list of templates that will be generated inside the root of the new repo when the command is triggered.
+
+```yaml
+{{#include ../../../examples/typescript/presets.yaml:templates}}
+
+{{#include ../../../examples/typescript/presets.yaml:git}}
+```
+Starting from this config, we can run this command:
+
+>`{{#include ../../../sketch/tests/output/presets/cmd}}`
+
+To generate a new git repo. 
+
+With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates to generate to the list.
+
+Tree output:
+
+```
+{{#include ../../../sketch/tests/output/presets/tree_output.txt}}
+```

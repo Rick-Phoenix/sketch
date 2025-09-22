@@ -6,11 +6,14 @@ By default, all `latest` versions will be converted to a version range (which ca
 
 This means that you can easily use your presets and ensure that they're always going to be updated, without using `latest`, which is not very good practice.
 
->⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api, causing an error.
+<div class="warning">
+
+Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api, causing an error.
+</div>
 
 
 ```yaml
-{{#include ../../examples/typescript/packages_versions.yaml:all}}
+{{#include ../../../examples/typescript/packages_versions.yaml:all}}
 ```
 
 
@@ -23,15 +26,15 @@ If you set up your package manager to be `pnpm` (which is the default) and set `
 Let's say that we are starting with a basic `pnpm-workspace.yaml` file, and we generate a package that has `catalog` dependencies, which are currently absent from their target catalogs:
 
 ```yaml
-{{#include ../../examples/typescript/catalog.yaml:all}}
+{{#include ../../../examples/typescript/catalog.yaml:all}}
 ```
 
 After running 
 
->`{{#include ../../sketch/tests/output/ts_examples/commands/catalog_cmd}}`
+>`{{#include ../../../sketch/tests/output/ts_examples/commands/catalog_cmd}}`
 
 We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:
 
 ```yaml
-{{#include ../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
+{{#include ../../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
 

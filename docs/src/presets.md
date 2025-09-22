@@ -8,17 +8,29 @@ As of now, these presets are available, with the specified characteristics:
 
 - Templating presets (to render a group of files and directories together)
 
-- Git repos
-    - `pre-commit` (extensible)
+- Git
+    - Git repo
+    - `.gitignore` (extensible)
+    - `.pre-commit-config.yaml` (extensible)
 
 - Typecript
-    - Package
-    - `package.json` (extensible, extra feature for storing contributors' info)
-    - `tsconfig.json` (extensible, with merging of values for `references`, `include`, `exclude` and `files`)
+    - Typescript package
+    - `package.json` (extensible, extra convenience feature for creating a mini-db for contributors)
+    - `tsconfig.json` (extensible, with merging of values for the `references`, `include`, `exclude` and `files` fields)
     - `.oxlintrc.json` (extensible)
 
-# Example
+# Extending Presets
 
+For those presets that are extensible, merging them works like this:
+
+- Collections are merged (and in almost all cases, deduped and ordered too)
+- Conflicting values are replaced
+- Values that are also extensible (such as `compilerOptions` in tsconfig) themselves will be merged with the same rules as above
+
+# Examples
+
+Typescript-related presets are explained in more detail in the [typescript] section.
 ```yaml
 {{#include ../../examples/typescript/presets.yaml:all}}
 ```
+

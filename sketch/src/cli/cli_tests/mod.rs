@@ -34,6 +34,8 @@ fn get_tree_output<T: Into<PathBuf>>(dir: T, file: &str) -> Result<(), Box<dyn s
     .arg("-I")
     .arg(file)
     .arg("-I")
+    .arg(".git")
+    .arg("-I")
     .arg("commands")
     .arg("--noreport")
     .arg("-o")

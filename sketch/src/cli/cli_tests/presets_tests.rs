@@ -7,7 +7,10 @@ use pretty_assertions::assert_eq;
 
 use super::reset_testing_dir;
 use crate::{
-  cli::{execute_cli, Cli},
+  cli::{
+    cli_tests::{get_clean_example_cmd, get_tree_output},
+    execute_cli, Cli,
+  },
   fs::{deserialize_json, deserialize_yaml},
   init_repo::pre_commit::{
     FileType, Hook, Language, LocalRepo, PreCommitConfig, Repo, GITLEAKS_REPO,
@@ -23,9 +26,84 @@ use crate::{
 async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples/typescript");
   let out_dir = PathBuf::from("tests/output/presets");
-  let package_out_dir = out_dir.join("packages/presets_example");
 
   reset_testing_dir(&out_dir);
+
+  let git_preset_args = [
+    "sketch",
+    "-c",
+    path_to_str!(examples_dir.join("presets.yaml")),
+    "repo",
+    "--preset",
+    "ts_package",
+    "--with-template",
+    "id=compose_file,output=compose.yaml",
+  ];
+  let git_presets_cmd = Cli::try_parse_from(git_preset_args)?;
+
+  execute_cli(git_presets_cmd).await?;
+
+  get_tree_output(&out_dir, "tree_output.txt")?;
+
+  get_clean_example_cmd(&git_preset_args, 1..3, &out_dir.join("cmd"))?;
+
+  let pre_commit_output: PreCommitConfig =
+    deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;
+
+  assert_eq!(
+    pre_commit_output,
+    PreCommitConfig {
+      repos: btreeset! {
+        GITLEAKS_REPO.clone(),
+        Repo::LocalRepo { repo: LocalRepo::Local, hooks: btreeset! {
+            Hook {
+              id: "oxlint".to_string(),
+              name: Some("oxlint".to_string()),
+              entry: Some("oxlint".to_string()),
+              language: Some(Language::System),
+              files: Some(r###"\.svelte$|\.js$|\.ts$"###.to_string()),
+              types: Some(btreeset!{ FileType::File }),
+              ..Default::default()
+            }
+          }
+        }
+      },
+      ..Default::default()
+    }
+  );
+
+  let gitignore_output = read_to_string(out_dir.join(".gitignore"))?;
+
+  let gitignore_entries: Vec<&str> = gitignore_output.split('\n').collect();
+
+  for entry in ["*.env", "dist", "*.tsBuildInfo", "node_modules"] {
+    assert!(gitignore_entries.contains(&entry));
+  }
+
+  let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
+
+  let expected_dockerfile = indoc! {r###"
+    FROM node:23-alpine
+
+    COPY . .
+    EXPOSE 5173
+    CMD ["npm", "run", "dev"]
+  "###};
+
+  assert_eq!(root_dockerfile_output, expected_dockerfile);
+
+  let root_compose_file = read_to_string(out_dir.join("compose.yaml"))?;
+
+  let expected_compose_file = indoc! {r#"
+    services:
+      myservice:
+        build: .
+        restart: unless-stopped
+  "#};
+
+  assert_eq!(root_compose_file, expected_compose_file);
+
+  let package_out_dir = out_dir.join("packages/presets_example");
   reset_testing_dir(&package_out_dir);
 
   let oxlint_test = Cli::try_parse_from([
@@ -41,6 +119,12 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   ])?;
 
   execute_cli(oxlint_test).await?;
+
+  let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
+  assert_eq!(package_dockerfile_output, expected_dockerfile);
+
+  let package_compose_file = read_to_string(package_out_dir.join("compose.yaml"))?;
+  assert_eq!(package_compose_file, expected_compose_file);
 
   let oxlint_result: OxlintConfig = deserialize_json(&package_out_dir.join(".oxlintrc.json"))?;
 
@@ -95,81 +179,6 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   assert_eq!(compiler_options.no_emit.unwrap(), false);
 
   assert_eq!(compiler_options.verbatim_module_syntax.unwrap(), true);
-
-  let git_presets_cmd = Cli::try_parse_from([
-    "sketch",
-    "-c",
-    path_to_str!(examples_dir.join("presets.yaml")),
-    "repo",
-    "--preset",
-    "ts_package",
-    "--with-template",
-    "id=compose_file,output=compose.yaml",
-  ])?;
-
-  execute_cli(git_presets_cmd).await?;
-
-  let pre_commit_output: PreCommitConfig =
-    deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;
-
-  assert_eq!(
-    pre_commit_output,
-    PreCommitConfig {
-      repos: btreeset! {
-        GITLEAKS_REPO.clone(),
-        Repo::LocalRepo { repo: LocalRepo::Local, hooks: btreeset! {
-            Hook {
-              id: "oxlint".to_string(),
-              name: Some("oxlint".to_string()),
-              entry: Some("oxlint".to_string()),
-              language: Some(Language::System),
-              files: Some(r###"\.svelte$|\.js$|\.ts$"###.to_string()),
-              types: Some(btreeset!{ FileType::File }),
-              ..Default::default()
-            }
-          }
-        }
-      },
-      ..Default::default()
-    }
-  );
-
-  let gitignore_output = read_to_string(out_dir.join(".gitignore"))?;
-
-  let gitignore_entries: Vec<&str> = gitignore_output.split('\n').collect();
-
-  for entry in ["*.env", "dist", "*.tsBuildInfo", "node_modules"] {
-    assert!(gitignore_entries.contains(&entry));
-  }
-
-  let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
-  let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
-
-  let expected_dockerfile = indoc! {r###"
-    FROM node:23-alpine
-
-    COPY . .
-    EXPOSE 5173
-    CMD ["npm", "run", "dev"]
-  "###};
-
-  assert_eq!(root_dockerfile_output, expected_dockerfile);
-
-  assert_eq!(package_dockerfile_output, expected_dockerfile);
-
-  let root_compose_file = read_to_string(out_dir.join("compose.yaml"))?;
-  let package_compose_file = read_to_string(package_out_dir.join("compose.yaml"))?;
-
-  let expected_compose_file = indoc! {r#"
-    services:
-      myservice:
-        build: .
-        restart: unless-stopped
-  "#};
-
-  assert_eq!(root_compose_file, expected_compose_file);
-
-  assert_eq!(package_compose_file, expected_compose_file);
 
   Ok(())
 }

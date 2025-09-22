@@ -12,6 +12,7 @@ You can use the `sketch new <OUTPUT>` command to generate a new configuration fi
 
 # Extending Configurations
 
+
 Configuration files can extend one another by using the `extends` field:
 
 ```yaml
@@ -20,12 +21,7 @@ extends: ["other_config.yaml"]
 
 Where the path being used can be either an absolute path or a relative path starting from the original config file.
 
-## Merging Logic
-
-The merging strategy works as follows:
-- For conflicting values, such as opposite booleans, the previous value will be overridden.
-- For non-conflicting values such as maps (for example, the global template vars map), the values will be merged.
-- For extensible sub-configurations, such as that for `Typescript`, these are merged with one another, with the same principles as above.
+The [merging strategy](../presets.md#extending-presets) for config files is the same as for all the other presets.
 
 # Top Level Configuration
 

@@ -7,15 +7,15 @@ To make this job easier and faster, you can use the `people` field in the typesc
 ## Example
 
 ```yaml
-{{#include ../../examples/typescript/people.yaml:all}}
+{{#include ../../../examples/typescript/people.yaml:all}}
 ```
 
 After we run
 
->`{{#include ../../sketch/tests/output/ts_examples/commands/people_cmd}}`
+>`{{#include ../../../sketch/tests/output/ts_examples/commands/people_cmd}}`
 
 We get this `package.json` file in the root of the new package:
 
 ```json
-{{#include ../../sketch/tests/output/ts_examples/packages/people-example/package.json}}
+{{#include ../../../sketch/tests/output/ts_examples/packages/people-example/package.json}}
 ```
