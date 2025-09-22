@@ -1,13 +1,17 @@
-use std::path::PathBuf;
+use std::{fs::read_to_string, path::PathBuf};
 
 use clap::Parser;
+use indoc::indoc;
 use maplit::{btreemap, btreeset};
 use pretty_assertions::assert_eq;
 
 use super::reset_testing_dir;
 use crate::{
   cli::{execute_cli, Cli},
-  fs::deserialize_json,
+  fs::{deserialize_json, deserialize_yaml},
+  init_repo::pre_commit::{
+    FileType, Hook, Language, LocalRepo, PreCommitConfig, Repo, GITLEAKS_REPO,
+  },
   ts::{
     oxlint::OxlintConfig,
     package_json::PackageJson,
@@ -18,9 +22,11 @@ use crate::{
 #[tokio::test]
 async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples/typescript");
-  let out_dir = PathBuf::from("tests/output/presets/packages/extending_presets_example");
+  let out_dir = PathBuf::from("tests/output/presets");
+  let package_out_dir = out_dir.join("packages/presets_example");
 
   reset_testing_dir(&out_dir);
+  reset_testing_dir(&package_out_dir);
 
   let oxlint_test = Cli::try_parse_from([
     "sketch",
@@ -34,14 +40,14 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(oxlint_test).await?;
 
-  let oxlint_result: OxlintConfig = deserialize_json(&out_dir.join(".oxlintrc.json"))?;
+  let oxlint_result: OxlintConfig = deserialize_json(&package_out_dir.join(".oxlintrc.json"))?;
 
   assert_eq!(
     oxlint_result.ignore_patterns.unwrap(),
     btreeset! { "**/node_modules/**".to_string(), ".cache".to_string(), ".output".to_string() }
   );
 
-  let package_json_result: PackageJson = deserialize_json(&out_dir.join("package.json"))?;
+  let package_json_result: PackageJson = deserialize_json(&package_out_dir.join("package.json"))?;
 
   assert_eq!(
     package_json_result.description.unwrap(),
@@ -65,7 +71,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     }
   );
 
-  let tsconfig_result: TsConfig = deserialize_json(&out_dir.join("tsconfig.json"))?;
+  let tsconfig_result: TsConfig = deserialize_json(&package_out_dir.join("tsconfig.json"))?;
 
   assert_eq!(
     tsconfig_result.references.unwrap(),
@@ -87,6 +93,75 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   assert_eq!(compiler_options.no_emit.unwrap(), false);
 
   assert_eq!(compiler_options.verbatim_module_syntax.unwrap(), true);
+
+  let git_presets_cmd = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    path_to_str!(examples_dir.join("presets.yaml")),
+    "repo",
+    "preset",
+    "ts_package",
+  ])?;
+
+  execute_cli(git_presets_cmd).await?;
+
+  let pre_commit_output: PreCommitConfig =
+    deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;
+
+  assert_eq!(
+    pre_commit_output,
+    PreCommitConfig {
+      repos: btreeset! {
+        GITLEAKS_REPO.clone(),
+        Repo::LocalRepo { repo: LocalRepo::Local, hooks: btreeset! {
+            Hook {
+              id: "oxlint".to_string(),
+              name: Some("oxlint".to_string()),
+              entry: Some("oxlint".to_string()),
+              language: Some(Language::System),
+              files: Some(r###"\.svelte$|\.js$|\.ts$"###.to_string()),
+              types: Some(btreeset!{ FileType::File }),
+              ..Default::default()
+            }
+          }
+        }
+      },
+      ..Default::default()
+    }
+  );
+
+  let gitignore_output = read_to_string(out_dir.join(".gitignore"))?;
+
+  let gitignore_entries: Vec<&str> = gitignore_output.split('\n').collect();
+
+  for entry in ["*.env", "dist", "*.tsBuildInfo", "node_modules"] {
+    assert!(gitignore_entries.contains(&entry));
+  }
+
+  let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
+
+  assert_eq!(
+    root_dockerfile_output,
+    indoc! {r###"
+    FROM node:23-alpine
+
+    COPY . .
+    EXPOSE 5173
+    CMD ["npm", "run", "dev"]
+  "###}
+  );
+
+  let package_compose_file = read_to_string(package_out_dir.join("compose.yaml"))?;
+
+  assert_eq!(
+    package_compose_file,
+    indoc! {r#"
+      services:
+        myservice:
+          build: .
+          restart: unless-stopped
+    "#}
+  );
 
   Ok(())
 }

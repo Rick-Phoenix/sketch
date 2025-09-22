@@ -91,7 +91,7 @@
       },
       "default": {}
     },
-    "repo_presets": {
+    "git_presets": {
       "description": "A map that contains presets for git repos.",
       "type": "object",
       "additionalProperties": {
@@ -5244,9 +5244,9 @@
           },
           "default": []
         },
-        "config": {
+        "content": {
           "$ref": "#/$defs/GitIgnore",
-          "default": "# Caches\n      .task\n      .cache \n\n      # Build Output\n      target\n      *.js.map\n      *.d.ts \n      *.tsbuildInfo\n      .out\n      .output\n      .vercel\n      .netlify\n      .wrangler\n      .svelte-kit\n      dist\n      build\n\n      # Llm Files\n      llms.txt\n      llms.md\n\n      # Node Modules\n      node_modules\n\n      # Env\n      .env\n      .env.*\n      !.env.example\n      !.env.test\n\n      # Temporary Files\n      *.tmp\n      *.swp\n      *.swo\n      vite.config.js.timestamp-*\n      vite.config.ts.timestamp-*\n\n      # Logs\n      logs/\n      *.log\n      pnpm-debug.log*\n\n      # Operating System Generated Files\n      .DS_Store\n      Thumbs.db\n      desktop.ini\n\n      # Test Reports & Coverage\n      coverage/\n      lcov-report/\n      *.lcov\n      .nyc_output/"
+          "default": ""
         }
       }
     },
@@ -5269,7 +5269,14 @@
       "properties": {
         "gitignore": {
           "description": "Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.",
-          "$ref": "#/$defs/GitIgnoreSetting"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GitIgnoreSetting"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "pre_commit": {
           "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.",
@@ -5287,7 +5294,6 @@
         }
       },
       "required": [
-        "gitignore",
         "pre_commit"
       ]
     },

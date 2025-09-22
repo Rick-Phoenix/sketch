@@ -173,34 +173,36 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
-    Repo { remote, input } => {
-      let preset = if let Some(id) = input.preset {
+    Repo {
+      remote,
+      input,
+      preset,
+    } => {
+      let preset = if let Some(PresetArg::Preset { id }) = preset {
         config
-          .repo_presets
+          .git_presets
           .get(&id)
           .ok_or(GenError::PresetNotFound {
             kind: Preset::Repo,
             name: id.clone(),
           })?
           .clone()
-      } else if let Some(new_config) = input.config {
-        let pre_commit = if new_config.no_pre_commit {
+      } else {
+        let pre_commit = if input.no_pre_commit {
           PreCommitSetting::Bool(false)
-        } else if let Some(preset_id) = new_config.pre_commit {
+        } else if let Some(preset_id) = input.pre_commit {
           PreCommitSetting::Id(preset_id)
         } else {
           PreCommitSetting::default()
         };
 
-        let gitignore = new_config.gitignore.map(|id| GitIgnoreSetting::Id(id));
+        let gitignore = input.gitignore.map(|id| GitIgnoreSetting::Id(id));
 
         RepoPreset {
           pre_commit,
           gitignore,
-          with_templates: new_config.with_templates,
+          with_templates: input.with_templates,
         }
-      } else {
-        panic!("No preset selected")
       };
 
       exit_if_dry_run!();
@@ -346,8 +348,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
           if install {
             launch_command(
-              None,
-              &[package_manager.to_string().as_str(), "install"],
+              package_manager.to_string().as_str(),
+              &["install"],
               &root_dir,
               Some("Could not install dependencies"),
             )?;
@@ -404,8 +406,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
             let package_manager = typescript.package_manager.get_or_insert_default().clone();
 
             launch_command(
-              None,
-              &[package_manager.to_string().as_str(), "install"],
+              package_manager.to_string().as_str(),
+              &["install"],
               &package_dir,
               Some("Could not install dependencies"),
             )?;
@@ -461,17 +463,7 @@ pub struct RenderingOutput {
 }
 
 #[derive(Args, Debug, Clone)]
-#[group(required = true, multiple = false)]
 pub struct RepoConfigInput {
-  #[arg(short, long)]
-  preset: Option<String>,
-
-  #[command(flatten)]
-  config: Option<RepoConfig>,
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct RepoConfig {
   /// Does not generate a pre-commit config.
   #[arg(long, group = "pre-commit")]
   no_pre_commit: bool,
@@ -484,8 +476,14 @@ pub struct RepoConfig {
   #[arg(long)]
   gitignore: Option<String>,
 
-  #[arg(short = 't', long = "--with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
+  #[arg(short = 't', long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
   with_templates: Option<Vec<TemplateOutput>>,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum PresetArg {
+  /// Select a preset by its ID.
+  Preset { id: String },
 }
 
 /// The cli commands.
@@ -502,6 +500,9 @@ pub enum Commands {
 
   /// Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config.
   Repo {
+    #[command(subcommand)]
+    preset: Option<PresetArg>,
+
     #[command(flatten)]
     input: RepoConfigInput,
 

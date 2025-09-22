@@ -8,10 +8,13 @@ use serde::{Deserialize, Serialize};
 use crate::{merge_index_sets, merge_presets, Extensible, GenError, Preset};
 
 fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
-  let mut left_as_list = left.as_list();
+  let left_as_list = left.as_list();
   let right_as_list = right.as_list();
 
-  let new: Vec<String> = left_as_list.splice(0..0, right_as_list).collect();
+  let new: Vec<String> = right_as_list
+    .into_iter()
+    .chain(left_as_list.into_iter())
+    .collect();
 
   *left = GitIgnore::List(new)
 }
@@ -77,7 +80,7 @@ impl GitIgnore {
   pub fn as_list(&self) -> Vec<String> {
     match self {
       GitIgnore::List(items) => items.clone(),
-      GitIgnore::String(entire) => entire.split('\n').map(|s| s.to_string()).collect(),
+      GitIgnore::String(entire) => entire.trim().split('\n').map(|s| s.to_string()).collect(),
     }
   }
 }

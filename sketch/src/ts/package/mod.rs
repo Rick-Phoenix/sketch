@@ -69,7 +69,7 @@ pub struct PackageConfig {
 
   /// The templates to generate when this package is created.
   /// Relative output paths will be joined to the package's root directory.
-  #[arg(short = 't', long = "--with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
+  #[arg(long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
   pub with_templates: Option<Vec<TemplateOutput>>,
 
   /// The kind of package [default: 'library'].

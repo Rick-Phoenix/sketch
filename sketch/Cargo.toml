@@ -27,6 +27,7 @@ allow-branch = ["main"]
 pretty_assertions = "1.4.1"
 assert_cmd = "2.0.17"
 clap-markdown = "0.1.5"
+indoc = "2.0.6"
 
 [dependencies]
 schemars = { version = "1.0.4", features = ["indexmap2"] }

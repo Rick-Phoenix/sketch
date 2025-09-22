@@ -97,7 +97,7 @@ pub struct Config {
   /// A map that contains presets for git repos.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  pub repo_presets: IndexMap<String, RepoPreset>,
+  pub git_presets: IndexMap<String, RepoPreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
@@ -186,7 +186,7 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
-      repo_presets: Default::default(),
+      git_presets: Default::default(),
       gitignore_presets: Default::default(),
       pre_commit_presets: Default::default(),
       config_file: None,

@@ -1,7 +1,21 @@
 # yaml-language-server: $schema=../../schemas/latest.json
 
-# ANCHOR: all
 out_dir: ../../sketch/tests/output/presets
+
+# ANCHOR: all
+templates:
+  dockerfile: |
+    FROM node:23-alpine
+
+    COPY . .
+    EXPOSE {{ docker_dev_port | default(value=5173) }}
+    CMD ["npm", "run", "dev"]
+
+  compose_file: |
+    services:
+      myservice:
+        build: .
+        restart: unless-stopped
 
 # Gitignore presets
 gitignore_presets:
@@ -43,29 +57,31 @@ pre_commit_presets:
             files: '\.svelte$|\.js$|\.ts$'
             types: [file]
 
+# Git presets
+git_presets:
+  ts_package:
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
+
+    # Templates that will be generated with this preset
+    # in the new repo's root
+    with_templates:
+      - template: dockerfile
+        output: Dockerfile
+
 # Templating presets
 templating_presets:
   # All the files in this group will be generated together
   docker:
     # Relative paths are joined with `out_dir`
-    - output: dockerfile
-      template: |
-        name: dev_dockerfile
-        content: |
-          FROM node:23-alpine
-
-          COPY . .
-          EXPOSE {{ docker_dev_port }}
-          CMD ["npm", "run", "dev"]
+    - output: Dockerfile
+      template: dockerfile
       # Optional local context variables
       context:
         docker_dev_port: 5173
     - output: compose.yaml
-      template: |
-        services:
-          myservice:
-            build: .
-            restart: unless-stopped
+      template: compose_file
 
 typescript:
   no_default_deps: true
@@ -134,7 +150,7 @@ typescript:
   package_presets:
     example:
       name: example
-      dir: packages/extending_presets_example
+      dir: packages/presets_example
 
       # For every preset, we can either refer to them
       # by their id...
@@ -157,5 +173,11 @@ typescript:
               - extended
             include:
               - scripts
+
+      # Templates to generate in the new package's root
+      with_templates:
+        - template: compose_file
+          output: compose.yaml
+
       # ANCHOR_END: all
       vitest: false

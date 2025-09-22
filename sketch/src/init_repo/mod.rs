@@ -28,7 +28,6 @@ pub struct RepoPreset {
 impl Config {
   pub fn init_repo(self, preset: RepoPreset, remote: Option<&str>) -> Result<(), GenError> {
     let out_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
-    let shell = self.shell.as_deref();
 
     create_all_dirs(&out_dir)?;
 
@@ -56,8 +55,8 @@ impl Config {
     )?;
 
     launch_command(
-      shell,
-      &["git", "init"],
+      "git",
+      &["init"],
       &out_dir,
       Some("Failed to initialize a new git repo"),
     )?;
@@ -87,8 +86,8 @@ impl Config {
       serialize_yaml(&pre_commit_config, &out_dir.join(".pre-commit-config.yaml"))?;
 
       launch_command(
-        shell,
-        &["pre-commit", "install"],
+        "pre-commit",
+        &["install"],
         &out_dir,
         Some("Failed to install the pre-commit hooks"),
       )?;
@@ -96,8 +95,8 @@ impl Config {
 
     if let Some(remote) = remote {
       launch_command(
-        shell,
-        &["git", "remote", "add", "origin", remote],
+        "git",
+        &["remote", "add", "origin", remote],
         &out_dir,
         Some("Failed to add the remote to the git repo"),
       )?;

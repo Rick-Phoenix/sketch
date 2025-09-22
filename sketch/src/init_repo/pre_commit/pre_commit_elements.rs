@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 use super::{Hook, Repo};
 
 pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::UriRepo {
-  repo: Some("https://github.com/gitleaks/gitleaks".to_string()),
+  repo: "https://github.com/gitleaks/gitleaks".to_string(),
   rev: Some("v8.28.0".to_string()),
-  hooks: Some(btreeset! { Hook { id: "gitleaks".to_string(), ..Default::default() } }),
+  hooks: btreeset! { Hook { id: "gitleaks".to_string(), ..Default::default() } },
 });
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
@@ -319,23 +319,30 @@ pub enum AutoUpdateSchedule {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 pub struct CiSettings {
   /// A commit message for pull request autofixes https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub autofix_commit_msg: Option<String>,
 
   /// Whether to autofix pull requests https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub autofix_prs: Option<bool>,
 
   /// A branch to send pull request's autoupdate to https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub autoupdate_branch: Option<String>,
 
   /// A commit message for autoupdate pull requests https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub autoupdate_commit_msg: Option<String>,
 
   /// An autoupdate frequency https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub autoupdate_schedule: Option<AutoUpdateSchedule>,
 
   /// List of skipped hook's ids https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub skip: Option<BTreeSet<String>>,
 
   /// Whether to recursively check out submodules https://pre-commit.ci/#configuration
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub submodules: Option<bool>,
 }
