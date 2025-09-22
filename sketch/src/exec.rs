@@ -65,19 +65,17 @@ impl Config {
 
     create_all_dirs(cwd)?;
 
-    launch_command(Some(shell), &[shell_arg, &rendered_command], cwd, None)
+    launch_command(shell, &[shell_arg, &rendered_command], cwd, None)
   }
 }
 
 pub(crate) fn launch_command(
-  shell: Option<&str>,
+  program: &str,
   commands: &[&str],
   cwd: &Path,
   custom_error_message: Option<&str>,
 ) -> Result<(), GenError> {
-  let shell = shell.unwrap_or_else(|| default_shell());
-
-  let output = Command::new(shell)
+  let output = Command::new(program)
     .args(commands)
     .current_dir(cwd)
     .stdout(Stdio::inherit())
