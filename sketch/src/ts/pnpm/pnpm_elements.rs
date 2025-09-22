@@ -148,29 +148,36 @@ pub struct ExecutionEnv {
 }
 
 /// Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct SupportedArchitectures {
   #[serde(alias = "os")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub os: Option<BTreeSet<String>>,
 
   #[serde(alias = "cpu")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub cpu: Option<BTreeSet<String>>,
 
   #[serde(alias = "libc")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub libc: Option<BTreeSet<String>>,
 }
 
 /// Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct AuditConfig {
   /// A list of CVE IDs that will be ignored by `pnpm audit`.
   #[serde(alias = "ignore_cves")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_cves: Option<BTreeSet<String>>,
 
   /// A list of GHSA Codes that will be ignored by `pnpm audit`.
   #[serde(alias = "ignore_ghas")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_ghas: Option<BTreeSet<String>>,
 }
 
@@ -180,12 +187,14 @@ pub struct AuditConfig {
 pub struct UpdateConfig {
   /// A list of packages that should be ignored when running `pnpm outdated` or `pnpm update --latest`.
   #[serde(alias = "ignore_dependencies")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_dependencies: Option<BTreeSet<String>>,
 }
 
 /// Rules for peer dependencies. See more: https://pnpm.io/settings#peerdependencyrules
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct PeerDependencyRules {
   /// pnpm will not print warnings about missing peer dependencies from this list.
   #[serde(alias = "ignore_missing")]
@@ -204,8 +213,9 @@ pub struct PeerDependencyRules {
 }
 
 /// Package extensions offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
 #[serde(rename_all = "camelCase")]
+#[serde(default)]
 pub struct PackageExtension {
   /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
   #[serde(skip_serializing_if = "Option::is_none")]

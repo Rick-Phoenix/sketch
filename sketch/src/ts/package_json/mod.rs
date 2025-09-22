@@ -256,7 +256,6 @@ pub struct PackageJson {
 
   /// Indicates the structure of your package.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(skip)]
   pub directories: Option<Directories>,
 
   /// The url to your project's issue tracker and / or the email address to which issues should be reported. These are helpful for people who encounter issues with your package.
@@ -279,6 +278,7 @@ pub struct PackageJson {
 
   /// An object that can be used to set configuration parameters used in package scripts that persist across upgrades.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
   pub config: Option<JsonValueBTreeMap>,
 
   /// A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with "latest", published to the global public registry or that a scoped module is private by default.

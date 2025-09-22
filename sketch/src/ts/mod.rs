@@ -55,6 +55,7 @@ impl Default for TypescriptConfig {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
+#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct TypescriptConfig {
   /// The configuration for the root typescript package to generate in new monorepos.
@@ -64,7 +65,6 @@ pub struct TypescriptConfig {
   pub root_package: Option<PackageConfig>,
 
   /// The package manager being used. [default: pnpm].
-  #[merge(strategy = overwrite_if_some)]
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
@@ -74,7 +74,6 @@ pub struct TypescriptConfig {
   pub no_default_deps: bool,
 
   /// The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]
-  #[merge(strategy = overwrite_if_some)]
   #[arg(value_enum)]
   #[arg(long, value_name = "KIND")]
   pub version_range: Option<VersionRange>,
@@ -115,7 +114,6 @@ pub struct TypescriptConfig {
   pub package_presets: IndexMap<String, PackageConfig>,
 
   /// The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
-  #[merge(skip)]
   #[arg(skip)]
   pub pnpm: Option<PnpmWorkspace>,
 }

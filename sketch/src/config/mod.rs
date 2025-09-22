@@ -14,7 +14,7 @@ use crate::{
   custom_templating::TemplateOutput,
   fs::get_parent_dir,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
-  is_default, merge_index_maps, merge_index_sets, overwrite_if_some,
+  is_default, merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
   ts::TypescriptConfig,
   GenError,
 };
@@ -29,6 +29,7 @@ impl Config {
 
 /// The global configuration struct.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
+#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct Config {
   #[serde(skip)]
@@ -37,13 +38,12 @@ pub struct Config {
   pub(crate) config_file: Option<PathBuf>,
 
   /// The configuration for typescript projects.
-  #[merge(strategy = merge::option::overwrite_none)]
+  #[merge(strategy = merge_optional_nested)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub typescript: Option<TypescriptConfig>,
 
   /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
-  #[merge(strategy = merge::option::overwrite_none)]
   #[arg(long)]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub shell: Option<String>,
@@ -55,13 +55,11 @@ pub struct Config {
   pub debug: bool,
 
   /// This will be considered as the starting path for the executed commands. If this is a relative path, it will be joined to the cwd (when set via cli) or to the config file's directory [default: `.`].
-  #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub out_dir: Option<PathBuf>,
 
   /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
-  #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub templates_dir: Option<PathBuf>,

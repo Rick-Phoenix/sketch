@@ -137,10 +137,12 @@ pub struct WatchOptions {
 
   /// Remove a list of directories from the watch process. See more: https://www.typescriptlang.org/tsconfig#excludeDirectories
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
   pub exclude_directories: Option<BTreeSet<String>>,
 
   /// Remove a list of files from the watch mode's processing. See more: https://www.typescriptlang.org/tsconfig#excludeFiles
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
   pub exclude_files: Option<BTreeSet<String>>,
 }
 
