@@ -82,7 +82,7 @@ impl Config {
     serialize_json(&package_json_data, &out_dir.join("package.json"))?;
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
-    let tsconfig_presets = &typescript.tsconfig_presets;
+    let tsconfig_presets = &typescript.ts_config_presets;
 
     if let Some(root_tsconfigs) = root_package.ts_config {
       for directive in root_tsconfigs {

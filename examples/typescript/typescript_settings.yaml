@@ -28,7 +28,7 @@ typescript:
   package_presets: {}
 
   # A map containing extensible tsconfig presets
-  tsconfig_presets: {}
+  ts_config_presets: {}
 
   # A map containing extensible oxlint presets
   oxlint_presets: {}

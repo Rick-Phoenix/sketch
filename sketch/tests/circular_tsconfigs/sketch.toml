@@ -2,13 +2,13 @@ out_dir = "../output"
 
 [typescript]
 
-[typescript.tsconfig_presets.one]
+[typescript.ts_config_presets.one]
 extend_presets = ["two"]
 
-[typescript.tsconfig_presets.two]
+[typescript.ts_config_presets.two]
 extend_presets = ["three"]
 
-[typescript.tsconfig_presets.three]
+[typescript.ts_config_presets.three]
 extend_presets = ["one"]
 
 [typescript.package_presets.circular_tsconfigs]

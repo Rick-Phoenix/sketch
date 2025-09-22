@@ -45,7 +45,7 @@ impl Default for TypescriptConfig {
       package_presets: Default::default(),
       catalog: false,
       version_range: Default::default(),
-      tsconfig_presets: Default::default(),
+      ts_config_presets: Default::default(),
       oxlint_presets: Default::default(),
       people: Default::default(),
       pnpm: Default::default(),
@@ -102,7 +102,7 @@ pub struct TypescriptConfig {
   /// A map containing [`TsConfig`] presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  pub tsconfig_presets: IndexMap<String, TsConfigPreset>,
+  pub ts_config_presets: IndexMap<String, TsConfigPreset>,
 
   /// A map containing `oxlint` config presets.
   #[merge(strategy = merge_index_maps)]

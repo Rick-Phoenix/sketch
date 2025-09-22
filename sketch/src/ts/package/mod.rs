@@ -231,7 +231,7 @@ impl Config {
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
 
-    let tsconfig_presets = &typescript.tsconfig_presets;
+    let tsconfig_presets = &typescript.ts_config_presets;
 
     if let Some(tsconfig_directives) = config.ts_config.clone() {
       for directive in tsconfig_directives {

@@ -45,6 +45,7 @@ pub struct Config {
   /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
   #[merge(strategy = merge::option::overwrite_none)]
   #[arg(long)]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub shell: Option<String>,
 
   /// Activates debugging mode.
@@ -53,19 +54,22 @@ pub struct Config {
   #[serde(skip_serializing_if = "is_default")]
   pub debug: bool,
 
-  /// The base path for the generated files [default: `.`].
+  /// This will be considered as the starting path for the executed commands. If this is a relative path, it will be joined to the cwd (when set via cli) or to the config file's directory [default: `.`].
   #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub out_dir: Option<PathBuf>,
 
   /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
   #[merge(strategy = overwrite_if_some)]
   #[arg(long, value_name = "DIR")]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub templates_dir: Option<PathBuf>,
 
   /// Does not overwrite existing files.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
+  #[serde(skip_serializing_if = "is_default")]
   pub no_overwrite: bool,
 
   /// The paths (absolute, or relative to the originating config file) to the config files to extend.
@@ -77,32 +81,38 @@ pub struct Config {
   /// A map that contains template definitions.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub templates: IndexMap<String, String>,
 
   /// A map that contains templating presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub templating_presets: IndexMap<String, Vec<TemplateOutput>>,
 
   /// A map that contains pre-commit presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
 
   /// A map that contains gitignore presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub gitignore_presets: IndexMap<String, GitignorePreset>,
 
   /// A map that contains presets for git repos.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub git_presets: IndexMap<String, RepoPreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
   pub vars: IndexMap<String, Value>,
 }
 

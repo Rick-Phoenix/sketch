@@ -78,7 +78,7 @@ fn get_config_from_xdg() -> Option<PathBuf> {
 async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   let mut config = Config::default();
 
-  if !cli.ignore_config_file {
+  if !cli.ignore_config {
     let config_path = if let Some(config_file) = get_config_file_path(cli.config) {
       Some(config_file)
     } else if let Some(config_from_xdg) = get_config_from_xdg() {
@@ -94,7 +94,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
       config.merge(Config::from_file(&config_path)?);
     }
   } else if config.debug {
-    eprintln!("`ignore_config_file` detected");
+    eprintln!("`ignore_config` detected");
   }
 
   if let Some(overrides) = cli.overrides {
@@ -274,7 +274,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       config.generate_templates(root_dir, vec![template])?;
     }
     New { output } => {
-      let output_path = get_cwd().join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
+      let output_path = root_dir.join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
 
       if let Some(parent_dir) = output_path.parent() {
         create_all_dirs(&parent_dir)?;
@@ -291,12 +291,14 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         )));
       }
 
+      let new_config = Config::default();
+
       match format.as_ref() {
-        "yaml" => serialize_yaml(&config, &output_path)?,
+        "yaml" => serialize_yaml(&new_config, &output_path)?,
         "toml" => {
-          serialize_toml(&config, &output_path)?;
+          serialize_toml(&new_config, &output_path)?;
         }
-        "json" => serialize_json(&config, &output_path)?,
+        "json" => serialize_json(&new_config, &output_path)?,
         _ => {
           return Err(GenError::Custom(format!(
             "Invalid config format. Allowed formats are: yaml, toml, json"
@@ -434,9 +436,9 @@ pub struct Cli {
   #[arg(short, long, value_name = "FILE", group = "config-file")]
   pub config: Option<PathBuf>,
 
-  /// Ignores any config files, uses cli instructions only
+  /// Ignores any automatically detected config files, uses cli instructions only
   #[arg(long, group = "config-file")]
-  pub ignore_config_file: bool,
+  pub ignore_config: bool,
 
   #[command(subcommand)]
   pub command: Commands,

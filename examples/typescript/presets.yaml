@@ -109,7 +109,7 @@ typescript:
         svelte: "*"
 
   # Tsconfig presets
-  tsconfig_presets:
+  ts_config_presets:
     base:
       references:
         - path: /some/path
