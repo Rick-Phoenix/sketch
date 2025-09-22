@@ -316,7 +316,8 @@ pub enum AutoUpdateSchedule {
 }
 
 /// pre-commit.ci specific settings https://pre-commit.ci/#configuration
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 pub struct CiSettings {
   /// A commit message for pull request autofixes https://pre-commit.ci/#configuration
   #[serde(skip_serializing_if = "Option::is_none")]

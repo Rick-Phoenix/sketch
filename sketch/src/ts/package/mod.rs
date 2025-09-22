@@ -18,7 +18,7 @@ use crate::{
     create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
     open_file_for_writing, serialize_json, serialize_yaml,
   },
-  merge_if_not_default, overwrite_if_some,
+  merge_if_not_default, merge_optional_vecs, overwrite_if_some,
   ts::{
     oxlint::{OxlintConfigSetting, OxlintPreset},
     ts_config, PackageManager,
@@ -55,7 +55,7 @@ pub struct PackageConfig {
   #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
   #[arg(
     help = "One or many tsconfig files for this package. If unset, defaults are used",
-    value_name = "output=PATH,id=ID"
+    value_name = "id=ID,output=PATH"
   )]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
@@ -69,7 +69,8 @@ pub struct PackageConfig {
 
   /// The templates to generate when this package is created.
   /// Relative output paths will be joined to the package's root directory.
-  #[arg(long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
+  #[arg(long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
+  #[merge(strategy = merge_optional_vecs)]
   pub with_templates: Option<Vec<TemplateOutput>>,
 
   /// The kind of package [default: 'library'].

@@ -34,6 +34,8 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     path_to_str!(examples_dir.join("presets.yaml")),
     "ts",
     "package",
+    "--with-template",
+    "id=dockerfile,output=Dockerfile",
     "--preset",
     "example",
   ])?;
@@ -99,8 +101,10 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "repo",
-    "preset",
+    "--preset",
     "ts_package",
+    "--with-template",
+    "id=compose_file,output=compose.yaml",
   ])?;
 
   execute_cli(git_presets_cmd).await?;
@@ -139,29 +143,33 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   }
 
   let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
+  let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
 
-  assert_eq!(
-    root_dockerfile_output,
-    indoc! {r###"
+  let expected_dockerfile = indoc! {r###"
     FROM node:23-alpine
 
     COPY . .
     EXPOSE 5173
     CMD ["npm", "run", "dev"]
-  "###}
-  );
+  "###};
 
+  assert_eq!(root_dockerfile_output, expected_dockerfile);
+
+  assert_eq!(package_dockerfile_output, expected_dockerfile);
+
+  let root_compose_file = read_to_string(out_dir.join("compose.yaml"))?;
   let package_compose_file = read_to_string(package_out_dir.join("compose.yaml"))?;
 
-  assert_eq!(
-    package_compose_file,
-    indoc! {r#"
-      services:
-        myservice:
-          build: .
-          restart: unless-stopped
-    "#}
-  );
+  let expected_compose_file = indoc! {r#"
+    services:
+      myservice:
+        build: .
+        restart: unless-stopped
+  "#};
+
+  assert_eq!(root_compose_file, expected_compose_file);
+
+  assert_eq!(package_compose_file, expected_compose_file);
 
   Ok(())
 }

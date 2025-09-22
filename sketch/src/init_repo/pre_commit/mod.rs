@@ -72,6 +72,7 @@ impl Default for PreCommitConfig {
 /// Configuration settings for [`pre-commit`](https://pre-commit.com)
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge)]
 #[merge(strategy = overwrite_if_some)]
+#[serde(default)]
 pub struct PreCommitConfig {
   /// Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
   #[merge(strategy = merge_btree_sets)]
@@ -171,6 +172,7 @@ pub enum LocalRepo {
 
 /// Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
+#[serde(default)]
 pub struct Hook {
   /// An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks
   pub id: String,

@@ -178,7 +178,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       input,
       preset,
     } => {
-      let preset = if let Some(PresetArg::Preset { id }) = preset {
+      let mut preset = if let Some(id) = preset {
         config
           .git_presets
           .get(&id)
@@ -188,22 +188,25 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           })?
           .clone()
       } else {
-        let pre_commit = if input.no_pre_commit {
-          PreCommitSetting::Bool(false)
-        } else if let Some(preset_id) = input.pre_commit {
-          PreCommitSetting::Id(preset_id)
-        } else {
-          PreCommitSetting::default()
-        };
-
-        let gitignore = input.gitignore.map(|id| GitIgnoreSetting::Id(id));
-
-        RepoPreset {
-          pre_commit,
-          gitignore,
-          with_templates: input.with_templates,
-        }
+        RepoPreset::default()
       };
+
+      if input.no_pre_commit {
+        preset.pre_commit = PreCommitSetting::Bool(false)
+      } else if let Some(preset_id) = input.pre_commit {
+        preset.pre_commit = PreCommitSetting::Id(preset_id);
+      };
+
+      if let Some(gitignore) = input.gitignore {
+        preset.gitignore = Some(GitIgnoreSetting::Id(gitignore));
+      }
+
+      if let Some(templates) = input.with_templates {
+        preset
+          .with_templates
+          .get_or_insert_default()
+          .extend(templates);
+      }
 
       exit_if_dry_run!();
 
@@ -464,26 +467,21 @@ pub struct RenderingOutput {
 
 #[derive(Args, Debug, Clone)]
 pub struct RepoConfigInput {
-  /// Does not generate a pre-commit config.
+  /// Does not generate a pre-commit config. It overrides the value in the git preset if one is being used.
   #[arg(long, group = "pre-commit")]
   no_pre_commit: bool,
 
-  /// Selects a pre-commit preset.
+  /// Selects a pre-commit preset. It overrides the value in the git preset if one is being used.
   #[arg(long, group = "pre-commit")]
   pre_commit: Option<String>,
 
-  /// Selects a gitignore preset.
+  /// Selects a gitignore preset. It overrides the value in the git preset if one is being used.
   #[arg(long)]
   gitignore: Option<String>,
 
-  #[arg(short = 't', long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "output=PATH,id=TEMPLATE_ID")]
+  /// One of many templates to render in the new repo's root. If a git preset with its own list of templates is being used, the lists are merged.
+  #[arg(short = 't', long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
   with_templates: Option<Vec<TemplateOutput>>,
-}
-
-#[derive(Subcommand, Debug, Clone)]
-pub enum PresetArg {
-  /// Select a preset by its ID.
-  Preset { id: String },
 }
 
 /// The cli commands.
@@ -500,8 +498,9 @@ pub enum Commands {
 
   /// Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config.
   Repo {
-    #[command(subcommand)]
-    preset: Option<PresetArg>,
+    /// Selects a git preset from a configuration file.
+    #[arg(short, long)]
+    preset: Option<String>,
 
     #[command(flatten)]
     input: RepoConfigInput,
