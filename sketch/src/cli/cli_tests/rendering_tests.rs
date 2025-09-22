@@ -1,14 +1,14 @@
-use std::{
-  fs::{read_to_string, File},
-  path::PathBuf,
-};
+use std::{fs::read_to_string, path::PathBuf};
 
 use clap::Parser;
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
 
 use super::{get_clean_example_cmd, reset_testing_dir};
-use crate::cli::{cli_tests::get_tree_output, execute_cli, get_config_from_cli, Cli};
+use crate::{
+  cli::{cli_tests::get_tree_output, execute_cli, get_config_from_cli, Cli},
+  fs::deserialize_yaml,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct CustomTemplateTest {
@@ -65,7 +65,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   write_command!(from_single_file_cmd, 1..5, "from_single_file_cmd");
 
-  let output = deserialize_yaml!(CustomTemplateTest, output_dir.join("from_single_file.yaml"));
+  let output: CustomTemplateTest = deserialize_yaml(&output_dir.join("from_single_file.yaml"))?;
 
   assert_eq!(output.my_var, 15);
 
@@ -87,10 +87,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   write_command!(from_config_template_cmd, 1..5, "from_config_template_cmd");
 
-  let output = deserialize_yaml!(
-    CustomTemplateTest,
-    output_dir.join("from_config_template.yaml")
-  );
+  let output: CustomTemplateTest = deserialize_yaml(&output_dir.join("from_config_template.yaml"))?;
 
   assert_eq!(output.my_var, 15);
 
@@ -114,10 +111,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   write_command!(from_template_file_cmd, 1..5, "from_template_file_cmd");
 
-  let output = deserialize_yaml!(
-    CustomTemplateTest,
-    output_dir.join("from_template_file.yaml")
-  );
+  let output: CustomTemplateTest = deserialize_yaml(&output_dir.join("from_template_file.yaml"))?;
 
   assert_eq!(output.my_var, 15);
 
@@ -147,7 +141,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   for template in templates {
     let output_path = output_dir.join(&template.output);
-    let output = deserialize_yaml!(CustomTemplateTest, output_path);
+    let output: CustomTemplateTest = deserialize_yaml(&output_path)?;
 
     let output_path_str = output_path.to_string_lossy();
 

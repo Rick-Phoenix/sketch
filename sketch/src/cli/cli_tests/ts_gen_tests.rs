@@ -1,4 +1,4 @@
-use std::{fs::File, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
 use pretty_assertions::{assert_eq, assert_ne};
@@ -6,6 +6,7 @@ use pretty_assertions::{assert_eq, assert_ne};
 use super::reset_testing_dir;
 use crate::{
   cli::{execute_cli, Cli},
+  fs::{deserialize_json, deserialize_yaml},
   ts::{
     package_json::PackageJson,
     pnpm::PnpmWorkspace,
@@ -43,10 +44,10 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(ts_repo_root.join(file).exists());
   }
 
-  let options_tsconfig = extract_tsconfig!(ts_repo_root.join("tsconfig.options.json"));
+  let options_tsconfig: TsConfig = deserialize_json(&ts_repo_root.join("tsconfig.options.json"))?;
 
   for dir in ["packages"] {
-    assert_dir_exists!(ts_repo_root.join(dir));
+    assert!(ts_repo_root.join(dir).is_dir());
   }
 
   assert_eq!(get_default_root_tsconfig(), options_tsconfig);
@@ -66,7 +67,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_dir = ts_repo_root.join("packages/test_package");
 
-  let root_tsconfig = extract_tsconfig!(root_tsconfig_path);
+  let root_tsconfig: TsConfig = deserialize_json(&root_tsconfig_path)?;
 
   assert!(root_tsconfig
     .references
@@ -75,20 +76,20 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
       path: "packages/test_package/tsconfig.json".to_string()
     }));
 
-  let package_tsconfig = extract_tsconfig!(package_dir.join("tsconfig.json"));
+  let package_tsconfig: TsConfig = deserialize_json(&package_dir.join("tsconfig.json"))?;
   assert_eq!(
     get_default_package_tsconfig("../../tsconfig.options.json".to_string(), false),
     package_tsconfig
   );
 
-  let src_tsconfig = extract_tsconfig!(package_dir.join("tsconfig.src.json"));
+  let src_tsconfig: TsConfig = deserialize_json(&package_dir.join("tsconfig.src.json"))?;
 
   assert_eq!(
     get_default_src_tsconfig(false, "../../.out/test_package"),
     src_tsconfig
   );
 
-  let dev_tsconfig = extract_tsconfig!(package_dir.join("tsconfig.dev.json"));
+  let dev_tsconfig: TsConfig = deserialize_json(&package_dir.join("tsconfig.dev.json"))?;
 
   assert_eq!(
     get_default_dev_tsconfig("../../.out/test_package"),
@@ -104,7 +105,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(package_dir.join(file).exists());
   }
 
-  let package_json = deserialize_json!(PackageJson, package_dir.join("package.json"));
+  let package_json: PackageJson = deserialize_json(&package_dir.join("package.json"))?;
 
   assert!(package_json
     .contributors
@@ -141,7 +142,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     assert!(app_package_dir.join(file).exists());
   }
 
-  let app_package_json = extract_package_json!(app_package_dir.join("package.json"));
+  let app_package_json: PackageJson = deserialize_json(&app_package_dir.join("package.json"))?;
 
   assert_eq!(app_package_json.name.unwrap(), "app_test");
 
@@ -153,7 +154,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
   assert!(svelte_dep.starts_with("^"));
 
   // New dependency with catalog: should be added to pnpm-workspace
-  let pnpm_workspace = deserialize_yaml!(PnpmWorkspace, ts_repo_root.join("pnpm-workspace.yaml"));
+  let pnpm_workspace: PnpmWorkspace = deserialize_yaml(&ts_repo_root.join("pnpm-workspace.yaml"))?;
 
   // And it should also have a version range
   assert!(pnpm_workspace

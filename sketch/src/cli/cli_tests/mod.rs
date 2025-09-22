@@ -1,7 +1,6 @@
 #[macro_use]
 mod tests_macros;
 
-mod cli_parsing_tests;
 mod examples_tests;
 mod exec_tests;
 mod generated_configs_tests;

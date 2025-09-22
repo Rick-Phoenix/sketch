@@ -1,4 +1,4 @@
-use std::{fs::File, path::PathBuf};
+use std::path::PathBuf;
 
 use clap::Parser;
 use pretty_assertions::assert_eq;
@@ -6,6 +6,7 @@ use pretty_assertions::assert_eq;
 use super::reset_testing_dir;
 use crate::{
   cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
+  fs::deserialize_yaml,
   Config,
 };
 
@@ -24,7 +25,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(default_config).await?;
 
-  let default_config_output = deserialize_yaml!(Config, output_dir.join("default_config.yaml"));
+  let default_config_output: Config = deserialize_yaml(&output_dir.join("default_config.yaml"))?;
 
   assert_eq!(default_config_output, Config::default());
 
@@ -51,7 +52,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(with_extras).await?;
 
-  let with_extras_output = deserialize_yaml!(Config, output_dir.join("with_extras.yaml"));
+  let with_extras_output: Config = deserialize_yaml(&output_dir.join("with_extras.yaml"))?;
 
   assert_eq!(
     with_extras_output.out_dir,
