@@ -152,10 +152,6 @@ pub struct ExecutionEnv {
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct SupportedArchitectures {
-  #[serde(alias = "os")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub os: Option<BTreeSet<String>>,
-
   #[serde(alias = "cpu")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub cpu: Option<BTreeSet<String>>,
@@ -163,6 +159,10 @@ pub struct SupportedArchitectures {
   #[serde(alias = "libc")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub libc: Option<BTreeSet<String>>,
+
+  #[serde(alias = "os")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub os: Option<BTreeSet<String>>,
 }
 
 /// Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig

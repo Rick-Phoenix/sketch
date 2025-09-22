@@ -1,9 +1,12 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::from_utf8};
 
 use clap::Parser;
 
 use super::{get_clean_example_cmd, reset_testing_dir};
-use crate::cli::{cli_tests::get_tree_output, execute_cli, Cli};
+use crate::{
+  cli::{cli_tests::get_tree_output, execute_cli, Cli},
+  fs::write_file,
+};
 
 #[tokio::test]
 async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
@@ -85,6 +88,44 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
   execute_cli(package_gen).await?;
 
   get_tree_output(&output_dir.join("packages/frontend"), "tree_output.txt")?;
+
+  Ok(())
+}
+
+#[tokio::test]
+async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
+  let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples");
+  let output_dir = PathBuf::from("tests/output/templating_examples");
+
+  reset_testing_dir(&output_dir);
+
+  let mut bin = get_bin!();
+
+  let args = [
+    "-c",
+    path_to_str!(examples_dir.join("templating.yaml")),
+    "render",
+    "--id",
+    "example",
+    "--stdout",
+  ];
+
+  let var_name = "GREETING";
+  let var_value = "hello,world";
+
+  let cmd_str = format!(
+    "{}=\"{}\" sketch {}",
+    var_name,
+    var_value,
+    args.split_at(2).1.join(" ")
+  );
+
+  let output = bin.env(var_name, var_value).args(args).output()?;
+
+  let output_str = from_utf8(&output.stdout)?.trim();
+
+  write_file(&output_dir.join("cmd"), &cmd_str, true)?;
+  write_file(&output_dir.join("output"), &output_str, true)?;
 
   Ok(())
 }

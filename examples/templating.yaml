@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../schemas/latest.json
+
+templates:
+  example: |
+    A random uuid is {{ uuid() }}
+
+    {# Generating a random alphanumeric string -#}
+    A random string is: {{ uuid() | truncate(length=6, end="") }}
+
+    {# Generating a random number -#}
+    A random number is: {{ get_random(start=100000, end=9999999) }}
+
+    Now is {{ now(utc=true) }}
+
+    {# Assigning an env to a variable -#}
+    {%- set greeting = get_env(name="GREETING") -%}
+
+    {#- Manipulating data -#}
+    {%- set segments = greeting | split(pat=",") -%}
+    First segment is {{ segments[0] }}
+    Second segment is {{ segments[1] }}
+
+    {# Using special variables -#}
+    Current arch is {{ sketch_arch }}
