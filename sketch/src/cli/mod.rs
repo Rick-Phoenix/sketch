@@ -106,7 +106,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   }
 
   match cli.command {
-    Init { .. } => {}
+    Repo { .. } => {}
 
     RenderPreset { .. } => {}
 
@@ -173,7 +173,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
-    Init { remote, input } => {
+    Repo { remote, input } => {
       let preset = if let Some(id) = input.preset {
         config
           .repo_presets
@@ -501,7 +501,7 @@ pub enum Commands {
   },
 
   /// Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config.
-  Init {
+  Repo {
     #[command(flatten)]
     input: RepoConfigInput,
 
