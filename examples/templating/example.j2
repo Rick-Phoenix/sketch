@@ -39,9 +39,15 @@ It's a dir!
 
 {% if file | is_file -%}
 It's a file!
-{% endif -%}
+{%- endif %}
 
-{% set captures = file | capture(regex="(?<path>.*)\.(?<extension>\w+)") -%}
+{%- set captures = file | capture(regex="(?<path>.*)\.(?<extension>\w+)") %}
 
 Path is: {{ captures['path'] }}
 Extension is: {{ captures['extension'] }}
+
+{% set words = "They're taking the hobbits to Isengard" | capture_many(regex="(?<word>[\w']+)") -%}
+
+{% for capture in words -%}
+{{ capture['word'] -}} {% if not loop.last %}{{ " " }}{% endif -%}
+{%- endfor -%}!

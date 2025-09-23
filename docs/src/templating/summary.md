@@ -42,7 +42,8 @@ On top of that, Sketch adds some extra filters and functions.
 
 - `basename` (gets the basename of a directory/file)
 - `parent_dir` (gets the parent directory of a directory/file)
-- `capture(regex=REGEX)` (returns the named capture groups for a regex)
+- `capture(regex=REGEX)` (matches a regex once and returns the named capture groups)
+- `capture_many(regex=REGEX)` (matches a regex repetitively and returns the list of named capture groups)
 - `is_file` (checks if a path is a file)
 - `is_dir` (checks if a path is a directory)
 
@@ -50,7 +51,7 @@ On top of that, Sketch adds some extra filters and functions.
 
 Template
 
-```yaml
+```jinja
 {{#include ../../../examples/templating/example.j2}}
 ```
 

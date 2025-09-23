@@ -78,3 +78,42 @@ pub(crate) fn capture(text: &Value, args: &HashMap<String, Value>) -> Result<Val
 
   Ok(captured_groups.into())
 }
+
+pub(crate) fn capture_many(text: &Value, args: &HashMap<String, Value>) -> Result<Value, Error> {
+  let pattern = extract_string(
+    "capture_many",
+    args.get("regex").ok_or(Error::call_filter(
+      "capture_many",
+      format!("Could not find the `regex` argument"),
+    ))?,
+  )?;
+
+  let regex = Regex::new(&pattern.to_string()).map_err(|e| {
+    Error::call_filter(
+      "capture_many",
+      format!("Regex creation error for `{}`: {}", pattern, e),
+    )
+  })?;
+
+  let text = extract_string("capture_many", text)?;
+
+  let mut all_captures: Vec<Map<String, Value>> = Vec::new();
+
+  for cap in regex.captures_iter(&text) {
+    let mut captured_groups: Map<String, Value> = Map::new();
+
+    for group in regex.capture_names() {
+      if let Some(name) = group {
+        if let Some(captured_text) = cap.name(name) {
+          captured_groups.insert(name.to_string(), captured_text.as_str().to_string().into());
+        }
+      }
+    }
+
+    if !captured_groups.is_empty() {
+      all_captures.push(captured_groups);
+    }
+  }
+
+  Ok(all_captures.into())
+}

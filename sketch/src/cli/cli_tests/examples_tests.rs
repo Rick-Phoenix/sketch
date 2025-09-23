@@ -151,6 +151,7 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("Parent dir is: mydir"));
   assert!(output_str.contains("Path is: sketch"));
   assert!(output_str.contains("Extension is: toml"));
+  assert!(output_str.contains("They're taking the hobbits to Isengard!"));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
   write_file(&output_dir.join("output"), &output_str, true)?;
