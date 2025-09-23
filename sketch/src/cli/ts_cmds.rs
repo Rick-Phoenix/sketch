@@ -194,6 +194,7 @@ pub(crate) async fn handle_ts_commands(
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum TsCommands {
+  /// Generates a `package.json` file from a preset.
   PackageJson {
     /// The output path of the created file [default: `package.json`]
     output: Option<PathBuf>,
@@ -203,6 +204,7 @@ pub enum TsCommands {
     preset: String,
   },
 
+  /// Generates a `tsconfig.json` file from a preset.
   TsConfig {
     /// The output path of the created file [default: `tsconfig.json`]
     output: Option<PathBuf>,
@@ -212,6 +214,7 @@ pub enum TsCommands {
     preset: String,
   },
 
+  /// Generates a `.oxlintrc.json` file from a preset.
   OxlintConfig {
     /// The output path of the created file [default: `.oxlintrc.json`]
     output: Option<PathBuf>,
@@ -221,7 +224,7 @@ pub enum TsCommands {
     preset: String,
   },
 
-  /// Generates a new typescript monorepo inside the `out_dir`
+  /// Generates a new typescript monorepo
   Monorepo {
     /// The id of the package preset to use for the root package.
     #[arg(short, long, value_name = "ID")]

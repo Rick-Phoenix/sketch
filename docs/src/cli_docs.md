@@ -6,6 +6,9 @@ This document contains the help content for the `sketch` command-line program.
 
 * [`sketch`↴](#sketch)
 * [`sketch ts`↴](#sketch-ts)
+* [`sketch ts package-json`↴](#sketch-ts-package-json)
+* [`sketch ts ts-config`↴](#sketch-ts-ts-config)
+* [`sketch ts oxlint-config`↴](#sketch-ts-oxlint-config)
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
 * [`sketch repo`↴](#sketch-repo)
@@ -35,9 +38,9 @@ This document contains the help content for the `sketch` command-line program.
 * `--ignore-config` — Ignores any automatically detected config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--debug` — Activates debugging mode
-* `--out-dir <DIR>` — This will be considered as the starting path for the executed commands. If this is a relative path, it will be joined to the cwd (when set via cli) or to the config file's directory [default: `.`]
 * `--templates-dir <DIR>` — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)
 * `--no-overwrite` — Does not overwrite existing files
+* `-o`, `--out-dir <PATH>` — The base path for the output files
 * `--dry-run` — Aborts before writing any content to disk
 * `-s`, `--set <KEY=VALUE>` — Set a variable (as key=value) to use in templates. Overrides global and local variables
 
@@ -51,6 +54,9 @@ Launches typescript-specific commands
 
 ###### **Subcommands:**
 
+* `package-json` — 
+* `ts-config` — 
+* `oxlint-config` — 
 * `monorepo` — Generates a new typescript monorepo inside the `out_dir`
 * `package` — Generates a new typescript package
 
@@ -67,6 +73,48 @@ Launches typescript-specific commands
 
 * `--catalog` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to `pnpm-workspace.yaml`
 * `--no-convert-latest` — Does not convert dependencies marked as `latest` to a version range
+
+
+
+## `sketch ts package-json`
+
+**Usage:** `sketch ts package-json --preset <ID> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<OUTPUT>` — The output path of the created file [default: `package.json`]
+
+###### **Options:**
+
+* `-p`, `--preset <ID>` — The preset id
+
+
+
+## `sketch ts ts-config`
+
+**Usage:** `sketch ts ts-config --preset <ID> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<OUTPUT>` — The output path of the created file [default: `tsconfig.json`]
+
+###### **Options:**
+
+* `-p`, `--preset <ID>` — The preset id
+
+
+
+## `sketch ts oxlint-config`
+
+**Usage:** `sketch ts oxlint-config --preset <ID> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<OUTPUT>` — The output path of the created file [default: `.oxlintrc.json`]
+
+###### **Options:**
+
+* `-p`, `--preset <ID>` — The preset id
 
 
 

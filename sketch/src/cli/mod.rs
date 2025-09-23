@@ -148,6 +148,21 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
+    Commands::PreCommit { output, preset } => {
+      let content = config
+        .pre_commit_presets
+        .get(&preset)
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::PreCommit,
+          name: preset.clone(),
+        })?
+        .clone()
+        .process_data(preset.as_str(), &config.pre_commit_presets)?;
+
+      let output = root_dir.join(output.unwrap_or_else(|| ".pre-commit-config.yaml".into()));
+
+      serialize_yaml(&content, &output, overwrite)?;
+    }
     Repo {
       remote,
       input,
@@ -380,6 +395,16 @@ pub struct RepoConfigInput {
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
+  /// Generates a `pre-commit` config file from a preset.
+  PreCommit {
+    /// The output path of the created file [default: `.pre-commit-config.yaml`]
+    output: Option<PathBuf>,
+
+    /// The preset id
+    #[arg(short, long, value_name = "ID")]
+    preset: String,
+  },
+
   /// Launches typescript-specific commands.
   Ts {
     #[command(flatten)]
