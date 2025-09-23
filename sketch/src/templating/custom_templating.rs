@@ -13,6 +13,9 @@ use crate::{
   cli::parsers::parse_key_value_pairs,
   config::Config,
   fs::{create_all_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
+  tera_filters::{basename, capture_groups, parent_dir},
+  tera_functions::tera_uuid,
+  tera_tests::{is_dir, is_file},
   GenError,
 };
 
@@ -94,6 +97,13 @@ impl Config {
     {
       tera.register_function("uuid", tera_uuid);
     }
+
+    tera.register_filter("basename", basename);
+    tera.register_filter("parent_dir", parent_dir);
+    tera.register_filter("capture_groups", capture_groups);
+
+    tera.register_tester("is_file", is_file);
+    tera.register_tester("is_dir", is_dir);
 
     for (name, template) in &self.templates {
       tera
@@ -250,11 +260,4 @@ pub(crate) fn get_default_context() -> Context {
   context.insert("sketch_home", &env::home_dir());
 
   context
-}
-
-#[cfg(feature = "uuid")]
-fn tera_uuid(
-  _: &std::collections::HashMap<String, tera::Value>,
-) -> Result<tera::Value, tera::Error> {
-  Ok(uuid::Uuid::new_v4().to_string().into())
 }

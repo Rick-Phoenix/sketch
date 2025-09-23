@@ -30,11 +30,26 @@ All of the following variables are available in templates, prefixed with `sketch
 
 # Filters and functions
 
-All of the builtin filters and functions for [Tera](https://keats.github.io/tera/docs/) are available. 
+All of the builtin functionalities for [Tera](https://keats.github.io/tera/docs/) are available. 
 
-On top of that, Sketch adds a `uuid` function that can be used to generate a v4 UUID.
+On top of that, Sketch adds some extra filters, tests and functions.
 
-## Example
+## Functions
+
+- `uuid` (generates a v4 UUID)
+
+## Filters
+
+- `basename` (gets the basename of a directory/file)
+- `parent_dir` (gets the parent directory of a directory/file)
+- `capture_groups(regex=REGEX)` (returns the named capture groups for a regex)
+
+## Tests
+
+- `is_file`
+- `is_dir`
+
+# Example
 
 Config:
 
