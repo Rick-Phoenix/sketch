@@ -1,0 +1,47 @@
+{# Using special variables -#}
+
+Current arch is: {{ sketch_arch }}
+Current os is: {{ sketch_os }}
+Current os family is: {{ sketch_os_family }}
+Is unix: {{ sketch_is_unix }}
+
+{# Functions and filters -#}
+
+A random uuid is: {{ uuid() }}
+
+{# Generating a random alphanumeric string -#}
+A random string is: {{ uuid() | truncate(length=6, end="") }}
+
+{# Generating a random number -#}
+A random number is: {{ get_random(start=100000, end=9999999) }}
+
+Now is {{ now(utc=true) }}
+
+{# Assigning an env to a variable -#}
+{%- set greeting = get_env(name="GREETING") -%}
+
+{#- Manipulating data -#}
+{%- set segments = greeting | split(pat=",") -%}
+First segment is: {{ segments[0] }}
+Second segment is: {{ segments[1] }}
+
+{% set some_path = "mydir/myfile" -%}
+Basename is: {{ some_path | basename }}
+Parent dir is: {{ some_path | parent_dir }}
+
+{% set dir = "../sketch" -%}
+
+{% if dir | is_dir -%}
+It's a dir!
+{% endif -%}
+
+{% set file = "sketch.toml" -%}
+
+{% if file | is_file -%}
+It's a file!
+{% endif -%}
+
+{% set captures = file | capture(regex="(?<path>.*)\.(?<extension>\w+)") -%}
+
+Path is: {{ captures['path'] }}
+Extension is: {{ captures['extension'] }}

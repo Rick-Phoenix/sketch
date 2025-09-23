@@ -32,7 +32,7 @@ All of the following variables are available in templates, prefixed with `sketch
 
 All of the builtin functionalities for [Tera](https://keats.github.io/tera/docs/) are available. 
 
-On top of that, Sketch adds some extra filters, tests and functions.
+On top of that, Sketch adds some extra filters and functions.
 
 ## Functions
 
@@ -42,19 +42,16 @@ On top of that, Sketch adds some extra filters, tests and functions.
 
 - `basename` (gets the basename of a directory/file)
 - `parent_dir` (gets the parent directory of a directory/file)
-- `capture_groups(regex=REGEX)` (returns the named capture groups for a regex)
-
-## Tests
-
-- `is_file`
-- `is_dir`
+- `capture(regex=REGEX)` (returns the named capture groups for a regex)
+- `is_file` (checks if a path is a file)
+- `is_dir` (checks if a path is a directory)
 
 # Example
 
-Config:
+Template
 
 ```yaml
-{{#include ../../../examples/templating.yaml}}
+{{#include ../../../examples/templating/example.j2}}
 ```
 
 Cmd:

@@ -13,9 +13,8 @@ use crate::{
   cli::parsers::parse_key_value_pairs,
   config::Config,
   fs::{create_all_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
-  tera_filters::{basename, capture_groups, parent_dir},
+  tera_filters::{basename, capture, is_dir, is_file, parent_dir},
   tera_functions::tera_uuid,
-  tera_tests::{is_dir, is_file},
   GenError,
 };
 
@@ -100,10 +99,9 @@ impl Config {
 
     tera.register_filter("basename", basename);
     tera.register_filter("parent_dir", parent_dir);
-    tera.register_filter("capture_groups", capture_groups);
-
-    tera.register_tester("is_file", is_file);
-    tera.register_tester("is_dir", is_dir);
+    tera.register_filter("capture", capture);
+    tera.register_filter("is_file", is_file);
+    tera.register_filter("is_dir", is_dir);
 
     for (name, template) in &self.templates {
       tera

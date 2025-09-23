@@ -110,11 +110,11 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   let mut bin = get_bin!();
 
   let args = [
-    "-c",
-    path_to_str!(examples_dir.join("templating.yaml")),
+    "--templates-dir",
+    path_to_str!(examples_dir.join("templating")),
     "render",
     "--id",
-    "example",
+    "example.j2",
     "--stdout",
   ];
 
@@ -131,6 +131,26 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   let output = bin.env(var_name, var_value).args(args).output()?;
 
   let output_str = from_utf8(&output.stdout)?.trim();
+
+  if output_str.is_empty() {
+    panic!(
+      "Error in the template output: {}",
+      from_utf8(&output.stderr)?
+    );
+  }
+
+  assert!(output_str.contains("Current arch is: x86_64"));
+  assert!(output_str.contains("Current os is: linux"));
+  assert!(output_str.contains("Current os family is: unix"));
+  assert!(output_str.contains("Is unix: true"));
+  assert!(output_str.contains("It's a dir!"));
+  assert!(output_str.contains("It's a file!"));
+  assert!(output_str.contains("First segment is: hello"));
+  assert!(output_str.contains("Second segment is: world"));
+  assert!(output_str.contains("Basename is: myfile"));
+  assert!(output_str.contains("Parent dir is: mydir"));
+  assert!(output_str.contains("Path is: sketch"));
+  assert!(output_str.contains("Extension is: toml"));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
   write_file(&output_dir.join("output"), &output_str, true)?;

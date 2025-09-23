@@ -5,6 +5,7 @@ This document contains the help content for the `sketch` command-line program.
 **Command Overview:**
 
 * [`sketch`↴](#sketch)
+* [`sketch pre-commit`↴](#sketch-pre-commit)
 * [`sketch ts`↴](#sketch-ts)
 * [`sketch ts package-json`↴](#sketch-ts-package-json)
 * [`sketch ts ts-config`↴](#sketch-ts-ts-config)
@@ -25,6 +26,7 @@ This document contains the help content for the `sketch` command-line program.
 
 ###### **Subcommands:**
 
+* `pre-commit` — Generates a `pre-commit` config file from a preset
 * `ts` — Launches typescript-specific commands
 * `repo` — Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config
 * `new` — Generates a new config file with some optional initial values defined via cli flags
@@ -46,6 +48,22 @@ This document contains the help content for the `sketch` command-line program.
 
 
 
+## `sketch pre-commit`
+
+Generates a `pre-commit` config file from a preset
+
+**Usage:** `sketch pre-commit --preset <ID> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<OUTPUT>` — The output path of the created file [default: `.pre-commit-config.yaml`]
+
+###### **Options:**
+
+* `-p`, `--preset <ID>` — The preset id
+
+
+
 ## `sketch ts`
 
 Launches typescript-specific commands
@@ -54,10 +72,10 @@ Launches typescript-specific commands
 
 ###### **Subcommands:**
 
-* `package-json` — 
-* `ts-config` — 
-* `oxlint-config` — 
-* `monorepo` — Generates a new typescript monorepo inside the `out_dir`
+* `package-json` — Generates a `package.json` file from a preset
+* `ts-config` — Generates a `tsconfig.json` file from a preset
+* `oxlint-config` — Generates a `.oxlintrc.json` file from a preset
+* `monorepo` — Generates a new typescript monorepo
 * `package` — Generates a new typescript package
 
 ###### **Options:**
@@ -78,6 +96,8 @@ Launches typescript-specific commands
 
 ## `sketch ts package-json`
 
+Generates a `package.json` file from a preset
+
 **Usage:** `sketch ts package-json --preset <ID> [OUTPUT]`
 
 ###### **Arguments:**
@@ -91,6 +111,8 @@ Launches typescript-specific commands
 
 
 ## `sketch ts ts-config`
+
+Generates a `tsconfig.json` file from a preset
 
 **Usage:** `sketch ts ts-config --preset <ID> [OUTPUT]`
 
@@ -106,6 +128,8 @@ Launches typescript-specific commands
 
 ## `sketch ts oxlint-config`
 
+Generates a `.oxlintrc.json` file from a preset
+
 **Usage:** `sketch ts oxlint-config --preset <ID> [OUTPUT]`
 
 ###### **Arguments:**
@@ -120,7 +144,7 @@ Launches typescript-specific commands
 
 ## `sketch ts monorepo`
 
-Generates a new typescript monorepo inside the `out_dir`
+Generates a new typescript monorepo
 
 **Usage:** `sketch ts monorepo [OPTIONS] [DIR]`
 
