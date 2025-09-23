@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +9,7 @@ pub mod pre_commit;
 use crate::{
   custom_templating::TemplateOutput,
   exec::launch_command,
-  fs::{create_all_dirs, get_cwd, serialize_yaml, write_file},
+  fs::{create_all_dirs, serialize_yaml, write_file},
   init_repo::{
     gitignore::{GitIgnore, GitIgnoreSetting, DEFAULT_GITIGNORE},
     pre_commit::{PreCommitPreset, PreCommitSetting},
@@ -26,8 +28,12 @@ pub struct RepoPreset {
 }
 
 impl Config {
-  pub fn init_repo(self, preset: RepoPreset, remote: Option<&str>) -> Result<(), GenError> {
-    let out_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
+  pub fn init_repo(
+    self,
+    preset: RepoPreset,
+    remote: Option<&str>,
+    out_dir: &Path,
+  ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
 
     create_all_dirs(&out_dir)?;

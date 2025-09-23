@@ -10,7 +10,7 @@ This is an example of a package-related configuration:
 
 <div class="warning">
 
-When generating a package with actions that are supposed to make changes in the root of the monorepo (such as updating `pnpm-workspace.yaml` or the root `tsconfig.json`), `out_dir` is assumed to be the root of the monorepo, and `dir` is the new package's directory starting from the root of the monorepo.
+When generating a package with actions that are supposed to make changes in the root of the monorepo (such as updating `pnpm-workspace.yaml` or the root `tsconfig.json`), the `--out-dir` is assumed to be the root of the monorepo, and `dir` is the new package's directory starting from the root of the monorepo.
 </div>
 
 After setting things up, you can run
@@ -21,7 +21,7 @@ To generate the new package.
 
 ## Adding Templates
 
-You can also use the `with_templates` field (or cli flag) to specify a list of templates that should be generated whenever a package preset is being used.
+You can also use the `with_templates` field (or the `--with-template` cli flag) to specify a list of templates that should be generated whenever a package preset is being used.
 
 Let's say for example that in a type of package, you always need a `schemas` directory, where you import some common schemas from a shared package and define new ones. 
 

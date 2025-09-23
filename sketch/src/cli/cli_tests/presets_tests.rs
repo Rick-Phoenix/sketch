@@ -31,6 +31,8 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   let git_preset_args = [
     "sketch",
+    "--out-dir",
+    &out_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "repo",
@@ -45,7 +47,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&out_dir, "tree_output.txt")?;
 
-  get_clean_example_cmd(&git_preset_args, 1..3, &out_dir.join("cmd"))?;
+  get_clean_example_cmd(&git_preset_args, 1..5, &out_dir.join("cmd"))?;
 
   let pre_commit_output: PreCommitConfig =
     deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;
@@ -108,6 +110,8 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   let oxlint_test = Cli::try_parse_from([
     "sketch",
+    "--out-dir",
+    &out_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "ts",

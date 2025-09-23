@@ -1,5 +1,3 @@
-out_dir = "../output"
-
 vars = { my_var = 15 }
 
 templates = { lit_template = "my_var: {{ my_var }}" }

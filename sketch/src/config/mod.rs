@@ -25,6 +25,10 @@ impl Config {
       ..Default::default()
     }
   }
+
+  pub(crate) fn can_overwrite(&self) -> bool {
+    !self.no_overwrite
+  }
 }
 
 /// The global configuration struct.
@@ -53,11 +57,6 @@ pub struct Config {
   #[arg(long)]
   #[serde(skip_serializing_if = "is_default")]
   pub debug: bool,
-
-  /// This will be considered as the starting path for the executed commands. If this is a relative path, it will be joined to the cwd (when set via cli) or to the config file's directory [default: `.`].
-  #[arg(long, value_name = "DIR")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub out_dir: Option<PathBuf>,
 
   /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
   #[arg(long, value_name = "DIR")]
@@ -202,7 +201,6 @@ impl Default for Config {
       typescript: None,
       shell: None,
       debug: false,
-      out_dir: None,
       templates_dir: Default::default(),
       templates: Default::default(),
       vars: Default::default(),

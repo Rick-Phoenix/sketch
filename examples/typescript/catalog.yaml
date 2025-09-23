@@ -1,7 +1,5 @@
 # yaml-language-server: $schema=../../schemas/latest.json
 
-out_dir: ../../sketch/tests/output/ts_examples
-
 # ANCHOR: all
 typescript:
   no_default_deps: true

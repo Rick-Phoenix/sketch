@@ -25,13 +25,15 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let monorepo_cmd = [
     "sketch",
+    "--out-dir",
+    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("root_package.yaml")),
     "ts",
     "monorepo",
   ];
 
-  write_command!(monorepo_cmd, 1..3, "monorepo_cmd");
+  write_command!(monorepo_cmd, 1..5, "monorepo_cmd");
 
   let monorepo_setup = Cli::try_parse_from(&monorepo_cmd)?;
 
@@ -41,6 +43,8 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let people_cmd = [
     "sketch",
+    "--out-dir",
+    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("people.yaml")),
     "ts",
@@ -49,7 +53,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "people-example",
   ];
 
-  write_command!(people_cmd, 1..3, "people_cmd");
+  write_command!(people_cmd, 1..5, "people_cmd");
 
   let people_example = Cli::try_parse_from(people_cmd)?;
 
@@ -57,6 +61,8 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let catalog_cmd = [
     "sketch",
+    "--out-dir",
+    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("catalog.yaml")),
     "ts",
@@ -65,7 +71,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "with_catalog",
   ];
 
-  write_command!(catalog_cmd, 1..3, "catalog_cmd");
+  write_command!(catalog_cmd, 1..5, "catalog_cmd");
 
   let catalog_example = Cli::try_parse_from(catalog_cmd)?;
 
@@ -73,6 +79,8 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_gen_cmd = [
     "sketch",
+    "--out-dir",
+    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("new_package.yaml")),
     "ts",
@@ -81,7 +89,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "frontend",
   ];
 
-  write_command!(package_gen_cmd, 1..3, "package_gen_cmd");
+  write_command!(package_gen_cmd, 1..5, "package_gen_cmd");
 
   let package_gen = Cli::try_parse_from(package_gen_cmd)?;
 

@@ -1,14 +1,14 @@
 # Monorepo Generation
 
-Once we have our settings defined (or not, if we want to use defaults), we can run
+We can set up a Typescript monorepo by simply running this command:
 
 >`{{#include ../../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}`
 
-to create our new Typescript monorepo.
+This will use all of the default settings and set up a basic structure for a monorepo.
+
+But we can also create a package preset and use that for the root package of the monorepo.
 
 # Example
-
-We can omit the root package if we want to use a basic, default structure for the monorepo. But we can also create a package preset and use it if we want to customize the output.
 
 Let's make this our starting config:
 

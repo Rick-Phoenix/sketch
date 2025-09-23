@@ -26,6 +26,7 @@ async fn circular_package_json() -> Result<(), GenError> {
     .build_package(
       PackageData::Preset("circular_package_json".to_string()),
       false,
+      "tests/output/circular_configs".into(),
     )
     .await;
 
@@ -46,7 +47,11 @@ async fn circular_tsconfig() -> Result<(), GenError> {
   let config = Config::from_file(PathBuf::from("tests/circular_tsconfigs/sketch.toml"))?;
 
   let result = config
-    .build_package(PackageData::Preset("circular_tsconfigs".to_string()), false)
+    .build_package(
+      PackageData::Preset("circular_tsconfigs".to_string()),
+      false,
+      "tests/output/circular_tsconfig".into(),
+    )
     .await;
 
   match result {

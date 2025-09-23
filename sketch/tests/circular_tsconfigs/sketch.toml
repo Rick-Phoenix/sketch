@@ -1,5 +1,3 @@
-out_dir = "../output"
-
 [typescript]
 
 [typescript.ts_config_presets.one]

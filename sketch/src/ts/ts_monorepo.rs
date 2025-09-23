@@ -1,9 +1,9 @@
-use std::fs::create_dir_all;
+use std::{fs::create_dir_all, path::Path};
 
 use maplit::btreeset;
 
 use crate::{
-  fs::{create_all_dirs, get_cwd, serialize_json, serialize_yaml},
+  fs::{create_all_dirs, serialize_json, serialize_yaml},
   ts::{
     oxlint::OxlintConfigSetting,
     package::PackageConfig,
@@ -15,13 +15,15 @@ use crate::{
 };
 
 impl Config {
-  pub async fn create_ts_monorepo(self, root_package: PackageConfig) -> Result<(), GenError> {
+  pub async fn create_ts_monorepo(
+    self,
+    root_package: PackageConfig,
+    out_dir: &Path,
+  ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
-
-    let out_dir = self.out_dir.clone().unwrap_or_else(|| get_cwd());
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();

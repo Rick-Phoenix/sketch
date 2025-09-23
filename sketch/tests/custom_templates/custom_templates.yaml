@@ -1,8 +1,5 @@
 # ANCHOR: all
 # ANCHOR: config
-# For templates inside presets, the `output` path will be
-# joined to `out_dir`
-out_dir: "../output/custom_templates"
 
 # Global variables
 vars:

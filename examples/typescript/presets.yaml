@@ -1,7 +1,5 @@
 # yaml-language-server: $schema=../../schemas/latest.json
 
-out_dir: ../../sketch/tests/output/presets
-
 # ANCHOR: all
 # ANCHOR: templates
 templates:
@@ -80,7 +78,7 @@ git_presets:
 templating_presets:
   # All the files in this group will be generated together
   docker:
-    # Relative paths are joined with `out_dir`
+    # Relative paths are joined with the `--out-dir`
     - output: Dockerfile
       template: dockerfile
       # Optional local context variables

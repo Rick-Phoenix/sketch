@@ -1,9 +1,5 @@
 # yaml-language-server: $schema=../schemas/latest.json
 
-# The root path for the generated files.
-# All output paths will start from this directory.
-out_dir: .
-
 # The relative path from the config file (or from the cwd, if set via the cli flag)
 # to the directory containing templates.
 templates_dir: null

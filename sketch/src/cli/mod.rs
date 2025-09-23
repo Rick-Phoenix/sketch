@@ -1,6 +1,8 @@
 #[cfg(test)]
 mod cli_tests;
 
+mod ts_cmds;
+
 mod cli_elements;
 pub(crate) mod parsers;
 
@@ -11,23 +13,17 @@ use std::{
 };
 
 use clap::{Args, Parser, Subcommand};
-use cli_elements::*;
 use merge::Merge;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
 use Commands::*;
 
 use crate::{
+  cli::ts_cmds::{handle_ts_commands, TsCommands},
   custom_templating::{TemplateData, TemplateOutput},
-  exec::launch_command,
   fs::{create_all_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml},
   init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
-  ts::{
-    oxlint::OxlintConfigSetting,
-    package::{PackageConfig, PackageData},
-    vitest::VitestConfigKind,
-    TypescriptConfig,
-  },
+  ts::TypescriptConfig,
   Config, *,
 };
 
@@ -106,28 +102,17 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   }
 
   match cli.command {
-    Repo { .. } => {}
-
-    RenderPreset { .. } => {}
-
-    Render { .. } => {}
-    New { .. } => {}
-    Exec { .. } => {}
     Ts {
-      command,
       typescript_overrides,
+      ..
     } => {
       let typescript = config.typescript.get_or_insert_default();
 
       if let Some(typescript_overrides) = typescript_overrides {
         typescript.merge(typescript_overrides);
       }
-
-      match command {
-        TsCommands::Monorepo { .. } => {}
-        TsCommands::Package { .. } => {}
-      }
     }
+    _ => {}
   };
 
   Ok(config)
@@ -141,8 +126,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let is_dry_run = cli.dry_run;
   let command = cli.command.clone();
 
-  let mut config = get_config_from_cli(cli).await?;
-  let root_dir = config.out_dir.clone().unwrap_or_else(|| get_cwd());
+  let root_dir = cli.out_dir.clone().unwrap_or_else(|| get_cwd());
+  create_all_dirs(&root_dir)?;
+
+  let config = get_config_from_cli(cli).await?;
 
   let overwrite = !config.no_overwrite;
 
@@ -198,7 +185,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.init_repo(preset, remote.as_deref())?;
+      config.init_repo(preset, remote.as_deref(), &root_dir)?;
     }
 
     RenderPreset { id } => {
@@ -322,124 +309,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       config.execute_command(shell.as_deref(), &cwd, command)?;
     }
     Ts { command, .. } => {
-      let typescript = config.typescript.get_or_insert_default();
-
-      match command {
-        TsCommands::Monorepo {
-          install,
-          root_package_overrides,
-          root_package,
-          oxlint,
-          ..
-        } => {
-          exit_if_dry_run!();
-
-          let mut root_package = if let Some(id) = root_package {
-            typescript
-              .package_presets
-              .get(&id)
-              .ok_or(GenError::PresetNotFound {
-                kind: Preset::TsPackage,
-                name: id,
-              })?
-              .clone()
-          } else {
-            let mut package = PackageConfig::default();
-            package.oxlint = Some(OxlintConfigSetting::Bool(true));
-            package.vitest = VitestConfigKind::Bool(false);
-            package.name = Some("root".to_string());
-            package
-          };
-
-          if let Some(overrides) = root_package_overrides {
-            root_package.merge(overrides);
-          }
-
-          if oxlint
-            && root_package
-              .oxlint
-              .as_ref()
-              .is_none_or(|ox| !ox.is_enabled())
-          {
-            root_package.oxlint = Some(OxlintConfigSetting::Bool(true));
-          }
-
-          let package_manager = typescript.package_manager.get_or_insert_default().clone();
-
-          config.create_ts_monorepo(root_package).await?;
-
-          if install {
-            launch_command(
-              package_manager.to_string().as_str(),
-              &["install"],
-              &root_dir,
-              Some("Could not install dependencies"),
-            )?;
-          }
-        }
-        TsCommands::Package {
-          preset,
-          package_config,
-          install,
-          no_vitest,
-          oxlint,
-          kind,
-          update_root_tsconfig,
-        } => {
-          let mut package = if let Some(preset) = preset {
-            typescript
-              .package_presets
-              .get(&preset)
-              .ok_or(GenError::PresetNotFound {
-                kind: Preset::TsPackage,
-                name: preset.clone(),
-              })?
-              .clone()
-          } else {
-            PackageConfig::default()
-          };
-
-          if let Some(overrides) = package_config {
-            package.merge(overrides);
-          }
-
-          if let Some(kind) = kind {
-            package.kind = Some(kind.into());
-          }
-
-          if no_vitest {
-            package.vitest = VitestConfigKind::Bool(false);
-          }
-
-          if oxlint && package.oxlint.is_none() {
-            package.oxlint = Some(OxlintConfigSetting::Bool(true));
-          }
-
-          if config.debug {
-            eprintln!("DEBUG:");
-            eprintln!("  package: {:#?}", package);
-          }
-
-          exit_if_dry_run!();
-
-          let package_dir = package.dir.get_or_insert_with(|| get_cwd()).clone();
-
-          if install {
-            let package_manager = typescript.package_manager.get_or_insert_default().clone();
-
-            launch_command(
-              package_manager.to_string().as_str(),
-              &["install"],
-              &package_dir,
-              Some("Could not install dependencies"),
-            )?;
-          }
-
-          config
-            .build_package(PackageData::Config(package.clone()), update_root_tsconfig)
-            .await?;
-        }
-      }
+      handle_ts_commands(config, command, root_dir).await?;
     }
   }
   Ok(())
@@ -462,6 +332,10 @@ pub struct Cli {
 
   #[command(flatten)]
   pub overrides: Option<Config>,
+
+  /// The base path for the output files.
+  #[arg(short, long, value_name = "PATH")]
+  pub out_dir: Option<PathBuf>,
 
   /// Aborts before writing any content to disk.
   #[arg(long)]
@@ -576,56 +450,5 @@ pub enum Commands {
     /// The id of the template to use (a name for config-defined templates, or a relative path to a file inside `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
-  },
-}
-
-#[derive(Subcommand, Debug, Clone)]
-pub enum TsCommands {
-  /// Generates a new typescript monorepo inside the `out_dir`
-  Monorepo {
-    /// The id of the package preset to use for the root package.
-    #[arg(short, long, value_name = "ID")]
-    root_package: Option<String>,
-
-    #[command(flatten)]
-    root_package_overrides: Option<PackageConfig>,
-
-    /// Generate a basic oxlint config at the root.
-    #[arg(long)]
-    oxlint: bool,
-
-    /// Installs the dependencies at the root after creation.
-    #[arg(short, long)]
-    install: bool,
-  },
-
-  /// Generates a new typescript package
-  Package {
-    /// The package preset to use
-    #[arg(short, long)]
-    preset: Option<String>,
-
-    /// Whether the tsconfig file at the workspace root
-    /// should receive a reference to the new package
-    #[arg(long)]
-    update_root_tsconfig: bool,
-
-    /// Does not set up vitest for this package
-    #[arg(long)]
-    no_vitest: bool,
-
-    /// If an oxlint config is not defined or enabled, this will generate one with the default values.
-    #[arg(long)]
-    oxlint: bool,
-
-    /// Installs the dependencies with the chosen package manager
-    #[arg(short, long)]
-    install: bool,
-
-    #[command(flatten)]
-    kind: Option<PackageKindFlag>,
-
-    #[command(flatten)]
-    package_config: Option<PackageConfig>,
   },
 }

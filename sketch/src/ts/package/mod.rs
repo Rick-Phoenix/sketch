@@ -15,7 +15,7 @@ use super::{
 use crate::{
   custom_templating::TemplateOutput,
   fs::{
-    create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_cwd, get_relative_path,
+    create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_relative_path,
     open_file_if_overwriting, serialize_json, serialize_yaml,
   },
   merge_if_not_default, merge_optional_vecs, overwrite_if_some,
@@ -114,13 +114,12 @@ impl Config {
     self,
     data: PackageData,
     update_root_tsconfig: bool,
+    monorepo_root: PathBuf,
   ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
-
-    let monorepo_root = self.out_dir.clone().unwrap_or_else(|| get_cwd());
 
     let config = match data {
       PackageData::Config(conf) => conf,

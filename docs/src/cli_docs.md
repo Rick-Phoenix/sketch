@@ -82,11 +82,12 @@ Generates a new typescript monorepo inside the `out_dir`
 
 ###### **Options:**
 
+* `-r`, `--root-package <ID>` — The id of the package preset to use for the root package
 * `-n`, `--name <NAME>` — The name of the new package. If `dir` is set, it defaults to the last segment of it
 * `-t`, `--ts-config <id=ID,output=PATH>` — One or many tsconfig files for this package. If unset, defaults are used
 * `--package-json <ID>` — The id of the package.json preset to use for this package
 * `--with-template <id=TEMPLATE_ID,output=PATH>` — The templates to generate when this package is created. Relative output paths will be joined to the package's root directory
-* `--no-oxlint` — Does not generate an oxlint config at the root
+* `--oxlint` — Generate a basic oxlint config at the root
 * `-i`, `--install` — Installs the dependencies at the root after creation
 
 
