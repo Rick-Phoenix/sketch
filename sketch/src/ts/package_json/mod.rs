@@ -22,16 +22,8 @@ impl Extensible for PackageJsonPreset {
   }
 }
 
-fn get_person_data(id: &str, store: &IndexMap<String, PersonData>) -> Result<PersonData, GenError> {
-  Ok(
-    store
-      .get(id)
-      .ok_or(GenError::Custom(format!(
-        "Person with id `{}` not found.",
-        id
-      )))?
-      .clone(),
-  )
+fn get_person_data(id: &str, store: &IndexMap<String, PersonData>) -> Option<PersonData> {
+  store.get(id).cloned()
 }
 
 impl PackageJsonPreset {
@@ -56,33 +48,25 @@ impl PackageJsonPreset {
 
     let mut package_json = merged_preset.config;
 
-    macro_rules! get_people {
-      ($target:ident) => {
-        let mut $target: BTreeSet<PersonData> = Default::default();
-        for person in merged_preset.$target {
-          let data = match person {
-            Person::Id(id) => get_person_data(id.as_str(), people)?,
-            Person::Data(person_data) => person_data,
-          };
-
-          $target.insert(data);
-        }
-
-        package_json.$target = $target;
-      };
+    for person in package_json.contributors.clone().iter() {
+      if let Person::Id(id) = person && let Some(data) = get_person_data(id.as_str(), &people) {
+        package_json.contributors.remove(person);
+        package_json.contributors.insert(Person::Data(data));
+      }
     }
 
-    if let Some(author) = merged_preset.author {
-      let author_data = match author {
-        Person::Id(id) => get_person_data(id.as_str(), people)?,
-        Person::Data(person_data) => person_data,
-      };
+    for person in package_json.maintainers.clone().iter() {
+      if let Person::Id(id) = person && let Some(data) = get_person_data(id.as_str(), &people) {
+        package_json.maintainers.remove(person);
+        package_json.maintainers.insert(Person::Data(data));
+      }
+    }
 
-      package_json.author = Some(author_data);
+    if let Some(author) = package_json.author.as_mut() {
+      if let Person::Id(id) = author && let Some(data) = get_person_data(id.as_str(), &people) {
+        *author = Person::Data(data);
+      }
     };
-
-    get_people!(contributors);
-    get_people!(maintainers);
 
     Ok(package_json)
   }
@@ -94,12 +78,6 @@ impl PackageJsonPreset {
 pub struct PackageJsonPreset {
   #[merge(strategy = merge_index_sets)]
   pub extends: IndexSet<String>,
-  #[merge(strategy = overwrite_if_some)]
-  pub author: Option<Person>,
-  #[merge(strategy = merge_btree_sets)]
-  pub contributors: BTreeSet<Person>,
-  #[merge(strategy = merge_btree_sets)]
-  pub maintainers: BTreeSet<Person>,
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
   pub config: PackageJson,
@@ -156,7 +134,7 @@ pub struct PackageJson {
 
   /// The author of this package.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub author: Option<PersonData>,
+  pub author: Option<Person>,
 
   /// You should specify a license for your package so that people know how they are permitted to use it, and any restrictions you're placing on it.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -265,12 +243,12 @@ pub struct PackageJson {
   /// A list of people who contributed to this package.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
-  pub contributors: BTreeSet<PersonData>,
+  pub contributors: BTreeSet<Person>,
 
   /// A list of people who maintains this package.
   #[serde(skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
-  pub maintainers: BTreeSet<PersonData>,
+  pub maintainers: BTreeSet<Person>,
 
   /// Specify either a single file or an array of filenames to put in place for the man program to find.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -443,7 +421,7 @@ mod test {
   };
   use crate::{
     fs::{get_parent_dir, serialize_json},
-    ts::package_json::{Bin, Funding, FundingData, PeerDependencyMeta},
+    ts::package_json::{Bin, Funding, FundingData, PeerDependencyMeta, Person},
   };
 
   fn convert_btreemap_to_json<T>(map: std::collections::BTreeMap<String, T>) -> Value
@@ -507,11 +485,11 @@ mod test {
       },
       main: Some("dist/index.js".to_string()),
       browser: Some("dist/index.js".to_string()),
-      author: Some(PersonData {
+      author: Some(Person::Data(PersonData {
         url: Some("abc".to_string()),
         name: "abc".to_string(),
         email: Some("abc".to_string()),
-      }),
+      })),
       license: Some("Apache-2.0".to_string()),
       bugs: Some(Bugs {
         url: Some("abc".to_string()),
@@ -566,28 +544,28 @@ mod test {
         }),
       }),
       contributors: btreeset! {
-        PersonData {
+        Person::Data(PersonData {
           name: "legolas".to_string(),
           url: Some("legolas.com".to_string()),
           email: Some("legolas@middleearth.com".to_string()),
-        },
-        PersonData {
+        }),
+        Person::Data(PersonData {
           name: "aragorn".to_string(),
           url: Some("aragorn.com".to_string()),
           email: Some("aragorn@middleearth.com".to_string()),
-        }
+        })
       },
       maintainers: btreeset! {
-        PersonData {
+        Person::Data(PersonData {
           name: "legolas".to_string(),
           url: Some("legolas.com".to_string()),
           email: Some("legolas@middleearth.com".to_string()),
-        },
-        PersonData {
+        }),
+        Person::Data(PersonData {
           name: "aragorn".to_string(),
           url: Some("aragorn.com".to_string()),
           email: Some("aragorn@middleearth.com".to_string()),
-        }
+        })
       },
       directories: Some(Directories {
         man: Some("abc".to_string()),

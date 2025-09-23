@@ -8,7 +8,7 @@ use crate::{
   cli::{execute_cli, Cli},
   fs::{deserialize_json, deserialize_yaml},
   ts::{
-    package_json::PackageJson,
+    package_json::{PackageJson, Person},
     pnpm::PnpmWorkspace,
     ts_config::{
       tsconfig_defaults::{
@@ -107,10 +107,13 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_json: PackageJson = deserialize_json(&package_dir.join("package.json"))?;
 
-  assert!(package_json
-    .contributors
-    .iter()
-    .any(|p| p.name == "Legolas"));
+  assert!(package_json.contributors.iter().any(|p| {
+    if let Person::Data(data) = p && data.name == "Legolas" {
+        true
+      } else {
+        false
+      }
+  }));
 
   assert_eq!(package_json.name.unwrap(), "test_package");
 
