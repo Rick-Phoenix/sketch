@@ -15,7 +15,7 @@ pub use tsconfig_elements::*;
 use crate::{
   cli::parsers::parse_key_value_pairs, merge_index_sets, merge_nested, merge_optional_btree_maps,
   merge_optional_btree_sets, merge_optional_nested, merge_presets, overwrite_if_some, Extensible,
-  GenError, JsonValueBTreeMap, Preset,
+  GenError, Preset,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, Default, Merge)]
@@ -144,11 +144,6 @@ pub struct WatchOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_sets)]
   pub exclude_files: Option<BTreeSet<String>>,
-
-  #[serde(flatten)]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_maps)]
-  pub extras: Option<JsonValueBTreeMap>,
 }
 
 /// A struct representing the contents of a `tsconfig.json` file.
@@ -193,11 +188,6 @@ pub struct TsConfig {
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_nested)]
   pub compiler_options: Option<CompilerOptions>,
-
-  #[serde(flatten)]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_maps)]
-  pub extras: Option<JsonValueBTreeMap>,
 }
 
 /// Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.
@@ -226,11 +216,6 @@ pub enum TypeAcquisition {
 #[serde(default)]
 #[merge(strategy = overwrite_if_some)]
 pub struct CompilerOptions {
-  #[serde(flatten)]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_maps)]
-  pub extras: Option<JsonValueBTreeMap>,
-
   /// Enable importing files with any extension, provided a declaration file is present. See more: https://www.typescriptlang.org/tsconfig#allowArbitraryExtensions
   #[serde(skip_serializing_if = "Option::is_none")]
   pub allow_arbitrary_extensions: Option<bool>,
