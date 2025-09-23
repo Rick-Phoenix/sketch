@@ -128,12 +128,6 @@ impl Default for OxlintConfigSetting {
   }
 }
 
-impl OxlintConfigSetting {
-  pub fn is_enabled(&self) -> bool {
-    !matches!(self, Self::Bool(false))
-  }
-}
-
 /// Settings for generating an `oxlint` configuration file.
 /// It can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
@@ -142,6 +136,12 @@ pub enum OxlintConfigSetting {
   Bool(bool),
   Id(String),
   Config(OxlintPreset),
+}
+
+impl OxlintConfigSetting {
+  pub fn is_enabled(&self) -> bool {
+    !matches!(self, Self::Bool(false))
+  }
 }
 
 /// Settings for global variables.

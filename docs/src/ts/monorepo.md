@@ -8,7 +8,9 @@ to create our new Typescript monorepo.
 
 # Example
 
-Our starting config:
+We can omit the root package if we want to use a basic, default structure for the monorepo. But we can also create a package preset and use it if we want to customize the output.
+
+Let's make this our starting config:
 
 ```yaml
 {{#include ../../../examples/typescript/root_package.yaml:all}}

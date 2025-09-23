@@ -6,6 +6,7 @@ use crate::{
   fs::{create_all_dirs, get_cwd, serialize_json, serialize_yaml},
   ts::{
     oxlint::OxlintConfigSetting,
+    package::PackageConfig,
     package_json::PackageJsonData,
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
     PackageManager,
@@ -14,7 +15,7 @@ use crate::{
 };
 
 impl Config {
-  pub async fn create_ts_monorepo(self) -> Result<(), GenError> {
+  pub async fn create_ts_monorepo(self, root_package: PackageConfig) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
 
@@ -24,7 +25,6 @@ impl Config {
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
-    let root_package = typescript.root_package.unwrap_or_default();
 
     create_all_dirs(&out_dir)?;
 

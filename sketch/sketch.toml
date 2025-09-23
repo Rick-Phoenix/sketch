@@ -13,9 +13,6 @@ catalog = true
 
 pnpm.packages = ["packages"]
 
-[typescript.root_package]
-oxlint = true
-
 [typescript.package_presets.test]
 name = "test_package"
 package_json = "extended"

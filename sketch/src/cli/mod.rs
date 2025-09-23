@@ -124,21 +124,7 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
       }
 
       match command {
-        TsCommands::Monorepo {
-          no_oxlint,
-          root_package_overrides,
-          ..
-        } => {
-          let root_package = typescript.root_package.get_or_insert_default();
-
-          if let Some(root_package_overrides) = root_package_overrides {
-            root_package.merge(root_package_overrides);
-          }
-
-          if no_oxlint {
-            root_package.oxlint = Some(OxlintConfigSetting::Bool(false));
-          }
-        }
+        TsCommands::Monorepo { .. } => {}
         TsCommands::Package { .. } => {}
       }
     }
@@ -339,12 +325,48 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       let typescript = config.typescript.get_or_insert_default();
 
       match command {
-        TsCommands::Monorepo { install, .. } => {
+        TsCommands::Monorepo {
+          install,
+          root_package_overrides,
+          root_package,
+          oxlint,
+          ..
+        } => {
           exit_if_dry_run!();
+
+          let mut root_package = if let Some(id) = root_package {
+            typescript
+              .package_presets
+              .get(&id)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::TsPackage,
+                name: id,
+              })?
+              .clone()
+          } else {
+            let mut package = PackageConfig::default();
+            package.oxlint = Some(OxlintConfigSetting::Bool(true));
+            package.vitest = VitestConfigKind::Bool(false);
+            package.name = Some("root".to_string());
+            package
+          };
+
+          if let Some(overrides) = root_package_overrides {
+            root_package.merge(overrides);
+          }
+
+          if oxlint
+            && root_package
+              .oxlint
+              .as_ref()
+              .is_none_or(|ox| !ox.is_enabled())
+          {
+            root_package.oxlint = Some(OxlintConfigSetting::Bool(true));
+          }
 
           let package_manager = typescript.package_manager.get_or_insert_default().clone();
 
-          config.create_ts_monorepo().await?;
+          config.create_ts_monorepo(root_package).await?;
 
           if install {
             launch_command(
@@ -561,12 +583,16 @@ pub enum Commands {
 pub enum TsCommands {
   /// Generates a new typescript monorepo inside the `out_dir`
   Monorepo {
+    /// The id of the package preset to use for the root package.
+    #[arg(short, long, value_name = "ID")]
+    root_package: Option<String>,
+
     #[command(flatten)]
     root_package_overrides: Option<PackageConfig>,
 
-    /// Does not generate an oxlint config at the root.
+    /// Generate a basic oxlint config at the root.
     #[arg(long)]
-    no_oxlint: bool,
+    oxlint: bool,
 
     /// Installs the dependencies at the root after creation.
     #[arg(short, long)]

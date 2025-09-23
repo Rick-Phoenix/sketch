@@ -36,7 +36,3 @@ typescript:
   # A map of contributors and maintainers, which can be referenced
   # in `package.json` presets with their ID
   people: {}
-
-  # The configuration for the root package
-  # (only relevant when creating a monorepo)
-  root_package: null

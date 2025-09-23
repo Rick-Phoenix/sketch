@@ -49,7 +49,6 @@ impl Default for TypescriptConfig {
       oxlint_presets: Default::default(),
       people: Default::default(),
       pnpm: Default::default(),
-      root_package: Default::default(),
     }
   }
 }
@@ -58,12 +57,6 @@ impl Default for TypescriptConfig {
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct TypescriptConfig {
-  /// The configuration for the root typescript package to generate in new monorepos.
-  /// Can be empty to use defaults.
-  #[merge(skip)]
-  #[arg(skip)]
-  pub root_package: Option<PackageConfig>,
-
   /// The package manager being used. [default: pnpm].
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
