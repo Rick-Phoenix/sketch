@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let latest = File::create(latest_schema_file)?;
   serde_json::to_writer_pretty(&latest, &schema)?;
 
-  if version != "latest" {
+  if !version.starts_with('v') {
     let (major, minor, _) = get_version(&version);
 
     let minor_dir = schemas_dir.join(format!("v{}.{}", major, minor));

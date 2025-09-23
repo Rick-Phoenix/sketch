@@ -5,6 +5,8 @@
 {{#include ../../../examples/typescript/presets.yaml:package_json}}
 ```
 
+Just like in actual `package.json` files, custom fields are allowed.
+
 >ℹ️ `package.json` presets come with extra features. [Dedicated section](../ts/smart_features.md)
 
 ## Tsconfig Presets

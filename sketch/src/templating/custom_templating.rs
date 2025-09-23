@@ -174,6 +174,40 @@ impl Config {
   }
 }
 
+fn get_env(vars: &[&str]) -> Option<String> {
+  for var in vars {
+    if let Ok(value) = env::var(var) {
+      return Some(value);
+    }
+  }
+  None
+}
+
+fn get_env_with_fallback(context: &mut Context, name: &str, vars: &[&str]) {
+  context.insert(
+    &format!("sketch_{}", name),
+    &get_env(vars).unwrap_or_else(|| "unknown".to_string()),
+  );
+}
+
+/// Test if the program is running under WSL
+#[cfg(target_os = "linux")]
+pub fn is_wsl() -> bool {
+  if let Ok(b) = std::fs::read("/proc/sys/kernel/osrelease") {
+    if let Ok(s) = std::str::from_utf8(&b) {
+      let a = s.to_ascii_lowercase();
+      return a.contains("microsoft") || a.contains("wsl");
+    }
+  }
+  false
+}
+
+/// Test if the program is running under WSL
+#[cfg(not(target_os = "linux"))]
+pub fn is_wsl() -> bool {
+  false
+}
+
 pub(crate) fn get_default_context() -> Context {
   let mut context = Context::default();
 
@@ -197,10 +231,16 @@ pub(crate) fn get_default_context() -> Context {
     };
   }
 
-  add_env_to_context!(os);
+  get_env_with_fallback(&mut context, "os", &["CARGO_CFG_TARGET_OS", "OS"]);
+  get_env_with_fallback(&mut context, "os_family", &["CARGO_CFG_TARGET_FAMILY"]);
+  get_env_with_fallback(&mut context, "arch", &["CARGO_CFG_TARGET_ARCH", "HOSTTYPE"]);
+
+  context.insert("sketch_is_windows", &cfg!(windows));
+  context.insert("sketch_is_unix", &cfg!(unix));
+  context.insert("sketch_is_wsl", &is_wsl());
+
   add_env_to_context!(user);
   add_env_to_context!(hostname);
-  add_env_to_context!(arch, HOSTTYPE);
   add_env_to_context!(xdg_config, XDG_CONFIG_HOME);
   add_env_to_context!(xdg_data, XDG_DATA_HOME);
   add_env_to_context!(xdg_cache, XDG_CACHE_HOME);
