@@ -1,12 +1,12 @@
 # Smart Features
 
-Sketch adds a few smart features, that may be useful when dealing with packages dependencies and metadata.
+Sketch adds a few smart features that may be useful when dealing with packages dependencies and metadata.
 
 ## Converting `latest` to a range
 
-By default, all `latest` versions will be converted to a version range (which can be specified in the config) that starts from the actual latest version for that package.
+By default, all versions marked as `latest` will be converted to a version range (`minor` by default, but can be customized) that starts from the actual latest version for that package.
 
-This means that you can easily use your presets and ensure that they're always going to be updated, without using `latest`, which is not very good practice.
+This means that you can easily reuse your presets over time to start new projects, without needing to manually bump all versions, and while also avoiding `latest`, which is not suitable for stability.
 
 <div class="warning">
 
@@ -41,11 +41,11 @@ We can see that the pnpm-workspace.yaml file has been updated with the new named
 {{#include ../../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
 ```
 
-## Maintainers Information
+## Storing And Reusing Contributors' Data
 
 When working with a team on a monorepo that is made of several individual packages, it's very common that the same people have to be added to the `author`, `contributors` and `maintainers` fields in the `package.json` files for these packages. 
 
-To make this job easier and faster, you can use the `people` field in the typescript config to store information about the contributors that are referred in multiple places, and then you can simply refer them by their ID.
+To make this job a bit easier, you can use the `people` field in the typescript config to store information about contributors which you can then simply refer to by their ID.
 
 ### Example
 

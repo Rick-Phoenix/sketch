@@ -60,19 +60,21 @@ pre_commit_presets:
             files: '\.svelte$|\.js$|\.ts$'
             types: [file]
 
+# ANCHOR: git_preset
 # Git presets
 git_presets:
   ts_package:
     # Selecting a preset
     gitignore: ts
     pre_commit: typescript
+    # ANCHOR_END: git
 
     # Templates that will be generated with this preset
     # starting from the new repo's root
     with_templates:
       - template: dockerfile
         output: Dockerfile
-# ANCHOR_END: git
+    # ANCHOR_END: git_preset
 
 # Templating presets
 templating_presets:
@@ -90,8 +92,8 @@ templating_presets:
 typescript:
   no_default_deps: true
 
-  # ANCHOR: package_json
   # `package.json` presets
+  # ANCHOR: package_json
   package_json_presets:
     # Defining some reusable fields such as some common scripts and dependencies
     frontend:
@@ -115,8 +117,8 @@ typescript:
 
     # ANCHOR_END: package_json
 
-  # ANCHOR: tsconfig
   # Tsconfig presets
+  # ANCHOR: tsconfig
   ts_config_presets:
     base:
       references:
@@ -143,8 +145,8 @@ typescript:
 
     # ANCHOR_END: tsconfig
 
-  # ANCHOR: oxlint
   # Oxlint presets
+  # ANCHOR: oxlint
   oxlint_presets:
     base:
       ignorePatterns:
@@ -159,8 +161,8 @@ typescript:
 
   # ANCHOR_END: oxlint
 
-  # ANCHOR: package
   # Package presets
+  # ANCHOR: package
   package_presets:
     example:
       name: example
@@ -189,10 +191,12 @@ typescript:
               - scripts
       # ANCHOR_END: package
 
+      # ANCHOR: ts_templates
       # Templates to generate in the new package's root
       with_templates:
         - template: compose_file
           output: compose.yaml
+      # ANCHOR_END: ts_templates
 
       # ANCHOR_END: all
       vitest: false

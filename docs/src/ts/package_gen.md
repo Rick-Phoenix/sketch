@@ -19,7 +19,7 @@ After setting things up, you can run
 
 To generate the new package.
 
-## Template rendering
+## Adding Templates
 
 You can also use the `with_templates` field (or cli flag) to specify a list of templates that should be generated whenever a package preset is being used.
 

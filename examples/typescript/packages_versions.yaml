@@ -6,5 +6,5 @@ typescript:
   no_convert_latest_to_range: false
 
   # Default
-  version_range: patch
+  version_range: minor
   # ANCHOR_END: all

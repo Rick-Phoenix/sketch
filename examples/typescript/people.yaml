@@ -5,6 +5,7 @@ out_dir: ../../sketch/tests/output/ts_examples
 # ANCHOR: all
 typescript:
   people:
+    # Person ID
     bruce:
       name: Bruce Wayne
       email: bruce@gotham.com

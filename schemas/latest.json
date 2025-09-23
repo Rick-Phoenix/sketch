@@ -20,33 +20,29 @@
       "type": [
         "string",
         "null"
-      ],
-      "default": null
+      ]
     },
     "debug": {
       "description": "Activates debugging mode.",
       "type": "boolean"
     },
     "out_dir": {
-      "description": "The base path for the generated files [default: `.`].",
+      "description": "This will be considered as the starting path for the executed commands. If this is a relative path, it will be joined to the cwd (when set via cli) or to the config file's directory [default: `.`].",
       "type": [
         "string",
         "null"
-      ],
-      "default": null
+      ]
     },
     "templates_dir": {
       "description": "The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).",
       "type": [
         "string",
         "null"
-      ],
-      "default": null
+      ]
     },
     "no_overwrite": {
       "description": "Does not overwrite existing files.",
-      "type": "boolean",
-      "default": false
+      "type": "boolean"
     },
     "extends": {
       "description": "The paths (absolute, or relative to the originating config file) to the config files to extend.",
@@ -61,8 +57,7 @@
       "type": "object",
       "additionalProperties": {
         "type": "string"
-      },
-      "default": {}
+      }
     },
     "templating_presets": {
       "description": "A map that contains templating presets.",
@@ -72,38 +67,33 @@
         "items": {
           "$ref": "#/$defs/TemplateOutput"
         }
-      },
-      "default": {}
+      }
     },
     "pre_commit_presets": {
       "description": "A map that contains pre-commit presets.",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/PreCommitPreset"
-      },
-      "default": {}
+      }
     },
     "gitignore_presets": {
       "description": "A map that contains gitignore presets.",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/GitignorePreset"
-      },
-      "default": {}
+      }
     },
     "git_presets": {
       "description": "A map that contains presets for git repos.",
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/RepoPreset"
-      },
-      "default": {}
+      }
     },
     "vars": {
       "description": "The global variables that will be available for every template being generated.\nThey are overridden by vars set in a template's local context or via the cli.",
       "type": "object",
-      "additionalProperties": true,
-      "default": {}
+      "additionalProperties": true
     }
   },
   "$defs": {
@@ -177,7 +167,7 @@
           },
           "default": {}
         },
-        "tsconfig_presets": {
+        "ts_config_presets": {
           "description": "A map containing [`TsConfig`] presets.",
           "type": "object",
           "additionalProperties": {
@@ -429,7 +419,8 @@
             }
           ]
         }
-      }
+      },
+      "additionalProperties": true
     },
     "TsConfigReference": {
       "description": "A reference to a Typescript project. Requires TypeScript version 3.0 or later.",
@@ -559,7 +550,8 @@
             "type": "string"
           }
         }
-      }
+      },
+      "additionalProperties": true
     },
     "WatchFile": {
       "description": "Specify how the TypeScript watch mode works. See more: https://www.typescriptlang.org/tsconfig#watchFile",
@@ -1424,7 +1416,8 @@
             "null"
           ]
         }
-      }
+      },
+      "additionalProperties": true
     },
     "Jsx": {
       "description": "Specify what JSX code is generated. See more: https://www.typescriptlang.org/tsconfig/#jsx",
@@ -3353,16 +3346,6 @@
       "description": "Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures",
       "type": "object",
       "properties": {
-        "os": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
         "cpu": {
           "type": [
             "array",
@@ -3374,6 +3357,16 @@
           }
         },
         "libc": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "os": {
           "type": [
             "array",
             "null"
@@ -3906,7 +3899,12 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Plugin"
-          }
+          },
+          "default": [
+            "oxc",
+            "typescript",
+            "unicorn"
+          ]
         },
         "rules": {
           "description": "Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.",
@@ -4064,7 +4062,8 @@
           "uniqueItems": true,
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         },
         "plugins": {
           "description": "Optionally change what plugins are enabled for this override. When omitted, the base config's plugins are used.",
@@ -4107,10 +4106,7 @@
             "$ref": "#/$defs/RuleSetting"
           }
         }
-      },
-      "required": [
-        "files"
-      ]
+      }
     },
     "Plugin": {
       "description": "Ways of referring to a plugin.",
@@ -4497,7 +4493,18 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Repo"
-          }
+          },
+          "default": [
+            {
+              "repo": "https://github.com/gitleaks/gitleaks",
+              "rev": "v8.28.0",
+              "hooks": [
+                {
+                  "id": "gitleaks"
+                }
+              ]
+            }
+          ]
         },
         "ci": {
           "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
@@ -4570,10 +4577,7 @@
             "null"
           ]
         }
-      },
-      "required": [
-        "repos"
-      ]
+      }
     },
     "Repo": {
       "description": "A pre-commit repo.",
@@ -4586,10 +4590,7 @@
               "$ref": "#/$defs/MetaRepo"
             },
             "hooks": {
-              "type": [
-                "array",
-                "null"
-              ],
+              "type": "array",
               "uniqueItems": true,
               "items": {
                 "$ref": "#/$defs/MetaRepoHook"
@@ -4597,7 +4598,8 @@
             }
           },
           "required": [
-            "repo"
+            "repo",
+            "hooks"
           ]
         },
         {
@@ -4608,11 +4610,8 @@
               "$ref": "#/$defs/LocalRepo"
             },
             "hooks": {
-              "description": "A list of local hooks\\nhttps://pre-commit.com/#2-add-a-pre-commit-configuration",
-              "type": [
-                "array",
-                "null"
-              ],
+              "description": "A list of local hooks https://pre-commit.com/#2-add-a-pre-commit-configuration",
+              "type": "array",
               "uniqueItems": true,
               "items": {
                 "$ref": "#/$defs/Hook"
@@ -4620,7 +4619,8 @@
             }
           },
           "required": [
-            "repo"
+            "repo",
+            "hooks"
           ]
         },
         {
@@ -4629,10 +4629,7 @@
           "properties": {
             "repo": {
               "description": "A repository url https://pre-commit.com/#2-add-a-pre-commit-configuration",
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string"
             },
             "rev": {
               "description": "A revision or tag to clone at https://pre-commit.com/#2-add-a-pre-commit-configuration",
@@ -4643,16 +4640,17 @@
             },
             "hooks": {
               "description": "A list of hook mappings https://pre-commit.com/#pre-commit-configyaml---hooks.",
-              "type": [
-                "array",
-                "null"
-              ],
+              "type": "array",
               "uniqueItems": true,
               "items": {
                 "$ref": "#/$defs/Hook"
               }
             }
-          }
+          },
+          "required": [
+            "repo",
+            "hooks"
+          ]
         }
       ]
     },
@@ -4693,7 +4691,8 @@
       "properties": {
         "id": {
           "description": "An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": "string"
+          "type": "string",
+          "default": ""
         },
         "additional_dependencies": {
           "description": "A list of additional_dependencies of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
@@ -4864,10 +4863,7 @@
             "null"
           ]
         }
-      },
-      "required": [
-        "id"
-      ]
+      }
     },
     "FileType": {
       "type": "string",
