@@ -32,7 +32,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let preset_rendering_args = [
     "sketch",
     "-c",
-    "tests/custom_templates/custom_templates.toml",
+    "tests/custom_templates/custom_templates.yaml",
     "--out-dir",
     "tests/output/custom_templates",
     "render-preset",
@@ -50,7 +50,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let from_single_file_cmd = [
     "sketch",
     "-c",
-    "tests/custom_templates/custom_templates.toml",
+    "tests/custom_templates/custom_templates.yaml",
     "--out-dir",
     "tests/output/custom_templates",
     "render",
@@ -72,7 +72,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let from_config_template_cmd = [
     "sketch",
     "-c",
-    "tests/custom_templates/custom_templates.toml",
+    "tests/custom_templates/custom_templates.yaml",
     "--out-dir",
     "tests/output/custom_templates",
     "render",
@@ -94,7 +94,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let from_template_file_cmd = [
     "sketch",
     "-c",
-    "tests/custom_templates/custom_templates.toml",
+    "tests/custom_templates/custom_templates.yaml",
     "--out-dir",
     "tests/output/custom_templates",
     "render",
@@ -118,7 +118,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let cli_override_args = [
     "sketch",
     "-c",
-    "tests/custom_templates/custom_templates.toml",
+    "tests/custom_templates/custom_templates.yaml",
     "--out-dir",
     "tests/output/custom_templates",
     "--set",

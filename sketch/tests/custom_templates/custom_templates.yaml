@@ -1,0 +1,46 @@
+# ANCHOR: all
+# ANCHOR: config
+# For templates inside presets, the `output` path will be
+# joined to `out_dir`
+out_dir: "../output/custom_templates"
+
+# Global variables
+vars:
+  my_var: 15
+
+# We can define templates directly in the config file
+templates:
+  lit_template: "my_var: {{ my_var }}"
+
+# Or as files inside a directory
+# (path relative to the config file, relative to the cwd if set via `--templates-dir`)
+templates_dir: "../templates"
+# ANCHOR_END: config
+
+# ANCHOR: preset
+# A group of templates that will be rendered together
+templating_presets:
+  test:
+    # Full path to the template file from `templates_dir`
+    - template: "subdir/nested.j2"
+      output: "new_dir/nested.yaml"
+
+    # ANCHOR: context_example
+    # Only using the global variables
+    - template: "lit_template"
+      output: "with_global_var.yaml"
+
+    # Using a local override
+    - template: "lit_template"
+      output: "with_override.yaml"
+      context: { my_var: 20 }
+    # ANCHOR_END: context_example
+
+    # Defining a literal template
+    - template:
+        name: "literal_inlined"
+        content: "my_var: {{ my_var }}"
+      output: "literal_inlined.yaml"
+# ANCHOR_END: preset
+
+# ANCHOR_END: all

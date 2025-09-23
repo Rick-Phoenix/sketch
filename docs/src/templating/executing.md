@@ -9,19 +9,19 @@ To do this, you can use a regular file, a template with an id (either defined in
 Let's say that we have a file named `cmd_template.j2` inside our `templates_dir`, and it looks like this:
 
 ```txt
-{{#include ../../sketch/tests/commands_tests/cmd_template.j2}}
+{{#include ../../../sketch/tests/commands_tests/cmd_template.j2}}
 ```
 
 >ℹ️ You do not have to use `.j2` as an extension for the template files. Any extension can be used.
 
 We can refer to it by its id:
 
->`{{#include ../../sketch/tests/output/commands_tests/commands/exec_from_template_cmd}}`
+>`{{#include ../../../sketch/tests/output/commands_tests/commands/exec_from_template_cmd}}`
 
-This will create a file containing
+This will trigger the command and create a file containing
 
 ```txt
-{{#include ../../sketch/tests/output/commands_tests/output_from_templates_dir.txt}}
+{{#include ../../../sketch/tests/output/commands_tests/output_from_templates_dir.txt}}
 ```
 
 ### From File
@@ -31,27 +31,29 @@ We can also use a file that is not inside `templates_dir` by using the `-f` flag
 So let's say that we have this template file:
 
 ```txt
-{{#include ../../sketch/tests/commands_tests/cmd_from_file.j2}}
+{{#include ../../../sketch/tests/commands_tests/cmd_from_file.j2}}
 ```
 
-We launch the command like this:
+Command:
 
->`{{#include ../../sketch/tests/output/commands_tests/commands/cmd_from_file}}`
+>`{{#include ../../../sketch/tests/output/commands_tests/commands/cmd_from_file}}`
 
-To create a file containing:
+Output:
 
 ```txt
-{{#include ../../sketch/tests/output/commands_tests/output_from_file.txt}}
+{{#include ../../../sketch/tests/output/commands_tests/output_from_file.txt}}
 ```
 
 ### From Literal Template
 
 Templates can also be defined directly as part of the command.
 
->`{{#include ../../sketch/tests/output/commands_tests/commands/exec_literal_cmd}}`
+Command: 
 
-This creates a file containing:
+>`{{#include ../../../sketch/tests/output/commands_tests/commands/exec_literal_cmd}}`
+
+Output:
 
 ```txt
-{{#include ../../sketch/tests/output/commands_tests/command_output.txt}}
+{{#include ../../../sketch/tests/output/commands_tests/command_output.txt}}
 ```

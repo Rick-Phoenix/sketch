@@ -30,6 +30,6 @@ For those presets that are extensible, merging them works like this:
 # Examples
 
 ```yaml
-{{#include ../../examples/typescript/presets.yaml:all}}
+{{#include ../../../examples/typescript/presets.yaml:all}}
 ```
 

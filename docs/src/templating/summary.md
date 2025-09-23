@@ -8,7 +8,9 @@ Since all autoescaping is disabled in templates, you should always only use temp
 
 # Special variables
 
-Sketch provides some special variables prefixed with to get access to some commonly used information. All of the following variables are available in templates, prefixed with `sketch_` (i.e. `sketch_os` and so on).
+Sketch provides some special variables to get access to commonly used values such as the home directory. 
+
+All of the following variables are available in templates, prefixed with `sketch_` (i.e. `sketch_os` and so on).
 
 - `cwd`
 - `tmp_dir` (obtained with env::temp_dir)
@@ -33,17 +35,17 @@ On top of that, Sketch adds a `uuid` function that can be used to generate a v4 
 Config:
 
 ```yaml
-{{#include ../../examples/templating.yaml}}
+{{#include ../../../examples/templating.yaml}}
 ```
 
 Cmd:
 
->`{{#include ../../sketch/tests/output/templating_examples/cmd}}`
+>`{{#include ../../../sketch/tests/output/templating_examples/cmd}}`
 
 Output:
 
 ```
-{{#include ../../sketch/tests/output/templating_examples/output}}
+{{#include ../../../sketch/tests/output/templating_examples/output}}
 ```
 
 # Global and Local Context

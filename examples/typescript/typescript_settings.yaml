@@ -5,7 +5,7 @@ typescript:
   no_convert_latest_to_range: false
 
   # Use this kind of version range when converting from `latest`
-  version_range: patch
+  version_range: minor
 
   # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   no_default_deps: false
@@ -33,8 +33,8 @@ typescript:
   # A map containing extensible oxlint presets
   oxlint_presets: {}
 
-  # A map of contributors and maintainers, which can be referred to
-  # in package.json presets with their ID
+  # A map of contributors and maintainers, which can be referenced
+  # in `package.json` presets with their ID
   people: {}
 
   # The configuration for the root package
