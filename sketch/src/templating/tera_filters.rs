@@ -1,5 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 
+use convert_case::{Case, Casing};
 use regex::Regex;
 use semver::{Version, VersionReq};
 use tera::{Error, Map, Value};
@@ -67,6 +68,38 @@ pub(crate) fn matches_semver(text: &Value, args: &HashMap<String, Value>) -> Res
   })?;
 
   Ok(target_version.matches(&version).into())
+}
+
+pub(crate) fn camel(text: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let text = extract_string("camel", text)?;
+
+  let converted = text.to_case(Case::Camel);
+
+  Ok(converted.into())
+}
+
+pub(crate) fn snake(text: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let text = extract_string("snake", text)?;
+
+  let converted = text.to_case(Case::Snake);
+
+  Ok(converted.into())
+}
+
+pub(crate) fn upper_snake(text: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let text = extract_string("upper_snake", text)?;
+
+  let converted = text.to_case(Case::UpperSnake);
+
+  Ok(converted.into())
+}
+
+pub(crate) fn pascal(text: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let text = extract_string("pascal", text)?;
+
+  let converted = text.to_case(Case::Pascal);
+
+  Ok(converted.into())
 }
 
 pub(crate) fn is_file(path: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {

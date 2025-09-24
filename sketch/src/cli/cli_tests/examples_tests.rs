@@ -177,6 +177,10 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("Patch is: 0"));
   assert!(output_str.contains("Version matches >=0.1.0: true"));
   assert!(output_str.contains("Version matches >=0.2.0: false"));
+  assert!(output_str.contains("To camelCase: myVar"));
+  assert!(output_str.contains("To snake_case: my_var"));
+  assert!(output_str.contains("To SCREAMING_CASE: MY_VAR"));
+  assert!(output_str.contains("To PascalCase: MyVar"));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
   write_file(&output_dir.join("output"), &output_str, true)?;

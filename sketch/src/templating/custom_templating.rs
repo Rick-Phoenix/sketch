@@ -14,7 +14,8 @@ use crate::{
   config::Config,
   fs::{create_all_dirs, get_cwd, get_parent_dir, open_file_if_overwriting},
   tera_filters::{
-    basename, capture, capture_many, is_dir, is_file, matches_semver, parent_dir, semver,
+    basename, camel, capture, capture_many, is_dir, is_file, matches_semver, parent_dir, pascal,
+    semver, snake, upper_snake,
   },
   tera_functions::tera_uuid,
   GenError,
@@ -106,6 +107,10 @@ impl Config {
     tera.register_filter("is_dir", is_dir);
     tera.register_filter("semver", semver);
     tera.register_filter("matches_semver", matches_semver);
+    tera.register_filter("camel", camel);
+    tera.register_filter("snake", snake);
+    tera.register_filter("upper_snake", upper_snake);
+    tera.register_filter("pascal", pascal);
 
     for (name, template) in &self.templates {
       tera

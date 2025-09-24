@@ -61,3 +61,8 @@ Patch is: {{ segments['patch'] }}
 
 Version matches >=0.1.0: {{ version | matches_semver(target=">=0.1.0") }}
 Version matches >=0.2.0: {{ version | matches_semver(target=">=0.2.0") }}
+
+To camelCase: {{ "my_var" | camel }}
+To snake_case: {{ "myVar" | snake }}
+To SCREAMING_CASE: {{ "myVar" | upper_snake }}
+To PascalCase: {{ "myVar" | pascal }}
