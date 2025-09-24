@@ -169,8 +169,27 @@ typescript:
         - base
       ignorePatterns:
         - .cache
-
   # ANCHOR_END: oxlint
+
+  # Vitest presets
+  # ANCHOR: vitest
+  vitest_presets:
+    base:
+      # Where the config file should be generated, starting from
+      # the root of the package.
+      # It defaults to the value of `tests_dir`
+      out_dir: null
+
+      # The directory to use for tests
+      tests_dir: tests
+
+      # The directory containing the setup files for tests.
+      # (starting from tests_dir)
+      setup_dir: setup
+
+      # A list of plugins that will be set up in the config file
+      plugins: []
+  # ANCHOR_END: vitest
 
   # Package presets
   # ANCHOR: package
@@ -199,6 +218,8 @@ typescript:
               - extended
             include:
               - scripts
+
+      vitest: base
       # ANCHOR_END: package
 
       # ANCHOR: ts_templates

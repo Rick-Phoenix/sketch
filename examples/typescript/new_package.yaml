@@ -15,13 +15,13 @@ typescript:
           tailwindcss: "^4.0.0"
 
       # Generates an oxlint config file in the root.
-      # Can be set to true to use defaults, or to
+      # Can be a boolean, a preset id, or
       # a literal configuration.
       oxlint: false
 
       # Create a vitest setup.
-      # Can be set to true to use defaults (which are as below),
-      # to a preset id, or to a literal configuration.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
       vitest:
         # Where the config file should be generated, starting from
         # the root of the package.

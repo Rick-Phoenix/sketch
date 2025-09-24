@@ -121,6 +121,8 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(oxlint_test).await?;
 
+  get_tree_output(&package_out_dir, "tree_output.txt")?;
+
   let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
   assert_eq!(package_dockerfile_output, expected_dockerfile);
 

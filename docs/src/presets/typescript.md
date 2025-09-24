@@ -29,6 +29,11 @@ Unlike what happens when you merge two `tsconfig` files by using the `extends` f
 {{#include ../../../examples/typescript/root_package.yaml:pnpm}}
 ```
 
+## Vitest Presets
+```yaml
+{{#include ../../../examples/typescript/presets.yaml:vitest}}
+```
+
 ## Package Presets
 
 This is what a fully formed package preset looks like. We are going to use the presets defined above in here.
@@ -71,4 +76,10 @@ We can also use the `with_templates` setting (or `--with-template <id=TEMPLATE_I
 # We add this part to the package preset
 
 {{#include ../../../examples/typescript/presets.yaml:ts_templates}}
+```
+
+With all of that, the output tree for the new package will look like this:
+
+```
+{{#include ../../../sketch/tests/output/presets/packages/presets_example/tree_output.txt}}
 ```
