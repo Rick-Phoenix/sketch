@@ -15,8 +15,8 @@ use super::{
 use crate::{
   custom_templating::TemplateOutput,
   fs::{
-    create_all_dirs, deserialize_json, deserialize_yaml, get_abs_path, get_relative_path,
-    open_file_if_overwriting, serialize_json, serialize_yaml,
+    create_all_dirs, deserialize_json, deserialize_yaml, find_file_up, get_abs_path,
+    get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml,
   },
   merge_if_not_default, merge_optional_vecs, overwrite_if_some,
   ts::{
@@ -40,11 +40,7 @@ pub enum PackageKind {
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {
-  /// The new package's root directory, starting from the `--out-dir`. Defaults to the name of the package.
-  #[arg(value_name = "DIR")]
-  pub dir: Option<PathBuf>,
-
-  /// The name of the new package. If `dir` is set, it defaults to the last segment of it.
+  /// The name of the new package. It defaults to the name of its parent directory.
   #[arg(short, long)]
   pub name: Option<String>,
 
@@ -71,10 +67,6 @@ pub struct PackageConfig {
   #[merge(strategy = merge_optional_vecs)]
   pub with_templates: Option<Vec<TemplateOutput>>,
 
-  /// The kind of package. Only relevant when using defaults [default: 'library'].
-  #[arg(skip)]
-  pub kind: Option<PackageKind>,
-
   /// The configuration for this package's vitest setup. It can be set to `false` to be disabled, or to a literal configuration.
   #[arg(skip)]
   #[merge(strategy = merge_if_not_default)]
@@ -89,9 +81,7 @@ impl Default for PackageConfig {
   fn default() -> Self {
     Self {
       name: None,
-      kind: Default::default(),
       package_json: None,
-      dir: Default::default(),
       vitest: Default::default(),
       ts_config: None,
       with_templates: Default::default(),
@@ -111,8 +101,8 @@ impl Config {
   pub async fn build_package(
     self,
     data: PackageData,
-    update_root_tsconfig: bool,
-    monorepo_root: PathBuf,
+    pkg_root: PathBuf,
+    tsconfig_files_to_update: Option<Vec<PathBuf>>,
   ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
@@ -133,22 +123,15 @@ impl Config {
 
     let package_name = if let Some(name) = config.name.as_ref() {
       name.clone()
-    } else if let Some(dir) = config.dir.as_ref() && let Some(base) = dir.file_name() {
-      base.to_string_lossy().to_string()
+    } else if let Some(dir_name) = pkg_root.file_name() {
+      dir_name.to_string_lossy().to_string()
     } else {
       "my-awesome-package".to_string()
     };
 
-    let mut pkg_root = monorepo_root.join(
-      config
-        .dir
-        .clone()
-        .unwrap_or_else(|| package_name.clone().into()),
-    );
+    let pkg_root = get_abs_path(&pkg_root)?;
 
     create_all_dirs(&pkg_root)?;
-
-    pkg_root = get_abs_path(&pkg_root)?;
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
@@ -220,7 +203,11 @@ impl Config {
     )?;
 
     if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
-      let pnpm_workspace_path = monorepo_root.join("pnpm-workspace.yaml");
+      let pnpm_workspace_path =
+        find_file_up(&pkg_root, "pnpm-workspace.yaml").ok_or(GenError::Custom(format!(
+          "Could not find a `pnpm-workspace.yaml` file while searching upwards from `{}`",
+          pkg_root.display()
+        )))?;
 
       let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
@@ -264,55 +251,27 @@ impl Config {
         ));
       }
     } else {
-      let is_app = matches!(config.kind.unwrap_or_default(), PackageKind::App);
-      let ts_out_dir = {
-        let rel_path_to_root = get_relative_path(&pkg_root, &monorepo_root)?;
-
-        let root_out_dir = rel_path_to_root.join(".out");
-
-        root_out_dir.join(&package_name)
-      }
-      .to_string_lossy()
-      .to_string();
-
-      let path_to_root_tsconfig =
-        get_relative_path(&pkg_root, &monorepo_root)?.join("tsconfig.options.json");
-
-      let base_tsconfig =
-        get_default_package_tsconfig(path_to_root_tsconfig.to_string_lossy().to_string(), is_app);
-
-      tsconfig_files.push(("tsconfig.json".to_string(), base_tsconfig));
-
-      let src_tsconfig = get_default_src_tsconfig(is_app, &ts_out_dir);
-
-      tsconfig_files.push(("tsconfig.src.json".to_string(), src_tsconfig));
-
-      if !is_app {
-        let dev_tsconfig = get_default_dev_tsconfig(&ts_out_dir);
-
-        tsconfig_files.push(("tsconfig.dev.json".to_string(), dev_tsconfig));
-      }
+      tsconfig_files.push(("tsconfig.json".to_string(), get_default_package_tsconfig()));
     }
 
     for (file, tsconfig) in tsconfig_files {
       serialize_json(&tsconfig, &pkg_root.join(file), overwrite)?;
     }
 
-    if update_root_tsconfig {
-      let root_tsconfig_path = monorepo_root.join("tsconfig.json");
+    if let Some(tsconfig_paths) = tsconfig_files_to_update {
+      for path in tsconfig_paths {
+        let mut tsconfig: TsConfig = deserialize_json(&path)?;
 
-      let mut root_tsconfig: TsConfig = deserialize_json(&root_tsconfig_path)?;
+        let path_to_new_tsconfig = get_relative_path(&path, &pkg_root.join("tsconfig.json"))?;
 
-      let path_to_new_tsconfig =
-        get_relative_path(&monorepo_root, &pkg_root.join("tsconfig.json"))?;
+        let root_tsconfig_references = tsconfig.references.get_or_insert_default();
 
-      let root_tsconfig_references = root_tsconfig.references.get_or_insert_default();
+        root_tsconfig_references.insert(ts_config::TsConfigReference {
+          path: path_to_new_tsconfig.to_string_lossy().to_string(),
+        });
 
-      root_tsconfig_references.insert(ts_config::TsConfigReference {
-        path: path_to_new_tsconfig.to_string_lossy().to_string(),
-      });
-
-      serialize_json(&root_tsconfig, &root_tsconfig_path, overwrite)?;
+        serialize_json(&tsconfig, &path, true)?;
+      }
     }
 
     let src_dir = pkg_root.join("src");

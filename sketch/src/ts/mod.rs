@@ -6,7 +6,10 @@ pub mod ts_config;
 mod ts_monorepo;
 pub mod vitest;
 
-use std::fmt::Display;
+use std::{
+  fmt::Display,
+  path::{Path, PathBuf},
+};
 
 use clap::{Parser, ValueEnum};
 use indexmap::IndexMap;
@@ -15,6 +18,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+  fs::{find_file_up, get_parent_dir},
   merge_index_maps, overwrite_if_some,
   ts::{
     oxlint::OxlintPreset,
@@ -109,6 +113,27 @@ pub struct TypescriptConfig {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub package_presets: IndexMap<String, PackageConfig>,
+}
+
+pub(crate) fn find_monorepo_root(
+  start_dir: &Path,
+  package_manager: PackageManager,
+) -> Option<PathBuf> {
+  let root_marker = package_manager.root_marker();
+
+  find_file_up(start_dir, root_marker).map(|file| get_parent_dir(&file).to_path_buf())
+}
+
+impl PackageManager {
+  pub fn root_marker(&self) -> &str {
+    match self {
+      PackageManager::Pnpm => "pnpm-workspace.yaml",
+      PackageManager::Npm => "package-lock.json",
+      PackageManager::Deno => "deno.lock",
+      PackageManager::Bun => "bun.lock",
+      PackageManager::Yarn => "yarn.lock",
+    }
+  }
 }
 
 #[derive(

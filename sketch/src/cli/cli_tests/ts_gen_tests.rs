@@ -11,10 +11,7 @@ use crate::{
     package_json::{PackageJson, Person},
     pnpm::PnpmWorkspace,
     ts_config::{
-      tsconfig_defaults::{
-        get_default_dev_tsconfig, get_default_package_tsconfig, get_default_root_tsconfig,
-        get_default_src_tsconfig,
-      },
+      tsconfig_defaults::{get_default_package_tsconfig, get_default_root_tsconfig},
       TsConfig, TsConfigReference,
     },
   },
@@ -58,7 +55,8 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_repo",
     "ts",
     "package",
-    "--update-root-tsconfig",
+    "--update-tsconfig",
+    &root_tsconfig_path.to_string_lossy(),
     "--preset",
     "test",
   ])?;
@@ -77,24 +75,7 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     }));
 
   let package_tsconfig: TsConfig = deserialize_json(&package_dir.join("tsconfig.json"))?;
-  assert_eq!(
-    get_default_package_tsconfig("../../tsconfig.options.json".to_string(), false),
-    package_tsconfig
-  );
-
-  let src_tsconfig: TsConfig = deserialize_json(&package_dir.join("tsconfig.src.json"))?;
-
-  assert_eq!(
-    get_default_src_tsconfig(false, "../../.out/test_package"),
-    src_tsconfig
-  );
-
-  let dev_tsconfig: TsConfig = deserialize_json(&package_dir.join("tsconfig.dev.json"))?;
-
-  assert_eq!(
-    get_default_dev_tsconfig("../../.out/test_package"),
-    dev_tsconfig
-  );
+  assert_eq!(get_default_package_tsconfig(), package_tsconfig);
 
   for dir in ["tests", "tests/setup", "src"] {
     let dir = package_dir.join(dir);
@@ -123,8 +104,6 @@ async fn ts_gen() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_repo",
     "ts",
     "package",
-    "--app",
-    "--update-root-tsconfig",
     "--oxlint",
     "--no-vitest",
     "--package-json",

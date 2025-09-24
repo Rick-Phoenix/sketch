@@ -4,9 +4,8 @@ use clap::Subcommand;
 use merge::Merge;
 
 use crate::{
-  cli::cli_elements::PackageKindFlag,
   exec::launch_command,
-  fs::{get_cwd, serialize_json},
+  fs::{create_parent_dirs, get_cwd, serialize_json},
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},
@@ -18,7 +17,6 @@ use crate::{
 pub(crate) async fn handle_ts_commands(
   mut config: Config,
   command: TsCommands,
-  out_dir: PathBuf,
 ) -> Result<(), GenError> {
   let overwrite = config.can_overwrite();
   let typescript = config.typescript.get_or_insert_default();
@@ -35,7 +33,8 @@ pub(crate) async fn handle_ts_commands(
         .clone()
         .process_data(preset.as_str(), &typescript.ts_config_presets)?;
 
-      let output = out_dir.join(output.unwrap_or_else(|| "tsconfig.json".into()));
+      let output = output.unwrap_or_else(|| "tsconfig.json".into());
+      create_parent_dirs(&output)?;
 
       serialize_json(&content, &output, overwrite)?;
     }
@@ -50,7 +49,8 @@ pub(crate) async fn handle_ts_commands(
         .clone()
         .process_data(preset.as_str(), &typescript.oxlint_presets)?;
 
-      let output = out_dir.join(output.unwrap_or_else(|| ".oxlintrc.json".into()));
+      let output = output.unwrap_or_else(|| ".oxlintrc.json".into());
+      create_parent_dirs(&output)?;
 
       serialize_json(&content, &output, overwrite)?;
     }
@@ -69,7 +69,8 @@ pub(crate) async fn handle_ts_commands(
           &typescript.people,
         )?;
 
-      let output = out_dir.join(output.unwrap_or_else(|| "package.json".into()));
+      let output = output.unwrap_or_else(|| "package.json".into());
+      create_parent_dirs(&output)?;
 
       serialize_json(&content, &output, overwrite)?;
     }
@@ -111,13 +112,13 @@ pub(crate) async fn handle_ts_commands(
 
       let package_manager = typescript.package_manager.get_or_insert_default().clone();
 
-      config.create_ts_monorepo(root_package, &out_dir).await?;
+      config.create_ts_monorepo(root_package, &get_cwd()).await?;
 
       if install {
         launch_command(
           package_manager.to_string().as_str(),
           &["install"],
-          &out_dir,
+          &get_cwd(),
           Some("Could not install dependencies"),
         )?;
       }
@@ -128,8 +129,8 @@ pub(crate) async fn handle_ts_commands(
       install,
       no_vitest,
       oxlint,
-      kind,
-      update_root_tsconfig,
+      update_tsconfig,
+      dir,
     } => {
       let mut package = if let Some(preset) = preset {
         typescript
@@ -146,10 +147,6 @@ pub(crate) async fn handle_ts_commands(
 
       if let Some(overrides) = package_config {
         package.merge(overrides);
-      }
-
-      if let Some(kind) = kind {
-        package.kind = Some(kind.into());
       }
 
       if no_vitest {
@@ -169,7 +166,8 @@ pub(crate) async fn handle_ts_commands(
         eprintln!("  package: {:#?}", package);
       }
 
-      let package_dir = package.dir.get_or_insert_with(|| get_cwd()).clone();
+      let package_dir =
+        dir.unwrap_or_else(|| package.name.as_deref().unwrap_or("new_package").into());
 
       if install {
         let package_manager = typescript.package_manager.get_or_insert_default().clone();
@@ -185,8 +183,8 @@ pub(crate) async fn handle_ts_commands(
       config
         .build_package(
           PackageData::Config(package.clone()),
-          update_root_tsconfig,
-          out_dir,
+          package_dir,
+          update_tsconfig,
         )
         .await?;
     }
@@ -247,14 +245,16 @@ pub enum TsCommands {
 
   /// Generates a new typescript package
   Package {
+    /// The root directory for the new package. Defaults to the package name, if that is set.
+    dir: Option<PathBuf>,
+
     /// The package preset to use
     #[arg(short, long, value_name = "ID")]
     preset: Option<String>,
 
-    /// Whether the tsconfig file at the workspace root
-    /// should receive a reference to the new package
-    #[arg(long)]
-    update_root_tsconfig: bool,
+    /// An optional list of tsconfig paths where the new tsconfig file will be added as a reference.
+    #[arg(short, long)]
+    update_tsconfig: Option<Vec<PathBuf>>,
 
     /// Does not set up vitest for this package
     #[arg(long)]
@@ -267,9 +267,6 @@ pub enum TsCommands {
     /// Installs the dependencies with the chosen package manager
     #[arg(short, long)]
     install: bool,
-
-    #[command(flatten)]
-    kind: Option<PackageKindFlag>,
 
     #[command(flatten)]
     package_config: Option<PackageConfig>,

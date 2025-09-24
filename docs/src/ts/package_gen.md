@@ -10,7 +10,7 @@ This is an example of a package-related configuration:
 
 <div class="warning">
 
-When generating a package with actions that are supposed to make changes in the root of the monorepo (such as updating `pnpm-workspace.yaml` or the root `tsconfig.json`), the `--out-dir` is assumed to be the root of the monorepo, and `dir` is the new package's directory starting from the root of the monorepo.
+When generating a package, `--out-dir` is assumed to be the root of the monorepo, whereas `dir` is assumed to be the root of the new package. This is relevant when triggering actions that make changes in the root of the monorepo (such as updating `pnpm-workspace.yaml` or the root `tsconfig.json`).
 </div>
 
 After setting things up, you can run

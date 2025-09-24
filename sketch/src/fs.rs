@@ -10,6 +10,23 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::GenError;
 
+pub fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
+  let mut current_dir = start_dir;
+
+  loop {
+    let target_path = current_dir.join(target_file);
+
+    if target_path.is_file() {
+      return Some(target_path);
+    }
+
+    match current_dir.parent() {
+      Some(parent) => current_dir = parent,
+      None => return None,
+    }
+  }
+}
+
 pub fn get_extension(file: &Path) -> &OsStr {
   file
     .extension()
@@ -130,6 +147,12 @@ pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, Ge
       },
     })
   }
+}
+
+pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), GenError> {
+  let dirname = get_parent_dir(path);
+
+  create_all_dirs(dirname)
 }
 
 pub(crate) fn create_all_dirs(path: &Path) -> Result<(), GenError> {

@@ -1,27 +1,29 @@
 #[cfg(test)]
 mod cli_tests;
 
+mod config_discovery;
 mod ts_cmds;
 
 mod cli_elements;
 pub(crate) mod parsers;
 
-use std::{
-  env,
-  fs::{exists, read_dir, read_to_string},
-  path::PathBuf,
-};
+use std::{fs::read_to_string, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
-use merge::Merge;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
 use Commands::*;
 
 use crate::{
-  cli::ts_cmds::{handle_ts_commands, TsCommands},
+  cli::{
+    config_discovery::get_config_from_cli,
+    ts_cmds::{handle_ts_commands, TsCommands},
+  },
   custom_templating::{TemplateData, TemplateOutput},
-  fs::{create_all_dirs, get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml},
+  fs::{
+    create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
+    serialize_yaml,
+  },
   init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
   ts::TypescriptConfig,
   Config, *,
@@ -31,103 +33,9 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
   execute_cli(Cli::parse()).await
 }
 
-fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
-  if let Some(cli_arg) = cli_arg {
-    Some(cli_arg)
-  } else if exists("sketch.yaml").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.yaml"))
-  } else if exists("sketch.toml").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.toml"))
-  } else if exists("sketch.json").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.json"))
-  } else {
-    None
-  }
-}
-
-fn get_config_from_xdg() -> Option<PathBuf> {
-  let xdg_config = if let Ok(env_val) = env::var("XDG_CONFIG_HOME") {
-    Some(PathBuf::from(env_val))
-  } else if let Some(home) = env::home_dir() {
-    Some(home.join(".config"))
-  } else {
-    None
-  };
-
-  if let Some(xdg_config) = xdg_config {
-    let config_dir = PathBuf::from(xdg_config).join("sketch");
-
-    if config_dir.is_dir() {
-      if let Ok(dir_contents) = read_dir(&config_dir) {
-        for item in dir_contents {
-          if let Ok(item) = item {
-            if item.file_name() == "sketch.toml"
-              || item.file_name() == "sketch.yaml"
-              || item.file_name() == "sketch.json"
-            {
-              return Some(item.path());
-            }
-          }
-        }
-      }
-    }
-  }
-  None
-}
-
-async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
-  let mut config = Config::default();
-
-  if !cli.ignore_config {
-    let config_path = if let Some(config_file) = get_config_file_path(cli.config) {
-      Some(config_file)
-    } else if let Some(config_from_xdg) = get_config_from_xdg() {
-      Some(config_from_xdg)
-    } else {
-      None
-    };
-
-    if let Some(config_path) = config_path {
-      if config.debug {
-        eprintln!("Found config file `{}`", config_path.display());
-      }
-      config.merge(Config::from_file(&config_path)?);
-    }
-  } else if config.debug {
-    eprintln!("`ignore_config` detected");
-  }
-
-  if let Some(overrides) = cli.overrides {
-    config.merge(overrides);
-  }
-
-  if let Some(vars) = cli.templates_vars {
-    config.vars.extend(vars);
-  }
-
-  match cli.command {
-    Ts {
-      typescript_overrides,
-      ..
-    } => {
-      let typescript = config.typescript.get_or_insert_default();
-
-      if let Some(typescript_overrides) = typescript_overrides {
-        typescript.merge(typescript_overrides);
-      }
-    }
-    _ => {}
-  };
-
-  Ok(config)
-}
-
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let is_dry_run = cli.dry_run;
   let command = cli.command.clone();
-
-  let root_dir = cli.out_dir.clone().unwrap_or_else(|| get_cwd());
-  create_all_dirs(&root_dir)?;
 
   let config = get_config_from_cli(cli).await?;
 
@@ -159,7 +67,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         .clone()
         .process_data(preset.as_str(), &config.pre_commit_presets)?;
 
-      let output = root_dir.join(output.unwrap_or_else(|| ".pre-commit-config.yaml".into()));
+      let output = output.unwrap_or_else(|| ".pre-commit-config.yaml".into());
+      create_parent_dirs(&output)?;
 
       serialize_yaml(&content, &output, overwrite)?;
     }
@@ -167,6 +76,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       remote,
       input,
       preset,
+      dir,
     } => {
       let mut preset = if let Some(id) = preset {
         config
@@ -200,10 +110,13 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.init_repo(preset, remote.as_deref(), &root_dir)?;
+      let out_dir = dir.unwrap_or_else(|| get_cwd());
+      create_all_dirs(&out_dir)?;
+
+      config.init_repo(preset, remote.as_deref(), &out_dir)?;
     }
 
-    RenderPreset { id } => {
+    RenderPreset { id, out_dir } => {
       let preset = config
         .templating_presets
         .get(&id)
@@ -215,7 +128,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.generate_templates(root_dir, preset)?;
+      let out_dir = out_dir.unwrap_or_else(|| get_cwd());
+      create_all_dirs(&out_dir)?;
+
+      config.generate_templates(out_dir, preset)?;
     }
 
     Render {
@@ -261,14 +177,12 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       exit_if_dry_run!();
 
-      config.generate_templates(root_dir, vec![template])?;
+      config.generate_templates(get_cwd(), vec![template])?;
     }
     New { output } => {
-      let output_path = get_cwd().join(output.unwrap_or_else(|| PathBuf::from("sketch.yaml")));
+      let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
 
-      if let Some(parent_dir) = output_path.parent() {
-        create_all_dirs(&parent_dir)?;
-      }
+      create_parent_dirs(&output_path)?;
 
       let format = get_extension(&output_path).to_string_lossy();
 
@@ -324,7 +238,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       config.execute_command(shell.as_deref(), &cwd, command)?;
     }
     Ts { command, .. } => {
-      handle_ts_commands(config, command, root_dir).await?;
+      handle_ts_commands(config, command).await?;
     }
   }
   Ok(())
@@ -348,10 +262,6 @@ pub struct Cli {
   #[command(flatten)]
   pub overrides: Option<Config>,
 
-  /// The base path for the output files.
-  #[arg(short, long, value_name = "PATH")]
-  pub out_dir: Option<PathBuf>,
-
   /// Aborts before writing any content to disk.
   #[arg(long)]
   pub dry_run: bool,
@@ -364,7 +274,7 @@ pub struct Cli {
 #[derive(Args, Debug, Clone)]
 #[group(required = true, multiple = false)]
 pub struct RenderingOutput {
-  /// The output file (relative from the cwd)
+  /// The output path for the generated file
   #[arg(requires = "input")]
   output_path: Option<String>,
 
@@ -416,6 +326,9 @@ pub enum Commands {
 
   /// Creates a new git repo.
   Repo {
+    /// The directory where the new repo should be generated. [default: `.`]
+    dir: Option<PathBuf>,
+
     /// Selects a git preset from a configuration file.
     #[arg(short, long)]
     preset: Option<String>,
@@ -430,7 +343,7 @@ pub enum Commands {
 
   /// Generates a new config file.
   New {
-    /// The output file. Must be an absolute path or a path relative to the cwd [default: sketch.yaml]
+    /// The output file [default: sketch.yaml]
     output: Option<PathBuf>,
   },
 
@@ -456,6 +369,10 @@ pub enum Commands {
   RenderPreset {
     /// The id of the preset.
     id: String,
+
+    /// The base path to join to relative output paths. [default: `.`]
+    #[arg(short, long)]
+    out_dir: Option<PathBuf>,
   },
 
   /// Renders a template and executes it as a shell command
