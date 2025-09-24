@@ -3,7 +3,7 @@ pub mod package;
 pub mod package_json;
 pub mod pnpm;
 pub mod ts_config;
-mod ts_monorepo;
+pub mod ts_monorepo;
 pub mod vitest;
 
 use std::{
@@ -24,7 +24,7 @@ use crate::{
     oxlint::OxlintPreset,
     package::PackageConfig,
     package_json::{PackageJsonPreset, Person, PersonData},
-    pnpm::PnpmWorkspace,
+    pnpm::PnpmPreset,
     ts_config::TsConfigPreset,
   },
   versions::VersionRange,
@@ -42,6 +42,7 @@ impl TypescriptConfig {
 impl Default for TypescriptConfig {
   fn default() -> Self {
     Self {
+      pnpm_presets: Default::default(),
       no_default_deps: false,
       no_convert_latest_to_range: false,
       package_json_presets: Default::default(),
@@ -52,7 +53,6 @@ impl Default for TypescriptConfig {
       ts_config_presets: Default::default(),
       oxlint_presets: Default::default(),
       people: Default::default(),
-      pnpm: Default::default(),
     }
   }
 }
@@ -64,10 +64,6 @@ pub struct TypescriptConfig {
   /// The package manager being used. [default: pnpm].
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
-
-  /// The settings to use in generated pnpm-workspace.yaml files, for new monorepos, if pnpm is selected as a package manager.
-  #[arg(skip)]
-  pub pnpm: Option<PnpmWorkspace>,
 
   /// Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   #[merge(strategy = merge::bool::overwrite_false)]
@@ -113,6 +109,11 @@ pub struct TypescriptConfig {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub package_presets: IndexMap<String, PackageConfig>,
+
+  /// A map of presets for [`PnpmWorkspace`] configurations.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub pnpm_presets: IndexMap<String, PnpmPreset>,
 }
 
 impl PackageManager {

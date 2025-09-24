@@ -9,7 +9,7 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch ts`↴](#sketch-ts)
 * [`sketch ts package-json`↴](#sketch-ts-package-json)
 * [`sketch ts ts-config`↴](#sketch-ts-ts-config)
-* [`sketch ts oxlint-config`↴](#sketch-ts-oxlint-config)
+* [`sketch ts oxlint`↴](#sketch-ts-oxlint)
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
 * [`sketch repo`↴](#sketch-repo)
@@ -20,15 +20,15 @@ This document contains the help content for the `sketch` command-line program.
 
 ## `sketch`
 
-🖌️ Templating made portable. A tool to generate files, project structures or shell commands via custom templates
+🖌️ Templating made simple. Define and generate reusable structures for all sorts of projects
 
 **Usage:** `sketch [OPTIONS] <COMMAND>`
 
 ###### **Subcommands:**
 
 * `pre-commit` — Generates a `pre-commit` config file from a preset
-* `ts` — Launches typescript-specific commands
-* `repo` — Creates a new git repo
+* `ts` — Executes typescript-specific commands
+* `repo` — Creates a new git repo from a preset
 * `new` — Generates a new config file
 * `render` — Renders a single template to a file or to stdout
 * `render-preset` — Renders a templating preset defined in a configuration file
@@ -40,10 +40,9 @@ This document contains the help content for the `sketch` command-line program.
 * `--ignore-config` — Ignores any automatically detected config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--debug` — Activates debugging mode
-* `--templates-dir <DIR>` — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)
-* `--no-overwrite` — Does not overwrite existing files
-* `--dry-run` — Aborts before writing any content to disk
-* `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables
+* `--templates-dir <DIR>` — The path to the templates directory
+* `--no-overwrite` — Do not overwrite existing files
+* `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
 
 
 
@@ -51,21 +50,18 @@ This document contains the help content for the `sketch` command-line program.
 
 Generates a `pre-commit` config file from a preset
 
-**Usage:** `sketch pre-commit --preset <ID> [OUTPUT]`
+**Usage:** `sketch pre-commit <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
+* `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the created file [default: `.pre-commit-config.yaml`]
-
-###### **Options:**
-
-* `-p`, `--preset <ID>` — The preset id
 
 
 
 ## `sketch ts`
 
-Launches typescript-specific commands
+Executes typescript-specific commands
 
 **Usage:** `sketch ts [OPTIONS] <COMMAND>`
 
@@ -73,7 +69,7 @@ Launches typescript-specific commands
 
 * `package-json` — Generates a `package.json` file from a preset
 * `ts-config` — Generates a `tsconfig.json` file from a preset
-* `oxlint-config` — Generates a `.oxlintrc.json` file from a preset
+* `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `monorepo` — Generates a new typescript monorepo
 * `package` — Generates a new typescript package
 
@@ -83,13 +79,13 @@ Launches typescript-specific commands
 
   Possible values: `pnpm`, `npm`, `deno`, `bun`, `yarn`
 
-* `--no-default-deps` — Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+* `--no-default-deps` — Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
 * `--version-range <KIND>` — The kind of version range to use for dependencies that are fetched automatically. [default: minor]
 
   Possible values: `patch`, `minor`, `exact`
 
 * `--catalog` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
-* `--no-convert-latest` — Does not convert dependencies marked as `latest` to a version range
+* `--no-convert-latest` — Do not convert dependencies marked as `latest` to a version range
 
 
 
@@ -97,15 +93,12 @@ Launches typescript-specific commands
 
 Generates a `package.json` file from a preset
 
-**Usage:** `sketch ts package-json --preset <ID> [OUTPUT]`
+**Usage:** `sketch ts package-json <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
+* `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the generated file [default: `package.json`]
-
-###### **Options:**
-
-* `-p`, `--preset <ID>` — The preset id
 
 
 
@@ -113,31 +106,25 @@ Generates a `package.json` file from a preset
 
 Generates a `tsconfig.json` file from a preset
 
-**Usage:** `sketch ts ts-config --preset <ID> [OUTPUT]`
+**Usage:** `sketch ts ts-config <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
+* `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
 
-###### **Options:**
-
-* `-p`, `--preset <ID>` — The preset id
 
 
-
-## `sketch ts oxlint-config`
+## `sketch ts oxlint`
 
 Generates a `.oxlintrc.json` file from a preset
 
-**Usage:** `sketch ts oxlint-config --preset <ID> [OUTPUT]`
+**Usage:** `sketch ts oxlint <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
+* `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the generated file [default: `.oxlintrc.json`]
-
-###### **Options:**
-
-* `-p`, `--preset <ID>` — The preset id
 
 
 
@@ -149,17 +136,18 @@ Generates a new typescript monorepo
 
 ###### **Arguments:**
 
-* `<DIR>` — The root directory for the new package. [default: `ts_root`]
+* `<DIR>` — The root directory for the new monorepo. [default: `ts_root`]
 
 ###### **Options:**
 
-* `-r`, `--root-package <ID>` — The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags
-* `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its parent directory
-* `-t`, `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package. If unset, defaults are used
-* `--package-json <ID>` — The id of the package.json preset to use for this package
-* `--with-template <id=TEMPLATE_ID,output=PATH>` — The templates to generate when this package is created. Relative output paths will be joined to the package's root directory
+* `-p`, `--pnpm <PRESET_ID>` — The `pnpm-workspace.yaml` preset to use for the new monorepo. If it's unset and `pnpm` is the chosen package manager, the default preset will be used
+* `-r`, `--root-package <PRESET_ID>` — The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags
+* `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
+* `-t`, `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
+* `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
+* `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many templates to generate along with this package. Relative output paths will resolve from the root of the package
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
-* `-i`, `--install` — Installs the dependencies at the root after creation
+* `-i`, `--install` — Installs the dependencies after creation
 
 
 
@@ -171,25 +159,25 @@ Generates a new typescript package
 
 ###### **Arguments:**
 
-* `<DIR>` — The root directory for the new package. Defaults to the package name, if that is set
+* `<DIR>` — The root directory for the new package. Defaults to the package name
 
 ###### **Options:**
 
 * `-p`, `--preset <ID>` — The package preset to use. If unset, the default preset is used, along with the values set via cli flags
-* `-u`, `--update-tsconfig <UPDATE_TSCONFIG>` — An optional list of tsconfig paths where the new tsconfig file will be added as a reference
-* `--no-vitest` — Does not set up vitest for this package
+* `-u`, `--update-tsconfig <UPDATE_TSCONFIG>` — An optional list of tsconfig files where the new tsconfig file will be added as a reference
+* `--no-vitest` — Do not set up vitest for this package
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
-* `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its parent directory
-* `-t`, `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package. If unset, defaults are used
-* `--package-json <ID>` — The id of the package.json preset to use for this package
-* `--with-template <id=TEMPLATE_ID,output=PATH>` — The templates to generate when this package is created. Relative output paths will be joined to the package's root directory
+* `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
+* `-t`, `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
+* `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
+* `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many templates to generate along with this package. Relative output paths will resolve from the root of the package
 
 
 
 ## `sketch repo`
 
-Creates a new git repo
+Creates a new git repo from a preset
 
 **Usage:** `sketch repo [OPTIONS] [DIR]`
 
@@ -200,9 +188,9 @@ Creates a new git repo
 ###### **Options:**
 
 * `-p`, `--preset <PRESET>` — Selects a git preset from a configuration file
-* `--no-pre-commit` — Does not generate a pre-commit config. It overrides the value in the git preset if one is being used
-* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset. It overrides the value in the git preset if one is being used
-* `--gitignore <GITIGNORE>` — Selects a gitignore preset. It overrides the value in the git preset if one is being used
+* `--no-pre-commit` — Do not generate a pre-commit config
+* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
+* `--gitignore <GITIGNORE>` — Selects a gitignore preset
 * `-t`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many templates to render in the new repo's root. If a preset is being used, the list is extended and not replaced
 * `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
@@ -233,7 +221,7 @@ Renders a single template to a file or to stdout
 ###### **Options:**
 
 * `--stdout` — Prints the result to stdout
-* `-f`, `--file <FILE>` — The path to the template file, as an absolute path or relative to the cwd
+* `-f`, `--file <FILE>` — The path to the template file
 * `-i`, `--id <ID>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
 * `-c`, `--content <CONTENT>` — The literal definition for the template
 
@@ -260,7 +248,7 @@ Renders a template and executes it as a shell command
 
 ###### **Arguments:**
 
-* `<CMD>` — The literal definition for the template
+* `<CMD>` — The literal definition for the template (incompatible with `--file` or `--template`)
 
 ###### **Options:**
 

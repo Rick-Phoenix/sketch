@@ -12,15 +12,16 @@ typescript:
 
   # ANCHOR: pnpm
   # Customized configuration for `pnpm-workspace.yaml`
-  pnpm:
-    # All the dirs listed here will be created automatically
-    # when new monorepos are created
-    packages:
-      - packages/*
-      - apps/*
-    onlyBuiltDependencies:
-      - esbuild
-    minimumReleaseAge: 1440
+  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
   # ANCHOR_END: pnpm
 
   package_presets:

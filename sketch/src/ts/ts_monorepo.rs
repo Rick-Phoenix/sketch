@@ -8,17 +8,22 @@ use crate::{
     oxlint::OxlintConfigSetting,
     package::PackageConfig,
     package_json::PackageJsonData,
+    pnpm::PnpmWorkspace,
     ts_config::{tsconfig_defaults::get_default_root_tsconfig, TsConfig, TsConfigKind},
-    PackageManager,
   },
   Config, GenError, Preset,
 };
 
+pub struct CreateTsMonorepoSettings<'a> {
+  pub root_package: PackageConfig,
+  pub out_dir: &'a Path,
+  pub pnpm_config: Option<PnpmWorkspace>,
+}
+
 impl Config {
   pub async fn create_ts_monorepo(
     self,
-    root_package: PackageConfig,
-    out_dir: &Path,
+    settings: CreateTsMonorepoSettings<'_>,
   ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
@@ -28,7 +33,13 @@ impl Config {
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
 
-    create_all_dirs(&out_dir)?;
+    let CreateTsMonorepoSettings {
+      root_package,
+      out_dir,
+      pnpm_config,
+    } = settings;
+
+    create_all_dirs(out_dir)?;
 
     let (package_json_id, package_json_preset) = match root_package.package_json.unwrap_or_default()
     {
@@ -136,9 +147,7 @@ impl Config {
       serialize_json(&tsconfig, &out_dir.join(file), overwrite)?;
     }
 
-    if matches!(package_manager, PackageManager::Pnpm) {
-      let mut pnpm_data = typescript.pnpm.unwrap_or_default();
-
+    if let Some(mut pnpm_data) = pnpm_config {
       for dir in &pnpm_data.packages {
         let dir = dir.strip_suffix("/*").unwrap_or(dir);
         create_dir_all(out_dir.join(dir)).map_err(|e| GenError::DirCreation {

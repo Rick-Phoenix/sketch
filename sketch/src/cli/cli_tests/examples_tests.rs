@@ -32,6 +32,8 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "monorepo",
     "--root-package",
     "root",
+    "--pnpm",
+    "base",
     "tests/output/ts_examples",
   ];
 

@@ -10,7 +10,10 @@ use crate::{
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},
+    pnpm::PnpmWorkspace,
+    ts_monorepo::CreateTsMonorepoSettings,
     vitest::VitestConfigKind,
+    PackageManager,
   },
   Config, GenError, *,
 };
@@ -91,6 +94,7 @@ pub(crate) async fn handle_ts_commands(
       root_package,
       oxlint,
       dir,
+      pnpm,
     } => {
       let mut root_package = if let Some(id) = root_package {
         typescript
@@ -126,7 +130,31 @@ pub(crate) async fn handle_ts_commands(
       let package_manager = typescript.package_manager.get_or_insert_default().clone();
       let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
-      config.create_ts_monorepo(root_package, &out_dir).await?;
+      let pnpm_config = if let Some(id) = pnpm {
+        Some(
+          typescript
+            .pnpm_presets
+            .get(&id)
+            .ok_or(GenError::PresetNotFound {
+              kind: Preset::PnpmWorkspace,
+              name: id.clone(),
+            })?
+            .clone()
+            .process_data(id.as_str(), &typescript.pnpm_presets)?,
+        )
+      } else if matches!(package_manager, PackageManager::Pnpm) {
+        Some(PnpmWorkspace::default())
+      } else {
+        None
+      };
+
+      config
+        .create_ts_monorepo(CreateTsMonorepoSettings {
+          root_package,
+          out_dir: &out_dir,
+          pnpm_config,
+        })
+        .await?;
 
       if install {
         launch_command(
@@ -237,6 +265,10 @@ pub enum TsCommands {
   Monorepo {
     /// The root directory for the new monorepo. [default: `ts_root`].
     dir: Option<PathBuf>,
+
+    /// The `pnpm-workspace.yaml` preset to use for the new monorepo. If it's unset and `pnpm` is the chosen package manager, the default preset will be used.
+    #[arg(short, long, value_name = "PRESET_ID")]
+    pnpm: Option<String>,
 
     /// The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags.
     #[arg(short, long, value_name = "PRESET_ID")]

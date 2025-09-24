@@ -23,7 +23,6 @@ use std::{collections::BTreeMap, fmt::Debug};
 pub use config::*;
 #[doc(inline)]
 pub use errors::*;
-use indexmap::IndexMap;
 pub(crate) use merging_strategies::*;
 use serde_json::Value;
 pub(crate) use templating::*;
@@ -32,8 +31,6 @@ use crate::{fs::get_abs_path, ts::package_json::PackageJson};
 
 pub(crate) type StringBTreeMap = BTreeMap<String, String>;
 pub(crate) type JsonValueBTreeMap = BTreeMap<String, Value>;
-
-pub(crate) type OrderedMap = IndexMap<String, Value>;
 
 /// The kinds of presets that can be stored in the global config, along with a name key.
 #[derive(Debug, Clone, Copy)]
@@ -46,6 +43,7 @@ pub enum Preset {
   PreCommit,
   Repo,
   Gitignore,
+  PnpmWorkspace,
 }
 
 pub(crate) fn log_debug<T: Debug>(name: &str, item: &T) {
