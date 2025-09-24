@@ -55,10 +55,6 @@ impl Config {
           source: e,
         })?;
 
-    if self.debug {
-      eprintln!("DEBUG: Rendered command: {}", rendered_command);
-    }
-
     let shell = shell.unwrap_or_else(|| default_shell());
 
     let shell_arg = if shell == "cmd.exe" { "/C" } else { "-c" };

@@ -30,7 +30,7 @@ pub enum SavePrefix {
   /// Allows minor upgrades.
   #[serde(rename = "^")]
   Minor,
-  /// Does not allow upgrades.
+  /// Do not allow upgrades.
   #[serde(rename = "")]
   Exact,
 }

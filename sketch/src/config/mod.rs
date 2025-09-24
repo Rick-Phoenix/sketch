@@ -58,12 +58,12 @@ pub struct Config {
   #[serde(skip_serializing_if = "is_default")]
   pub debug: bool,
 
-  /// The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them).
+  /// The path to the templates directory.
   #[arg(long, value_name = "DIR")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub templates_dir: Option<PathBuf>,
 
-  /// Does not overwrite existing files.
+  /// Do not overwrite existing files.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   #[serde(skip_serializing_if = "is_default")]

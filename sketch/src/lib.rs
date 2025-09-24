@@ -17,7 +17,7 @@ pub mod errors;
 pub mod ts;
 pub mod versions;
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Debug};
 
 #[doc(inline)]
 pub use config::*;
@@ -46,4 +46,9 @@ pub enum Preset {
   PreCommit,
   Repo,
   Gitignore,
+}
+
+pub(crate) fn log_debug<T: Debug>(name: &str, item: &T) {
+  eprintln!("DEBUG:");
+  eprintln!("  {}: {:#?}", name, item);
 }

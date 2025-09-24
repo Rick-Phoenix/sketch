@@ -69,7 +69,7 @@ pub struct TypescriptConfig {
   #[arg(skip)]
   pub pnpm: Option<PnpmWorkspace>,
 
-  /// Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+  /// Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub no_default_deps: bool,
@@ -84,7 +84,7 @@ pub struct TypescriptConfig {
   #[arg(long)]
   pub catalog: bool,
 
-  /// Does not convert dependencies marked as `latest` to a version range.
+  /// Do not convert dependencies marked as `latest` to a version range.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long = "no-convert-latest")]
   pub no_convert_latest_to_range: bool,

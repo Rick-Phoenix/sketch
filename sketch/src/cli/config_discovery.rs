@@ -11,50 +11,6 @@ use crate::{
   Config, GenError,
 };
 
-fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
-  if let Some(cli_arg) = cli_arg {
-    Some(cli_arg)
-  } else if exists("sketch.yaml").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.yaml"))
-  } else if exists("sketch.toml").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.toml"))
-  } else if exists("sketch.json").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.json"))
-  } else {
-    None
-  }
-}
-
-fn get_config_from_xdg() -> Option<PathBuf> {
-  let xdg_config = if let Ok(env_val) = env::var("XDG_CONFIG_HOME") {
-    Some(PathBuf::from(env_val))
-  } else if let Some(home) = env::home_dir() {
-    Some(home.join(".config"))
-  } else {
-    None
-  };
-
-  if let Some(xdg_config) = xdg_config {
-    let config_dir = PathBuf::from(xdg_config).join("sketch");
-
-    if config_dir.is_dir() {
-      if let Ok(dir_contents) = read_dir(&config_dir) {
-        for item in dir_contents {
-          if let Ok(item) = item {
-            if item.file_name() == "sketch.toml"
-              || item.file_name() == "sketch.yaml"
-              || item.file_name() == "sketch.json"
-            {
-              return Some(item.path());
-            }
-          }
-        }
-      }
-    }
-  }
-  None
-}
-
 pub(crate) async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   let mut config = Config::default();
 
@@ -100,4 +56,48 @@ pub(crate) async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   };
 
   Ok(config)
+}
+
+fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
+  if let Some(cli_arg) = cli_arg {
+    Some(cli_arg)
+  } else if exists("sketch.yaml").is_ok_and(|exists| exists) {
+    Some(PathBuf::from("sketch.yaml"))
+  } else if exists("sketch.toml").is_ok_and(|exists| exists) {
+    Some(PathBuf::from("sketch.toml"))
+  } else if exists("sketch.json").is_ok_and(|exists| exists) {
+    Some(PathBuf::from("sketch.json"))
+  } else {
+    None
+  }
+}
+
+fn get_config_from_xdg() -> Option<PathBuf> {
+  let xdg_config = if let Ok(env_val) = env::var("XDG_CONFIG_HOME") {
+    Some(PathBuf::from(env_val))
+  } else if let Some(home) = env::home_dir() {
+    Some(home.join(".config"))
+  } else {
+    None
+  };
+
+  if let Some(xdg_config) = xdg_config {
+    let config_dir = PathBuf::from(xdg_config).join("sketch");
+
+    if config_dir.is_dir() {
+      if let Ok(dir_contents) = read_dir(&config_dir) {
+        for item in dir_contents {
+          if let Ok(item) = item {
+            if item.file_name() == "sketch.toml"
+              || item.file_name() == "sketch.yaml"
+              || item.file_name() == "sketch.json"
+            {
+              return Some(item.path());
+            }
+          }
+        }
+      }
+    }
+  }
+  None
 }

@@ -4,6 +4,7 @@ use clap::Subcommand;
 use merge::Merge;
 
 use crate::{
+  cli::log_debug,
   exec::launch_command,
   fs::{create_parent_dirs, serialize_json},
   ts::{
@@ -19,7 +20,16 @@ pub(crate) async fn handle_ts_commands(
   command: TsCommands,
 ) -> Result<(), GenError> {
   let overwrite = config.can_overwrite();
+  let debug = config.debug;
   let typescript = config.typescript.get_or_insert_default();
+
+  macro_rules! report_info {
+    ($info:expr) => {
+      if debug {
+        $info;
+      }
+    };
+  }
 
   match command {
     TsCommands::TsConfig { output, preset } => {
@@ -34,11 +44,12 @@ pub(crate) async fn handle_ts_commands(
         .process_data(preset.as_str(), &typescript.ts_config_presets)?;
 
       let output = output.unwrap_or_else(|| "tsconfig.json".into());
+
       create_parent_dirs(&output)?;
 
       serialize_json(&content, &output, overwrite)?;
     }
-    TsCommands::OxlintConfig { output, preset } => {
+    TsCommands::Oxlint { output, preset } => {
       let content = typescript
         .oxlint_presets
         .get(&preset)
@@ -110,6 +121,8 @@ pub(crate) async fn handle_ts_commands(
         };
       }
 
+      report_info!(log_debug("root_package", &root_package));
+
       let package_manager = typescript.package_manager.get_or_insert_default().clone();
       let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
@@ -162,10 +175,7 @@ pub(crate) async fn handle_ts_commands(
         };
       }
 
-      if config.debug {
-        eprintln!("DEBUG:");
-        eprintln!("  package: {:#?}", package);
-      }
+      report_info!(log_debug("package", &package));
 
       let package_dir =
         dir.unwrap_or_else(|| package.name.as_deref().unwrap_or("new_package").into());
@@ -198,41 +208,38 @@ pub(crate) async fn handle_ts_commands(
 pub enum TsCommands {
   /// Generates a `package.json` file from a preset.
   PackageJson {
+    /// The preset id
+    preset: String,
+
     /// The output path of the generated file [default: `package.json`]
     output: Option<PathBuf>,
-
-    /// The preset id
-    #[arg(short, long, value_name = "ID")]
-    preset: String,
   },
 
   /// Generates a `tsconfig.json` file from a preset.
   TsConfig {
+    /// The preset id
+    preset: String,
+
     /// The output path of the generated file [default: `tsconfig.json`]
     output: Option<PathBuf>,
-
-    /// The preset id
-    #[arg(short, long, value_name = "ID")]
-    preset: String,
   },
 
   /// Generates a `.oxlintrc.json` file from a preset.
-  OxlintConfig {
+  Oxlint {
+    /// The preset id
+    preset: String,
+
     /// The output path of the generated file [default: `.oxlintrc.json`]
     output: Option<PathBuf>,
-
-    /// The preset id
-    #[arg(short, long, value_name = "ID")]
-    preset: String,
   },
 
   /// Generates a new typescript monorepo
   Monorepo {
-    /// The root directory for the new package. [default: `ts_root`].
+    /// The root directory for the new monorepo. [default: `ts_root`].
     dir: Option<PathBuf>,
 
     /// The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags.
-    #[arg(short, long, value_name = "ID")]
+    #[arg(short, long, value_name = "PRESET_ID")]
     root_package: Option<String>,
 
     #[command(flatten)]
@@ -242,25 +249,25 @@ pub enum TsCommands {
     #[arg(long, value_name = "ID")]
     oxlint: Option<String>,
 
-    /// Installs the dependencies at the root after creation.
+    /// Installs the dependencies after creation.
     #[arg(short, long)]
     install: bool,
   },
 
   /// Generates a new typescript package
   Package {
-    /// The root directory for the new package. Defaults to the package name, if that is set.
+    /// The root directory for the new package. Defaults to the package name.
     dir: Option<PathBuf>,
 
     /// The package preset to use. If unset, the default preset is used, along with the values set via cli flags
     #[arg(short, long, value_name = "ID")]
     preset: Option<String>,
 
-    /// An optional list of tsconfig paths where the new tsconfig file will be added as a reference.
+    /// An optional list of tsconfig files where the new tsconfig file will be added as a reference.
     #[arg(short, long)]
     update_tsconfig: Option<Vec<PathBuf>>,
 
-    /// Does not set up vitest for this package
+    /// Do not set up vitest for this package
     #[arg(long)]
     no_vitest: bool,
 

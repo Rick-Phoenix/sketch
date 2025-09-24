@@ -7,7 +7,7 @@ mod ts_cmds;
 mod cli_elements;
 pub(crate) mod parsers;
 
-use std::{fs::read_to_string, path::PathBuf};
+use std::{fmt::Debug, fs::read_to_string, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
 use parsers::parse_serializable_key_value_pair;
@@ -34,25 +34,15 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 }
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
-  let is_dry_run = cli.dry_run;
   let command = cli.command.clone();
 
   let config = get_config_from_cli(cli).await?;
 
+  let debug = config.debug;
   let overwrite = !config.no_overwrite;
 
-  macro_rules! exit_if_dry_run {
-    () => {
-      if is_dry_run {
-        eprintln!("Aborting due to dry run...");
-        return Ok(());
-      }
-    };
-  }
-
-  if config.debug {
-    eprintln!("DEBUG:");
-    eprintln!("  config: {:#?}", config);
+  if debug {
+    log_debug("Config", &config);
   }
 
   match command {
@@ -68,6 +58,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         .process_data(preset.as_str(), &config.pre_commit_presets)?;
 
       let output = output.unwrap_or_else(|| ".pre-commit-config.yaml".into());
+
       create_parent_dirs(&output)?;
 
       serialize_yaml(&content, &output, overwrite)?;
@@ -108,9 +99,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           .extend(templates);
       }
 
-      exit_if_dry_run!();
-
       let out_dir = dir.unwrap_or_else(|| get_cwd());
+
       create_all_dirs(&out_dir)?;
 
       config.init_repo(preset, remote.as_deref(), &out_dir)?;
@@ -125,8 +115,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           name: id.clone(),
         })?
         .clone();
-
-      exit_if_dry_run!();
 
       let out_dir = out_dir.unwrap_or_else(|| get_cwd());
       create_all_dirs(&out_dir)?;
@@ -175,7 +163,9 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         context: Default::default(),
       };
 
-      exit_if_dry_run!();
+      if debug {
+        log_debug("Template", &template);
+      }
 
       config.generate_templates(get_cwd(), vec![template])?;
     }
@@ -185,8 +175,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       create_parent_dirs(&output_path)?;
 
       let format = get_extension(&output_path).to_string_lossy();
-
-      exit_if_dry_run!();
 
       let new_config = Config::default();
 
@@ -230,8 +218,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         panic!("At least one between command and file must be set.")
       };
 
-      exit_if_dry_run!();
-
       let cwd = cwd.unwrap_or_else(|| get_cwd());
 
       let shell = config.shell.clone();
@@ -262,11 +248,7 @@ pub struct Cli {
   #[command(flatten)]
   pub overrides: Option<Config>,
 
-  /// Aborts before writing any content to disk.
-  #[arg(long)]
-  pub dry_run: bool,
-
-  /// Sets a variable (as key=value) to use in templates. Overrides global and local variables.
+  /// Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
@@ -285,19 +267,19 @@ pub struct RenderingOutput {
 
 #[derive(Args, Debug, Clone)]
 pub struct RepoConfigInput {
-  /// Does not generate a pre-commit config. It overrides the value in the git preset if one is being used.
+  /// Do not generate a pre-commit config
   #[arg(long, group = "pre-commit")]
   no_pre_commit: bool,
 
-  /// Selects a pre-commit preset. It overrides the value in the git preset if one is being used.
+  /// Selects a pre-commit preset
   #[arg(long, group = "pre-commit")]
   pre_commit: Option<String>,
 
-  /// Selects a gitignore preset. It overrides the value in the git preset if one is being used.
+  /// Selects a gitignore preset
   #[arg(long)]
   gitignore: Option<String>,
 
-  /// One or many templates to render in the new repo's root. If a preset is being used, the list is extended and not replaced.
+  /// One or many templates to render in the new repo's root. If a preset is being used, the list is extended and not replaced
   #[arg(short = 't', long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
   with_templates: Option<Vec<TemplateOutput>>,
 }
@@ -307,15 +289,14 @@ pub struct RepoConfigInput {
 pub enum Commands {
   /// Generates a `pre-commit` config file from a preset.
   PreCommit {
+    /// The preset id
+    preset: String,
+
     /// The output path of the created file [default: `.pre-commit-config.yaml`]
     output: Option<PathBuf>,
-
-    /// The preset id
-    #[arg(short, long, value_name = "ID")]
-    preset: String,
   },
 
-  /// Launches typescript-specific commands.
+  /// Executes typescript-specific commands.
   Ts {
     #[command(flatten)]
     typescript_overrides: Option<TypescriptConfig>,
@@ -324,7 +305,7 @@ pub enum Commands {
     command: TsCommands,
   },
 
-  /// Creates a new git repo.
+  /// Creates a new git repo from a preset.
   Repo {
     /// The directory where the new repo should be generated. [default: `.`]
     dir: Option<PathBuf>,
@@ -352,7 +333,7 @@ pub enum Commands {
     #[command(flatten)]
     output: RenderingOutput,
 
-    /// The path to the template file, as an absolute path or relative to the cwd
+    /// The path to the template file
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
@@ -376,7 +357,7 @@ pub enum Commands {
 
   /// Renders a template and executes it as a shell command
   Exec {
-    /// The literal definition for the template
+    /// The literal definition for the template (incompatible with `--file` or `--template`)
     #[arg(group = "input")]
     cmd: Option<String>,
 

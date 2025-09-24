@@ -2,7 +2,7 @@
 name = "sketch-it"
 version = "0.1.0-beta.1"
 
-description = "🖌️ Templating made portable. A tool to generate files, project structures or shell commands via custom templates"
+description = "🖌️ Templating made simple. Define and generate reusable structures for all sorts of projects"
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["boilerplate", "generation", "templating"]
 repository = "https://github.com/Rick-Phoenix/sketch"

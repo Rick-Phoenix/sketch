@@ -1,6 +1,6 @@
 # 🖌️ Sketch
 
->`Templating, made portable`
+>`Templating made simple`
 
 Templating is awesome. While it is mostly used for websites, it can be a powerful tool for developers as it can allow us to automate some repetitive tasks like setting up projects which share the same basic structure. 
 

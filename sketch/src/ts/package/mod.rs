@@ -40,14 +40,14 @@ pub enum PackageKind {
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {
-  /// The name of the new package. It defaults to the name of its parent directory.
+  /// The name of the new package. It defaults to the name of its directory.
   #[arg(short, long)]
   pub name: Option<String>,
 
-  /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.
+  /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations.
   #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
   #[arg(
-    help = "One or many tsconfig presets (with their output path) to use for this package. If unset, defaults are used",
+    help = "One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)",
     value_name = "id=ID,output=PATH"
   )]
   #[merge(strategy = merge_optional_vecs)]
@@ -56,13 +56,12 @@ pub struct PackageConfig {
   /// The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
   #[arg(long, value_parser = PackageJsonData::from_cli)]
   #[arg(
-    help = "The id of the package.json preset to use for this package",
+    help = "The package.json preset ID to use (uses defaults if not provided)",
     value_name = "ID"
   )]
   pub package_json: Option<PackageJsonData>,
 
-  /// The templates to generate when this package is created.
-  /// Relative output paths will be joined to the package's root directory.
+  /// One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.
   #[arg(long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
   #[merge(strategy = merge_optional_vecs)]
   pub with_templates: Option<Vec<TemplateOutput>>,

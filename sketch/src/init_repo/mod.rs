@@ -19,9 +19,9 @@ use crate::{
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default)]
 pub struct RepoPreset {
-  /// Settings for the gitignore file to generate in new repos. It can be a list of strings to append to the defaults or a single string, to replace the defaults entirely.
+  /// Settings for the gitignore file.
   pub gitignore: Option<GitIgnoreSetting>,
-  /// Configuration settings for [`pre-commit`](https://pre-commit.com/), to use when creating a new repo.
+  /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
   pub pre_commit: PreCommitSetting,
   /// A set of templates to generate when this preset is used.
   pub with_templates: Option<Vec<TemplateOutput>>,
