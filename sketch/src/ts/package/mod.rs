@@ -129,9 +129,9 @@ impl Config {
       "my-awesome-package".to_string()
     };
 
-    let pkg_root = get_abs_path(&pkg_root)?;
-
     create_all_dirs(&pkg_root)?;
+
+    let pkg_root = get_abs_path(&pkg_root)?;
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();

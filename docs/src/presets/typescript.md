@@ -33,7 +33,7 @@ This is what a fully formed package preset looks like. We are going to use the p
 
 
 <details>
-<summary>Tsconfig Output</summary>
+<summary>Tsconfig output</summary>
 
 ```json
 {{#include ../../../sketch/tests/output/presets/packages/presets_example/tsconfig.json}}

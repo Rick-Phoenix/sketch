@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=../../schemas/development.json
 
+# ANCHOR: all
 typescript:
   # Convert `latest` to a version range for dependencies
   no_convert_latest_to_range: false
@@ -36,3 +37,4 @@ typescript:
   # A map of contributors and maintainers, which can be referenced
   # in `package.json` presets with their ID
   people: {}
+# ANCHOR_END: all

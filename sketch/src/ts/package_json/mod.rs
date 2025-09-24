@@ -183,6 +183,7 @@ pub struct PackageJson {
   pub package_manager: Option<String>,
 
   /// Configuration settings for pnpm.
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub pnpm: Option<Box<PnpmWorkspace>>,
 
   /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.

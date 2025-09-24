@@ -25,7 +25,13 @@ If you set up your package manager to be `pnpm` (which is the default) and set `
 
 ### Example
 
-Let's say that we are starting with a basic `pnpm-workspace.yaml` file, and we generate a package that has `catalog` dependencies, which are currently absent from their target catalogs:
+Let's say that we are starting with a basic `pnpm-workspace.yaml` config like this one:
+
+```yaml
+{{#include ../../../examples/typescript/root_package.yaml:pnpm}}
+```
+
+and we generate a package that has `catalog` dependencies, which are currently absent from their target catalogs:
 
 ```yaml
 {{#include ../../../examples/typescript/catalog.yaml:all}}

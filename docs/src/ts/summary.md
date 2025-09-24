@@ -5,7 +5,7 @@ Sketch can be used to quickly generate Typescript monorepos and packages, and us
 These are the top level configuration settings for Typescript projects, with their default values:
 
 ```yaml
-{{#include ../../../examples/typescript/typescript_settings.yaml}}
+{{#include ../../../examples/typescript/typescript_settings.yaml:all}}
 ```
 
 

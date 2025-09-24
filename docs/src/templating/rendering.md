@@ -32,7 +32,7 @@ However, we can also render content from any file, by using the `-f` flag. In th
 
 ## From Literal Definition
 
-...or directly as part of the command:
+Templates can be defined directly within a command too:
 
 >`{{#include ../../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}`
 
@@ -50,7 +50,7 @@ When we run the command
 
 >`{{#include ../../../sketch/tests/output/custom_templates/commands/render_preset_cmd}}`
 
-These templates will be rendered together, so that the output of the specified `OUT_DIR` (cwd, if omitted) will look like this:
+These templates will be rendered together, so that the output of the specified `OUT_DIR` (or the cwd, if omitted) will look like this:
 
 ```
 {{#include ../../../sketch/tests/output/custom_templates/render_preset_tree.txt}}

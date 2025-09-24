@@ -1,28 +1,18 @@
 # Monorepo Generation
 
-We can set up a Typescript monorepo by simply running this command:
+We can set up a Typescript monorepo by simply running
 
->`{{#include ../../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}`
+>`sketch ts monorepo`
 
 This will use all of the default settings and set up a basic structure for a monorepo.
 
 But we can also create a package preset and use that for the root package of the monorepo.
 
-# Example
-
-Let's make this our starting config:
+This is a more customized configuration for the root package:
 
 ```yaml
 {{#include ../../../examples/typescript/root_package.yaml:all}}
 ```
-
-Tree output:
-
-```
-{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt}}
-```
-
->ℹ️ You can use the `-i` flag to install dependencies for the root package after creating the new monorepo.
 
 ## Adding Templates
 
@@ -37,3 +27,19 @@ To do that, we add this to the root package's definition:
 ```
 
 >ℹ️ You can also use `--with-template <id=TEMPLATE_ID,output=PATH>` as a flag to add more templates when generating a new package.
+
+# Example
+
+So after setting everything up, we run the command
+
+>`{{#include ../../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}`
+
+And get this tree output:
+
+```
+{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt}}
+```
+
+>ℹ️ You can use the `-i` flag to install dependencies for the root package after creating the new monorepo.
+
+

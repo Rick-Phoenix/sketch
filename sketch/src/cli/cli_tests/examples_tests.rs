@@ -5,7 +5,8 @@ use clap::Parser;
 use super::{get_clean_example_cmd, reset_testing_dir};
 use crate::{
   cli::{cli_tests::get_tree_output, execute_cli, Cli},
-  fs::write_file,
+  fs::{deserialize_yaml, write_file},
+  ts::pnpm::PnpmWorkspace,
 };
 
 #[tokio::test]
@@ -18,8 +19,8 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
   reset_testing_dir(&commands_dir);
 
   macro_rules! write_command {
-    ($args:expr, $remove_range:expr, $out_file:expr) => {
-      get_clean_example_cmd(&$args, $remove_range, &commands_dir.join($out_file))?
+    ($args:expr, $list:expr, $out_file:expr) => {
+      get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
     };
   }
 
@@ -29,12 +30,12 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     path_to_str!(examples_dir.join("root_package.yaml")),
     "ts",
     "monorepo",
-    "-p",
+    "--root-package",
     "root",
     "tests/output/ts_examples",
   ];
 
-  write_command!(monorepo_cmd, 1..5, "monorepo_cmd");
+  write_command!(monorepo_cmd, [1, 2, 7], "monorepo_cmd");
 
   let monorepo_setup = Cli::try_parse_from(&monorepo_cmd)?;
 
@@ -53,7 +54,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples/packages/people-example",
   ];
 
-  write_command!(people_cmd, 1..5, "people_cmd");
+  write_command!(people_cmd, [1, 2, 7], "people_cmd");
 
   let people_example = Cli::try_parse_from(people_cmd)?;
 
@@ -70,11 +71,30 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples/packages/with-catalog",
   ];
 
-  write_command!(catalog_cmd, 1..5, "catalog_cmd");
+  write_command!(catalog_cmd, [1, 2, 7], "catalog_cmd");
 
   let catalog_example = Cli::try_parse_from(catalog_cmd)?;
 
   execute_cli(catalog_example).await?;
+
+  // Checking if the pnpm-workspace file contains the right config + the updated versions
+  let pnpm_file: PnpmWorkspace = deserialize_yaml(&output_dir.join("pnpm-workspace.yaml"))?;
+
+  assert!(pnpm_file
+    .only_built_dependencies
+    .unwrap()
+    .contains("esbuild"));
+  assert!(pnpm_file.packages.contains("packages/*"));
+  assert!(pnpm_file.packages.contains("apps/*"));
+  assert!(pnpm_file.catalog.get("hono").unwrap().starts_with('^'));
+  assert!(pnpm_file
+    .catalogs
+    .get("svelte")
+    .unwrap()
+    .get("svelte")
+    .unwrap()
+    .starts_with('^'));
+  assert_eq!(pnpm_file.minimum_release_age.unwrap(), 1440);
 
   let package_gen_cmd = [
     "sketch",
@@ -87,7 +107,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples/packages/frontend",
   ];
 
-  write_command!(package_gen_cmd, 1..5, "package_gen_cmd");
+  write_command!(package_gen_cmd, [1, 2, 7], "package_gen_cmd");
 
   let package_gen = Cli::try_parse_from(package_gen_cmd)?;
 

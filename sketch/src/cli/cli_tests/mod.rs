@@ -11,7 +11,6 @@ mod rendering_tests;
 use std::{
   fs::{create_dir_all, remove_dir_all, remove_file, File},
   io::Write,
-  ops::Range,
   path::{Path, PathBuf},
   process::Command,
 };
@@ -46,13 +45,13 @@ fn get_tree_output<T: Into<PathBuf>>(dir: T, file: &str) -> Result<(), Box<dyn s
 
 fn get_clean_example_cmd(
   cmd: &[&str],
-  remove_range: Range<usize>,
+  discarded_segments: &[usize],
   output: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut example = String::new();
 
   for (i, segment) in cmd.iter().enumerate() {
-    if !remove_range.contains(&i) {
+    if !discarded_segments.contains(&i) {
       if segment.contains(' ') {
         if segment.contains('\'') {
           example.push_str(&format!("\"{}\"", segment));

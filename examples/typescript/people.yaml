@@ -2,6 +2,8 @@
 
 # ANCHOR: all
 typescript:
+  no_default_deps: true
+
   people:
     # Person ID
     bruce:

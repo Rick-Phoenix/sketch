@@ -16,8 +16,8 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
   reset_testing_dir(&commands_dir);
 
   macro_rules! write_command {
-    ($cmd:expr, $range:expr, $out_file:expr) => {
-      get_clean_example_cmd(&$cmd, $range, &commands_dir.join($out_file))?
+    ($cmd:expr, $list:expr, $out_file:expr) => {
+      get_clean_example_cmd(&$cmd, &$list, &commands_dir.join($out_file))?
     };
   }
 
@@ -31,7 +31,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "echo \"hello there!\\ngeneral {{ general }}.\" > command_output.txt",
   ];
 
-  write_command!(literal_template_cmd, 1..3, "exec_literal_cmd");
+  write_command!(literal_template_cmd, [4, 5], "exec_literal_cmd");
 
   let literal = Cli::try_parse_from(literal_template_cmd)?;
 
@@ -52,7 +52,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "tests/commands_tests/cmd_from_file.j2",
   ];
 
-  write_command!(from_file_cmd, 1..3, "cmd_from_file");
+  write_command!(from_file_cmd, [4, 5], "cmd_from_file");
 
   let from_file = Cli::try_parse_from(from_file_cmd)?;
 
@@ -78,7 +78,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "cmd_template.j2",
   ];
 
-  write_command!(from_template_cmd, 1..3, "exec_from_template_cmd");
+  write_command!(from_template_cmd, [1, 2, 6, 7], "exec_from_template_cmd");
 
   let from_file_in_templates_dir = Cli::try_parse_from(from_template_cmd)?;
 

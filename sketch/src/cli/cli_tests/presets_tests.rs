@@ -46,7 +46,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&out_dir, "tree_output.txt")?;
 
-  get_clean_example_cmd(&git_preset_args, 1..5, &out_dir.join("cmd"))?;
+  get_clean_example_cmd(&git_preset_args, &[1, 2, 8], &out_dir.join("cmd"))?;
 
   let pre_commit_output: PreCommitConfig =
     deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;

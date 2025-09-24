@@ -10,6 +10,7 @@ typescript:
   # a pnpm-workspace.yaml file
   package_manager: pnpm
 
+  # ANCHOR: pnpm
   # Customized configuration for `pnpm-workspace.yaml`
   pnpm:
     # All the dirs listed here will be created automatically
@@ -20,6 +21,7 @@ typescript:
     onlyBuiltDependencies:
       - esbuild
     minimumReleaseAge: 1440
+  # ANCHOR_END: pnpm
 
   package_presets:
     # Defining a preset for the root package

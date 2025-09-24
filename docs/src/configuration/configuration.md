@@ -30,5 +30,5 @@ The [merging strategy](../presets.md#extending-presets) for config files is the 
 These are the defaults for the top level configuration values:
 
 ```yaml
-{{#include ../../../examples/top_level_config.yaml}}
+{{#include ../../../examples/top_level_config.yaml:all}}
 ```

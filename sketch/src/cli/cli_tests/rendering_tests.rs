@@ -21,8 +21,8 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let commands_dir = output_dir.join("commands");
 
   macro_rules! write_command {
-    ($args:expr, $remove_range:expr, $out_file:expr) => {
-      get_clean_example_cmd(&$args, $remove_range, &commands_dir.join($out_file))?
+    ($args:expr, $list:expr, $out_file:expr) => {
+      get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
     };
   }
 
@@ -42,7 +42,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(rendering_cmd.clone()).await?;
 
-  write_command!(preset_rendering_args, 1..5, "render_preset_cmd");
+  write_command!(preset_rendering_args, [1, 2], "render_preset_cmd");
 
   get_tree_output(&output_dir, "render_preset_tree.txt")?;
 
@@ -60,7 +60,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(from_single_file.clone()).await?;
 
-  write_command!(from_single_file_cmd, 1..5, "from_single_file_cmd");
+  write_command!(from_single_file_cmd, [1, 2], "from_single_file_cmd");
 
   let output: CustomTemplateTest = deserialize_yaml(&output_dir.join("from_single_file.yaml"))?;
 
@@ -80,7 +80,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(from_config_template.clone()).await?;
 
-  write_command!(from_config_template_cmd, 1..5, "from_config_template_cmd");
+  write_command!(from_config_template_cmd, [1, 2], "from_config_template_cmd");
 
   let output: CustomTemplateTest = deserialize_yaml(&output_dir.join("from_config_template.yaml"))?;
 
@@ -102,7 +102,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output("tests/templates", "templates_tree.txt")?;
 
-  write_command!(from_template_file_cmd, 1..5, "from_template_file_cmd");
+  write_command!(from_template_file_cmd, [1, 2], "from_template_file_cmd");
 
   let output: CustomTemplateTest = deserialize_yaml(&output_dir.join("from_template_file.yaml"))?;
 
@@ -124,7 +124,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(with_cli_override).await?;
 
-  write_command!(cli_override_args, 1..5, "cli_override_cmd");
+  write_command!(cli_override_args, [1, 2], "cli_override_cmd");
 
   let config = get_config_from_cli(rendering_cmd).await?;
 
@@ -157,7 +157,7 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/from_literal.txt",
   ];
 
-  write_command!(literal_template_cmd, 1..3, "literal_template_cmd");
+  write_command!(literal_template_cmd, [1, 2], "literal_template_cmd");
 
   let from_literal = Cli::try_parse_from(literal_template_cmd)?;
 

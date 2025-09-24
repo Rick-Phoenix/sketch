@@ -24,13 +24,15 @@ Starting from this config, we can run this command:
 
 >`{{#include ../../../sketch/tests/output/presets/cmd}}`
 
-With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates to generate to the list (which is what we did here).
 
-Tree output:
+
+To get this tree output:
 
 ```
 {{#include ../../../sketch/tests/output/presets/tree_output.txt}}
 ```
+
+>ℹ️ With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates to generate to the list (which is what we did here).
 
 <details>
 <summary>pre-commit-config.yaml output</summary>

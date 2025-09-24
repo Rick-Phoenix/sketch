@@ -4,21 +4,18 @@
 typescript:
   package_presets:
     frontend:
-      # The name of the package. If this is unset, the name of the parent directory will be used.
+      # The name of the package. If this is unset,
+      # the name of the output directory will be used.
       name: "@myproject/frontend"
 
-      # The package.json config for this package. Can be a preset id
+      # The `package.json` config for this package. Can be a preset id
       # or a literal configuration.
       package_json:
         devDependencies:
           tailwindcss: "^4.0.0"
 
-      # The kind of package to generate. Only relevant if you use
-      # default tsconfigs.
-      kind: library
-
       # Generates an oxlint config file in the root.
-      # Can be set to true/false to use defaults or to disable it, or to
+      # Can be set to true to use defaults, or to
       # a literal configuration.
       oxlint: false
 
