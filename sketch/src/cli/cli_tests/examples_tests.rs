@@ -37,7 +37,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples",
   ];
 
-  write_command!(monorepo_cmd, [1, 2, 7], "monorepo_cmd");
+  write_command!(monorepo_cmd, [1, 2, 9], "monorepo_cmd");
 
   let monorepo_setup = Cli::try_parse_from(&monorepo_cmd)?;
 

@@ -24,6 +24,11 @@ Unlike what happens when you merge two `tsconfig` files by using the `extends` f
 {{#include ../../../examples/typescript/presets.yaml:oxlint}}
 ```
 
+## Pnpm-workspace Presets
+```yaml
+{{#include ../../../examples/typescript/root_package.yaml:pnpm}}
+```
+
 ## Package Presets
 
 This is what a fully formed package preset looks like. We are going to use the presets defined above in here.

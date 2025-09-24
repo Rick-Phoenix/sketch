@@ -15,6 +15,7 @@ As of now, these presets are available, with the specified characteristics:
 
 - Typecript
     - Typescript package
+    - `pnpm-workspace.yaml` (extensible)
     - `package.json` (extensible, extra convenience feature for creating a mini-db for contributors)
     - `tsconfig.json` (extensible, with merging of values for the `references`, `include`, `exclude` and `files` fields)
     - `.oxlintrc.json` (extensible)

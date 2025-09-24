@@ -91,6 +91,7 @@ templating_presets:
 typescript:
   no_default_deps: true
 
+  # `pnpm-workspace.yaml` presets
   pnpm_presets:
     base:
       # All the dirs listed here will be created automatically
