@@ -49,7 +49,7 @@ On top of that, Sketch adds some extra filters and functions.
 - `semver` (parses a cargo-style semver and returns the segments)
 - `matches_semver(target=TARGET)` (checks if a cargo-style semver matches a target)
 
-# Example
+# Examples
 
 Template
 

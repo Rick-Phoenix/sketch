@@ -61,17 +61,21 @@ pub struct TypescriptConfig {
   #[arg(value_enum, long, value_name = "NAME")]
   pub package_manager: Option<PackageManager>,
 
+  /// The settings to use in generated pnpm-workspace.yaml files, for new monorepos, if pnpm is selected as a package manager.
+  #[arg(skip)]
+  pub pnpm: Option<PnpmWorkspace>,
+
   /// Does not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub no_default_deps: bool,
 
-  /// The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]
+  /// The kind of version range to use for dependencies that are fetched automatically. [default: minor]
   #[arg(value_enum)]
   #[arg(long, value_name = "KIND")]
   pub version_range: Option<VersionRange>,
 
-  /// Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to `pnpm-workspace.yaml`.
+  /// Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.
   #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
   pub catalog: bool,
@@ -81,22 +85,22 @@ pub struct TypescriptConfig {
   #[arg(long = "no-convert-latest")]
   pub no_convert_latest_to_range: bool,
 
-  /// A map of individual [`PersonData`] that can be referenced in [`PackageJson::contributors`] or [`PackageJson::maintainers`].
+  /// A map of individual [`PersonData`] that can be referenced as authors, contributors or maintainers in a [`PackageJsonPreset`].
   #[arg(skip)]
   #[merge(strategy = merge_index_maps)]
   pub people: IndexMap<String, PersonData>,
 
-  /// A map containing [`PackageJson`] presets.
+  /// A map containing [`PackageJsonPreset`]s.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub package_json_presets: IndexMap<String, PackageJsonPreset>,
 
-  /// A map containing [`TsConfig`] presets.
+  /// A map containing [`TsConfigPreset`]s.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub ts_config_presets: IndexMap<String, TsConfigPreset>,
 
-  /// A map containing `oxlint` config presets.
+  /// A map containing [`OxlintPreset`]s.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub oxlint_presets: IndexMap<String, OxlintPreset>,
@@ -105,10 +109,6 @@ pub struct TypescriptConfig {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub package_presets: IndexMap<String, PackageConfig>,
-
-  /// The settings to use in the generated pnpm-workspace.yaml file, if pnpm is selected as a package manager.
-  #[arg(skip)]
-  pub pnpm: Option<PnpmWorkspace>,
 }
 
 #[derive(

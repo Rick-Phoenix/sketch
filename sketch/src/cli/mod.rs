@@ -27,6 +27,10 @@ use crate::{
   Config, *,
 };
 
+pub async fn main_entrypoint() -> Result<(), GenError> {
+  execute_cli(Cli::parse()).await
+}
+
 fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
   if let Some(cli_arg) = cli_arg {
     Some(cli_arg)
@@ -116,10 +120,6 @@ async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
   };
 
   Ok(config)
-}
-
-pub async fn main_entrypoint() -> Result<(), GenError> {
-  execute_cli(Cli::parse()).await
 }
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
@@ -334,7 +334,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 #[command(name = "sketch")]
 #[command(version, about, long_about = None)]
 pub struct Cli {
-  /// Sets a custom config file. Any file names `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
+  /// Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
   #[arg(short, long, value_name = "FILE", group = "config-file")]
   pub config: Option<PathBuf>,
 
@@ -356,7 +356,7 @@ pub struct Cli {
   #[arg(long)]
   pub dry_run: bool,
 
-  /// Set a variable (as key=value) to use in templates. Overrides global and local variables.
+  /// Sets a variable (as key=value) to use in templates. Overrides global and local variables.
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
   pub templates_vars: Option<Vec<(String, Value)>>,
 }
@@ -387,7 +387,7 @@ pub struct RepoConfigInput {
   #[arg(long)]
   gitignore: Option<String>,
 
-  /// One of many templates to render in the new repo's root. If a git preset with its own list of templates is being used, the lists are merged.
+  /// One or many templates to render in the new repo's root. If a preset is being used, the list is extended and not replaced.
   #[arg(short = 't', long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
   with_templates: Option<Vec<TemplateOutput>>,
 }
@@ -414,7 +414,7 @@ pub enum Commands {
     command: TsCommands,
   },
 
-  /// Creates a new git repo with a generated gitignore file and, optionally, it sets up the git remote and the pre-commit config.
+  /// Creates a new git repo.
   Repo {
     /// Selects a git preset from a configuration file.
     #[arg(short, long)]
@@ -423,14 +423,14 @@ pub enum Commands {
     #[command(flatten)]
     input: RepoConfigInput,
 
-    /// The link to the git remote to use.
+    /// The link of the git remote to use for the new repo.
     #[arg(long)]
     remote: Option<String>,
   },
 
-  /// Generates a new config file with some optional initial values defined via cli flags.
+  /// Generates a new config file.
   New {
-    /// The output file. Must be an absolute path or a path relative from the cwd [default: sketch.yaml]
+    /// The output file. Must be an absolute path or a path relative to the cwd [default: sketch.yaml]
     output: Option<PathBuf>,
   },
 
@@ -443,7 +443,7 @@ pub enum Commands {
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id of the template to use (a name for config-defined templates, or a relative path for a file inside `templates_dir`)
+    /// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
     #[arg(short, long, group = "input")]
     id: Option<String>,
 
@@ -452,7 +452,7 @@ pub enum Commands {
     content: Option<String>,
   },
 
-  /// Renders a templating preset defined in the configuration file
+  /// Renders a templating preset defined in a configuration file
   RenderPreset {
     /// The id of the preset.
     id: String,
@@ -464,7 +464,7 @@ pub enum Commands {
     #[arg(group = "input")]
     cmd: Option<String>,
 
-    /// The cwd for the command to execute. [default: `.`]
+    /// The cwd for the command to execute [default: `.`]
     #[arg(long)]
     cwd: Option<PathBuf>,
 
@@ -472,7 +472,7 @@ pub enum Commands {
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id of the template to use (a name for config-defined templates, or a relative path to a file inside `templates_dir`)
+    /// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
   },

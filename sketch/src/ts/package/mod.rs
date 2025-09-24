@@ -26,7 +26,7 @@ use crate::{
   Config, GenError, Preset,
 };
 
-/// The kind of ts package.
+/// The kind of ts package. Only relevant when using defaults.
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum PackageKind {
@@ -40,11 +40,8 @@ pub enum PackageKind {
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {
-  /// The new package's directory, starting from the [`Config::out_dir`]. Defaults to the name of the package.
-  #[arg(
-    value_name = "DIR",
-    help = "The new package's directory, starting from the `out_dir`. Defaults to the name of the package"
-  )]
+  /// The new package's root directory, starting from the `--out-dir`. Defaults to the name of the package.
+  #[arg(value_name = "DIR")]
   pub dir: Option<PathBuf>,
 
   /// The name of the new package. If `dir` is set, it defaults to the last segment of it.
@@ -54,12 +51,13 @@ pub struct PackageConfig {
   /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations. If unset, defaults are used.
   #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
   #[arg(
-    help = "One or many tsconfig files for this package. If unset, defaults are used",
+    help = "One or many tsconfig presets (with their output path) to use for this package. If unset, defaults are used",
     value_name = "id=ID,output=PATH"
   )]
+  #[merge(strategy = merge_optional_vecs)]
   pub ts_config: Option<Vec<TsConfigDirective>>,
 
-  /// The [`PackageJsonKind`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
+  /// The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
   #[arg(long, value_parser = PackageJsonData::from_cli)]
   #[arg(
     help = "The id of the package.json preset to use for this package",
@@ -73,16 +71,16 @@ pub struct PackageConfig {
   #[merge(strategy = merge_optional_vecs)]
   pub with_templates: Option<Vec<TemplateOutput>>,
 
-  /// The kind of package [default: 'library'].
+  /// The kind of package. Only relevant when using defaults [default: 'library'].
   #[arg(skip)]
   pub kind: Option<PackageKind>,
 
-  /// The configuration for this package's vitest setup. It can be set to true/false (to use defaults or to disable it), or as a customized configuration.
+  /// The configuration for this package's vitest setup. It can be set to `false` to be disabled, or to a literal configuration.
   #[arg(skip)]
   #[merge(strategy = merge_if_not_default)]
   pub vitest: VitestConfigKind,
 
-  /// The configuration for this package's oxlint setup. It can be set to true/false (to use defaults or to disable it), or to a literal configuration.
+  /// The configuration for this package's oxlint setup. It can be set to `true` to use a basic default config, to a preset id, or to a literal configuration.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfigSetting>,
 }

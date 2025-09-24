@@ -101,13 +101,12 @@ pub(crate) async fn handle_ts_commands(
         root_package.merge(overrides);
       }
 
-      if oxlint
-        && root_package
-          .oxlint
-          .as_ref()
-          .is_none_or(|ox| !ox.is_enabled())
-      {
-        root_package.oxlint = Some(OxlintConfigSetting::Bool(true));
+      if let Some(id) = oxlint {
+        root_package.oxlint = if id == "default" {
+          Some(OxlintConfigSetting::Bool(true))
+        } else {
+          Some(OxlintConfigSetting::Id(id))
+        };
       }
 
       let package_manager = typescript.package_manager.get_or_insert_default().clone();
@@ -157,8 +156,12 @@ pub(crate) async fn handle_ts_commands(
         package.vitest = VitestConfigKind::Bool(false);
       }
 
-      if oxlint && package.oxlint.is_none() {
-        package.oxlint = Some(OxlintConfigSetting::Bool(true));
+      if let Some(id) = oxlint {
+        package.oxlint = if id == "default" {
+          Some(OxlintConfigSetting::Bool(true))
+        } else {
+          Some(OxlintConfigSetting::Id(id))
+        };
       }
 
       if config.debug {
@@ -196,7 +199,7 @@ pub(crate) async fn handle_ts_commands(
 pub enum TsCommands {
   /// Generates a `package.json` file from a preset.
   PackageJson {
-    /// The output path of the created file [default: `package.json`]
+    /// The output path of the generated file [default: `package.json`]
     output: Option<PathBuf>,
 
     /// The preset id
@@ -206,7 +209,7 @@ pub enum TsCommands {
 
   /// Generates a `tsconfig.json` file from a preset.
   TsConfig {
-    /// The output path of the created file [default: `tsconfig.json`]
+    /// The output path of the generated file [default: `tsconfig.json`]
     output: Option<PathBuf>,
 
     /// The preset id
@@ -216,7 +219,7 @@ pub enum TsCommands {
 
   /// Generates a `.oxlintrc.json` file from a preset.
   OxlintConfig {
-    /// The output path of the created file [default: `.oxlintrc.json`]
+    /// The output path of the generated file [default: `.oxlintrc.json`]
     output: Option<PathBuf>,
 
     /// The preset id
@@ -226,16 +229,16 @@ pub enum TsCommands {
 
   /// Generates a new typescript monorepo
   Monorepo {
-    /// The id of the package preset to use for the root package.
+    /// The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags.
     #[arg(short, long, value_name = "ID")]
     root_package: Option<String>,
 
     #[command(flatten)]
     root_package_overrides: Option<PackageConfig>,
 
-    /// Generate a basic oxlint config at the root.
-    #[arg(long)]
-    oxlint: bool,
+    /// The oxlint preset to use. It can be set to `default` to use the default preset.
+    #[arg(long, value_name = "ID")]
+    oxlint: Option<String>,
 
     /// Installs the dependencies at the root after creation.
     #[arg(short, long)]
@@ -245,7 +248,7 @@ pub enum TsCommands {
   /// Generates a new typescript package
   Package {
     /// The package preset to use
-    #[arg(short, long)]
+    #[arg(short, long, value_name = "ID")]
     preset: Option<String>,
 
     /// Whether the tsconfig file at the workspace root
@@ -257,9 +260,9 @@ pub enum TsCommands {
     #[arg(long)]
     no_vitest: bool,
 
-    /// If an oxlint config is not defined or enabled, this will generate one with the default values.
-    #[arg(long)]
-    oxlint: bool,
+    /// The oxlint preset to use. It can be set to `default` to use the default preset.
+    #[arg(long, value_name = "ID")]
+    oxlint: Option<String>,
 
     /// Installs the dependencies with the chosen package manager
     #[arg(short, long)]
