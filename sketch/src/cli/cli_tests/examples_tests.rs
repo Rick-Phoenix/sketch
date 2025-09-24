@@ -25,12 +25,13 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let monorepo_cmd = [
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("root_package.yaml")),
     "ts",
     "monorepo",
+    "-p",
+    "root",
+    "tests/output/ts_examples",
   ];
 
   write_command!(monorepo_cmd, 1..5, "monorepo_cmd");
@@ -43,14 +44,13 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let people_cmd = [
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("people.yaml")),
     "ts",
     "package",
     "--preset",
     "people-example",
+    "tests/output/ts_examples/packages/people-example",
   ];
 
   write_command!(people_cmd, 1..5, "people_cmd");
@@ -61,14 +61,13 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let catalog_cmd = [
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("catalog.yaml")),
     "ts",
     "package",
     "--preset",
     "with_catalog",
+    "tests/output/ts_examples/packages/with-catalog",
   ];
 
   write_command!(catalog_cmd, 1..5, "catalog_cmd");
@@ -79,14 +78,13 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_gen_cmd = [
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("new_package.yaml")),
     "ts",
     "package",
     "--preset",
     "frontend",
+    "tests/output/ts_examples/packages/frontend",
   ];
 
   write_command!(package_gen_cmd, 1..5, "package_gen_cmd");
@@ -149,7 +147,7 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("Second segment is: world"));
   assert!(output_str.contains("Basename is: myfile"));
   assert!(output_str.contains("Parent dir is: mydir"));
-  assert!(output_str.contains("Path is: sketch"));
+  assert!(output_str.contains("Path is: Cargo"));
   assert!(output_str.contains("Extension is: toml"));
   assert!(output_str.contains("They're taking the hobbits to Isengard!"));
   assert!(output_str.contains("Major is: 0"));

@@ -38,7 +38,7 @@ However, we can also render content from any file, by using the `-f` flag. In th
 
 # Rendering Presets
 
-Templates can also be defined in groups, which can be rendered all at once starting from the same `--out-dir`.
+Templates can also be defined in groups, which can be rendered all at once.
 
 This is how groups are defined:
 
@@ -50,7 +50,7 @@ When we run the command
 
 >`{{#include ../../../sketch/tests/output/custom_templates/commands/render_preset_cmd}}`
 
-These templates will be rendered together, so that the output of the specified `--out-dir` will look like this:
+These templates will be rendered together, so that the output of the specified `OUT_DIR` (cwd, if omitted) will look like this:
 
 ```
 {{#include ../../../sketch/tests/output/custom_templates/render_preset_tree.txt}}

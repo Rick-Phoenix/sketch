@@ -8,11 +8,6 @@ This is an example of a package-related configuration:
 {{#include ../../../examples/typescript/new_package.yaml:all}}
 ```
 
-<div class="warning">
-
-When generating a package, `--out-dir` is assumed to be the root of the monorepo, whereas `dir` is assumed to be the root of the new package. This is relevant when triggering actions that make changes in the root of the monorepo (such as updating `pnpm-workspace.yaml` or the root `tsconfig.json`).
-</div>
-
 After setting things up, you can run
 
 >`{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}`

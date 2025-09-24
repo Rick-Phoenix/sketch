@@ -31,8 +31,6 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   let git_preset_args = [
     "sketch",
-    "--out-dir",
-    &out_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "repo",
@@ -40,6 +38,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     "ts_package",
     "--with-template",
     "id=compose_file,output=compose.yaml",
+    &out_dir.to_string_lossy(),
   ];
   let git_presets_cmd = Cli::try_parse_from(git_preset_args)?;
 
@@ -106,12 +105,9 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   assert_eq!(root_compose_file, expected_compose_file);
 
   let package_out_dir = out_dir.join("packages/presets_example");
-  reset_testing_dir(&package_out_dir);
 
   let oxlint_test = Cli::try_parse_from([
     "sketch",
-    "--out-dir",
-    &out_dir.to_string_lossy(),
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "ts",
@@ -120,6 +116,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     "id=dockerfile,output=Dockerfile",
     "--preset",
     "example",
+    &package_out_dir.to_string_lossy(),
   ])?;
 
   execute_cli(oxlint_test).await?;

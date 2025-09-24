@@ -4,8 +4,7 @@
 typescript:
   package_presets:
     frontend:
-      # The name of the package. If this is unset and `dir` is set,
-      # it will use the last segment from it.
+      # The name of the package. If this is unset, the name of the parent directory will be used.
       name: "@myproject/frontend"
 
       # The package.json config for this package. Can be a preset id
@@ -13,9 +12,6 @@ typescript:
       package_json:
         devDependencies:
           tailwindcss: "^4.0.0"
-
-      # The directory for this package, starting from the `--out-dir`
-      dir: packages/frontend
 
       # The kind of package to generate. Only relevant if you use
       # default tsconfigs.

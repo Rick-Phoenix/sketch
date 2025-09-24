@@ -5,7 +5,7 @@ use merge::Merge;
 
 use crate::{
   exec::launch_command,
-  fs::{create_parent_dirs, get_cwd, serialize_json},
+  fs::{create_parent_dirs, serialize_json},
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},
@@ -79,7 +79,7 @@ pub(crate) async fn handle_ts_commands(
       root_package_overrides,
       root_package,
       oxlint,
-      ..
+      dir,
     } => {
       let mut root_package = if let Some(id) = root_package {
         typescript
@@ -111,14 +111,15 @@ pub(crate) async fn handle_ts_commands(
       }
 
       let package_manager = typescript.package_manager.get_or_insert_default().clone();
+      let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
-      config.create_ts_monorepo(root_package, &get_cwd()).await?;
+      config.create_ts_monorepo(root_package, &out_dir).await?;
 
       if install {
         launch_command(
           package_manager.to_string().as_str(),
           &["install"],
-          &get_cwd(),
+          &out_dir,
           Some("Could not install dependencies"),
         )?;
       }
@@ -227,6 +228,9 @@ pub enum TsCommands {
 
   /// Generates a new typescript monorepo
   Monorepo {
+    /// The root directory for the new package. [default: `ts_root`].
+    dir: Option<PathBuf>,
+
     /// The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags.
     #[arg(short, long, value_name = "ID")]
     root_package: Option<String>,
@@ -248,7 +252,7 @@ pub enum TsCommands {
     /// The root directory for the new package. Defaults to the package name, if that is set.
     dir: Option<PathBuf>,
 
-    /// The package preset to use
+    /// The package preset to use. If unset, the default preset is used, along with the values set via cli flags
     #[arg(short, long, value_name = "ID")]
     preset: Option<String>,
 

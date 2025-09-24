@@ -1,8 +1,8 @@
 use std::{fmt::Display, str::FromStr};
 
-use clap::{Args, ValueEnum};
+use clap::ValueEnum;
 
-use crate::{ts::package::PackageKind, GenError};
+use crate::GenError;
 
 #[derive(Clone, Debug, ValueEnum, Default)]
 pub enum ConfigFormat {

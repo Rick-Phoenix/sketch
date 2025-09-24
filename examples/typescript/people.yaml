@@ -32,7 +32,6 @@ typescript:
 
   package_presets:
     people-example:
-      dir: packages/people-example
       package_json: people-example
 # ANCHOR: all
 

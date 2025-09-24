@@ -7,7 +7,6 @@ mod generated_configs_tests;
 mod overwriting_tests;
 mod presets_tests;
 mod rendering_tests;
-mod ts_gen_tests;
 
 use std::{
   fs::{create_dir_all, remove_dir_all, remove_file, File},

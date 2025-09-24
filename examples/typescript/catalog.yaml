@@ -9,7 +9,6 @@ typescript:
   package_presets:
     with_catalog:
       name: with_catalog
-      dir: packages/with_catalog
       package_json:
         devDependencies:
           # Named catalog

@@ -33,10 +33,9 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.yaml",
-    "--out-dir",
-    "tests/output/custom_templates",
     "render-preset",
     "test",
+    "tests/output/custom_templates",
   ];
 
   let rendering_cmd = Cli::try_parse_from(preset_rendering_args)?;
@@ -51,12 +50,10 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.yaml",
-    "--out-dir",
-    "tests/output/custom_templates",
     "render",
     "-f",
     "tests/custom_templates/single_file.j2",
-    "from_single_file.yaml",
+    "tests/output/custom_templates/from_single_file.yaml",
   ];
 
   let from_single_file = Cli::try_parse_from(from_single_file_cmd)?;
@@ -73,12 +70,10 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.yaml",
-    "--out-dir",
-    "tests/output/custom_templates",
     "render",
     "--id",
     "lit_template",
-    "from_config_template.yaml",
+    "tests/output/custom_templates/from_config_template.yaml",
   ];
 
   let from_config_template = Cli::try_parse_from(from_config_template_cmd)?;
@@ -95,12 +90,10 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.yaml",
-    "--out-dir",
-    "tests/output/custom_templates",
     "render",
     "--id",
     "subdir/nested.j2",
-    "from_template_file.yaml",
+    "tests/output/custom_templates/from_template_file.yaml",
   ];
 
   let from_template_file = Cli::try_parse_from(from_template_file_cmd)?;
@@ -119,14 +112,12 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
     "sketch",
     "-c",
     "tests/custom_templates/custom_templates.yaml",
-    "--out-dir",
-    "tests/output/custom_templates",
     "--set",
     "my_var=25",
     "render",
     "--id",
     "lit_template",
-    "with_cli_override.yaml",
+    "tests/output/custom_templates/with_cli_override.yaml",
   ];
 
   let with_cli_override = Cli::try_parse_from(cli_override_args)?;
@@ -158,14 +149,12 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let literal_template_cmd = [
     "sketch",
-    "--out-dir",
-    "tests/output/custom_templates",
     "--set",
     "location=\"Isengard\"",
     "render",
     "--content",
     "they're taking the hobbits to {{ location }}!",
-    "from_literal.txt",
+    "tests/output/custom_templates/from_literal.txt",
   ];
 
   write_command!(literal_template_cmd, 1..3, "literal_template_cmd");

@@ -371,7 +371,6 @@ pub enum Commands {
     id: String,
 
     /// The base path to join to relative output paths. [default: `.`]
-    #[arg(short, long)]
     out_dir: Option<PathBuf>,
   },
 

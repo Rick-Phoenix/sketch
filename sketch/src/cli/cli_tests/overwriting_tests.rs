@@ -11,29 +11,28 @@ async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
 
   reset_testing_dir(&output_dir);
 
+  let output_file = output_dir.join("overwrite_test.txt");
+
   let first_write = Cli::try_parse_from([
     "sketch",
-    "--out-dir",
-    &output_dir.to_string_lossy(),
     "render",
     "--content",
     "they're taking the hobbits to Isengard!",
-    "overwrite_test.txt",
+    &output_file.to_string_lossy(),
   ])?;
 
   execute_cli(first_write).await?;
 
   let mut cmd = get_bin!();
 
+  // Ensuring the second write fails
   cmd
     .args([
       "--no-overwrite",
-      "--out-dir",
-      &output_dir.to_string_lossy(),
       "render",
       "--content",
       "they're taking the hobbits to Isengard!",
-      "overwrite_test.txt",
+      &output_file.to_string_lossy(),
     ])
     .assert()
     .failure();

@@ -78,7 +78,8 @@ git_presets:
 templating_presets:
   # All the files in this group will be generated together
   docker:
-    # Relative paths are joined with the `--out-dir`
+    # Relative paths are joined with the output
+    # directory specified via command, (or, by default, to the cwd)
     - output: Dockerfile
       template: dockerfile
       # Optional local context variables
@@ -164,7 +165,6 @@ typescript:
   package_presets:
     example:
       name: example
-      dir: packages/presets_example
 
       # For every preset, we can either refer to them
       # by their id...

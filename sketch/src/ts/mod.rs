@@ -115,16 +115,13 @@ pub struct TypescriptConfig {
   pub package_presets: IndexMap<String, PackageConfig>,
 }
 
-pub(crate) fn find_monorepo_root(
-  start_dir: &Path,
-  package_manager: PackageManager,
-) -> Option<PathBuf> {
-  let root_marker = package_manager.root_marker();
-
-  find_file_up(start_dir, root_marker).map(|file| get_parent_dir(&file).to_path_buf())
-}
-
 impl PackageManager {
+  pub fn find_root(&self, start_dir: &Path) -> Option<PathBuf> {
+    let root_marker = self.root_marker();
+
+    find_file_up(start_dir, root_marker).map(|file| get_parent_dir(&file).to_path_buf())
+  }
+
   pub fn root_marker(&self) -> &str {
     match self {
       PackageManager::Pnpm => "pnpm-workspace.yaml",

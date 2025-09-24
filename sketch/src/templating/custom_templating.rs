@@ -39,7 +39,6 @@ impl TemplateData {
 }
 
 /// The data for outputting a new template.
-/// Relative output paths will resolve from the [`Config::out_dir`].
 /// The context specified here will override the global context (but not the variables set via cli).
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 pub struct TemplateOutput {
