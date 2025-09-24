@@ -44,6 +44,7 @@ pub enum Preset {
   Repo,
   Gitignore,
   PnpmWorkspace,
+  Vitest,
 }
 
 pub(crate) fn log_debug<T: Debug>(name: &str, item: &T) {

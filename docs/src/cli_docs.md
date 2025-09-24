@@ -7,6 +7,7 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch`↴](#sketch)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
 * [`sketch ts`↴](#sketch-ts)
+* [`sketch ts pnpm-workspace`↴](#sketch-ts-pnpm-workspace)
 * [`sketch ts package-json`↴](#sketch-ts-package-json)
 * [`sketch ts ts-config`↴](#sketch-ts-ts-config)
 * [`sketch ts oxlint`↴](#sketch-ts-oxlint)
@@ -67,6 +68,7 @@ Executes typescript-specific commands
 
 ###### **Subcommands:**
 
+* `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
 * `package-json` — Generates a `package.json` file from a preset
 * `ts-config` — Generates a `tsconfig.json` file from a preset
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
@@ -86,6 +88,19 @@ Executes typescript-specific commands
 
 * `--catalog` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
 * `--no-convert-latest` — Do not convert dependencies marked as `latest` to a version range
+
+
+
+## `sketch ts pnpm-workspace`
+
+Generates a `pnpm-workspace.yaml` file from a preset
+
+**Usage:** `sketch ts pnpm-workspace <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `pnpm-workspace.yaml`]
 
 
 
@@ -165,7 +180,7 @@ Generates a new typescript package
 
 * `-p`, `--preset <ID>` — The package preset to use. If unset, the default preset is used, along with the values set via cli flags
 * `-u`, `--update-tsconfig <UPDATE_TSCONFIG>` — An optional list of tsconfig files where the new tsconfig file will be added as a reference
-* `--no-vitest` — Do not set up vitest for this package
+* `--vitest <ID>` — The vitest preset to use. It can be set to `default` to use the default preset
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory

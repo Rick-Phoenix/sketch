@@ -173,10 +173,18 @@
           "default": {}
         },
         "pnpm_presets": {
-          "description": "A map of presets for [`PnpmWorkspace`] configurations.",
+          "description": "A map of presets for `pnpm-workspace.yaml` configurations.",
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/PnpmPreset"
+          },
+          "default": {}
+        },
+        "vitest_presets": {
+          "description": "A map of presets for vitest setups.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/VitestConfig"
           },
           "default": {}
         }
@@ -4257,8 +4265,15 @@
         },
         "vitest": {
           "description": "The configuration for this package's vitest setup. It can be set to `false` to be disabled, or to a literal configuration.",
-          "$ref": "#/$defs/VitestConfigKind",
-          "default": true
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VitestConfigKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "oxlint": {
           "description": "The configuration for this package's oxlint setup. It can be set to `true` to use a basic default config, to a preset id, or to a literal configuration.",
@@ -4367,6 +4382,9 @@
       "anyOf": [
         {
           "type": "boolean"
+        },
+        {
+          "type": "string"
         },
         {
           "$ref": "#/$defs/VitestConfig"

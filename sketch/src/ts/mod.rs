@@ -26,6 +26,7 @@ use crate::{
     package_json::{PackageJsonPreset, Person, PersonData},
     pnpm::PnpmPreset,
     ts_config::TsConfigPreset,
+    vitest::VitestConfig,
   },
   versions::VersionRange,
 };
@@ -42,6 +43,7 @@ impl TypescriptConfig {
 impl Default for TypescriptConfig {
   fn default() -> Self {
     Self {
+      vitest_presets: Default::default(),
       pnpm_presets: Default::default(),
       no_default_deps: false,
       no_convert_latest_to_range: false,
@@ -110,10 +112,15 @@ pub struct TypescriptConfig {
   #[arg(skip)]
   pub package_presets: IndexMap<String, PackageConfig>,
 
-  /// A map of presets for [`PnpmWorkspace`] configurations.
+  /// A map of presets for `pnpm-workspace.yaml` configurations.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub pnpm_presets: IndexMap<String, PnpmPreset>,
+
+  /// A map of presets for vitest setups.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub vitest_presets: IndexMap<String, VitestConfig>,
 }
 
 impl PackageManager {

@@ -14,6 +14,7 @@ use serde::{Deserialize, Serialize};
 #[serde(untagged)]
 pub enum VitestConfigKind {
   Bool(bool),
+  Id(String),
   Config(VitestConfig),
 }
 

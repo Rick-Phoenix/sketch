@@ -20,7 +20,8 @@ typescript:
       oxlint: false
 
       # Create a vitest setup.
-      # Can be set to true to use defaults (which are as below).
+      # Can be set to true to use defaults (which are as below),
+      # to a preset id, or to a literal configuration.
       vitest:
         # Where the config file should be generated, starting from
         # the root of the package.

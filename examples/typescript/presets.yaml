@@ -209,4 +209,3 @@ typescript:
       # ANCHOR_END: ts_templates
 
       # ANCHOR_END: all
-      vitest: false

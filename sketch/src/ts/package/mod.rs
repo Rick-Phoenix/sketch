@@ -69,7 +69,7 @@ pub struct PackageConfig {
   /// The configuration for this package's vitest setup. It can be set to `false` to be disabled, or to a literal configuration.
   #[arg(skip)]
   #[merge(strategy = merge_if_not_default)]
-  pub vitest: VitestConfigKind,
+  pub vitest: Option<VitestConfigKind>,
 
   /// The configuration for this package's oxlint setup. It can be set to `true` to use a basic default config, to a preset id, or to a literal configuration.
   #[arg(skip)]
@@ -168,7 +168,7 @@ impl Config {
     if !typescript.no_default_deps {
       let mut default_deps = vec!["typescript", "oxlint"];
 
-      if config.vitest.is_enabled() {
+      if let Some(ref vitest) = config.vitest && vitest.is_enabled() {
         default_deps.push("vitest")
       }
 
@@ -278,12 +278,13 @@ impl Config {
 
     let _index_file = open_file_if_overwriting(overwrite, &src_dir.join("index.ts"))?;
 
-    let vitest_config = match config.vitest {
-      VitestConfigKind::Bool(v) => v.then(VitestConfig::default),
-      VitestConfigKind::Config(vitest_config_struct) => Some(vitest_config_struct),
-    };
+    if let Some(vitest_config) = config.vitest && vitest_config.is_enabled() {
+      let mut vitest = match vitest_config {
+        VitestConfigKind::Bool(_) => VitestConfig::default(),
+        VitestConfigKind::Id(id) => typescript.vitest_presets.get(&id).ok_or(GenError::PresetNotFound { kind: Preset::Vitest, name: id.clone() })?.clone(),
+        VitestConfigKind::Config(vitest_config_struct) => vitest_config_struct,
+      };
 
-    if let Some(mut vitest) = vitest_config {
       let tests_dir = pkg_root.join(&vitest.tests_dir);
       let tests_setup_dir = tests_dir.join(&vitest.setup_dir);
 

@@ -125,7 +125,6 @@ pub(crate) async fn handle_ts_commands(
       } else {
         let mut package = PackageConfig::default();
         package.oxlint = Some(OxlintConfigSetting::Bool(true));
-        package.vitest = VitestConfigKind::Bool(false);
         package.name = Some("root".to_string());
         package
       };
@@ -186,10 +185,10 @@ pub(crate) async fn handle_ts_commands(
       preset,
       package_config,
       install,
-      no_vitest,
       oxlint,
       update_tsconfig,
       dir,
+      vitest,
     } => {
       let mut package = if let Some(preset) = preset {
         typescript
@@ -208,8 +207,8 @@ pub(crate) async fn handle_ts_commands(
         package.merge(overrides);
       }
 
-      if no_vitest {
-        package.vitest = VitestConfigKind::Bool(false);
+      if let Some(vitest) = vitest {
+        package.vitest = Some(VitestConfigKind::Id(vitest))
       }
 
       if let Some(id) = oxlint {
@@ -325,9 +324,9 @@ pub enum TsCommands {
     #[arg(short, long)]
     update_tsconfig: Option<Vec<PathBuf>>,
 
-    /// Do not set up vitest for this package
-    #[arg(long)]
-    no_vitest: bool,
+    /// The vitest preset to use. It can be set to `default` to use the default preset.
+    #[arg(long, value_name = "ID")]
+    vitest: Option<String>,
 
     /// The oxlint preset to use. It can be set to `default` to use the default preset.
     #[arg(long, value_name = "ID")]
