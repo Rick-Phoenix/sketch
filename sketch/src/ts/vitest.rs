@@ -1,7 +1,6 @@
-use std::path::PathBuf;
+use std::{fmt::Display, path::PathBuf};
 
 use askama::Template;
-use convert_case::{Case, Casing};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -42,11 +41,21 @@ pub struct VitestConfig {
   /// If unset, the `tests_dir` will be used.
   pub out_dir: Option<PathBuf>,
 
-  /// A list of plugins, which will be set up in the config file.
-  pub plugins: Vec<String>,
-
   /// The path to the setup directory, starting from the `tests_dir`. [default: 'setup']
   pub setup_dir: String,
+
+  /// A list of setup files. The paths will be joined to the `setup_dir`.
+  pub setup_files: Vec<String>,
+
+  /// The environment that will be used for testing. See more: https://vitest.dev/config/#environment
+  pub environment: Environment,
+
+  /// By default, vitest does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the --globals option to CLI or add globals: true in the config. See more: https://vitest.dev/config/#globals
+  pub globals: bool,
+
+  /// Silent console output from tests.
+  /// Use 'passed-only' to see logs from failing tests only. Logs from failing tests are printed after a test has finished.
+  pub silent: Silent,
 
   #[serde(skip)]
   pub(crate) src_rel_path: String,
@@ -61,13 +70,52 @@ impl Default for VitestConfig {
     Self {
       out_dir: None,
       tests_dir: "tests".to_string(),
-      plugins: vec![],
       setup_dir: "setup".to_string(),
       src_rel_path: "../src".to_string(),
+      environment: Environment::Node,
+      globals: true,
+      setup_files: Default::default(),
+      silent: Silent::PassedOnly,
     }
   }
 }
 
-fn to_camel_case(string: &str) -> String {
-  string.to_case(Case::Camel)
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+pub enum Silent {
+  #[serde(rename = "passed-only")]
+  PassedOnly,
+  #[serde(untagged)]
+  Bool(bool),
+}
+
+impl Display for Silent {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Silent::PassedOnly => write!(f, "\"passed-only\""),
+      Silent::Bool(val) => write!(f, "{:?}", val),
+    }
+  }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum Environment {
+  Node,
+  Jsdom,
+  HappyDom,
+  EdgeRuntime,
+  #[serde(untagged)]
+  Other(String),
+}
+
+impl Display for Environment {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Environment::Node => write!(f, "node"),
+      Environment::Jsdom => write!(f, "jsdom"),
+      Environment::HappyDom => write!(f, "happy-dom"),
+      Environment::EdgeRuntime => write!(f, "edge-runtime"),
+      Environment::Other(val) => write!(f, "{val}"),
+    }
+  }
 }

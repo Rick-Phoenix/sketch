@@ -19,7 +19,7 @@ As of now, these presets are available, with the specified characteristics:
     - `package.json` (extensible, extra convenience feature for creating a mini-db for contributors)
     - `tsconfig.json` (extensible, with merging of values for the `references`, `include`, `exclude` and `files` fields)
     - `.oxlintrc.json` (extensible)
-    - `vitest` (not a full configuration for `vitest.config.ts`, but a general testing setup)
+    - `vitest` (not a full configuration for `vitest.config.ts`, but a basic testing setup)
 
 # Extending Presets
 

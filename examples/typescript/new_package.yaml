@@ -35,8 +35,6 @@ typescript:
         # (starting from tests_dir)
         setup_dir: setup
 
-        # A list of plugins that will be set up in the config file
-        plugins: []
       # ANCHOR_END: all
 
       # Using the default tsconfigs, which are:

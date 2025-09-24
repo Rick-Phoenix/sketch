@@ -4408,20 +4408,64 @@
           ],
           "default": null
         },
-        "plugins": {
-          "description": "A list of plugins, which will be set up in the config file.",
+        "setup_dir": {
+          "description": "The path to the setup directory, starting from the `tests_dir`. [default: 'setup']",
+          "type": "string",
+          "default": "setup"
+        },
+        "setup_files": {
+          "description": "A list of setup files. The paths will be joined to the `setup_dir`.",
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": []
         },
-        "setup_dir": {
-          "description": "The path to the setup directory, starting from the `tests_dir`. [default: 'setup']",
-          "type": "string",
-          "default": "setup"
+        "environment": {
+          "description": "The environment that will be used for testing. See more: https://vitest.dev/config/#environment",
+          "$ref": "#/$defs/Environment",
+          "default": "node"
+        },
+        "globals": {
+          "description": "By default, vitest does not provide global APIs for explicitness. If you prefer to use the APIs globally like Jest, you can pass the --globals option to CLI or add globals: true in the config. See more: https://vitest.dev/config/#globals",
+          "type": "boolean",
+          "default": true
+        },
+        "silent": {
+          "description": "Silent console output from tests.\nUse 'passed-only' to see logs from failing tests only. Logs from failing tests are printed after a test has finished.",
+          "$ref": "#/$defs/Silent",
+          "default": "passed-only"
         }
       }
+    },
+    "Environment": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "node",
+            "jsdom",
+            "happy-dom",
+            "edge-runtime"
+          ]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Silent": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "passed-only"
+          ]
+        },
+        {
+          "type": "boolean"
+        }
+      ]
     },
     "OxlintConfigSetting": {
       "description": "Settings for generating an `oxlint` configuration file.\nIt can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.",

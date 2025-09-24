@@ -187,8 +187,13 @@ typescript:
       # (starting from tests_dir)
       setup_dir: setup
 
-      # A list of plugins that will be set up in the config file
-      plugins: []
+      # A list of setup files (the paths will be joined to the `setup_dir`)
+      setup_files:
+        - somefile.ts
+        - anotherfile.ts
+      environment: jsdom
+      silent: passed-only
+
   # ANCHOR_END: vitest
 
   # Package presets

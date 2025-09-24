@@ -1,6 +1,4 @@
-{% for plugin in plugins %}
-import {{ self::to_camel_case(plugin) }} from "{{ plugin }}";
-{% endfor %}
+{% import "utils.j2" as utils %}
 import { defineConfig } from "vitest/config";
 import { resolve, join } from "node:path";
 
@@ -11,11 +9,7 @@ const dir = import.meta.dirname;
 const setupDir = r(dir, "{{ setup_dir }}");
 
 export default defineConfig({
-  plugins: [
-    {% for plugin in plugins %}
-    {{ self::to_camel_case(plugin) }}(),
-    {% endfor %}
-  ],
+  plugins: [],
   resolve: {
     alias: {
       '@': r(dir, "{{ src_rel_path }}"),
@@ -25,10 +19,13 @@ export default defineConfig({
   test: { 
     setupFiles: [ 
       j(setupDir, "tests_setup.ts"),  
+      {% for file in setup_files +%}
+      j(setupDir, "{{ file }}") {% call utils::optional_comma(!loop.last) %}
+      {% endfor +%}
     ], 
-    globals: true,
-    environment: "node",
-    silent: "passed-only",
+    globals: {{+ globals }},
+    environment: "{{ environment }}",
+    silent: {{+ silent }},
     sequence: {
       setupFiles: "list",
     },
