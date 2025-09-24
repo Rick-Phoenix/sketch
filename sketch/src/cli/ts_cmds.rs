@@ -6,7 +6,7 @@ use merge::Merge;
 use crate::{
   cli::log_debug,
   exec::launch_command,
-  fs::{create_parent_dirs, serialize_json},
+  fs::{create_parent_dirs, serialize_json, serialize_yaml},
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},
@@ -35,6 +35,23 @@ pub(crate) async fn handle_ts_commands(
   }
 
   match command {
+    TsCommands::PnpmWorkspace { output, preset } => {
+      let content = typescript
+        .pnpm_presets
+        .get(&preset)
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::PnpmWorkspace,
+          name: preset.clone(),
+        })?
+        .clone()
+        .process_data(preset.as_str(), &typescript.pnpm_presets)?;
+
+      let output = output.unwrap_or_else(|| "pnpm-workspace.yaml".into());
+
+      create_parent_dirs(&output)?;
+
+      serialize_yaml(&content, &output, overwrite)?;
+    }
     TsCommands::TsConfig { output, preset } => {
       let content = typescript
         .ts_config_presets
@@ -234,6 +251,15 @@ pub(crate) async fn handle_ts_commands(
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum TsCommands {
+  /// Generates a `pnpm-workspace.yaml` file from a preset.
+  PnpmWorkspace {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the generated file [default: `pnpm-workspace.yaml`]
+    output: Option<PathBuf>,
+  },
+
   /// Generates a `package.json` file from a preset.
   PackageJson {
     /// The preset id
