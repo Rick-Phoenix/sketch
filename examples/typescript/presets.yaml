@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../schemas/latest.json
+# yaml-language-server: $schema=../../schemas/development.json
 
 # ANCHOR: all
 # ANCHOR: templates

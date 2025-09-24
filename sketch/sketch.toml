@@ -1,4 +1,4 @@
-#:schema ../schemas/latest.json
+#:schema ../schemas/development.json
 
 vars = { my_var = 15 }
 

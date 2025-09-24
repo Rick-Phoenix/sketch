@@ -34,6 +34,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let version = SchemaCmd::parse().version;
 
+  if version == "development" {
+    let file = File::create(&schemas_dir.join("development.json"))?;
+    serde_json::to_writer_pretty(&file, &schema)?;
+    return Ok(());
+  }
+
   let latest_schema_file = schemas_dir.join("latest.json");
 
   if latest_schema_file.is_file() {
@@ -48,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let latest = File::create(latest_schema_file)?;
   serde_json::to_writer_pretty(&latest, &schema)?;
 
-  if !version.starts_with('v') {
+  if version.starts_with('v') {
     let (major, minor, _) = get_version(&version);
 
     let minor_dir = schemas_dir.join(format!("v{}.{}", major, minor));

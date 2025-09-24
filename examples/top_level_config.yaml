@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../schemas/latest.json
+# yaml-language-server: $schema=../schemas/development.json
 
 # The relative path from the config file (or from the cwd, if set via the cli flag)
 # to the directory containing templates.

@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../../schemas/latest.json
+# yaml-language-server: $schema=../../schemas/development.json
 
 typescript:
   # Convert `latest` to a version range for dependencies
