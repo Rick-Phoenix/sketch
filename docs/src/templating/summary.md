@@ -46,6 +46,8 @@ On top of that, Sketch adds some extra filters and functions.
 - `capture_many(regex=REGEX)` (matches a regex repetitively and returns the list of named capture groups)
 - `is_file` (checks if a path is a file)
 - `is_dir` (checks if a path is a directory)
+- `semver` (parses a cargo-style semver and returns the segments)
+- `matches_semver(target=TARGET)` (checks if a cargo-style semver matches a target)
 
 # Example
 

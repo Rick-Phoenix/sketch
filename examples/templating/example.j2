@@ -51,3 +51,13 @@ Extension is: {{ captures['extension'] }}
 {% for capture in words -%}
 {{ capture['word'] -}} {% if not loop.last %}{{ " " }}{% endif -%}
 {%- endfor -%}!
+
+{% set version = "v0.1.0" -%}
+
+{% set segments = version | semver -%}
+Major is: {{ segments['major'] }}
+Minor is: {{ segments['minor'] }}
+Patch is: {{ segments['patch'] }}
+
+Version matches >=0.1.0: {{ version | matches_semver(target=">=0.1.0") }}
+Version matches >=0.2.0: {{ version | matches_semver(target=">=0.2.0") }}

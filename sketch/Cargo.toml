@@ -30,6 +30,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+semver = { version = "1.0.27" }
 schemars = { version = "1.0.4", features = ["indexmap2"] }
 askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }

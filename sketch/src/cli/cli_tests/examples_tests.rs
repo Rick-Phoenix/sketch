@@ -152,6 +152,11 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("Path is: sketch"));
   assert!(output_str.contains("Extension is: toml"));
   assert!(output_str.contains("They're taking the hobbits to Isengard!"));
+  assert!(output_str.contains("Major is: 0"));
+  assert!(output_str.contains("Minor is: 1"));
+  assert!(output_str.contains("Patch is: 0"));
+  assert!(output_str.contains("Version matches >=0.1.0: true"));
+  assert!(output_str.contains("Version matches >=0.2.0: false"));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
   write_file(&output_dir.join("output"), &output_str, true)?;

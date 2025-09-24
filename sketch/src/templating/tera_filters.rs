@@ -1,6 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use regex::Regex;
+use semver::{Version, VersionReq};
 use tera::{Error, Map, Value};
 
 fn extract_string<'a>(filter_name: &'a str, value: &'a Value) -> Result<&'a str, Error> {
@@ -8,6 +9,64 @@ fn extract_string<'a>(filter_name: &'a str, value: &'a Value) -> Result<&'a str,
     filter_name,
     format!("Value `{}` is not a string", value.to_string()),
   ))
+}
+
+pub(crate) fn semver(text: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let mut text = extract_string("semver", text)?;
+
+  text = text.strip_prefix('v').unwrap_or(text);
+
+  let version = Version::parse(&text).map_err(|e| {
+    Error::call_filter(
+      "semver",
+      format!("Could not parse `{}` as a semver: {}", text, e),
+    )
+  })?;
+
+  let mut data: Map<String, Value> = Map::new();
+
+  data.insert("major".to_string(), version.major.into());
+  data.insert("minor".to_string(), version.minor.into());
+  data.insert("patch".to_string(), version.patch.into());
+
+  Ok(data.into())
+}
+
+pub(crate) fn matches_semver(text: &Value, args: &HashMap<String, Value>) -> Result<Value, Error> {
+  let mut text = extract_string("matches_semver", text)?;
+
+  text = text.strip_prefix('v').unwrap_or(text);
+
+  let version = Version::parse(&text).map_err(|e| {
+    Error::call_filter(
+      "matches_semver",
+      format!("Could not parse `{}` as a semver: {}", text, e),
+    )
+  })?;
+
+  let mut target_version_text = extract_string(
+    "matches_semver",
+    args.get("target").ok_or(Error::call_filter(
+      "matches_semver",
+      format!("Could not find the `target` argument"),
+    ))?,
+  )?;
+
+  target_version_text = target_version_text
+    .strip_prefix('v')
+    .unwrap_or(target_version_text);
+
+  let target_version = VersionReq::parse(&target_version_text).map_err(|e| {
+    Error::call_filter(
+      "matches_semver",
+      format!(
+        "Could not parse `{}` as a semver: {}",
+        target_version_text, e
+      ),
+    )
+  })?;
+
+  Ok(target_version.matches(&version).into())
 }
 
 pub(crate) fn is_file(path: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
