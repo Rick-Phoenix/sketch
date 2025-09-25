@@ -3,6 +3,7 @@ use std::{
   path::{Path, PathBuf},
 };
 
+use globset::{Glob, GlobSetBuilder};
 use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -51,6 +52,8 @@ pub enum TemplatingPreset {
   Structured {
     /// A relative path to a directory starting from `templates_dir`
     dir: PathBuf,
+    /// A list of glob patterns for the templates to exclude
+    exclude: Option<Vec<String>>,
     /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
     #[serde(default)]
     context: IndexMap<String, Value>,
@@ -157,7 +160,11 @@ impl Config {
             )?;
           }
         }
-        TemplatingPreset::Structured { dir, context } => {
+        TemplatingPreset::Structured {
+          dir,
+          context,
+          exclude,
+        } => {
           local_context.extend(context);
 
           let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
@@ -172,6 +179,7 @@ impl Config {
               .templates_dir
               .clone()
               .ok_or(GenError::Custom(format!("templates_dir not set")))?,
+            exclude,
           )?;
         }
         TemplatingPreset::Single(template) => {
@@ -247,6 +255,7 @@ fn render_structured_preset(
   output_root: &Path,
   dir: PathBuf,
   templates_dir: &Path,
+  exclude: Option<Vec<String>>,
 ) -> Result<(), GenError> {
   let templates_dir = get_abs_path(templates_dir)?;
   let root_dir = templates_dir.join(&dir);
@@ -256,14 +265,47 @@ fn render_structured_preset(
       dir.display()
     )));
   }
+
+  let globset = if let Some(ref patterns) = exclude {
+    let mut glob_builder = GlobSetBuilder::new();
+
+    for pattern in patterns {
+      glob_builder.add(
+        Glob::new(pattern)
+          .map_err(|e| generic_error!("Could not parse glob pattern `{}`: {}", pattern, e))?,
+      );
+    }
+
+    Some(
+      glob_builder
+        .build()
+        .map_err(|e| generic_error!("Could not build globset: {}", e))?,
+    )
+  } else {
+    None
+  };
+
   Ok(
     for entry in WalkDir::new(&root_dir)
       .into_iter()
       .filter_map(|e| e.ok())
       .filter(|e| e.file_type().is_file())
     {
-      let template_path = entry.path().strip_prefix(&templates_dir).unwrap();
-      let mut output_path = entry.path().strip_prefix(&root_dir).unwrap().to_path_buf();
+      let template_path = entry
+        .path()
+        .strip_prefix(&templates_dir)
+        .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?;
+      let mut output_path = entry
+        .path()
+        .strip_prefix(&root_dir)
+        .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?
+        .to_path_buf();
+
+      if let Some(ref globset) = globset {
+        if globset.is_match(&template_path) {
+          continue;
+        }
+      }
 
       if output_path
         .extension()

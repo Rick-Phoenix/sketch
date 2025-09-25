@@ -20,6 +20,9 @@ templating_presets:
   # ANCHOR: structured_preset
   structured:
     dir: subdir
+    # Glob patterns to exclude certain templates
+    exclude:
+      - "some/glob/pattern/*"
     # Optional context
     context: {}
   # ANCHOR_END: structured_preset

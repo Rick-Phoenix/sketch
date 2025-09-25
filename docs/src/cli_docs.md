@@ -147,12 +147,11 @@ Generates a `.oxlintrc.json` file from a preset
 
 Generates a new typescript monorepo
 
-**Usage:** `sketch ts monorepo [OPTIONS] [DIR] [ID]...`
+**Usage:** `sketch ts monorepo [OPTIONS] [DIR]`
 
 ###### **Arguments:**
 
 * `<DIR>` — The root directory for the new monorepo. [default: `ts_root`]
-* `<ID>` — One or many templating presets to render in the new monorepo
 
 ###### **Options:**
 
@@ -161,9 +160,10 @@ Generates a new typescript monorepo
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
 * `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
-* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new monorepo
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
-* `-i`, `--install` — Installs the dependencies after creation
+* `-i`, `--install` — Installs the dependencies with the chosen package manager
+* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
+* `-t <ID>` — One or many templating presets to render in the new package's directory
 
 
 
@@ -181,14 +181,14 @@ Generates a new typescript package
 
 * `-p`, `--preset <ID>` — The package preset to use. If unset, the default preset is used, along with the values set via cli flags
 * `-u`, `--update-tsconfig <UPDATE_TSCONFIG>` — An optional list of tsconfig files where the new tsconfig file will be added as a reference
-* `--vitest <ID>` — The vitest preset to use. It can be set to `default` to use the default preset
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
+* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
+* `-t <ID>` — One or many templating presets to render in the new package's directory
+* `--vitest <ID>` — The vitest preset to use. It can be set to `default` to use the default preset
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
 * `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
-* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
-* `-t <ID>` — One or many templating presets to render in the new package's directory
 
 
 
@@ -210,7 +210,7 @@ Creates a new git repo from a preset
 * `--gitignore <GITIGNORE>` — Selects a gitignore preset
 * `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new repo
 * `-t <ID>` — One or many templating presets to render in the new repo
-* `--remote <REMOTE>` — The link of the git remote to use for the new repo
+* `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
 
 

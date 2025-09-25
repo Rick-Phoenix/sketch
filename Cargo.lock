@@ -1916,6 +1916,7 @@ dependencies = [
  "clap-markdown",
  "convert_case",
  "futures",
+ "globset",
  "indexmap",
  "indoc",
  "maplit",
