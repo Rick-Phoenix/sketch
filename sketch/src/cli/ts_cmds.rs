@@ -1,13 +1,16 @@
-use std::path::PathBuf;
+use std::{collections::BTreeSet, path::PathBuf};
 
+use askama::Template;
 use clap::{Args, Subcommand};
+use globset::{Glob, GlobSetBuilder};
 use merge::Merge;
+use walkdir::WalkDir;
 
 use crate::{
   cli::{log_debug, TemplateOutput},
   custom_templating::{TemplatingPreset, TemplatingPresetReference},
   exec::launch_command,
-  fs::{create_parent_dirs, serialize_json, serialize_yaml},
+  fs::{create_parent_dirs, get_cwd, open_file_if_overwriting, serialize_json, serialize_yaml},
   ts::{
     oxlint::OxlintConfigSetting,
     package::{PackageConfig, PackageData},
@@ -37,6 +40,9 @@ pub(crate) async fn handle_ts_commands(
   }
 
   match command {
+    TsCommands::Barrel { args } => {
+      create_ts_barrel(args, overwrite)?;
+    }
     TsCommands::PnpmWorkspace { output, preset } => {
       let content = typescript
         .pnpm_presets
@@ -385,6 +391,12 @@ pub enum TsCommands {
     #[command(flatten)]
     package_config: Option<PackageConfig>,
   },
+
+  /// Creates a barrel file
+  Barrel {
+    #[command(flatten)]
+    args: TsBarrelArgs,
+  },
 }
 
 #[derive(Debug, Clone, Args)]
@@ -409,4 +421,112 @@ pub struct TsPackageArgs {
   /// One or many templating presets to render in the new package's directory
   #[arg(short = 't', value_name = "ID")]
   with_templ_preset: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct TsBarrelArgs {
+  /// The directory where to search for the files and generate the barrel file [default: `.`]
+  pub dir: Option<PathBuf>,
+
+  /// The output path for the barrel file. It defaults to `dir`/index.ts
+  #[arg(short, long)]
+  pub output: Option<PathBuf>,
+
+  /// The file extensions that should be kept in export statements.
+  #[arg(long = "keep-extension")]
+  pub keep_extensions: Vec<String>,
+
+  /// Export `.ts` files as `.js`. It assumes that `js` is among the allowed extensions.
+  #[arg(long)]
+  pub js_ext: bool,
+
+  /// One or more glob patterns to exclude from the imported modules. `index.ts` is added automatically
+  #[arg(long)]
+  pub exclude: Option<Vec<String>>,
+}
+
+#[derive(Debug, Template)]
+#[template(path = "ts/barrel.ts.j2")]
+struct BarrelFile {
+  pub files: BTreeSet<PathBuf>,
+}
+
+const JS_EXTENSIONS: &[&str] = &["vue", "svelte", "jsx", "tsx", "ts", "js"];
+
+fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError> {
+  let TsBarrelArgs {
+    dir,
+    keep_extensions,
+    exclude,
+    js_ext,
+    output,
+  } = args;
+
+  let dir = dir.unwrap_or_else(|| get_cwd());
+
+  if !dir.is_dir() {
+    return Err(generic_error!("`{:?}` is not a directory", dir));
+  }
+
+  let mut glob_builder = GlobSetBuilder::new();
+
+  glob_builder.add(Glob::new("index.ts").unwrap());
+
+  if let Some(ref patterns) = exclude {
+    for pattern in patterns {
+      glob_builder.add(
+        Glob::new(pattern)
+          .map_err(|e| generic_error!("Could not parse glob pattern `{}`: {}", pattern, e))?,
+      );
+    }
+  }
+
+  let globset = glob_builder
+    .build()
+    .map_err(|e| generic_error!("Could not build globset: {}", e))?;
+
+  let mut paths: BTreeSet<PathBuf> = BTreeSet::new();
+
+  for entry in WalkDir::new(&dir)
+    .into_iter()
+    .filter_map(|e| e.ok())
+    .filter(|e| e.file_type().is_file())
+  {
+    let mut path = entry.path().strip_prefix(&dir).unwrap().to_path_buf();
+
+    let extension = if let Some(ext) = path.extension() {
+      ext.to_string_lossy().to_string()
+    } else {
+      continue;
+    };
+
+    if !JS_EXTENSIONS.contains(&extension.as_str()) || globset.is_match(&path) {
+      continue;
+    }
+
+    if js_ext && (extension == "js" || extension == "ts") {
+      path = path.with_extension("js");
+    } else if !keep_extensions.contains(&extension) {
+      path = path.with_extension("");
+    }
+
+    paths.insert(path);
+  }
+
+  let out_file = output.unwrap_or_else(|| dir.join("index.ts"));
+
+  create_parent_dirs(&out_file)?;
+
+  let mut file = open_file_if_overwriting(overwrite, &out_file)?;
+
+  let barrel = BarrelFile { files: paths };
+
+  barrel
+    .write_into(&mut file)
+    .map_err(|e| GenError::WriteError {
+      path: out_file,
+      source: e,
+    })?;
+
+  Ok(())
 }
