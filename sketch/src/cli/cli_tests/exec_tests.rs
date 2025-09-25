@@ -24,11 +24,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
   let literal_template_cmd = [
     "sketch",
     "--set",
-    "general=\"kenobi\"",
+    "condition=\"slower\"",
     "exec",
     "--cwd",
     &output_dir.to_string_lossy(),
-    "echo \"hello there!\\ngeneral {{ general }}.\" > command_output.txt",
+    "echo \"engine feels good... much {{ condition }} than before... amazing\" > command_output.txt",
   ];
 
   write_command!(literal_template_cmd, [4, 5], "exec_literal_cmd");
@@ -39,7 +39,10 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let output: String = read_to_string(output_dir.join("command_output.txt"))?;
 
-  assert_eq!(output, "hello there!\ngeneral kenobi.\n");
+  assert_eq!(
+    output,
+    "engine feels good... much slower than before... amazing\n"
+  );
 
   let from_file_cmd = [
     "sketch",

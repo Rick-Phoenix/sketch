@@ -17,28 +17,41 @@ use crate::{
   GenError, Preset,
 };
 
+/// A reference to a templating preset, or a new preset definition.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TemplatingPresetReference {
+  /// A reference to a templating preset, with some optional context
   Preset {
+    /// The id of the preset to select.
     id: String,
+    /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
     #[serde(default)]
     context: IndexMap<String, Value>,
   },
+  /// The definition for a new templating preset.
   Definition(TemplatingPreset),
 }
 
+/// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TemplatingPreset {
+  /// Data for a single template.
   Single(TemplateOutput),
+  /// A list of individual templates, with extra optional context.
   Collection {
+    /// A list of individual templates to include in this preset.
     templates: Vec<TemplateOutput>,
+    /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
     #[serde(default)]
     context: IndexMap<String, Value>,
   },
+  /// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
   Structured {
+    /// A relative path to a directory starting from `templates_dir`
     dir: PathBuf,
+    /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
     #[serde(default)]
     context: IndexMap<String, Value>,
   },
@@ -49,7 +62,14 @@ pub enum TemplatingPreset {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
 pub enum TemplateData {
-  Content { name: String, content: String },
+  /// A literal definition for a template.
+  Content {
+    /// The id of the newly created template.
+    name: String,
+    /// The content of the new template.
+    content: String,
+  },
+  /// An id pointing to a template defined in a configuration file or inside `templates_dir`.
   Id(String),
 }
 
@@ -74,9 +94,12 @@ pub enum TemplateOutputKind {
 /// The context specified here will override the global context (but not the variables set via cli).
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 pub struct TemplateOutput {
+  /// The definition or id for the template to use.
   pub template: TemplateData,
+  /// The output path for the generated file.
   pub output: TemplateOutputKind,
   #[serde(default)]
+  /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
   pub context: IndexMap<String, Value>,
 }
 

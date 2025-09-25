@@ -4,6 +4,8 @@ With the `sketch exec` command, you can render a template and then execute it as
 
 To do this, you can use a regular file, a template with an id (either defined in the config file or inside the `templates_dir`), or even one defined within the command itself.
 
+## Examples
+
 ### From Template
 
 Let's say that we have a file named `cmd_template.j2` inside our `templates_dir`, and it looks like this:

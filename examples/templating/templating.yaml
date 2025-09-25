@@ -5,7 +5,6 @@ templates_dir: templates
 
 vars:
   location: Isengard
-  something: laser
   greeting: hello
   general: kenobi
   meal: breakfast
@@ -29,8 +28,7 @@ templating_presets:
   # A preset can also contain a single template
   single_preset:
     template: hobbits
-    context:
-      location: Isengard
+    context: {}
     output: isengard.txt
 
   # Or more commonly, many of them

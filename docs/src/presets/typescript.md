@@ -1,93 +1,37 @@
-# Typescript Presets
+# Presets
 
-## Package.json Presets
-```yaml
-{{#include ../../../examples/typescript/presets.yaml:package_json}}
-```
+Templating presets are not the only way to create reusable project structures and configurations. Sketch also supports presets for some of the most common elements that you would find in a typical project.
 
-Just like in actual `package.json` files, custom fields are allowed.
+Some of these presets are used just for defining an easily reproducible configuration, while others also include extra features such as extensibility.
 
->ℹ️ `package.json` presets come with extra features. [Dedicated section](../ts/smart_features.md)
+As of now, these presets are available:
 
-## Tsconfig Presets
-```yaml
-{{#include ../../../examples/typescript/presets.yaml:tsconfig}}
-```
+- Git
+    - Git repo
+    - `.gitignore` (extensible)
+    - `.pre-commit-config.yaml` (extensible)
 
-<div class="warning">
+- Typecript
+    - Typescript package
+    - `pnpm-workspace.yaml` (extensible)
+    - `package.json` (extensible, extra convenience feature for creating a mini-db for contributors)
+    - `tsconfig.json` (extensible, with merging of values for the `references`, `include`, `exclude` and `files` fields)
+    - `.oxlintrc.json` (extensible)
+    - `vitest` (not a full configuration for `vitest.config.ts`, but a basic testing setup)
 
-Unlike what happens when you merge two `tsconfig` files by using the `extends` field, extending presets will merge all collections, including `files`, `include`, `exclude` and `references`, which would normally be overwritten, rather than merged.
-</div>
+# Extending Presets
 
-## Oxlint Presets
-```yaml
-{{#include ../../../examples/typescript/presets.yaml:oxlint}}
-```
+For those presets that are extensible, merging them works like this:
 
-## Pnpm-workspace Presets
-```yaml
-{{#include ../../../examples/typescript/root_package.yaml:pnpm}}
-```
+- Collections are merged (and in almost all cases, deduped and sorted)
+- Conflicting values are replaced
+- Values that are also extensible (such as `compilerOptions` in tsconfig) themselves will be merged with the same rules as above
 
-## Vitest Presets
-```yaml
-{{#include ../../../examples/typescript/presets.yaml:vitest}}
-```
+# Examples
 
-## Package Presets
-
-This is what a fully formed package preset looks like. We are going to use the presets defined above in here.
-```yaml
-{{#include ../../../examples/typescript/presets.yaml:package}}
-```
-
-
-<details>
-<summary>Tsconfig output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tsconfig.json}}
-```
-</details>
-
-<details>
-<summary>Package.json output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/package.json}}
-```
-</details>
-
-<details>
-<summary>Oxlintrc.json output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/.oxlintrc.json}}
-```
-</details>
-
-<details>
-<summary>vitest.config.ts output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tests/vitest.config.ts}}
-```
-</details>
-
-# Adding Templates
-
-We can also use the `with_templates` setting (or `--with-template <id=TEMPLATE_ID,output=PATH>` in the cli) to automatically generate one or many templates when the preset is used.
+This is an in-depth example of the various kinds of presets that are available:
 
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:templates}}
-
-# We add this part to the package preset
-
-{{#include ../../../examples/typescript/presets.yaml:ts_templates}}
+{{#include ../../../examples/typescript/presets.yaml:all}}
 ```
 
-With all of that, the output tree for the new package will look like this:
-
-```
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tree_output.txt}}
-```

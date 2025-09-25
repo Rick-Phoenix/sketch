@@ -1,6 +1,6 @@
 # Smart Features
 
-Sketch adds a few smart features that may be useful when dealing with packages dependencies and metadata.
+Sketch provides some additional features that may come in handy when dealing with a typescript project.
 
 ## Converting `latest` to a range
 

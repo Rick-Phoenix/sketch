@@ -20,6 +20,12 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     };
   }
 
+  macro_rules! exists {
+    ($name:literal) => {
+      assert!(output_dir.join($name).is_file())
+    };
+  }
+
   reset_testing_dir(&output_dir);
   reset_testing_dir(&commands_dir);
 
@@ -41,6 +47,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(from_template_id).await?;
 
+  exists!("from_template_id.txt");
+
   let from_template_file_cmd = [
     "sketch",
     "-c",
@@ -56,6 +64,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
   let from_template_file = Cli::try_parse_from(from_template_file_cmd)?;
 
   execute_cli(from_template_file).await?;
+
+  exists!("from_template_file.txt");
 
   let literal_template_cmd = [
     "sketch",
@@ -109,6 +119,9 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(from_collection_preset).await?;
 
+  exists!("lotr/hobbits.txt");
+  exists!("lotr/subdir/breakfast.txt");
+
   get_tree_output("tests/output/custom_templates/lotr", None)?;
 
   let structured_preset = [
@@ -125,6 +138,9 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
   let from_structured_preset = Cli::try_parse_from(structured_preset)?;
 
   execute_cli(from_structured_preset).await?;
+
+  exists!("structured/nested_file");
+  exists!("structured/nested/more_nested_file");
 
   get_tree_output("tests/output/custom_templates/structured", None)?;
 

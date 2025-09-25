@@ -19,6 +19,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 pub struct RepoPreset {
   /// Settings for the gitignore file.
   pub gitignore: Option<GitIgnoreSetting>,

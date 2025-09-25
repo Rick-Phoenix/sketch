@@ -4331,14 +4331,18 @@
       ]
     },
     "TemplatingPresetReference": {
+      "description": "A reference to a templating preset, or a new preset definition.",
       "anyOf": [
         {
+          "description": "A reference to a templating preset, with some optional context",
           "type": "object",
           "properties": {
             "id": {
+              "description": "The id of the preset to select.",
               "type": "string"
             },
             "context": {
+              "description": "Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.",
               "type": "object",
               "additionalProperties": true,
               "default": {}
@@ -4349,25 +4353,31 @@
           ]
         },
         {
+          "description": "The definition for a new templating preset.",
           "$ref": "#/$defs/TemplatingPreset"
         }
       ]
     },
     "TemplatingPreset": {
+      "description": "A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.",
       "anyOf": [
         {
+          "description": "Data for a single template.",
           "$ref": "#/$defs/TemplateOutput"
         },
         {
+          "description": "A list of individual templates, with extra optional context.",
           "type": "object",
           "properties": {
             "templates": {
+              "description": "The",
               "type": "array",
               "items": {
                 "$ref": "#/$defs/TemplateOutput"
               }
             },
             "context": {
+              "description": "Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.",
               "type": "object",
               "additionalProperties": true,
               "default": {}
@@ -4378,12 +4388,15 @@
           ]
         },
         {
+          "description": "A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.",
           "type": "object",
           "properties": {
             "dir": {
+              "description": "A relative path to a directory starting from `templates_dir`",
               "type": "string"
             },
             "context": {
+              "description": "Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.",
               "type": "object",
               "additionalProperties": true,
               "default": {}
@@ -4400,12 +4413,15 @@
       "type": "object",
       "properties": {
         "template": {
+          "description": "The definition or id for the template to use.",
           "$ref": "#/$defs/TemplateData"
         },
         "output": {
-          "type": "string"
+          "description": "The output path for the generated file.",
+          "$ref": "#/$defs/TemplateOutputKind"
         },
         "context": {
+          "description": "Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.",
           "type": "object",
           "additionalProperties": true,
           "default": {}
@@ -4420,6 +4436,7 @@
       "description": "The types of configuration values for a template's data.\nIt can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)",
       "anyOf": [
         {
+          "description": "A literal definition for a template.",
           "type": "object",
           "properties": {
             "name": {
@@ -4433,6 +4450,18 @@
             "name",
             "content"
           ]
+        },
+        {
+          "description": "An id pointing to a template defined in a configuration file or inside `templates_dir`.",
+          "type": "string"
+        }
+      ]
+    },
+    "TemplateOutputKind": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": []
         },
         {
           "type": "string"
@@ -6404,11 +6433,13 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
         },
         "pre_commit": {
           "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/).",
-          "$ref": "#/$defs/PreCommitSetting"
+          "$ref": "#/$defs/PreCommitSetting",
+          "default": true
         },
         "with_templates": {
           "description": "A set of templates to generate when this preset is used.",
@@ -6418,12 +6449,10 @@
           ],
           "items": {
             "$ref": "#/$defs/TemplatingPresetReference"
-          }
+          },
+          "default": null
         }
-      },
-      "required": [
-        "pre_commit"
-      ]
+      }
     },
     "GitIgnoreSetting": {
       "description": "Settings for a .gitignore file. It can be a preset id or a literal configuration.",
