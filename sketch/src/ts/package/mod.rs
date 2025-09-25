@@ -13,7 +13,7 @@ use super::{
   vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
 };
 use crate::{
-  custom_templating::TemplateOutput,
+  custom_templating::TemplatingPresetReference,
   fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, find_file_up, get_abs_path,
     get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml,
@@ -62,9 +62,9 @@ pub struct PackageConfig {
   pub package_json: Option<PackageJsonData>,
 
   /// One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.
-  #[arg(long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
+  #[arg(skip)]
   #[merge(strategy = merge_optional_vecs)]
-  pub with_templates: Option<Vec<TemplateOutput>>,
+  pub with_templates: Option<Vec<TemplatingPresetReference>>,
 
   /// The configuration for this package's vitest setup. It can be set to `false` to be disabled, or to a literal configuration.
   #[arg(skip)]

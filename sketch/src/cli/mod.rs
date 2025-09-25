@@ -19,7 +19,7 @@ use crate::{
     config_discovery::get_config_from_cli,
     ts_cmds::{handle_ts_commands, TsCommands},
   },
-  custom_templating::{TemplateData, TemplateOutput},
+  custom_templating::{TemplateData, TemplateOutput, TemplatingPreset, TemplatingPresetReference},
   fs::{
     create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
     serialize_yaml,
@@ -92,11 +92,25 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         preset.gitignore = Some(GitIgnoreSetting::Id(gitignore));
       }
 
+      if let Some(presets) = input.with_templ_preset {
+        let templates_list = preset.with_templates.get_or_insert_default();
+
+        for id in presets {
+          templates_list.push(TemplatingPresetReference::Preset {
+            id: id,
+            context: Default::default(),
+          });
+        }
+      }
+
       if let Some(templates) = input.with_templates {
-        preset
-          .with_templates
-          .get_or_insert_default()
-          .extend(templates);
+        let templates_list = preset.with_templates.get_or_insert_default();
+
+        for template in templates {
+          templates_list.push(TemplatingPresetReference::Definition(
+            TemplatingPreset::Single(template),
+          ));
+        }
       }
 
       let out_dir = dir.unwrap_or_else(|| get_cwd());
@@ -107,19 +121,15 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     }
 
     RenderPreset { id, out_dir } => {
-      let preset = config
-        .templating_presets
-        .get(&id)
-        .ok_or(GenError::PresetNotFound {
-          kind: Preset::Templates,
-          name: id.clone(),
-        })?
-        .clone();
-
       let out_dir = out_dir.unwrap_or_else(|| get_cwd());
-      create_all_dirs(&out_dir)?;
 
-      config.generate_templates(out_dir, preset)?;
+      config.generate_templates(
+        &out_dir,
+        vec![TemplatingPresetReference::Preset {
+          id,
+          context: Default::default(),
+        }],
+      )?;
     }
 
     Render {
@@ -167,7 +177,15 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         log_debug("Template", &template);
       }
 
-      config.generate_templates(get_cwd(), vec![template])?;
+      config.generate_templates(
+        get_cwd(),
+        vec![TemplatingPresetReference::Definition(
+          TemplatingPreset::Collection {
+            templates: vec![template],
+            context: Default::default(),
+          },
+        )],
+      )?;
     }
     New { output } => {
       let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
@@ -279,9 +297,17 @@ pub struct RepoConfigInput {
   #[arg(long)]
   gitignore: Option<String>,
 
-  /// One or many templates to render in the new repo's root. If a preset is being used, the list is extended and not replaced
-  #[arg(short = 't', long = "with-template", value_parser = TemplateOutput::from_cli, value_name = "id=TEMPLATE_ID,output=PATH")]
+  /// One or many individual templates to render in the new repo
+  #[arg(
+    short,
+    long = "with-template",
+    value_name = "id=TEMPLATE_ID,output=PATH", value_parser = TemplateOutput::from_cli
+  )]
   with_templates: Option<Vec<TemplateOutput>>,
+
+  /// One or many templating presets to render in the new repo
+  #[arg(short = 't', value_name = "ID")]
+  with_templ_preset: Option<Vec<String>>,
 }
 
 /// The cli commands.

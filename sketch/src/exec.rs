@@ -6,9 +6,8 @@ use std::{
 use tera::Context;
 
 use crate::{
-  custom_templating::{get_default_context, TemplateData},
-  fs::create_all_dirs,
-  Config, GenError,
+  custom_templating::TemplateData, fs::create_all_dirs, tera_setup::get_default_context, Config,
+  GenError,
 };
 
 pub(crate) fn default_shell() -> &'static str {

@@ -4,7 +4,8 @@ use clap::Subcommand;
 use merge::Merge;
 
 use crate::{
-  cli::log_debug,
+  cli::{log_debug, TemplateOutput},
+  custom_templating::{TemplatingPreset, TemplatingPresetReference},
   exec::launch_command,
   fs::{create_parent_dirs, serialize_json, serialize_yaml},
   ts::{
@@ -112,6 +113,8 @@ pub(crate) async fn handle_ts_commands(
       oxlint,
       dir,
       pnpm,
+      with_templates,
+      with_templ_preset,
     } => {
       let mut root_package = if let Some(id) = root_package {
         typescript
@@ -164,6 +167,27 @@ pub(crate) async fn handle_ts_commands(
         None
       };
 
+      if let Some(presets) = with_templ_preset {
+        let templates_list = root_package.with_templates.get_or_insert_default();
+
+        for id in presets {
+          templates_list.push(TemplatingPresetReference::Preset {
+            id,
+            context: Default::default(),
+          });
+        }
+      }
+
+      if let Some(templates) = with_templates {
+        let templates_list = root_package.with_templates.get_or_insert_default();
+
+        for template in templates {
+          templates_list.push(TemplatingPresetReference::Definition(
+            TemplatingPreset::Single(template),
+          ));
+        }
+      }
+
       config
         .create_ts_monorepo(CreateTsMonorepoSettings {
           root_package,
@@ -189,6 +213,8 @@ pub(crate) async fn handle_ts_commands(
       update_tsconfig,
       dir,
       vitest,
+      with_templates,
+      with_templ_preset,
     } => {
       let mut package = if let Some(preset) = preset {
         typescript
@@ -217,6 +243,27 @@ pub(crate) async fn handle_ts_commands(
         } else {
           Some(OxlintConfigSetting::Id(id))
         };
+      }
+
+      if let Some(presets) = with_templ_preset {
+        let templates_list = package.with_templates.get_or_insert_default();
+
+        for id in presets {
+          templates_list.push(TemplatingPresetReference::Preset {
+            id,
+            context: Default::default(),
+          });
+        }
+      }
+
+      if let Some(templates) = with_templates {
+        let templates_list = package.with_templates.get_or_insert_default();
+
+        for template in templates {
+          templates_list.push(TemplatingPresetReference::Definition(
+            TemplatingPreset::Single(template),
+          ));
+        }
       }
 
       report_info!(log_debug("package", &package));
@@ -302,6 +349,19 @@ pub enum TsCommands {
     #[command(flatten)]
     root_package_overrides: Option<PackageConfig>,
 
+    /// One or many individual templates to render in the new monorepo
+    #[arg(
+      short,
+      long = "with-template",
+      value_name = "id=TEMPLATE_ID,output=PATH",
+      value_parser = TemplateOutput::from_cli
+    )]
+    with_templates: Option<Vec<TemplateOutput>>,
+
+    /// One or many templating presets to render in the new monorepo
+    #[arg(short = 't', value_name = "ID")]
+    with_templ_preset: Option<Vec<String>>,
+
     /// The oxlint preset to use. It can be set to `default` to use the default preset.
     #[arg(long, value_name = "ID")]
     oxlint: Option<String>,
@@ -338,5 +398,18 @@ pub enum TsCommands {
 
     #[command(flatten)]
     package_config: Option<PackageConfig>,
+
+    /// One or many individual templates to render in the new package's directory
+    #[arg(
+      short,
+      long = "with-template",
+      value_name = "id=TEMPLATE_ID,output=PATH",
+      value_parser = TemplateOutput::from_cli
+    )]
+    with_templates: Option<Vec<TemplateOutput>>,
+
+    /// One or many templating presets to render in the new package's directory
+    #[arg(short = 't', value_name = "ID")]
+    with_templ_preset: Option<Vec<String>>,
   },
 }

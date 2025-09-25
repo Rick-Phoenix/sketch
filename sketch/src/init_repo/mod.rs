@@ -7,7 +7,7 @@ pub mod gitignore;
 pub mod pre_commit;
 
 use crate::{
-  custom_templating::TemplateOutput,
+  custom_templating::TemplatingPresetReference,
   exec::launch_command,
   fs::{create_all_dirs, serialize_yaml, write_file},
   init_repo::{
@@ -24,7 +24,7 @@ pub struct RepoPreset {
   /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
   pub pre_commit: PreCommitSetting,
   /// A set of templates to generate when this preset is used.
-  pub with_templates: Option<Vec<TemplateOutput>>,
+  pub with_templates: Option<Vec<TemplatingPresetReference>>,
 }
 
 impl Config {

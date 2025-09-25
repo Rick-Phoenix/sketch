@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  custom_templating::TemplateOutput,
+  custom_templating::TemplatingPreset,
   fs::get_parent_dir,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
   is_default, merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
@@ -85,7 +85,7 @@ pub struct Config {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   #[serde(skip_serializing_if = "is_default")]
-  pub templating_presets: IndexMap<String, Vec<TemplateOutput>>,
+  pub templating_presets: IndexMap<String, TemplatingPreset>,
 
   /// A map that contains pre-commit presets.
   #[merge(strategy = merge_index_maps)]

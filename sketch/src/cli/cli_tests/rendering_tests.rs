@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use super::{get_clean_example_cmd, reset_testing_dir};
 use crate::{
   cli::{cli_tests::get_tree_output, execute_cli, get_config_from_cli, Cli},
+  custom_templating::TemplatingPreset,
   fs::deserialize_yaml,
 };
 
@@ -129,6 +130,10 @@ async fn cli_rendering() -> Result<(), Box<dyn std::error::Error>> {
   let config = get_config_from_cli(rendering_cmd).await?;
 
   let templates = config.templating_presets.get("test").unwrap();
+
+  let TemplatingPreset::Collection{ templates, .. } = templates else {
+    panic!("Expected a collection of templates")
+  };
 
   for template in templates {
     let output_path = output_dir.join(&template.output);
