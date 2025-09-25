@@ -425,22 +425,22 @@ pub struct TsPackageArgs {
 
 #[derive(Debug, Clone, Args)]
 pub struct TsBarrelArgs {
-  /// The directory where to search for the files and generate the barrel file [default: `.`]
+  /// The directory where to search recursively for the files and generate the barrel file [default: `.`]
   pub dir: Option<PathBuf>,
 
-  /// The output path for the barrel file. It defaults to `dir`/index.ts
+  /// The output path for the barrel file. It defaults to {dir}/index.ts
   #[arg(short, long)]
   pub output: Option<PathBuf>,
 
   /// The file extensions that should be kept in export statements.
-  #[arg(long = "keep-extension")]
+  #[arg(long = "keep-ext")]
   pub keep_extensions: Vec<String>,
 
-  /// Export `.ts` files as `.js`. It assumes that `js` is among the allowed extensions.
+  /// Exports `.ts` files as `.js`. It assumes that `js` is among the file extensions to keep.
   #[arg(long)]
   pub js_ext: bool,
 
-  /// One or more glob patterns to exclude from the imported modules. `index.ts` is added automatically
+  /// One or more glob patterns to exclude from the imported modules.
   #[arg(long)]
   pub exclude: Option<Vec<String>>,
 }

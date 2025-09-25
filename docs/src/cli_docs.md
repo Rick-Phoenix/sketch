@@ -13,6 +13,7 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch ts oxlint`↴](#sketch-ts-oxlint)
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
+* [`sketch ts barrel`↴](#sketch-ts-barrel)
 * [`sketch repo`↴](#sketch-repo)
 * [`sketch new`↴](#sketch-new)
 * [`sketch render`↴](#sketch-render)
@@ -74,6 +75,7 @@ Executes typescript-specific commands
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `monorepo` — Generates a new typescript monorepo
 * `package` — Generates a new typescript package
+* `barrel` — Creates a barrel file
 
 ###### **Options:**
 
@@ -189,6 +191,25 @@ Generates a new typescript package
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
 * `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
+
+
+
+## `sketch ts barrel`
+
+Creates a barrel file
+
+**Usage:** `sketch ts barrel [OPTIONS] [DIR]`
+
+###### **Arguments:**
+
+* `<DIR>` — The directory where to search for the files and generate the barrel file [default: `.`]
+
+###### **Options:**
+
+* `-o`, `--output <OUTPUT>` — The output path for the barrel file. It defaults to {dir}/index.ts
+* `--keep-extension <KEEP_EXTENSIONS>` — The file extensions that should be kept in export statements
+* `--js-ext` — Export `.ts` files as `.js`. It assumes that `js` is among the allowed extensions
+* `--exclude <EXCLUDE>` — One or more glob patterns to exclude from the imported modules. `index.ts` is added automatically
 
 
 
