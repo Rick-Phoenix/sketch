@@ -5,11 +5,51 @@ use regex::Regex;
 use semver::{Version, VersionReq};
 use tera::{Error, Map, Value};
 
+use crate::fs::{get_abs_path, get_relative_path};
+
 fn extract_string<'a>(filter_name: &'a str, value: &'a Value) -> Result<&'a str, Error> {
   value.as_str().ok_or(Error::call_filter(
     filter_name,
     format!("Value `{}` is not a string", value.to_string()),
   ))
+}
+
+pub(crate) fn is_relative(path: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let path = PathBuf::from(extract_string("is_relative", path)?);
+
+  Ok(path.is_relative().into())
+}
+
+pub(crate) fn is_absolute(path: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let path = PathBuf::from(extract_string("is_absolute", path)?);
+
+  Ok(path.is_absolute().into())
+}
+
+pub(crate) fn absolute(path: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let path = PathBuf::from(extract_string("absolute", path)?);
+
+  let abs_path = get_abs_path(&path).map_err(|e| Error::call_filter("absolute", e))?;
+
+  Ok(abs_path.to_string_lossy().to_string().into())
+}
+
+pub(crate) fn relative(path: &Value, args: &HashMap<String, Value>) -> Result<Value, Error> {
+  let path = PathBuf::from(extract_string("relative", path)?);
+
+  let starting_path: PathBuf = extract_string(
+    "relative",
+    args.get("from").ok_or(Error::call_filter(
+      "relative",
+      format!("Could not find the `from` argument"),
+    ))?,
+  )?
+  .into();
+
+  let relative_path =
+    get_relative_path(&starting_path, &path).map_err(|e| Error::call_filter("relative", e))?;
+
+  Ok(relative_path.to_string_lossy().to_string().into())
 }
 
 pub(crate) fn semver(text: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
