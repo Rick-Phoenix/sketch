@@ -3,6 +3,7 @@ use std::{
   process::{Command, Stdio},
 };
 
+use serde_json::Value;
 use tera::Context;
 
 use crate::{
@@ -24,6 +25,7 @@ impl Config {
     shell: Option<&str>,
     cwd: &Path,
     command_template: TemplateData,
+    cli_vars: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
 
@@ -31,6 +33,12 @@ impl Config {
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
 
     context.extend(get_default_context());
+
+    if let Some(overrides) = cli_vars {
+      for (key, val) in overrides {
+        context.insert(&key, &val);
+      }
+    }
 
     let template_name = match command_template {
       TemplateData::Id(id) => id,

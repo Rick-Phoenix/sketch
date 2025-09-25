@@ -56,10 +56,7 @@
       "description": "A map that contains templating presets.",
       "type": "object",
       "additionalProperties": {
-        "type": "array",
-        "items": {
-          "$ref": "#/$defs/TemplateOutput"
-        }
+        "$ref": "#/$defs/TemplatingPreset"
       }
     },
     "pre_commit_presets": {
@@ -4259,7 +4256,7 @@
             "null"
           ],
           "items": {
-            "$ref": "#/$defs/TemplateOutput"
+            "$ref": "#/$defs/TemplatingPresetReference"
           },
           "default": null
         },
@@ -4330,6 +4327,71 @@
         },
         {
           "$ref": "#/$defs/PackageJsonPreset"
+        }
+      ]
+    },
+    "TemplatingPresetReference": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "context": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            }
+          },
+          "required": [
+            "id"
+          ]
+        },
+        {
+          "$ref": "#/$defs/TemplatingPreset"
+        }
+      ]
+    },
+    "TemplatingPreset": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TemplateOutput"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "templates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TemplateOutput"
+              }
+            },
+            "context": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            }
+          },
+          "required": [
+            "templates"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dir": {
+              "type": "string"
+            },
+            "context": {
+              "type": "object",
+              "additionalProperties": true,
+              "default": {}
+            }
+          },
+          "required": [
+            "dir"
+          ]
         }
       ]
     },
@@ -6355,7 +6417,7 @@
             "null"
           ],
           "items": {
-            "$ref": "#/$defs/TemplateOutput"
+            "$ref": "#/$defs/TemplatingPresetReference"
           }
         }
       },

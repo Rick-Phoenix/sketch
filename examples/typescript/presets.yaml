@@ -76,17 +76,34 @@ git_presets:
 
 # Templating presets
 templating_presets:
-  # All the files in this group will be generated together
+  single:
+    template: "engine feels good, much {{ condition }} than before... amazing"
+    # Local context
+    context:
+      condition: slower
+    output: single.txt
+
+  # Takes an entire directory and renders the templates
+  # in the output dir with the same directory structure
+  structured:
+    dir: docker
+    context: {}
+
+  # Group of individual templates, for granular control
   docker:
-    # Relative paths are joined with the output
-    # directory specified via command, (or, by default, to the cwd)
-    - output: Dockerfile
-      template: dockerfile
-      # Optional local context variables
-      context:
-        docker_dev_port: 5173
-    - output: compose.yaml
-      template: compose_file
+    context:
+      # Group context
+      some_var: 25
+    templates:
+      # Relative paths are joined with the output
+      # directory specified via command, (or, by default, to the cwd)
+      - output: Dockerfile
+        template: dockerfile
+        # Local context with higher priority
+        context:
+          docker_dev_port: 5173
+      - output: compose.yaml
+        template: compose_file
 
 typescript:
   no_default_deps: true

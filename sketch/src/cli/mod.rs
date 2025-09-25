@@ -19,7 +19,9 @@ use crate::{
     config_discovery::get_config_from_cli,
     ts_cmds::{handle_ts_commands, TsCommands},
   },
-  custom_templating::{TemplateData, TemplateOutput, TemplatingPreset, TemplatingPresetReference},
+  custom_templating::{
+    TemplateData, TemplateOutput, TemplateOutputKind, TemplatingPreset, TemplatingPresetReference,
+  },
   fs::{
     create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
     serialize_yaml,
@@ -35,6 +37,7 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let command = cli.command.clone();
+  let cli_vars = cli.templates_vars.clone();
 
   let config = get_config_from_cli(cli).await?;
 
@@ -117,7 +120,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       create_all_dirs(&out_dir)?;
 
-      config.init_repo(preset, remote.as_deref(), &out_dir)?;
+      config.init_repo(preset, remote.as_deref(), &out_dir, cli_vars)?;
     }
 
     RenderPreset { id, out_dir } => {
@@ -129,6 +132,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           id,
           context: Default::default(),
         }],
+        cli_vars,
       )?;
     }
 
@@ -160,11 +164,13 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       };
 
       let output = if output.stdout {
-        "__stdout".to_string()
+        TemplateOutputKind::Stdout
       } else {
-        output
-          .output_path
-          .expect("At least one must be set between output_path and --stdout")
+        TemplateOutputKind::Path(
+          output
+            .output_path
+            .expect("At least one must be set between output_path and --stdout"),
+        )
       };
 
       let template = TemplateOutput {
@@ -185,6 +191,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
             context: Default::default(),
           },
         )],
+        cli_vars,
       )?;
     }
     New { output } => {
@@ -239,10 +246,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       let cwd = cwd.unwrap_or_else(|| get_cwd());
 
       let shell = config.shell.clone();
-      config.execute_command(shell.as_deref(), &cwd, command)?;
+      config.execute_command(shell.as_deref(), &cwd, command, cli_vars)?;
     }
     Ts { command, .. } => {
-      handle_ts_commands(config, command).await?;
+      handle_ts_commands(config, command, cli_vars).await?;
     }
   }
   Ok(())
@@ -276,7 +283,7 @@ pub struct Cli {
 pub struct RenderingOutput {
   /// The output path for the generated file
   #[arg(requires = "input")]
-  output_path: Option<String>,
+  output_path: Option<PathBuf>,
 
   /// Prints the result to stdout
   #[arg(long, requires = "input")]

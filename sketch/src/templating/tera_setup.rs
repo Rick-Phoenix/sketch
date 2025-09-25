@@ -5,7 +5,7 @@ use tera::{Context, Tera};
 use crate::{
   cli::parsers::parse_key_value_pairs,
   config::Config,
-  custom_templating::{TemplateData, TemplateOutput},
+  custom_templating::{TemplateData, TemplateOutput, TemplateOutputKind},
   fs::get_cwd,
   tera_filters::{
     basename, camel, capture, capture_many, is_dir, is_file, matches_semver, parent_dir, pascal,
@@ -43,7 +43,7 @@ impl TemplateOutput {
 
     Ok(TemplateOutput {
       template,
-      output,
+      output: TemplateOutputKind::Path(output.into()),
       context: Default::default(),
     })
   }

@@ -22,6 +22,7 @@ use crate::{
 pub(crate) async fn handle_ts_commands(
   mut config: Config,
   command: TsCommands,
+  cli_vars: Option<Vec<(String, Value)>>,
 ) -> Result<(), GenError> {
   let overwrite = config.can_overwrite();
   let debug = config.debug;
@@ -193,6 +194,7 @@ pub(crate) async fn handle_ts_commands(
           root_package,
           out_dir: &out_dir,
           pnpm_config,
+          cli_vars,
         })
         .await?;
 
@@ -287,6 +289,7 @@ pub(crate) async fn handle_ts_commands(
           PackageData::Config(package.clone()),
           package_dir,
           update_tsconfig,
+          cli_vars,
         )
         .await?;
     }
@@ -359,7 +362,7 @@ pub enum TsCommands {
     with_templates: Option<Vec<TemplateOutput>>,
 
     /// One or many templating presets to render in the new monorepo
-    #[arg(short = 't', value_name = "ID")]
+    #[arg(value_name = "ID")]
     with_templ_preset: Option<Vec<String>>,
 
     /// The oxlint preset to use. It can be set to `default` to use the default preset.

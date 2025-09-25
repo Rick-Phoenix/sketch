@@ -5,6 +5,7 @@ use clap::Parser;
 use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use super::{
   package_json::PackageJsonData,
@@ -45,7 +46,7 @@ pub struct PackageConfig {
   pub name: Option<String>,
 
   /// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations.
-  #[arg(short, long, value_parser = TsConfigDirective::from_cli)]
+  #[arg(long, value_parser = TsConfigDirective::from_cli)]
   #[arg(
     help = "One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)",
     value_name = "id=ID,output=PATH"
@@ -102,6 +103,7 @@ impl Config {
     data: PackageData,
     pkg_root: PathBuf,
     tsconfig_files_to_update: Option<Vec<PathBuf>>,
+    cli_vars: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let typescript = self.typescript.clone().unwrap_or_default();
@@ -324,7 +326,7 @@ impl Config {
 
     if let Some(templates) = config.with_templates && !templates.is_empty() {
       self
-        .generate_templates(&pkg_root, templates)?;
+        .generate_templates(&pkg_root, templates, cli_vars)?;
     }
 
     Ok(())

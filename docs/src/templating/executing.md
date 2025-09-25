@@ -28,6 +28,11 @@ This will trigger the command and create a file containing
 
 We can also use a file that is not inside `templates_dir` by using the `-f` flag and providing the path to said file.  Relative paths will be resolved starting from the cwd.
 
+<div class="warning">
+
+When using a single file outside `templates_dir`, importing other templates is not possible.
+</div>
+
 So let's say that we have this template file:
 
 ```txt

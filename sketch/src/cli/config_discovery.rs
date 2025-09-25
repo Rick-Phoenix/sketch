@@ -37,10 +37,6 @@ pub(crate) async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
     config.merge(overrides);
   }
 
-  if let Some(vars) = cli.templates_vars {
-    config.vars.extend(vars);
-  }
-
   match cli.command {
     Commands::Ts {
       typescript_overrides,

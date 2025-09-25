@@ -62,12 +62,20 @@ impl TemplateData {
   }
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+pub enum TemplateOutputKind {
+  #[serde(skip)]
+  Stdout,
+  #[serde(untagged)]
+  Path(PathBuf),
+}
+
 /// The data for outputting a new template.
 /// The context specified here will override the global context (but not the variables set via cli).
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 pub struct TemplateOutput {
   pub template: TemplateData,
-  pub output: String,
+  pub output: TemplateOutputKind,
   #[serde(default)]
   pub context: IndexMap<String, Value>,
 }
@@ -78,6 +86,7 @@ impl Config {
     self,
     output_root: T,
     templates: Vec<TemplatingPresetReference>,
+    cli_overrides: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
     let mut tera = self.initialize_tera()?;
@@ -90,11 +99,11 @@ impl Config {
     let output_root = output_root.as_ref();
 
     for template in templates {
-      let mut local_context = Cow::Borrowed(&global_context);
+      let mut local_context: IndexMap<String, Value> = IndexMap::new();
 
       let preset = match template {
         TemplatingPresetReference::Preset { id, context } => {
-          local_context = get_local_context(local_context, context)?;
+          local_context.extend(context);
 
           self
             .templating_presets
@@ -110,25 +119,30 @@ impl Config {
 
       match preset {
         TemplatingPreset::Collection { templates, context } => {
-          local_context = get_local_context(local_context, context)?;
+          local_context.extend(context);
+
+          let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
 
           for template in templates {
             render_template_with_output(
               overwrite,
               &mut tera,
-              &local_context,
+              &context,
               output_root,
-              template,
+              template.output,
+              template.template,
             )?;
           }
         }
         TemplatingPreset::Structured { dir, context } => {
-          local_context = get_local_context(local_context, context)?;
+          local_context.extend(context);
+
+          let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
 
           render_structured_preset(
             overwrite,
             &tera,
-            &local_context,
+            &context,
             output_root,
             dir,
             &self
@@ -137,13 +151,18 @@ impl Config {
               .ok_or(GenError::Custom(format!("templates_dir not set")))?,
           )?;
         }
-        TemplatingPreset::Single(template_with_output) => {
+        TemplatingPreset::Single(template) => {
+          local_context.extend(template.context);
+
+          let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
+
           render_template_with_output(
             overwrite,
             &mut tera,
-            &local_context,
+            &context,
             output_root,
-            template_with_output,
+            template.output,
+            template.template,
           )?;
         }
       };
@@ -158,13 +177,12 @@ fn render_template_with_output(
   tera: &mut Tera,
   context: &Context,
   output_root: &Path,
-  template: TemplateOutput,
+  output: TemplateOutputKind,
+  template: TemplateData,
 ) -> Result<(), GenError> {
-  let local_context = get_local_context(Cow::Borrowed(context), template.context)?;
+  let template_name = template.name();
 
-  let template_name = template.template.name();
-
-  if let TemplateData::Content { name, content } = &template.template {
+  if let TemplateData::Content { name, content } = &template {
     tera
       .add_raw_template(name, content)
       .map_err(|e| GenError::TemplateParsing {
@@ -173,21 +191,28 @@ fn render_template_with_output(
       })?;
   }
 
-  if template.output == "__stdout" {
-    let output =
-      tera
-        .render(template_name, &local_context)
-        .map_err(|e| GenError::TemplateRendering {
-          template: template_name.to_string(),
-          source: e,
-        })?;
+  match output {
+    TemplateOutputKind::Stdout => {
+      let output =
+        tera
+          .render(template_name, context)
+          .map_err(|e| GenError::TemplateRendering {
+            template: template_name.to_string(),
+            source: e,
+          })?;
 
-    println!("{}", output);
-  } else {
-    let output_path = output_root.join(template.output);
-
-    render_template(tera, template_name, &output_path, &local_context, overwrite)?;
-  }
+      println!("{}", output);
+    }
+    TemplateOutputKind::Path(path) => {
+      render_template(
+        tera,
+        template_name,
+        &output_root.join(path),
+        context,
+        overwrite,
+      )?;
+    }
+  };
 
   Ok(())
 }
@@ -248,19 +273,42 @@ fn render_template(
 }
 
 fn get_local_context<'a>(
-  global_context: Cow<'a, Context>,
-  new_context: IndexMap<String, Value>,
+  global_context: &'a Context,
+  local_context: IndexMap<String, Value>,
 ) -> Result<Cow<'a, Context>, GenError> {
-  if new_context.is_empty() {
-    Ok(global_context)
+  if local_context.is_empty() {
+    Ok(Cow::Borrowed(global_context))
   } else {
-    let mut local_context = global_context.as_ref().clone();
+    let mut new_context = global_context.clone();
 
-    let added_context = Context::from_serialize(new_context)
-      .map_err(|e| GenError::TemplateContextParsing { source: e })?;
+    new_context.extend(create_context(local_context)?);
 
-    local_context.extend(added_context);
-
-    Ok(Cow::Owned(local_context))
+    Ok(Cow::Owned(new_context))
   }
+}
+
+fn get_context<'a>(
+  global_context: &'a Context,
+  mut local_context: IndexMap<String, Value>,
+  overrides: Option<&'a [(String, Value)]>,
+) -> Result<Cow<'a, Context>, GenError> {
+  apply_cli_overrides(&mut local_context, overrides)?;
+  get_local_context(global_context, local_context)
+}
+
+fn create_context(context: IndexMap<String, Value>) -> Result<Context, GenError> {
+  Context::from_serialize(context).map_err(|e| GenError::TemplateContextParsing { source: e })
+}
+
+fn apply_cli_overrides(
+  context: &mut IndexMap<String, Value>,
+  overrides: Option<&[(String, Value)]>,
+) -> Result<(), GenError> {
+  if let Some(overrides) = overrides {
+    for (key, val) in overrides {
+      context.insert(key.clone(), val.clone());
+    }
+  }
+
+  Ok(())
 }

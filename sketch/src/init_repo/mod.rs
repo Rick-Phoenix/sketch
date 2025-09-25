@@ -2,6 +2,7 @@ use std::path::Path;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub mod gitignore;
 pub mod pre_commit;
@@ -33,6 +34,7 @@ impl Config {
     preset: RepoPreset,
     remote: Option<&str>,
     out_dir: &Path,
+    cli_vars: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
     let overwrite = !self.no_overwrite;
 
@@ -114,7 +116,7 @@ impl Config {
     }
 
     if let Some(templates) = preset.with_templates {
-      self.generate_templates(&out_dir, templates)?;
+      self.generate_templates(&out_dir, templates, cli_vars)?;
     }
 
     Ok(())

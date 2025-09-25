@@ -1,6 +1,7 @@
 use std::{fs::create_dir_all, path::Path};
 
 use maplit::btreeset;
+use serde_json::Value;
 
 use crate::{
   fs::{create_all_dirs, serialize_json, serialize_yaml},
@@ -18,6 +19,7 @@ pub struct CreateTsMonorepoSettings<'a> {
   pub root_package: PackageConfig,
   pub out_dir: &'a Path,
   pub pnpm_config: Option<PnpmWorkspace>,
+  pub cli_vars: Option<Vec<(String, Value)>>,
 }
 
 impl Config {
@@ -37,6 +39,7 @@ impl Config {
       root_package,
       out_dir,
       pnpm_config,
+      cli_vars,
     } = settings;
 
     create_all_dirs(out_dir)?;
@@ -168,7 +171,7 @@ impl Config {
     }
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {
-      self.generate_templates(&out_dir, templates)?;
+      self.generate_templates(&out_dir, templates, cli_vars)?;
     }
 
     Ok(())
