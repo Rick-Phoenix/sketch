@@ -18,6 +18,7 @@ use crate::{
   Config, GenError, Preset,
 };
 
+/// A preset for a git repository.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default)]
 #[serde(default)]
 pub struct RepoPreset {

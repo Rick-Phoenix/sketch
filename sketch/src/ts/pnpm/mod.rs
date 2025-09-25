@@ -20,9 +20,11 @@ use crate::{
   Extensible, GenError, JsonValueBTreeMap, PackageJson, Preset, StringBTreeMap,
 };
 
+/// A preset for a `pnpm-workspace.yaml` file configuration.
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, Merge)]
 #[serde(default)]
 pub struct PnpmPreset {
+  /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
   pub extends: IndexSet<String>,
 

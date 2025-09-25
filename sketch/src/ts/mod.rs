@@ -59,6 +59,7 @@ impl Default for TypescriptConfig {
   }
 }
 
+/// All settings related to typescript projects.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
@@ -141,6 +142,7 @@ impl PackageManager {
   }
 }
 
+/// A js/ts package manager.
 #[derive(
   Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default, ValueEnum, Copy, JsonSchema,
 )]

@@ -18,9 +18,11 @@ use crate::{
   GenError, Preset,
 };
 
+/// A preset for a `tsconfig` file.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, Default, Merge)]
 #[serde(default)]
 pub struct TsConfigPreset {
+  /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
   pub extend_presets: IndexSet<String>,
 
@@ -71,7 +73,10 @@ impl Default for TsConfigKind {
 /// If the output path is relative, it will be joined to the root path of its package.
 #[derive(Deserialize, Debug, Clone, Serialize, PartialEq, JsonSchema)]
 pub struct TsConfigDirective {
+  /// The output path of the config file [default: `tsconfig.json`]
   pub output: Option<String>,
+
+  /// The configuration for the output file. It can be a preset id or a new definition.
   pub config: Option<TsConfigKind>,
 }
 

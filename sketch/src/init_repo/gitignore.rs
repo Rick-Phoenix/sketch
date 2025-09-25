@@ -19,10 +19,11 @@ fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
   *left = GitIgnore::List(new)
 }
 
+/// A preset for a `.gitignore` file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge, Default)]
 #[serde(default)]
 pub struct GitignorePreset {
-  /// The ids of the extended configurations.
+  /// The ids of the extended presets.
   #[merge(strategy = merge_index_sets)]
   pub extends: IndexSet<String>,
 
@@ -56,7 +57,7 @@ impl GitignorePreset {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
-/// Settings for a .gitignore file. It can be a preset id or a literal configuration.
+/// Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)
 pub enum GitIgnoreSetting {
   Id(String),
   Config(GitIgnore),

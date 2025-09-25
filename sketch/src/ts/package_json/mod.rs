@@ -72,10 +72,11 @@ impl PackageJsonPreset {
   }
 }
 
-/// A [`PackageJson`] preset, that holds all of the data of a [`PackageJson`], plus the ability to extend other presets and refer to authors and maintainers by their id.
+/// A [`PackageJson`] preset.
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, JsonSchema, Merge, Default)]
 #[serde(default)]
 pub struct PackageJsonPreset {
+  /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
   pub extends: IndexSet<String>,
   #[serde(flatten)]

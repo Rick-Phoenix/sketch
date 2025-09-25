@@ -16,7 +16,7 @@ use crate::{
   StringBTreeMap,
 };
 
-/// The definition for a pre-commit configuration or preset.
+/// A preset for a `.pre-commit-config.yaml` configuration file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge, Default)]
 #[serde(default)]
 pub struct PreCommitPreset {

@@ -67,12 +67,12 @@ pub struct PackageConfig {
   #[merge(strategy = merge_optional_vecs)]
   pub with_templates: Option<Vec<TemplatingPresetReference>>,
 
-  /// The configuration for this package's vitest setup. It can be set to `false` to be disabled, or to a literal configuration.
+  /// The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
   #[arg(skip)]
   #[merge(strategy = merge_if_not_default)]
   pub vitest: Option<VitestConfigKind>,
 
-  /// The configuration for this package's oxlint setup. It can be set to `true` to use a basic default config, to a preset id, or to a literal configuration.
+  /// The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfigSetting>,
 }

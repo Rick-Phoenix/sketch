@@ -14,9 +14,11 @@ use crate::{
   GenError, JsonValueBTreeMap, Preset,
 };
 
+/// A preset for `.oxlintrc.json`
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, Merge)]
 #[serde(default)]
 pub struct OxlintPreset {
+  /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
   pub extend_presets: IndexSet<String>,
 
