@@ -54,7 +54,7 @@ On top of that, Sketch adds some extra filters and functions.
 Template
 
 ```jinja
-{{#include ../../../examples/templating/example.j2}}
+{{#include ../../../examples/templating/templates/example.j2}}
 ```
 
 Cmd:

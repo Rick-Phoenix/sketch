@@ -44,7 +44,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(git_presets_cmd).await?;
 
-  get_tree_output(&out_dir, "tree_output.txt")?;
+  get_tree_output(&out_dir, None)?;
 
   get_clean_example_cmd(&git_preset_args, &[1, 2, 8], &out_dir.join("cmd"))?;
 
@@ -121,7 +121,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(oxlint_test).await?;
 
-  get_tree_output(&package_out_dir, "tree_output.txt")?;
+  get_tree_output(&package_out_dir, None)?;
 
   let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
   assert_eq!(package_dockerfile_output, expected_dockerfile);

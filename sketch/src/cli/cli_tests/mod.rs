@@ -17,27 +17,34 @@ use std::{
 
 use crate::cli::Cli;
 
-fn get_tree_output<T: Into<PathBuf>>(dir: T, file: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn get_tree_output<T: Into<PathBuf>>(
+  dir: T,
+  file: Option<PathBuf>,
+) -> Result<(), Box<dyn std::error::Error>> {
   let dir: PathBuf = dir.into();
 
-  let output_file = dir.join(file);
+  let output_file = if let Some(path) = file {
+    path
+  } else {
+    dir.join("tree_output.txt")
+  };
 
   if output_file.is_file() {
     remove_file(&output_file)?;
   }
 
   Command::new("tree")
-    .current_dir(dir)
+    .arg(&dir.to_string_lossy().to_string())
     .arg("-a")
     .arg("-I")
-    .arg(file)
+    .arg("tree_output.txt")
     .arg("-I")
     .arg(".git")
     .arg("-I")
     .arg("commands")
     .arg("--noreport")
     .arg("-o")
-    .arg(file)
+    .arg(output_file)
     .output()?;
 
   Ok(())

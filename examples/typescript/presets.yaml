@@ -76,7 +76,7 @@ git_presets:
 
 # Templating presets
 templating_presets:
-  single:
+  single_template:
     template: "engine feels good, much {{ condition }} than before... amazing"
     # Local context
     context:
@@ -85,15 +85,15 @@ templating_presets:
 
   # Takes an entire directory and renders the templates
   # in the output dir with the same directory structure
-  structured:
-    dir: docker
+  structured_template:
+    dir: some/dir/inside/templates_dir
     context: {}
 
   # Group of individual templates, for granular control
   docker:
     context:
       # Group context
-      some_var: 25
+      docker_dev_port: 9530
     templates:
       # Relative paths are joined with the output
       # directory specified via command, (or, by default, to the cwd)

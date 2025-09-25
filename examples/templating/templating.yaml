@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../../schemas/development.json
+
+# ANCHOR: template_definition
+templates_dir: templates
+
+vars:
+  location: Isengard
+  something: laser
+  greeting: hello
+  general: kenobi
+  meal: breakfast
+
+templates:
+  hobbits: "they're taking the hobbits to {{ location }}!"
+  breakfast: "what about second {{ meal }}?"
+# ANCHOR_END: template_definition
+
+# ANCHOR: prop_name
+templating_presets:
+  # ANCHOR_END: prop_name
+  # ANCHOR: structured_preset
+  structured:
+    dir: subdir
+    # Optional context
+    context: {}
+  # ANCHOR_END: structured_preset
+
+  # ANCHOR: collection_preset
+  # A preset can also contain a single template
+  single_preset:
+    template: hobbits
+    context:
+      location: Isengard
+    output: isengard.txt
+
+  # Or more commonly, many of them
+  lotr:
+    # We can define a group context
+    context: {}
+    templates:
+      - template: hobbits
+        output: hobbits.txt
+        # And a local context (higher priority)
+        context: {}
+      - template: breakfast
+        output: subdir/breakfast.txt
+# ANCHOR_END: collection_preset

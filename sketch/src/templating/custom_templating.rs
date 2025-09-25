@@ -240,7 +240,14 @@ fn render_structured_preset(
       .filter(|e| e.file_type().is_file())
     {
       let template_path = entry.path().strip_prefix(&templates_dir).unwrap();
-      let output_path = entry.path().strip_prefix(&root_dir).unwrap();
+      let mut output_path = entry.path().strip_prefix(&root_dir).unwrap().to_path_buf();
+
+      if output_path
+        .extension()
+        .is_some_and(|e| e == "j2" || e == "jinja" || e == "jinja2")
+      {
+        output_path = output_path.with_extension("");
+      }
 
       render_template(
         tera,

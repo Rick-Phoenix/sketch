@@ -43,7 +43,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(monorepo_setup).await?;
 
-  get_tree_output(&output_dir, "tree_output.txt")?;
+  get_tree_output(&output_dir, None)?;
 
   let people_cmd = [
     "sketch",
@@ -115,7 +115,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(package_gen).await?;
 
-  get_tree_output(&output_dir.join("packages/frontend"), "tree_output.txt")?;
+  get_tree_output(&output_dir.join("packages/frontend"), None)?;
 
   Ok(())
 }
@@ -131,7 +131,7 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
 
   let args = [
     "--templates-dir",
-    path_to_str!(examples_dir.join("templating")),
+    path_to_str!(examples_dir.join("templating/templates")),
     "render",
     "--id",
     "example.j2",
