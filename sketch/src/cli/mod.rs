@@ -351,7 +351,7 @@ pub enum Commands {
     input: RepoConfigInput,
 
     /// The link of the git remote to use for the new repo.
-    #[arg(long)]
+    #[arg(short, long)]
     remote: Option<String>,
   },
 

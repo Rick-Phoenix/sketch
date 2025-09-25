@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::Subcommand;
+use clap::{Args, Subcommand};
 use merge::Merge;
 
 use crate::{
@@ -108,14 +108,17 @@ pub(crate) async fn handle_ts_commands(
       serialize_json(&content, &output, overwrite)?;
     }
     TsCommands::Monorepo {
-      install,
+      package_args:
+        TsPackageArgs {
+          oxlint,
+          install,
+          with_templates,
+          with_templ_preset,
+        },
       root_package_overrides,
       root_package,
-      oxlint,
       dir,
       pnpm,
-      with_templates,
-      with_templ_preset,
     } => {
       let mut root_package = if let Some(id) = root_package {
         typescript
@@ -210,13 +213,16 @@ pub(crate) async fn handle_ts_commands(
     TsCommands::Package {
       preset,
       package_config,
-      install,
-      oxlint,
       update_tsconfig,
       dir,
       vitest,
-      with_templates,
-      with_templ_preset,
+      package_args:
+        TsPackageArgs {
+          oxlint,
+          install,
+          with_templates,
+          with_templ_preset,
+        },
     } => {
       let mut package = if let Some(preset) = preset {
         typescript
@@ -352,26 +358,8 @@ pub enum TsCommands {
     #[command(flatten)]
     root_package_overrides: Option<PackageConfig>,
 
-    /// One or many individual templates to render in the new monorepo
-    #[arg(
-      short,
-      long = "with-template",
-      value_name = "id=TEMPLATE_ID,output=PATH",
-      value_parser = TemplateOutput::from_cli
-    )]
-    with_templates: Option<Vec<TemplateOutput>>,
-
-    /// One or many templating presets to render in the new monorepo
-    #[arg(value_name = "ID")]
-    with_templ_preset: Option<Vec<String>>,
-
-    /// The oxlint preset to use. It can be set to `default` to use the default preset.
-    #[arg(long, value_name = "ID")]
-    oxlint: Option<String>,
-
-    /// Installs the dependencies after creation.
-    #[arg(short, long)]
-    install: bool,
+    #[command(flatten)]
+    package_args: TsPackageArgs,
   },
 
   /// Generates a new typescript package
@@ -387,32 +375,38 @@ pub enum TsCommands {
     #[arg(short, long)]
     update_tsconfig: Option<Vec<PathBuf>>,
 
+    #[command(flatten)]
+    package_args: TsPackageArgs,
+
     /// The vitest preset to use. It can be set to `default` to use the default preset.
     #[arg(long, value_name = "ID")]
     vitest: Option<String>,
 
-    /// The oxlint preset to use. It can be set to `default` to use the default preset.
-    #[arg(long, value_name = "ID")]
-    oxlint: Option<String>,
-
-    /// Installs the dependencies with the chosen package manager
-    #[arg(short, long)]
-    install: bool,
-
     #[command(flatten)]
     package_config: Option<PackageConfig>,
+  },
+}
 
-    /// One or many individual templates to render in the new package's directory
-    #[arg(
+#[derive(Debug, Clone, Args)]
+pub struct TsPackageArgs {
+  /// The oxlint preset to use. It can be set to `default` to use the default preset.
+  #[arg(long, value_name = "ID")]
+  oxlint: Option<String>,
+
+  /// Installs the dependencies with the chosen package manager
+  #[arg(short, long)]
+  install: bool,
+
+  /// One or many individual templates to render in the new package's directory
+  #[arg(
       short,
       long = "with-template",
       value_name = "id=TEMPLATE_ID,output=PATH",
       value_parser = TemplateOutput::from_cli
     )]
-    with_templates: Option<Vec<TemplateOutput>>,
+  with_templates: Option<Vec<TemplateOutput>>,
 
-    /// One or many templating presets to render in the new package's directory
-    #[arg(short = 't', value_name = "ID")]
-    with_templ_preset: Option<Vec<String>>,
-  },
+  /// One or many templating presets to render in the new package's directory
+  #[arg(short = 't', value_name = "ID")]
+  with_templ_preset: Option<Vec<String>>,
 }
