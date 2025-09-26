@@ -27,7 +27,7 @@ impl Config {
     self,
     settings: CreateTsMonorepoSettings<'_>,
   ) -> Result<(), GenError> {
-    let overwrite = !self.no_overwrite;
+    let overwrite = self.can_overwrite();
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
@@ -69,10 +69,10 @@ impl Config {
       package_json_data.package_manager = Some(package_manager.to_string());
     }
 
-    if !typescript.no_default_deps {
+    if !typescript.no_default_deps.unwrap_or_default() {
       for dep in ["typescript", "oxlint"] {
         if !package_json_data.dev_dependencies.contains_key(dep) {
-          let version = if typescript.catalog {
+          let version = if typescript.catalog.unwrap_or_default() {
             "catalog:".to_string()
           } else {
             "latest".to_string()
@@ -86,7 +86,7 @@ impl Config {
       }
     }
 
-    if !typescript.no_convert_latest_to_range {
+    if !typescript.no_convert_latest_to_range.unwrap_or_default() {
       package_json_data
         .convert_latest_to_range(version_ranges)
         .await?;

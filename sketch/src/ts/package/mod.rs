@@ -19,7 +19,7 @@ use crate::{
     create_all_dirs, deserialize_json, deserialize_yaml, find_file_up, get_abs_path,
     get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml,
   },
-  merge_if_not_default, merge_optional_vecs, overwrite_if_some,
+  merge_optional_vecs, overwrite_if_some,
   ts::{
     oxlint::{OxlintConfigSetting, OxlintPreset},
     ts_config, PackageManager,
@@ -69,7 +69,6 @@ pub struct PackageConfig {
 
   /// The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
   #[arg(skip)]
-  #[merge(strategy = merge_if_not_default)]
   pub vitest: Option<VitestConfigKind>,
 
   /// The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
@@ -105,7 +104,7 @@ impl Config {
     tsconfig_files_to_update: Option<Vec<PathBuf>>,
     cli_vars: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
-    let overwrite = !self.no_overwrite;
+    let overwrite = self.can_overwrite();
     let typescript = self.typescript.clone().unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
@@ -167,7 +166,7 @@ impl Config {
       package_json_data.package_manager = Some(package_manager.to_string());
     }
 
-    if !typescript.no_default_deps {
+    if !typescript.no_default_deps.unwrap_or_default() {
       let mut default_deps = vec!["typescript", "oxlint"];
 
       if let Some(ref vitest) = config.vitest && vitest.is_enabled() {
@@ -176,7 +175,7 @@ impl Config {
 
       for dep in default_deps {
         if !package_json_data.dev_dependencies.contains_key(dep) {
-          let version = if typescript.catalog {
+          let version = if typescript.catalog.unwrap_or_default() {
             "catalog:".to_string()
           } else {
             "latest".to_string()
@@ -191,7 +190,7 @@ impl Config {
 
     package_json_data.name = Some(package_name.clone());
 
-    if !typescript.no_convert_latest_to_range {
+    if !typescript.no_convert_latest_to_range.unwrap_or_default() {
       package_json_data
         .convert_latest_to_range(version_ranges)
         .await?;
@@ -203,7 +202,7 @@ impl Config {
       overwrite,
     )?;
 
-    if typescript.catalog && matches!(package_manager, PackageManager::Pnpm) {
+    if typescript.catalog.unwrap_or_default() && matches!(package_manager, PackageManager::Pnpm) {
       let pnpm_workspace_path =
         find_file_up(&pkg_root, "pnpm-workspace.yaml").ok_or(GenError::Custom(format!(
           "Could not find a `pnpm-workspace.yaml` file while searching upwards from `{}`",

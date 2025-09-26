@@ -23,7 +23,7 @@ extends: ["other_config.yaml"]
 
 Where the path being used can be either an absolute path or a relative path starting from the original config file.
 
-The [merging strategy](../presets.md#extending-presets) for config files is the same as for all the other presets.
+The [merging strategy](../presets/summary.md#extending-presets) for config files is the same as for all the other presets.
 
 # Top Level Configuration
 

@@ -41,9 +41,15 @@ This document contains the help content for the `sketch` command-line program.
 * `-c`, `--config <FILE>` — Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
 * `--ignore-config` — Ignores any automatically detected config files, uses cli instructions only
 * `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
-* `--debug` — Activates debugging mode
+* `--debug <DEBUG>` — Activates debugging mode
+
+  Possible values: `true`, `false`
+
 * `--templates-dir <DIR>` — The path to the templates directory
-* `--no-overwrite` — Do not overwrite existing files
+* `--no-overwrite <NO_OVERWRITE>` — Do not overwrite existing files
+
+  Possible values: `true`, `false`
+
 * `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
 
 
@@ -83,13 +89,22 @@ Executes typescript-specific commands
 
   Possible values: `pnpm`, `npm`, `deno`, `bun`, `yarn`
 
-* `--no-default-deps` — Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+* `--no-default-deps <NO_DEFAULT_DEPS>` — Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+
+  Possible values: `true`, `false`
+
 * `--version-range <KIND>` — The kind of version range to use for dependencies that are fetched automatically. [default: minor]
 
   Possible values: `patch`, `minor`, `exact`
 
-* `--catalog` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
-* `--no-convert-latest` — Do not convert dependencies marked as `latest` to a version range
+* `--catalog <CATALOG>` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
+
+  Possible values: `true`, `false`
+
+* `--no-convert-latest <NO_CONVERT_LATEST_TO_RANGE>` — Do not convert dependencies marked as `latest` to a version range
+
+  Possible values: `true`, `false`
+
 
 
 

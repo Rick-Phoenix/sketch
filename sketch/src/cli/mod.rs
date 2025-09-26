@@ -41,8 +41,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
   let config = get_config_from_cli(cli).await?;
 
-  let debug = config.debug;
-  let overwrite = !config.no_overwrite;
+  let debug = config.debug.unwrap_or_default();
+  let overwrite = config.can_overwrite();
 
   if debug {
     log_debug("Config", &config);
@@ -178,10 +178,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         template: template_data,
         context: Default::default(),
       };
-
-      if debug {
-        log_debug("Template", &template);
-      }
 
       config.generate_templates(
         get_cwd(),

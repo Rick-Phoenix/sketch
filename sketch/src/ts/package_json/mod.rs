@@ -114,8 +114,7 @@ pub struct PackageJson {
   pub name: Option<String>,
 
   /// If set to true, then npm will refuse to publish it.
-  #[merge(strategy = merge::bool::overwrite_true)]
-  pub private: bool,
+  pub private: Option<bool>,
 
   /// Allows packages within a directory to depend on one another using direct linking of local files. Additionally, dependencies within a workspace are hoisted to the workspace root when possible to reduce duplication. Note: It's also a good idea to set `private` to true when using this feature.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -291,7 +290,7 @@ impl Default for PackageJson {
   fn default() -> Self {
     Self {
       name: None,
-      private: true,
+      private: None,
       pnpm: None,
       overrides: None,
       bin: None,
@@ -451,7 +450,7 @@ mod test {
         }
         }
       }),
-      private: true,
+      private: Some(true),
       type_: JsPackageType::Module,
       bin: Some(Bin::Map(btreemap! {
         "bin1".to_string() => "bin/bin1".to_string(),

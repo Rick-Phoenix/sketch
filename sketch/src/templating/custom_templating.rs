@@ -114,7 +114,7 @@ impl Config {
     templates: Vec<TemplatingPresetReference>,
     cli_overrides: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
-    let overwrite = !self.no_overwrite;
+    let overwrite = self.can_overwrite();
     let mut tera = self.initialize_tera()?;
 
     let mut global_context = Context::from_serialize(self.vars)

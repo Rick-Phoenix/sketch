@@ -80,12 +80,6 @@ pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
   v == &T::default()
 }
 
-pub(crate) fn merge_if_not_default<T: Default + PartialEq>(left: &mut T, right: T) {
-  if !is_default(&right) {
-    *left = right
-  }
-}
-
 pub(crate) fn merge_nested<T: Merge>(left: &mut T, right: T) {
   left.merge(right)
 }

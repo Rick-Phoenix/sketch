@@ -38,7 +38,7 @@ impl Config {
     out_dir: &Path,
     cli_vars: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
-    let overwrite = !self.no_overwrite;
+    let overwrite = self.can_overwrite();
 
     create_all_dirs(&out_dir)?;
 

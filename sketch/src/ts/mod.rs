@@ -45,12 +45,12 @@ impl Default for TypescriptConfig {
     Self {
       vitest_presets: Default::default(),
       pnpm_presets: Default::default(),
-      no_default_deps: false,
-      no_convert_latest_to_range: false,
+      no_default_deps: None,
+      no_convert_latest_to_range: None,
       package_json_presets: Default::default(),
       package_manager: Default::default(),
       package_presets: Default::default(),
-      catalog: false,
+      catalog: None,
       version_range: Default::default(),
       ts_config_presets: Default::default(),
       oxlint_presets: Default::default(),
@@ -69,9 +69,8 @@ pub struct TypescriptConfig {
   pub package_manager: Option<PackageManager>,
 
   /// Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
-  #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
-  pub no_default_deps: bool,
+  pub no_default_deps: Option<bool>,
 
   /// The kind of version range to use for dependencies that are fetched automatically. [default: minor]
   #[arg(value_enum)]
@@ -79,14 +78,12 @@ pub struct TypescriptConfig {
   pub version_range: Option<VersionRange>,
 
   /// Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.
-  #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
-  pub catalog: bool,
+  pub catalog: Option<bool>,
 
   /// Do not convert dependencies marked as `latest` to a version range.
-  #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long = "no-convert-latest")]
-  pub no_convert_latest_to_range: bool,
+  pub no_convert_latest_to_range: Option<bool>,
 
   /// A map of individual [`PersonData`] that can be referenced as authors, contributors or maintainers in a [`PackageJsonPreset`].
   #[arg(skip)]

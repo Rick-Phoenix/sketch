@@ -27,7 +27,7 @@ impl Config {
   }
 
   pub(crate) fn can_overwrite(&self) -> bool {
-    !self.no_overwrite
+    !self.no_overwrite.unwrap_or_default()
   }
 }
 
@@ -53,10 +53,9 @@ pub struct Config {
   pub shell: Option<String>,
 
   /// Activates debugging mode.
-  #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
-  #[serde(skip_serializing_if = "is_default")]
-  pub debug: bool,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub debug: Option<bool>,
 
   /// The path to the templates directory.
   #[arg(long, value_name = "DIR")]
@@ -64,10 +63,9 @@ pub struct Config {
   pub templates_dir: Option<PathBuf>,
 
   /// Do not overwrite existing files.
-  #[merge(strategy = merge::bool::overwrite_false)]
   #[arg(long)]
-  #[serde(skip_serializing_if = "is_default")]
-  pub no_overwrite: bool,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub no_overwrite: Option<bool>,
 
   /// The paths (absolute, or relative to the originating config file) to the config files to extend.
   #[merge(strategy = merge_index_sets)]
@@ -200,12 +198,12 @@ impl Default for Config {
       templating_presets: Default::default(),
       typescript: None,
       shell: None,
-      debug: false,
+      debug: None,
       templates_dir: Default::default(),
       templates: Default::default(),
       vars: Default::default(),
       extends: Default::default(),
-      no_overwrite: false,
+      no_overwrite: None,
     }
   }
 }

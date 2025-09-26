@@ -7,7 +7,7 @@ use merge::Merge;
 use walkdir::WalkDir;
 
 use crate::{
-  cli::{log_debug, TemplateOutput},
+  cli::TemplateOutput,
   custom_templating::{TemplatingPreset, TemplatingPresetReference},
   exec::launch_command,
   fs::{create_parent_dirs, get_cwd, open_file_if_overwriting, serialize_json, serialize_yaml},
@@ -28,16 +28,7 @@ pub(crate) async fn handle_ts_commands(
   cli_vars: Option<Vec<(String, Value)>>,
 ) -> Result<(), GenError> {
   let overwrite = config.can_overwrite();
-  let debug = config.debug;
   let typescript = config.typescript.get_or_insert_default();
-
-  macro_rules! report_info {
-    ($info:expr) => {
-      if debug {
-        $info;
-      }
-    };
-  }
 
   match command {
     TsCommands::Barrel { args } => {
@@ -153,8 +144,6 @@ pub(crate) async fn handle_ts_commands(
           Some(OxlintConfigSetting::Id(id))
         };
       }
-
-      report_info!(log_debug("root_package", &root_package));
 
       let package_manager = typescript.package_manager.get_or_insert_default().clone();
       let out_dir = dir.unwrap_or_else(|| "ts_root".into());
@@ -279,8 +268,6 @@ pub(crate) async fn handle_ts_commands(
           ));
         }
       }
-
-      report_info!(log_debug("package", &package));
 
       let package_dir =
         dir.unwrap_or_else(|| package.name.as_deref().unwrap_or("new_package").into());
