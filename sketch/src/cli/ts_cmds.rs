@@ -419,7 +419,7 @@ pub struct TsPackageArgs {
   with_templates: Option<Vec<TemplateOutput>>,
 
   /// One or many templating presets to render in the new package's directory
-  #[arg(short = 't', value_name = "ID")]
+  #[arg(short = 't', long, value_name = "ID")]
   with_templ_preset: Option<Vec<String>>,
 }
 
@@ -428,12 +428,12 @@ pub struct TsBarrelArgs {
   /// The directory where to search recursively for the files and generate the barrel file [default: `.`]
   pub dir: Option<PathBuf>,
 
-  /// The output path for the barrel file. It defaults to {dir}/index.ts
+  /// The output path for the barrel file. It defaults to `{dir}/index.ts`
   #[arg(short, long)]
   pub output: Option<PathBuf>,
 
   /// The file extensions that should be kept in export statements.
-  #[arg(long = "keep-ext")]
+  #[arg(long = "keep-ext", value_name = "EXT")]
   pub keep_extensions: Vec<String>,
 
   /// Exports `.ts` files as `.js`. It assumes that `js` is among the file extensions to keep.

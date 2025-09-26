@@ -8,8 +8,9 @@ use crate::{
   custom_templating::{TemplateData, TemplateOutput, TemplateOutputKind},
   fs::get_cwd,
   tera_filters::{
-    absolute, basename, camel, capture, capture_many, is_absolute, is_dir, is_file, is_relative,
-    matches_semver, parent_dir, pascal, relative, semver, snake, upper_snake,
+    absolute, basename, camel, capture, capture_many, glob, is_absolute, is_dir, is_file,
+    is_relative, matches_glob, matches_semver, parent_dir, pascal, read_dir, relative, semver,
+    snake, strip_prefix, strip_suffix, upper_snake,
   },
   tera_functions::tera_uuid,
   GenError,
@@ -81,6 +82,11 @@ impl Config {
     tera.register_filter("is_relative", is_relative);
     tera.register_filter("relative", relative);
     tera.register_filter("absolute", absolute);
+    tera.register_filter("strip_prefix", strip_prefix);
+    tera.register_filter("strip_suffix", strip_suffix);
+    tera.register_filter("read_dir", read_dir);
+    tera.register_filter("glob", glob);
+    tera.register_filter("matches_glob", matches_glob);
 
     for (name, template) in &self.templates {
       tera

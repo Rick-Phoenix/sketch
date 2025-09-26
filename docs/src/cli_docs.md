@@ -33,7 +33,7 @@ This document contains the help content for the `sketch` command-line program.
 * `repo` — Creates a new git repo from a preset
 * `new` — Generates a new config file
 * `render` — Renders a single template to a file or to stdout
-* `render-preset` — Renders a templating preset defined in a configuration file
+* `render-preset` — Renders a templating preset
 * `exec` — Renders a template and executes it as a shell command
 
 ###### **Options:**
@@ -165,7 +165,7 @@ Generates a new typescript monorepo
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
-* `-t <ID>` — One or many templating presets to render in the new package's directory
+* `-t`, `--with-templ-preset <ID>` — One or many templating presets to render in the new package's directory
 
 
 
@@ -186,7 +186,7 @@ Generates a new typescript package
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
-* `-t <ID>` — One or many templating presets to render in the new package's directory
+* `-t`, `--with-templ-preset <ID>` — One or many templating presets to render in the new package's directory
 * `--vitest <ID>` — The vitest preset to use. It can be set to `default` to use the default preset
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
@@ -202,14 +202,14 @@ Creates a barrel file
 
 ###### **Arguments:**
 
-* `<DIR>` — The directory where to search for the files and generate the barrel file [default: `.`]
+* `<DIR>` — The directory where to search recursively for the files and generate the barrel file [default: `.`]
 
 ###### **Options:**
 
-* `-o`, `--output <OUTPUT>` — The output path for the barrel file. It defaults to {dir}/index.ts
-* `--keep-extension <KEEP_EXTENSIONS>` — The file extensions that should be kept in export statements
-* `--js-ext` — Export `.ts` files as `.js`. It assumes that `js` is among the allowed extensions
-* `--exclude <EXCLUDE>` — One or more glob patterns to exclude from the imported modules. `index.ts` is added automatically
+* `-o`, `--output <OUTPUT>` — The output path for the barrel file. It defaults to `{dir}/index.ts`
+* `--keep-ext <EXT>` — The file extensions that should be kept in export statements
+* `--js-ext` — Exports `.ts` files as `.js`. It assumes that `js` is among the file extensions to keep
+* `--exclude <EXCLUDE>` — One or more glob patterns to exclude from the imported modules
 
 
 
@@ -230,7 +230,7 @@ Creates a new git repo from a preset
 * `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
 * `--gitignore <GITIGNORE>` — Selects a gitignore preset
 * `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new repo
-* `-t <ID>` — One or many templating presets to render in the new repo
+* `-t`, `--with-templ-preset <ID>` — One or many templating presets to render in the new repo
 * `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
 
@@ -268,7 +268,7 @@ Renders a single template to a file or to stdout
 
 ## `sketch render-preset`
 
-Renders a templating preset defined in a configuration file
+Renders a templating preset
 
 **Usage:** `sketch render-preset <ID> [OUT_DIR]`
 

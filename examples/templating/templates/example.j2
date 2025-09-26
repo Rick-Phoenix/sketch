@@ -41,6 +41,8 @@ It's a dir!
 It's a file!
 {%- endif %}
 
+Matches glob: {{ file | matches_glob(pattern="**/*.toml") }}
+
 {%- set captures = file | capture(regex="(?<path>.*)\.(?<extension>\w+)") %}
 
 Path is: {{ captures['path'] }}
@@ -66,3 +68,11 @@ To camelCase: {{ "my_var" | camel }}
 To snake_case: {{ "myVar" | snake }}
 To SCREAMING_CASE: {{ "myVar" | upper_snake }}
 To PascalCase: {{ "myVar" | pascal }}
+
+Luke, I am your {{ "grandfather" | strip_prefix(prefix="grand") }}!
+
+{%- set dir = "../examples/templating/templates" -%}
+
+{%- for entry in dir | glob(pattern="example.j2") %}
+Entry: {{ entry }}
+{% endfor %}

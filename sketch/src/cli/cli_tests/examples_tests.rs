@@ -171,6 +171,7 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("Parent dir is: mydir"));
   assert!(output_str.contains("Path is: Cargo"));
   assert!(output_str.contains("Extension is: toml"));
+  assert!(output_str.contains("Matches glob: true"));
   assert!(output_str.contains("They're taking the hobbits to Isengard!"));
   assert!(output_str.contains("Major is: 0"));
   assert!(output_str.contains("Minor is: 1"));
@@ -181,6 +182,8 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("To snake_case: my_var"));
   assert!(output_str.contains("To SCREAMING_CASE: MY_VAR"));
   assert!(output_str.contains("To PascalCase: MyVar"));
+  assert!(output_str.contains("Luke, I am your father!"));
+  assert!(output_str.contains("Entry: example.j2"));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
   write_file(&output_dir.join("output"), &output_str, true)?;

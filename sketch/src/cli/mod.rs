@@ -313,7 +313,7 @@ pub struct RepoConfigInput {
   with_templates: Option<Vec<TemplateOutput>>,
 
   /// One or many templating presets to render in the new repo
-  #[arg(short = 't', value_name = "ID")]
+  #[arg(short = 't', long, value_name = "ID")]
   with_templ_preset: Option<Vec<String>>,
 }
 
@@ -379,7 +379,7 @@ pub enum Commands {
     content: Option<String>,
   },
 
-  /// Renders a templating preset defined in a configuration file
+  /// Renders a templating preset
   RenderPreset {
     /// The id of the preset.
     id: String,
