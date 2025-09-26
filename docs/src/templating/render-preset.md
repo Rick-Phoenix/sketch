@@ -2,7 +2,7 @@
 
 Rendering a single template is for cases when we need a simpler or more flexible setup. But things become more interesting with templating presets, which can allow you to define entire project structures and then replicate them very easily (while also being able to modify the context at different levels). 
 
-Presets can be rendered with the `render-preset` command, or generated automatically with another preset, such as a git repo preset.
+Presets can be rendered with the `render-preset` command, or generated automatically with [another preset](../presets/git.md#adding-templates), such as a git repo preset.
 
 # Types Of Presets
 

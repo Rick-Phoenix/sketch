@@ -1,12 +1,6 @@
 # Monorepo Generation
 
-We can set up a Typescript monorepo by simply running
-
->`sketch ts monorepo`
-
-This will use all of the default settings and set up a basic structure for a monorepo.
-
-But we can also create a package preset and use that for the root package of the monorepo.
+To set up a basic monorepo with default settings, we can just run the command `sketch ts monorepo`. But we can also create a package preset and use that for the root package of the monorepo.
 
 This is a more customized configuration for the root package:
 
@@ -37,7 +31,7 @@ So after setting everything up, we run the command
 And get this tree output:
 
 ```
-{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt}}
+{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt:2:}}
 ```
 
 >ℹ️ You can use the `-i` flag to install dependencies for the root package after creating the new monorepo.

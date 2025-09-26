@@ -6,7 +6,7 @@ Sketch uses the [Tera](https://keats.github.io/tera/docs/) templating engine to 
 Since all autoescaping is disabled in templates, you should always only use templates that you made or trust.
 </div>
 
-# Special variables
+# Special Variables
 
 Sketch provides some special variables to get access to commonly used values such as the home directory. 
 
@@ -28,7 +28,7 @@ All of the following variables are available in templates, prefixed with `sketch
 - `is_unix` (`cfg!(unix)`)
 - `is_wsl` (checks `/proc/sys/kernel/osrelease`)
 
-# Filters and functions
+# Filters And Functions
 
 All of the builtin functionalities for [Tera](https://keats.github.io/tera/docs/) are available. 
 
@@ -81,9 +81,14 @@ Output:
 {{#include ../../../sketch/tests/output/templating_examples/output}}
 ```
 
-# Global and Local Context
+# Context Priority
 
-Variables are evaluated based on the locality of their context. Variables set via cli with the `--set` flag have the highest priority, followed by variables defined in a local context (the `context` field in a template preset) and by global variables defined in the config file.
+Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):
+
+- Global variables
+- Preset context
+- Single template context
+- Cli-set variables
 
 <div class="warning">
 Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.

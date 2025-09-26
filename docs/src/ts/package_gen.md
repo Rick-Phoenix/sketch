@@ -29,7 +29,7 @@ You can use this feature to generate a file inside `src/schemas/index.ts` automa
 So the final tree structure of the output directory will look like this:
 
 ```
-{{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt}}
+{{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt:2:}}
 ```
 
 > ℹ️ You can also use the `-i` flag to automatically install the dependencies with your selected package manager whenever a new package is created.

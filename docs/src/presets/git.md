@@ -7,7 +7,7 @@ A git preset uses (or defines) a preset for its `gitignore` file and, optionally
 ```yaml
 {{#include ../../../examples/typescript/presets.yaml:git}}
 ```
-# Adding templates
+# Adding Templates
 
 We can use the `with_templates` setting to add a group of templates to a git preset. Let's say that we want to automatically generate a basic docker setup whenever we use this preset:
 
@@ -29,10 +29,10 @@ Starting from this config, we can run this command:
 To get this tree output:
 
 ```
-{{#include ../../../sketch/tests/output/presets/tree_output.txt}}
+{{#include ../../../sketch/tests/output/presets/tree_output.txt:2:}}
 ```
 
->ℹ️ With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates to generate to the list (which is what we did here).
+>ℹ️ With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates to generate to the list.
 
 <details>
 <summary>pre-commit-config.yaml output</summary>

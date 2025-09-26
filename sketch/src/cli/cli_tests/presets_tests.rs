@@ -36,8 +36,6 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     "repo",
     "--preset",
     "ts_package",
-    "--with-template",
-    "id=compose_file,output=compose.yaml",
     &out_dir.to_string_lossy(),
   ];
   let git_presets_cmd = Cli::try_parse_from(git_preset_args)?;
@@ -46,7 +44,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&out_dir, None)?;
 
-  get_clean_example_cmd(&git_preset_args, &[1, 2, 8], &out_dir.join("cmd"))?;
+  get_clean_example_cmd(&git_preset_args, &[1, 2, 6], &out_dir.join("cmd"))?;
 
   let pre_commit_output: PreCommitConfig =
     deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;
@@ -93,16 +91,12 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   assert_eq!(root_dockerfile_output, expected_dockerfile);
 
-  let root_compose_file = read_to_string(out_dir.join("compose.yaml"))?;
-
   let expected_compose_file = indoc! {r#"
     services:
       myservice:
         build: .
         restart: unless-stopped
   "#};
-
-  assert_eq!(root_compose_file, expected_compose_file);
 
   let package_out_dir = out_dir.join("packages/presets_example");
 

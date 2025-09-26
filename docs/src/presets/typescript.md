@@ -91,5 +91,5 @@ We can also use the `with_templates` setting (or `--with-template <id=TEMPLATE_I
 With all of that, the output tree for the new package will look like this:
 
 ```
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tree_output.txt}}
+{{#include ../../../sketch/tests/output/presets/packages/presets_example/tree_output.txt:2:}}
 ```

@@ -71,8 +71,8 @@ To PascalCase: {{ "myVar" | pascal }}
 
 Luke, I am your {{ "grandfather" | strip_prefix(prefix="grand") }}!
 
-{%- set dir = "../examples/templating/templates" -%}
+{% set dir = "../examples/templating/templates" -%}
 
-{%- for entry in dir | glob(pattern="example.j2") %}
+{% for entry in dir | glob(pattern="example.j2") -%}
 Entry: {{ entry }}
 {% endfor %}
