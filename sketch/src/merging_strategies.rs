@@ -76,10 +76,6 @@ pub(crate) fn merge_presets<T: Merge + Extensible + Default + Clone>(
   Ok(aggregated)
 }
 
-pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
-  v == &T::default()
-}
-
 pub(crate) fn merge_nested<T: Merge>(left: &mut T, right: T) {
   left.merge(right)
 }

@@ -15,7 +15,7 @@ use crate::{
   docker::compose::ComposePreset,
   fs::get_parent_dir,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
-  is_default, merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
+  merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
   ts::TypescriptConfig,
   GenError,
 };
@@ -45,76 +45,63 @@ pub struct Config {
   /// The configuration for typescript projects.
   #[merge(strategy = merge_optional_nested)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub typescript: Option<TypescriptConfig>,
 
   /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
   #[arg(long)]
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub shell: Option<String>,
 
   /// Activates debugging mode.
   #[arg(long)]
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub debug: Option<bool>,
 
   /// The path to the templates directory.
   #[arg(long, value_name = "DIR")]
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub templates_dir: Option<PathBuf>,
 
   /// Do not overwrite existing files.
   #[arg(long)]
-  #[serde(skip_serializing_if = "Option::is_none")]
   pub no_overwrite: Option<bool>,
 
   /// The paths (absolute, or relative to the originating config file) to the config files to extend.
   #[merge(strategy = merge_index_sets)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub extends: IndexSet<PathBuf>,
 
   /// A map that contains template definitions.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub templates: IndexMap<String, String>,
 
   /// A map that contains templating presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub templating_presets: IndexMap<String, TemplatingPreset>,
 
   /// A map that contains pre-commit presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
 
   /// A map that contains gitignore presets.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub gitignore_presets: IndexMap<String, GitignorePreset>,
 
   /// A map that contains presets for git repos.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub git_presets: IndexMap<String, RepoPreset>,
 
   /// A map that contains presets for Docker Compose files.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub docker_compose_presets: IndexMap<String, ComposePreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
-  #[serde(skip_serializing_if = "is_default")]
   pub vars: IndexMap<String, Value>,
 }
 

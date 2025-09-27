@@ -116,17 +116,21 @@ pub struct PackageJson {
   /// If set to true, then npm will refuse to publish it.
   pub private: Option<bool>,
 
-  /// Allows packages within a directory to depend on one another using direct linking of local files. Additionally, dependencies within a workspace are hoisted to the workspace root when possible to reduce duplication. Note: It's also a good idea to set `private` to true when using this feature.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub workspaces: Option<BTreeSet<String>>,
+  /// Version must be parsable by node-semver, which is bundled with npm as a dependency.
+  pub version: Option<String>,
 
   /// When set to `module`, the type field allows a package to specify all .js files within are ES modules. If the `type` field is omitted or set to `commonjs`, all .js files are treated as CommonJS.
   #[serde(rename = "type")]
   #[merge(skip)]
   pub type_: JsPackageType,
 
-  /// Version must be parsable by node-semver, which is bundled with npm as a dependency.
-  pub version: Option<String>,
+  /// Allows packages within a directory to depend on one another using direct linking of local files. Additionally, dependencies within a workspace are hoisted to the workspace root when possible to reduce duplication. Note: It's also a good idea to set `private` to true when using this feature.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub workspaces: Option<BTreeSet<String>>,
+
+  /// A map of shell scripts to launch from the root of the package.
+  #[merge(strategy = merge_btree_maps)]
+  pub scripts: StringBTreeMap,
 
   /// This helps people discover your package, as it's listed in 'npm search'.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -157,10 +161,6 @@ pub struct PackageJson {
   /// The url to the project homepage.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub homepage: Option<String>,
-
-  /// A map of shell scripts to launch from the root of the package.
-  #[merge(strategy = merge_btree_maps)]
-  pub scripts: StringBTreeMap,
 
   /// The single path for this package's binary, or a map of several binaries.
   #[serde(skip_serializing_if = "Option::is_none")]

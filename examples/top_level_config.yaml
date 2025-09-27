@@ -20,7 +20,10 @@ templating_presets: {}
 
 git_presets: {}
 
-# Enables debugging mode
+docker_compose_presets: {}
+
+# Enables debugging mode, which prints the
+# full resolved config to stderr
 debug: false
 
 # Extends other configuration files

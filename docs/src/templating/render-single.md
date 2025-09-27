@@ -30,13 +30,11 @@ Command:
 
 >`{{#include ../../../sketch/tests/output/custom_templates/commands/from_template_file}}`
 
-## Using A File
-
-You can also use the `-f` flag to render a template from any file, even outside `templates_dir`.
+>ℹ️ You can also use the `-f` flag to render a template from any file, even outside `templates_dir`.
 
 ## From Literal Definition
 
-Or alternatively, a template can also be defined directly within a command:
+Alternatively, a template can also be defined directly within a command:
 
 >`{{#include ../../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}`
 

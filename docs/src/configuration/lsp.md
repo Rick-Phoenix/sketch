@@ -41,4 +41,4 @@ As of now, these external configurations defined with sketch are all **fully typ
 - `pnpm-workspace.yaml`
 - `package.json`
 - `tsconfig.json`
-- Docker Compose
+- `compose.yaml` (Docker)

@@ -13,19 +13,19 @@ Sketch provides some special variables to get access to commonly used values suc
 All of the following variables are available in templates, prefixed with `sketch_` (i.e. `sketch_os` and so on).
 
 - `cwd`
-- `tmp_dir` (`env::temp_dir`)
-- `home` (`env::home_dir`)
-- `os` (`CARGO_CFG_TARGET_OS` or `OS`)
-- `os_family` (`CARGO_CFG_TARGET_FAMILY`)
-- `arch` (`CARGO_CFG_TARGET_ARCH` or `HOSTTYPE`)
-- `user` (`USER`)
-- `hostname` (`HOSTNAME`)
-- `xdg_config` (`XDG_CONFIG_HOME`)
-- `xdg_data` (`XDG_DATA_HOME`)
-- `xdg_state` (`XDG_STATE_HOME`)
-- `xdg_cache` (`XDG_CACHE_HOME`)
-- `is_windows` (`cfg!(windows)`)
-- `is_unix` (`cfg!(unix)`)
+- `tmp_dir` (from `env::temp_dir`)
+- `home` (from `env::home_dir`)
+- `os` (from `CARGO_CFG_TARGET_OS` or env `OS`)
+- `os_family` (from `CARGO_CFG_TARGET_FAMILY`)
+- `arch` (from `CARGO_CFG_TARGET_ARCH` or env `HOSTTYPE`)
+- `user` (env `USER`)
+- `hostname` (env `HOSTNAME`)
+- `xdg_config` (env `XDG_CONFIG_HOME`)
+- `xdg_data` (env `XDG_DATA_HOME`)
+- `xdg_state` (env `XDG_STATE_HOME`)
+- `xdg_cache` (env `XDG_CACHE_HOME`)
+- `is_windows` (from `cfg!(windows)`)
+- `is_unix` (from `cfg!(unix)`)
 - `is_wsl` (checks `/proc/sys/kernel/osrelease`)
 
 # Filters And Functions
@@ -65,7 +65,7 @@ On top of that, Sketch adds some extra filters and functions.
 
 # Examples
 
-Template
+Template:
 
 ```jinja
 {{#include ../../../examples/templating/templates/example.j2}}
