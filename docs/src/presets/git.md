@@ -5,7 +5,7 @@ The `sketch repo` command allows you to generate a new git repository, starting 
 A git preset uses (or defines) a preset for its `gitignore` file and, optionally, for [`pre-commit`](https://pre-commit.com), as well as a list of templates that will be generated inside the root of the new repo when the command is triggered.
 
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:git}}
+{{#include ../../../examples/presets.yaml:git}}
 ```
 # Adding Templates
 
@@ -13,11 +13,11 @@ We can use the `with_templates` setting to add a group of templates to a git pre
 
 ```yaml
 # We define a template in a file or in a config file...
-{{#include ../../../examples/typescript/presets.yaml:templates}}
+{{#include ../../../examples/presets.yaml:templates}}
 
 # ...and then we add it to a preset
 
-{{#include ../../../examples/typescript/presets.yaml:git_preset}}
+{{#include ../../../examples/presets.yaml:git_preset}}
 ```
 
 Starting from this config, we can run this command:

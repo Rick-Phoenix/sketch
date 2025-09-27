@@ -12,7 +12,7 @@ pub(crate) mod merging_strategies;
 pub(crate) mod templating;
 
 pub mod cli;
-pub mod compose;
+pub(crate) mod compose;
 pub mod config;
 pub mod errors;
 pub mod ts;
@@ -46,6 +46,7 @@ pub enum Preset {
   Gitignore,
   PnpmWorkspace,
   Vitest,
+  DockerCompose,
 }
 
 pub(crate) fn log_debug<T: Debug>(name: &str, item: &T) {

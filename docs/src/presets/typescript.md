@@ -4,7 +4,7 @@ Many typical components of a typescript project have their own dedicated preset.
 
 ## Package.json Presets
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:package_json}}
+{{#include ../../../examples/presets.yaml:package_json}}
 ```
 
 Just like in actual `package.json` files, custom fields are allowed.
@@ -13,7 +13,7 @@ Just like in actual `package.json` files, custom fields are allowed.
 
 ## Tsconfig Presets
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:tsconfig}}
+{{#include ../../../examples/presets.yaml:tsconfig}}
 ```
 
 <div class="warning">
@@ -23,7 +23,7 @@ Unlike what happens when you merge two `tsconfig` files by using the `extends` f
 
 ## Oxlint Presets
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:oxlint}}
+{{#include ../../../examples/presets.yaml:oxlint}}
 ```
 
 ## Pnpm-workspace Presets
@@ -33,14 +33,14 @@ Unlike what happens when you merge two `tsconfig` files by using the `extends` f
 
 ## Vitest Presets
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:vitest}}
+{{#include ../../../examples/presets.yaml:vitest}}
 ```
 
 ## Package Presets
 
 This is what a fully formed package preset looks like. We are going to use the presets defined above in here.
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:package}}
+{{#include ../../../examples/presets.yaml:package}}
 ```
 
 
@@ -81,11 +81,11 @@ This is what a fully formed package preset looks like. We are going to use the p
 We can also use the `with_templates` setting (or `--with-template <id=TEMPLATE_ID,output=PATH>` in the cli) to automatically generate one or many templates when the preset is used.
 
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:templates}}
+{{#include ../../../examples/presets.yaml:templates}}
 
 # We add this part to the package preset
 
-{{#include ../../../examples/typescript/presets.yaml:ts_templates}}
+{{#include ../../../examples/presets.yaml:ts_templates}}
 ```
 
 With all of that, the output tree for the new package will look like this:

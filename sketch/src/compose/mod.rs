@@ -4,20 +4,59 @@ use std::{
   fmt,
 };
 
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-  merge_optional_btree_maps, merge_optional_btree_sets, merge_optional_vecs, overwrite_if_some,
+  merge_index_sets, merge_nested, merge_optional_btree_maps, merge_optional_btree_sets,
+  merge_optional_vecs, merge_presets, overwrite_if_some, Extensible, GenError, Preset,
   StringBTreeMap,
 };
+
+/// A preset for Docker Compose files.
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Merge)]
+#[serde(default)]
+pub struct ComposePreset {
+  /// The list of extended presets.
+  #[merge(strategy = merge_index_sets)]
+  pub extends: IndexSet<String>,
+
+  #[serde(flatten)]
+  #[merge(strategy = merge_nested)]
+  pub config: Compose,
+}
+
+impl Extensible for ComposePreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extends
+  }
+}
+
+impl ComposePreset {
+  pub fn process_data(
+    self,
+    id: &str,
+    store: &IndexMap<String, ComposePreset>,
+  ) -> Result<Compose, GenError> {
+    if self.extends.is_empty() {
+      return Ok(self.config);
+    }
+
+    let mut processed_ids: IndexSet<String> = IndexSet::new();
+
+    let merged_preset = merge_presets(Preset::DockerCompose, id, self, store, &mut processed_ids)?;
+
+    Ok(merged_preset.config)
+  }
+}
 
 /// Configuration settings for a Docker Compose file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default, Merge)]
 #[merge(strategy = overwrite_if_some)]
+#[serde(default)]
 pub struct Compose {
   /// The top-level name property is defined by the Compose Specification as the project name to be used if you don't set one explicitly.
   ///
@@ -160,6 +199,7 @@ impl Default for StringOrSortedList {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/include/#long-syntax
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Eq)]
+#[serde(default)]
 pub struct IncludeSettings {
   /// Defines the location of the Compose file(s) to be parsed and included into the local Compose model.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -206,6 +246,7 @@ impl Default for Include {
 /// See more: https://docs.docker.com/reference/compose-file/services/
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Merge)]
 #[merge(strategy = overwrite_if_some)]
+#[serde(default)]
 pub struct Service {
   /// `extends` lets you share common configurations among different files, or even different projects entirely.
   ///
@@ -808,10 +849,12 @@ pub struct DependsOnSettings {
 
   /// Whether to restart dependent services when this service is restarted.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub restart: Option<bool>,
 
   /// Whether the dependency is required for the dependent service to start. (default: true)
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub required: Option<bool>,
 }
 
@@ -844,7 +887,8 @@ pub enum LoggingDriver {
 /// Defines the logging configuration.
 ///
 /// See more: https://docs.docker.com/engine/logging/configure/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 pub struct LoggingSettings {
   /// Logging driver to use, such as 'json-file', 'syslog', 'journald', etc.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -880,7 +924,10 @@ pub enum Port {
 /// Settings for a port mapping.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#long-syntax-4
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(
+  Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord, Default,
+)]
+#[serde(default)]
 pub struct PortSettings {
   /// A human-readable name for this port mapping.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1119,73 +1166,79 @@ pub enum Uts {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/networks/
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
-#[serde(untagged)]
-pub enum TopLevelNetwork {
-  External {
-    /// If set to true, it specifies that this network’s lifecycle is maintained outside of that of the application. Compose doesn't attempt to create these networks, and returns an error if one doesn't exist.
-    ///
-    /// See more: https://docs.docker.com/reference/compose-file/networks/#external
-    external: bool,
-  },
-  Config {
-    /// Custom name for this network.
-    ///
-    /// See more: https://docs.docker.com/reference/compose-file/networks/#name
-    #[serde(skip_serializing_if = "Option::is_none")]
-    name: Option<String>,
+pub struct TopLevelNetwork {
+  /// If set to true, it specifies that this network’s lifecycle is maintained outside of that of the application. Compose doesn't attempt to create these networks, and returns an error if one doesn't exist.
+  ///
+  /// See more: https://docs.docker.com/reference/compose-file/networks/#external
+  pub external: bool,
+  /// Custom name for this network.
+  ///
+  /// See more: https://docs.docker.com/reference/compose-file/networks/#name
 
-    /// By default, Compose provides external connectivity to networks. internal, when set to true, lets you create an externally isolated network.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    internal: Option<bool>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub name: Option<String>,
 
-    /// Specifies which driver should be used for this network. Compose returns an error if the driver is not available on the platform.
-    ///
-    /// For more information on drivers and available options, see [Network drivers](https://docs.docker.com/engine/network/drivers/).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    driver: Option<String>,
+  /// By default, Compose provides external connectivity to networks. internal, when set to true, lets you create an externally isolated network.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub internal: Option<bool>,
 
-    /// If `attachable` is set to `true`, then standalone containers should be able to attach to this network, in addition to services. If a standalone container attaches to the network, it can communicate with services and other standalone containers that are also attached to the network.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    attachable: Option<bool>,
+  /// Specifies which driver should be used for this network. Compose returns an error if the driver is not available on the platform.
+  ///
+  /// For more information on drivers and available options, see [Network drivers](https://docs.docker.com/engine/network/drivers/).
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub driver: Option<String>,
 
-    /// Can be used to disable IPv4 address assignment.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_ipv4: Option<bool>,
+  /// If `attachable` is set to `true`, then standalone containers should be able to attach to this network, in addition to services. If a standalone container attaches to the network, it can communicate with services and other standalone containers that are also attached to the network.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub attachable: Option<bool>,
 
-    /// Enables IPv6 address assignment.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_ipv6: Option<bool>,
+  /// Can be used to disable IPv4 address assignment.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  enable_ipv4: Option<bool>,
 
-    /// Specifies a custom IPAM configuration.
-    ///
-    /// See more: https://docs.docker.com/reference/compose-file/networks/#ipam
-    #[serde(skip_serializing_if = "Option::is_none")]
-    ipam: Option<Ipam>,
+  /// Enables IPv6 address assignment.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub enable_ipv6: Option<bool>,
 
-    /// A list of options as key-value pairs to pass to the driver. These options are driver-dependent.
-    ///
-    /// Consult the [network drivers documentation](https://docs.docker.com/engine/network/) for more information.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    driver_opts: BTreeMap<String, Option<SingleValue>>,
+  /// Specifies a custom IPAM configuration.
+  ///
+  /// See more: https://docs.docker.com/reference/compose-file/networks/#ipam
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub ipam: Option<Ipam>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    labels: Option<ListOrMap>,
-  },
+  /// A list of options as key-value pairs to pass to the driver. These options are driver-dependent.
+  ///
+  /// Consult the [network drivers documentation](https://docs.docker.com/engine/network/) for more information.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub driver_opts: Option<BTreeMap<String, Option<SingleValue>>>,
+
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub labels: Option<ListOrMap>,
 }
 
 /// Specifies a custom IPAM configuration.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/networks/#ipam
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct Ipam {
   /// Custom IPAM driver, instead of the default.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub driver: Option<String>,
 
   /// A list with zero or more configuration elements.
-  #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-  pub config: BTreeSet<IpamConfig>,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub config: Option<BTreeSet<IpamConfig>>,
 
   /// Driver-specific options as a key-value mapping.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1195,8 +1248,9 @@ pub struct Ipam {
 /// IPAM specific configurations.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/networks/#ipam
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct IpamConfig {
   /// Subnet in CIDR format that represents a network segment
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1261,6 +1315,7 @@ pub enum DeployMode {
 /// Compose Deploy Specification https://docs.docker.com/reference/compose-file/deploy
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct Deploy {
   /// Specifies a service discovery method for external clients connecting to a service. See more: https://docs.docker.com/reference/compose-file/deploy/#endpoint_mode
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1304,6 +1359,7 @@ pub struct Deploy {
 /// See more: https://docs.docker.com/reference/compose-file/services/#healthcheck
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct Healthcheck {
   /// Disable any container-specified healthcheck. Set to true to disable.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1337,6 +1393,7 @@ pub struct Healthcheck {
 /// Resource constraints and reservations for the service.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct Limits {
   /// Limit for how much of the available CPU resources, as number of cores, a container can use.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1353,6 +1410,7 @@ pub struct Limits {
 
 /// Resource reservations for the service containers.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct Reservations {
   /// Reservation for how much of the available CPU resources, as number of cores, a container can use.
@@ -1376,6 +1434,7 @@ pub struct Reservations {
 #[derive(
   Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default, PartialOrd, Ord,
 )]
+#[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct GenericResource {
   /// Specification for discrete (countable) resources.
@@ -1385,6 +1444,7 @@ pub struct GenericResource {
 
 /// Specification for discrete (countable) resources.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct DiscreteResourceSpec {
   /// Type of resource (e.g., 'GPU', 'FPGA', 'SSD').
@@ -1409,19 +1469,22 @@ impl Ord for DiscreteResourceSpec {
 }
 
 /// Device reservations for containers, allowing services to access specific hardware devices.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct Device {
   /// Device driver to use (e.g., 'nvidia').
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub driver: Option<String>,
 
   /// Number of devices of this type to reserve.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub count: Option<StringOrNum>,
 
   /// List of specific device IDs to reserve.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub device_ids: Option<BTreeSet<String>>,
 
   /// List of capabilities the device needs to have (e.g., 'gpu', 'compute', 'utility').
@@ -1430,6 +1493,7 @@ pub struct Device {
 
   /// Driver-specific options for the device.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub options: Option<ListOrMap>,
 }
 
@@ -1447,6 +1511,7 @@ impl Ord for Device {
 
 /// Specifies constraints and preferences for the platform to select a physical node to run service containers. See more: https://docs.docker.com/reference/compose-file/deploy/#placement
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct Placement {
   /// Defines a required property the platform's node must fulfill to run the service container.
@@ -1470,6 +1535,7 @@ pub struct Preferences {
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#resources
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct Resources {
   /// The platform must prevent the container from allocating more resources.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1497,6 +1563,7 @@ pub enum RestartPolicyCondition {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#restart_policy
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct RestartPolicy {
   /// The condition that should trigger a restart.
@@ -1545,6 +1612,7 @@ pub enum OperationsOrder {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#rollback_config
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct RollbackConfig {
   /// The number of containers to rollback at a time.
@@ -1573,6 +1641,7 @@ pub struct RollbackConfig {
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#update_config
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct UpdateConfig {
   /// The number of containers to update at a time.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1637,7 +1706,7 @@ impl Ord for ServiceConfigOrSecretSettings {
 }
 
 /// Configuration for service configs or secrets, defining how they are mounted in the container.
-#[derive(Clone, Default, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct ServiceConfigOrSecretSettings {
   /// Name of the config or secret as defined in the top-level configs or secrets section.
@@ -1645,18 +1714,22 @@ pub struct ServiceConfigOrSecretSettings {
 
   /// Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub target: Option<String>,
 
   /// UID of the file in the container. Default is 0 (root).
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub uid: Option<String>,
 
   /// GID of the file in the container. Default is 0 (root).
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub gid: Option<String>,
 
   /// File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub mode: Option<StringOrNum>,
 }
 
@@ -1747,10 +1820,12 @@ pub struct ServiceVolumeSettings {
 
   /// Flag to set the volume as read-only.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub read_only: Option<bool>,
 
   /// The source of the mount, a path on the host for a bind mount, a docker image reference for an image mount, or the name of a volume defined in the top-level volumes key. Not applicable for a tmpfs mount.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub source: Option<String>,
 
   /// The path in the container where the volume is mounted.
@@ -1758,22 +1833,27 @@ pub struct ServiceVolumeSettings {
 
   /// The consistency requirements for the mount. Available values are platform specific.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub consistency: Option<String>,
 
   /// Configuration specific to bind mounts.
-  #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub bind: Option<Bind>,
 
   /// Configuration specific to image mounts.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub image: Option<ImageVolumeSettings>,
 
   /// /// Configuration specific to tmpfs mounts.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub tmpfs: Option<TmpfsSettings>,
 
   /// Configuration specific to volume mounts.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub volume: Option<VolumeSettings>,
 }
 
@@ -1813,6 +1893,7 @@ pub enum SELinux {
 /// Configuration specific to bind mounts.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default, JsonSchema)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct Bind {
   /// Create the host path if it doesn't exist.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1834,6 +1915,7 @@ pub struct Bind {
 /// Configuration specific to volume mounts.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default, JsonSchema)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct VolumeSettings {
   /// Labels to apply to the volume.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1857,8 +1939,9 @@ pub struct ImageVolumeSettings {
 }
 
 /// Configuration specific to tmpfs mounts.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, Eq, PartialEq, JsonSchema)]
 #[serde(deny_unknown_fields)]
+#[serde(default)]
 pub struct TmpfsSettings {
   /// File mode of the tmpfs in octal.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1893,6 +1976,7 @@ impl fmt::Display for SingleValue {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#blkio_config
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, JsonSchema)]
+#[serde(default)]
 pub struct BlkioSettings {
   /// Limit read rate (bytes per second) from a device.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1921,6 +2005,7 @@ pub struct BlkioSettings {
 
 /// Block IO limit for a specific device.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[serde(default)]
 pub struct BlkioLimit {
   /// Path to the device (e.g., '/dev/sda').
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1948,6 +2033,7 @@ impl Ord for BlkioLimit {
 
 /// Block IO weight for a specific device.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[serde(default)]
 pub struct BlkioWeight {
   /// Path to the device (e.g., '/dev/sda').
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -1988,6 +2074,7 @@ pub enum Cgroup {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/configs/
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[serde(default)]
 pub struct TopLevelConfig {
   /// The name of the config object in the container engine to look up. This field can be used to reference configs that contain special characters. The name is used as is and will not be scoped with the project name.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -2014,6 +2101,7 @@ pub struct TopLevelConfig {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#credential_spec
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[serde(default)]
 pub struct CredentialSpec {
   /// The name of the credential spec Config to use.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -2065,18 +2153,21 @@ pub struct WatchItem {
   ///
   /// See more: https://docs.docker.com/reference/compose-file/develop/#exec
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub exec: Option<ServiceHook>,
 
   /// Patterns to exclude from watching.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/develop/#ignore
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub ignore: Option<BTreeSet<String>>,
 
   /// It is sometimes easier to select files to be watched instead of declaring those that shouldn't be watched with ignore.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/develop/#include
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub include: Option<BTreeSet<String>>,
 
   /// Defines the path to source code (relative to the project directory) to monitor for changes. Updates to any file inside the path, which doesn't match any ignore rule, triggers the configured action.
@@ -2084,6 +2175,7 @@ pub struct WatchItem {
 
   /// Only applies when action is configured for sync. Files within path that have changes are synchronized with the container's filesystem, so that the latter is always running with up-to-date content.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub target: Option<String>,
 }
 
@@ -2117,7 +2209,8 @@ pub enum WatchAction {
 /// Configuration for service lifecycle hooks, which are commands executed at specific points in a container's lifecycle.
 ///
 /// See more: https://docs.docker.com/compose/how-tos/lifecycle/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, JsonSchema)]
+#[serde(default)]
 pub struct ServiceHook {
   /// Whether to run the command with extended privileges.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -2156,10 +2249,12 @@ pub struct DeviceMappingSettings {
 
   /// Path in the container where the device will be mapped.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub target: Option<String>,
 
   /// Cgroup permissions for the device (rwm).
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub permissions: Option<String>,
 }
 
@@ -2223,9 +2318,13 @@ pub struct EnvFileDetailed {
   pub path: String,
 
   /// Format attribute lets you to use an alternative file formats for env_file. When not set, env_file is parsed according to Compose rules.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub format: Option<String>,
 
   /// Whether the file is required. If true and the file doesn't exist, an error will be raised. (default: true)
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub required: Option<bool>,
 }
 
@@ -2242,6 +2341,7 @@ pub enum Extends {
     service: String,
 
     /// The file path where the service to extend is defined.
+    #[serde(default)]
     file: Option<String>,
   },
 }
@@ -2307,7 +2407,8 @@ fn merge_gpus(left: &mut Option<Gpus>, right: Option<Gpus>) {
 /// Requires: Docker Compose 2.30.0 and later
 ///
 /// Specifies GPU devices to be allocated for container usage.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, JsonSchema)]
+#[serde(default)]
 pub struct GpuSettings {
   /// List of capabilities the GPU needs to have (e.g., 'compute', 'utility').
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -2373,7 +2474,8 @@ fn merge_service_models(left: &mut Option<ServiceModels>, right: Option<ServiceM
   }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 pub struct ServiceModelSettings {
   /// Environment variable set to AI model name.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -2437,7 +2539,8 @@ fn merge_service_networks(left: &mut Option<ServiceNetworks>, right: Option<Serv
 /// The networks attribute defines the networks that service containers are attached to, referencing entries under the networks top-level element.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#networks
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[serde(default)]
 pub struct ServiceNetworkSettings {
   /// Interface network name used to connect to network
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -2494,6 +2597,7 @@ pub struct Provider {
 
   /// Provider-specific options.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub options: Option<BTreeMap<String, ProviderOptions>>,
 }
 
@@ -2518,14 +2622,17 @@ pub struct TopLevelModel {
 
   /// Custom name for this model.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub name: Option<String>,
 
   /// The context window size for the model.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub context_size: Option<u64>,
 
   /// Raw runtime flags to pass to the inference engine.
   #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
   pub runtime_flags: Option<Vec<String>>,
 }
 
@@ -2548,35 +2655,35 @@ impl Ord for TopLevelModel {
 ///
 /// See more: https://docs.docker.com/reference/compose-file/volumes/
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
-#[serde(untagged)]
-pub enum TopLevelVolume {
-  External {
-    /// If set to true, it specifies that this volume already exists on the platform and its lifecycle is managed outside of that of the application.
-    ///
-    /// See more: https://docs.docker.com/reference/compose-file/volumes/#external
-    external: bool,
-  },
-  Config {
-    /// Sets a custom name for a volume.
-    ///
-    /// See more: https://docs.docker.com/reference/compose-file/volumes/#name
-    #[serde(skip_serializing_if = "Option::is_none")]
-    name: Option<String>,
+pub struct TopLevelVolume {
+  /// If set to true, it specifies that this volume already exists on the platform and its lifecycle is managed outside of that of the application.
+  ///
+  /// See more: https://docs.docker.com/reference/compose-file/volumes/#external
+  pub external: bool,
 
-    /// Specifies which volume driver should be used. If the driver is not available, Compose returns an error and doesn't deploy the application.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    driver: Option<String>,
+  /// Sets a custom name for a volume.
+  ///
+  /// See more: https://docs.docker.com/reference/compose-file/volumes/#name
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub name: Option<String>,
 
-    /// Specifies a list of options as key-value pairs to pass to the driver for this volume. The options are driver-dependent.
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    driver_opts: BTreeMap<String, SingleValue>,
+  /// Specifies which volume driver should be used. If the driver is not available, Compose returns an error and doesn't deploy the application.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub driver: Option<String>,
 
-    /// Labels are used to add metadata to volumes. You can use either an array or a dictionary.
-    ///
-    /// It's recommended that you use reverse-DNS notation to prevent your labels from conflicting with those used by other software.
-    ///
-    /// See more: https://docs.docker.com/reference/compose-file/volumes/#labels
-    #[serde(skip_serializing_if = "Option::is_none")]
-    labels: Option<ListOrMap>,
-  },
+  /// Specifies a list of options as key-value pairs to pass to the driver for this volume. The options are driver-dependent.
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+  #[serde(default)]
+  pub driver_opts: BTreeMap<String, SingleValue>,
+
+  /// Labels are used to add metadata to volumes. You can use either an array or a dictionary.
+  ///
+  /// It's recommended that you use reverse-DNS notation to prevent your labels from conflicting with those used by other software.
+  ///
+  /// See more: https://docs.docker.com/reference/compose-file/volumes/#labels
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[serde(default)]
+  pub labels: Option<ListOrMap>,
 }

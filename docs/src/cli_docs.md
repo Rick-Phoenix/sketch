@@ -5,6 +5,7 @@ This document contains the help content for the `sketch` command-line program.
 **Command Overview:**
 
 * [`sketch`↴](#sketch)
+* [`sketch docker-compose`↴](#sketch-docker-compose)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
 * [`sketch ts`↴](#sketch-ts)
 * [`sketch ts pnpm-workspace`↴](#sketch-ts-pnpm-workspace)
@@ -28,6 +29,7 @@ This document contains the help content for the `sketch` command-line program.
 
 ###### **Subcommands:**
 
+* `docker-compose` — Generates a Docker Compose file from a preset
 * `pre-commit` — Generates a `pre-commit` config file from a preset
 * `ts` — Executes typescript-specific commands
 * `repo` — Creates a new git repo from a preset
@@ -51,6 +53,19 @@ This document contains the help content for the `sketch` command-line program.
   Possible values: `true`, `false`
 
 * `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
+
+
+
+## `sketch docker-compose`
+
+Generates a Docker Compose file from a preset
+
+**Usage:** `sketch docker-compose <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the created file [default: `compose.yaml`]
 
 
 

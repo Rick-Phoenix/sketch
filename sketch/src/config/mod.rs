@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
+  compose::ComposePreset,
   custom_templating::TemplatingPreset,
   fs::get_parent_dir,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
@@ -103,6 +104,12 @@ pub struct Config {
   #[serde(skip_serializing_if = "is_default")]
   pub git_presets: IndexMap<String, RepoPreset>,
 
+  /// A map that contains presets for Docker Compose files.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  #[serde(skip_serializing_if = "is_default")]
+  pub docker_compose_presets: IndexMap<String, ComposePreset>,
+
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
   #[merge(strategy = merge_index_maps)]
@@ -191,6 +198,7 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      docker_compose_presets: Default::default(),
       git_presets: Default::default(),
       gitignore_presets: Default::default(),
       pre_commit_presets: Default::default(),

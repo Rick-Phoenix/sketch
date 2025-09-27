@@ -6,6 +6,9 @@ Some of these presets are used just for defining an easily reproducible configur
 
 As of now, these presets are available:
 
+- Docker
+    - Docker Compose file (extensible)
+
 - Git
     - Git repo
     - `.gitignore` (extensible)
@@ -32,6 +35,6 @@ For those presets that are extensible, merging them works like this:
 This is an in-depth example of the various kinds of presets that are available:
 
 ```yaml
-{{#include ../../../examples/typescript/presets.yaml:all}}
+{{#include ../../../examples/presets.yaml:all}}
 ```
 

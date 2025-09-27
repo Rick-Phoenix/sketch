@@ -1,6 +1,18 @@
-# yaml-language-server: $schema=../../schemas/development.json
+# yaml-language-server: $schema=../schemas/development.json
 
 # ANCHOR: all
+
+# ANCHOR: docker_compose
+docker_compose_presets:
+  base:
+    volumes:
+      my_volume:
+        external: true
+    networks:
+      my_network:
+        external: true
+# ANCHOR_END: docker_compose
+
 # ANCHOR: templates
 templates:
   dockerfile: |
@@ -10,11 +22,6 @@ templates:
     EXPOSE {{ docker_dev_port | default(value=5173) }}
     CMD ["npm", "run", "dev"]
 
-  compose_file: |
-    services:
-      myservice:
-        build: .
-        restart: unless-stopped
 # ANCHOR_END: templates
 # ANCHOR: git
 # Gitignore presets
@@ -102,8 +109,6 @@ templating_presets:
         # Local context with higher priority
         context:
           docker_dev_port: 5173
-      - output: compose.yaml
-        template: compose_file
 
 typescript:
   no_default_deps: true

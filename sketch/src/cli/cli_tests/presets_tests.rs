@@ -24,7 +24,7 @@ use crate::{
 
 #[tokio::test]
 async fn presets() -> Result<(), Box<dyn std::error::Error>> {
-  let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples/typescript");
+  let examples_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples");
   let out_dir = PathBuf::from("tests/output/presets");
 
   reset_testing_dir(&out_dir);
@@ -91,13 +91,6 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   assert_eq!(root_dockerfile_output, expected_dockerfile);
 
-  let expected_compose_file = indoc! {r#"
-    services:
-      myservice:
-        build: .
-        restart: unless-stopped
-  "#};
-
   let package_out_dir = out_dir.join("packages/presets_example");
 
   let oxlint_test = Cli::try_parse_from([
@@ -119,9 +112,6 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
   assert_eq!(package_dockerfile_output, expected_dockerfile);
-
-  let package_compose_file = read_to_string(package_out_dir.join("compose.yaml"))?;
-  assert_eq!(package_compose_file, expected_compose_file);
 
   let oxlint_result: OxlintConfig = deserialize_json(&package_out_dir.join(".oxlintrc.json"))?;
 
