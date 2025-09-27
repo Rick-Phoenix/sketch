@@ -132,13 +132,13 @@ pub struct PackageJson {
   #[merge(strategy = merge_btree_maps)]
   pub scripts: StringBTreeMap,
 
-  /// This helps people discover your package, as it's listed in 'npm search'.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub description: Option<String>,
-
   /// The author of this package.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub author: Option<Person>,
+
+  /// This helps people discover your package, as it's listed in 'npm search'.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub description: Option<String>,
 
   /// You should specify a license for your package so that people know how they are permitted to use it, and any restrictions you're placing on it.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -186,14 +186,14 @@ pub struct PackageJson {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub pnpm: Option<Box<PnpmWorkspace>>,
 
-  /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
-  #[merge(strategy = merge_btree_maps)]
-  pub dependencies: StringBTreeMap,
-
   /// Overrides is used to support selective version overrides using npm, which lets you define custom package versions or ranges inside your dependencies. For yarn, use resolutions instead. See: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
   pub overrides: Option<JsonValueBTreeMap>,
+
+  /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
+  #[merge(strategy = merge_btree_maps)]
+  pub dependencies: StringBTreeMap,
 
   /// Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.
   // Necessary to have both camelCase and snake_case

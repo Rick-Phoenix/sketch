@@ -74,14 +74,9 @@ impl Default for PreCommitConfig {
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PreCommitConfig {
-  /// Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
-  #[merge(strategy = merge_btree_sets)]
-  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
-  pub repos: BTreeSet<Repo>,
-
-  /// pre-commit.ci specific settings https://pre-commit.ci/#configuration
+  /// A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub ci: Option<CiSettings>,
+  pub minimum_pre_commit_version: Option<String>,
 
   /// A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level
   #[merge(strategy = merge_optional_btree_sets)]
@@ -110,9 +105,14 @@ pub struct PreCommitConfig {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub fail_fast: Option<bool>,
 
-  /// A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level
+  /// pre-commit.ci specific settings https://pre-commit.ci/#configuration
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub minimum_pre_commit_version: Option<String>,
+  pub ci: Option<CiSettings>,
+
+  /// Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
+  #[merge(strategy = merge_btree_sets)]
+  #[serde(skip_serializing_if = "BTreeSet::is_empty")]
+  pub repos: BTreeSet<Repo>,
 }
 
 /// A pre-commit repo.

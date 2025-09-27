@@ -68,6 +68,11 @@ pub struct PnpmWorkspace {
   #[merge(strategy = merge_btree_sets)]
   pub packages: BTreeSet<String>,
 
+  /// When set to true, pnpm will remove unused catalog entries during installation. See more: https://pnpm.io/settings#cleanupunusedcatalogs
+  #[serde(alias = "cleanup_unused_catalogs")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub cleanup_unused_catalogs: Option<bool>,
+
   /// The dependencies to store in the unnamed (default) catalog.
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
@@ -78,21 +83,54 @@ pub struct PnpmWorkspace {
   #[merge(strategy = merge_btree_maps)]
   pub catalogs: BTreeMap<String, StringBTreeMap>,
 
-  /// When set to true, pnpm will remove unused catalog entries during installation. See more: https://pnpm.io/settings#cleanupunusedcatalogs
-  #[serde(alias = "cleanup_unused_catalogs")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub cleanup_unused_catalogs: Option<bool>,
-
   /// A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts. See more: https://pnpm.io/settings#onlybuiltdependencies
   #[serde(alias = "only_built_dependencies")]
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_sets)]
   pub only_built_dependencies: Option<BTreeSet<String>>,
 
+  /// Specifies a JSON file that lists the only packages permitted to run installation scripts during the pnpm install process. See more: https://pnpm.io/settings#onlybuiltdependenciesfile
+  #[serde(alias = "only_built_dependencies_file")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub only_built_dependencies_file: Option<PathBuf>,
+
+  /// A list of dependencies to run builds for. See more: https://pnpm.io/settings#neverbuiltdependencies
+  #[serde(alias = "never_built_dependencies")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub never_built_dependencies: Option<BTreeSet<String>>,
+
+  /// A list of package names that should not be built during installation. See more: https://pnpm.io/settings#ignoredbuiltdependencies
+  #[serde(alias = "ignored_built_dependencies")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub ignored_built_dependencies: Option<BTreeSet<String>>,
+
+  /// If set to true, all build scripts (e.g. preinstall, install, postinstall) from dependencies will run automatically, without requiring approval. See more: https://pnpm.io/settings#dangerouslyallowallbuilds
+  #[serde(alias = "dangerously_allow_all_builds")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub dangerously_allow_all_builds: Option<bool>,
+
   /// This field allows you to instruct pnpm to override any dependency in the dependency graph. This is useful for enforcing all your packages to use a single version of a dependency, backporting a fix, replacing a dependency with a fork, or removing an unused dependency. See more: https://pnpm.io/settings#overrides
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
   pub overrides: Option<StringBTreeMap>,
+
+  /// Configuration for package updates. See more: https://pnpm.io/settings#updateconfig
+  #[serde(alias = "update_config")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub update_config: Option<UpdateConfig>,
+
+  /// It specifies the number of minutes that must pass after a version is published before pnpm will install it. For example, setting `minimumReleaseAge: 1440` ensures that only packages released at least one day ago can be installed. See more: https://pnpm.io/settings#minimumreleaseage
+  #[serde(alias = "minimum_release_age")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub minimum_release_age: Option<usize>,
+
+  /// If you set `minimumReleaseAge` but need to disable this restriction for certain dependencies, you can list them under the `minimumReleaseAgeExclude` setting. See more: https://pnpm.io/settings#minimumreleaseageexclude
+  #[serde(alias = "minimum_release_age_exclude")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub minimum_release_age_exclude: Option<BTreeSet<String>>,
 
   /// The packageExtensions fields offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions
   #[serde(alias = "package_extensions")]
@@ -104,28 +142,6 @@ pub struct PnpmWorkspace {
   #[serde(alias = "peer_dependency_rules")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub peer_dependency_rules: Option<PeerDependencyRules>,
-
-  /// A list of dependencies to run builds for. See more: https://pnpm.io/settings#neverbuiltdependencies
-  #[serde(alias = "never_built_dependencies")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_sets)]
-  pub never_built_dependencies: Option<BTreeSet<String>>,
-
-  /// If set to true, all build scripts (e.g. preinstall, install, postinstall) from dependencies will run automatically, without requiring approval. See more: https://pnpm.io/settings#dangerouslyallowallbuilds
-  #[serde(alias = "dangerously_allow_all_builds")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub dangerously_allow_all_builds: Option<bool>,
-
-  /// Specifies a JSON file that lists the only packages permitted to run installation scripts during the pnpm install process. See more: https://pnpm.io/settings#onlybuiltdependenciesfile
-  #[serde(alias = "only_built_dependencies_file")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub only_built_dependencies_file: Option<PathBuf>,
-
-  /// A list of package names that should not be built during installation. See more: https://pnpm.io/settings#ignoredbuiltdependencies
-  #[serde(alias = "ignored_built_dependencies")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_sets)]
-  pub ignored_built_dependencies: Option<BTreeSet<String>>,
 
   /// A list of deprecated versions that the warnings are suppressed. See more: https://pnpm.io/settings#alloweddeprecatedversions
   #[serde(alias = "allowed_deprecated_versions")]
@@ -149,11 +165,6 @@ pub struct PnpmWorkspace {
   #[serde(alias = "ignore_patch_failures")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub ignore_patch_failures: Option<bool>,
-
-  /// Configuration for package updates. See more: https://pnpm.io/settings#updateconfig
-  #[serde(alias = "update_config")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub update_config: Option<UpdateConfig>,
 
   /// Config dependencies allow you to share and centralize configuration files, settings, and hooks across multiple projects. They are installed before all regular dependencies ('dependencies', 'devDependencies', 'optionalDependencies'), making them ideal for setting up custom hooks, patches, and catalog entries. See more: https://pnpm.io/config-dependencies
   #[serde(alias = "config_dependencies")]
@@ -705,17 +716,6 @@ pub struct PnpmWorkspace {
   #[serde(alias = "save_exact")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub save_exact: Option<bool>,
-
-  /// It specifies the number of minutes that must pass after a version is published before pnpm will install it. For example, setting `minimumReleaseAge: 1440` ensures that only packages released at least one day ago can be installed. See more: https://pnpm.io/settings#minimumreleaseage
-  #[serde(alias = "minimum_release_age")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub minimum_release_age: Option<usize>,
-
-  /// If you set `minimumReleaseAge` but need to disable this restriction for certain dependencies, you can list them under the `minimumReleaseAgeExclude` setting. See more: https://pnpm.io/settings#minimumreleaseageexclude
-  #[serde(alias = "minimum_release_age_exclude")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_sets)]
-  pub minimum_release_age_exclude: Option<BTreeSet<String>>,
 
   #[serde(flatten)]
   #[serde(skip_serializing_if = "Option::is_none")]

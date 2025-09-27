@@ -11,72 +11,51 @@ pub enum ResolutionMode {
   /// Dependencies will be resolved to their highest versions.
   #[serde(rename = "highest")]
   Highest,
+
+  /// Direct dependencies will be resolved to their lowest versions.
+  #[serde(rename = "lowest-direct")]
+  LowestDirect,
+
   /// When resolutionMode is set to time-based, dependencies will be resolved the following way:
   /// Direct dependencies will be resolved to their lowest versions. So if there is foo@^1.1.0 in the dependencies, then 1.1.0 will be installed.
   /// Subdependencies will be resolved from versions that were published before the last direct dependency was published.
   #[serde(rename = "time-based")]
   TimeBased,
-  /// Direct dependencies will be resolved to their lowest versions.
-  #[serde(rename = "lowest-direct")]
-  LowestDirect,
 }
 
 /// Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
 pub enum SavePrefix {
+  /// Do not allow upgrades.
+  #[serde(rename = "")]
+  Exact,
   /// Allows patch upgrades.
   #[serde(rename = "~")]
   Patch,
   /// Allows minor upgrades.
   #[serde(rename = "^")]
   Minor,
-  /// Do not allow upgrades.
-  #[serde(rename = "")]
-  Exact,
 }
 
 /// This setting controls how dependencies that are linked from the workspace are added to package.json. See more: https://pnpm.io/settings#saveworkspaceprotocol
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
-#[serde(untagged)]
 pub enum SaveWorkspaceProtocol {
-  Bool(bool),
-  Choice(SaveWorkspaceProtocolChoices),
-}
-
-/// The enum values for [`SaveWorkspaceProtocol`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum SaveWorkspaceProtocolChoices {
   Rolling,
+  #[serde(untagged)]
+  Bool(bool),
 }
 
 /// If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry. See more: https://pnpm.io/settings#linkworkspacepackages
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
-#[serde(untagged)]
 pub enum LinkWorkspacePackages {
-  Bool(bool),
-  Choice(LinkWorkspacePackagesChoices),
-}
-
-/// The enum values for [`LinkWorkspacePackages`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum LinkWorkspacePackagesChoices {
   Deep,
+  #[serde(untagged)]
+  Bool(bool),
 }
 
 /// This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
-#[serde(untagged)]
 pub enum VerifyDepsBeforeRun {
-  Bool(bool),
-  Choice(VerifyDepsBeforeRunChoices),
-}
-
-/// Allowed enum values for [`VerifyDepsBeforeRun`]
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Copy, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum VerifyDepsBeforeRunChoices {
   /// Automatically runs install if node_modules is not up to date.
   Install,
   /// Prints a warning if node_modules is not up to date.
@@ -85,6 +64,8 @@ pub enum VerifyDepsBeforeRunChoices {
   Error,
   /// Prompts the user for permission to run install if node_modules is not up to date.
   Prompt,
+  #[serde(untagged)]
+  Bool(bool),
 }
 
 /// Controls colors in the output. See more: https://pnpm.io/settings#no-color
@@ -117,13 +98,13 @@ pub enum PackageImportMethod {
   Auto,
   /// Hard link packages from the store.
   Hardlink,
+  /// Clone (AKA copy-on-write or reference link) packages from the store.
+  Clone,
   /// Try to clone packages from the store. If cloning is not supported then fall back to copying.
   #[serde(rename = "clone-or-copy")]
   CloneOrCopy,
   /// Copy packages from the store.
   Copy,
-  /// Clone (AKA copy-on-write or reference link) packages from the store.
-  Clone,
 }
 
 /// Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker
@@ -196,11 +177,6 @@ pub struct UpdateConfig {
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct PeerDependencyRules {
-  /// pnpm will not print warnings about missing peer dependencies from this list.
-  #[serde(alias = "ignore_missing")]
-  #[serde(skip_serializing_if = "Option::is_none")]
-  pub ignore_missing: Option<BTreeSet<String>>,
-
   /// Unmet peer dependency warnings will not be printed for peer dependencies of the specified range.
   #[serde(alias = "allowed_versions")]
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -210,6 +186,11 @@ pub struct PeerDependencyRules {
   #[serde(alias = "allow_any")]
   #[serde(skip_serializing_if = "Option::is_none")]
   pub allow_any: Option<BTreeSet<String>>,
+
+  /// pnpm will not print warnings about missing peer dependencies from this list.
+  #[serde(alias = "ignore_missing")]
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub ignore_missing: Option<BTreeSet<String>>,
 }
 
 /// Package extensions offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions

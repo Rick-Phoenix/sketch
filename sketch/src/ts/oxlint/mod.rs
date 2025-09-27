@@ -61,16 +61,31 @@ pub struct OxlintConfig {
   #[merge(strategy = merge_optional_index_sets)]
   pub extends: Option<IndexSet<String>>,
 
-  /// Environments enable and disable collections of global variables.
+  /// A list of plugins to enable for this config.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_maps)]
-  pub env: Option<BTreeMap<String, bool>>,
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub plugins: Option<BTreeSet<Plugin>>,
+
+  /// Contains the settings for various plugins.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = overwrite_if_some)]
+  pub settings: Option<PluginsSettings>,
 
   /// Enables or disables specific global variables.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
   pub globals: Option<BTreeMap<String, GlobalValue>>,
 
+  /// Environments enable and disable collections of global variables.
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
+  pub env: Option<BTreeMap<String, bool>>,
+
+  /// Configure an entire category of rules all at once.
+  ///
+  /// Rules enabled or disabled this way will be overwritten by individual rules in the rules field.
+  ///
+  /// See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference#categories
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = overwrite_if_some)]
   pub categories: Option<Categories>,
@@ -80,25 +95,15 @@ pub struct OxlintConfig {
   #[merge(strategy = merge_optional_btree_sets)]
   pub ignore_patterns: Option<BTreeSet<String>>,
 
-  /// Add, remove, or otherwise reconfigure rules for specific files or groups of files.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_vecs)]
-  pub overrides: Option<Vec<Override>>,
-
-  /// A list of plugins to enable for this config.
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_sets)]
-  pub plugins: Option<BTreeSet<Plugin>>,
-
   /// Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
   pub rules: Option<BTreeMap<String, RuleSetting>>,
 
-  /// Contains the settings for various plugins.
+  /// Add, remove, or otherwise reconfigure rules for specific files or groups of files.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = overwrite_if_some)]
-  pub settings: Option<PluginsSettings>,
+  #[merge(strategy = merge_optional_vecs)]
+  pub overrides: Option<Vec<Override>>,
 
   #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]

@@ -132,6 +132,16 @@ pub struct WatchOptions {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub watch_directory: Option<WatchDirectory>,
 
+  /// Remove a list of files from the watch mode's processing. See more: https://www.typescriptlang.org/tsconfig#excludeFiles
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub exclude_files: Option<BTreeSet<String>>,
+
+  /// Remove a list of directories from the watch process. See more: https://www.typescriptlang.org/tsconfig#excludeDirectories
+  #[serde(skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_sets)]
+  pub exclude_directories: Option<BTreeSet<String>>,
+
   /// Specify what approach the watcher should use if the system runs out of native file watchers. See more: https://www.typescriptlang.org/tsconfig#fallbackPolling
   #[serde(skip_serializing_if = "Option::is_none")]
   pub fallback_polling: Option<FallbackPolling>,
@@ -139,16 +149,6 @@ pub struct WatchOptions {
   /// Synchronously call callbacks and update the state of directory watchers on platforms that don`t support recursive watching natively. See more: https://www.typescriptlang.org/tsconfig#synchronousWatchDirectory
   #[serde(skip_serializing_if = "Option::is_none")]
   pub synchronous_watch_directory: Option<bool>,
-
-  /// Remove a list of directories from the watch process. See more: https://www.typescriptlang.org/tsconfig#excludeDirectories
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_sets)]
-  pub exclude_directories: Option<BTreeSet<String>>,
-
-  /// Remove a list of files from the watch mode's processing. See more: https://www.typescriptlang.org/tsconfig#excludeFiles
-  #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_btree_sets)]
-  pub exclude_files: Option<BTreeSet<String>>,
 }
 
 /// A struct representing the contents of a `tsconfig.json` file.
