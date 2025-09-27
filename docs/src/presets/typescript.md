@@ -75,21 +75,3 @@ This is what a fully formed package preset looks like. We are going to use the p
 {{#include ../../../sketch/tests/output/presets/packages/presets_example/tests/vitest.config.ts}}
 ```
 </details>
-
-# Adding Templates
-
-We can also use the `with_templates` setting (or `--with-template <id=TEMPLATE_ID,output=PATH>` in the cli) to automatically generate one or many templates when the preset is used.
-
-```yaml
-{{#include ../../../examples/presets.yaml:templates}}
-
-# We add this part to the package preset
-
-{{#include ../../../examples/presets.yaml:ts_templates}}
-```
-
-With all of that, the output tree for the new package will look like this:
-
-```
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tree_output.txt:2:}}
-```

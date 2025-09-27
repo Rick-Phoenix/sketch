@@ -1,7 +1,7 @@
 use std::{
   cmp::Ordering,
   collections::{BTreeMap, BTreeSet},
-  fmt,
+  fmt::{self, Display},
 };
 
 use indexmap::{IndexMap, IndexSet};
@@ -26,7 +26,7 @@ pub struct ComposePreset {
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
-  pub config: Compose,
+  pub config: ComposeFile,
 }
 
 impl Extensible for ComposePreset {
@@ -40,7 +40,7 @@ impl ComposePreset {
     self,
     id: &str,
     store: &IndexMap<String, ComposePreset>,
-  ) -> Result<Compose, GenError> {
+  ) -> Result<ComposeFile, GenError> {
     if self.extends.is_empty() {
       return Ok(self.config);
     }
@@ -57,7 +57,7 @@ impl ComposePreset {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default, Merge)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
-pub struct Compose {
+pub struct ComposeFile {
   /// The top-level name property is defined by the Compose Specification as the project name to be used if you don't set one explicitly.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/version-and-name/#name-top-level-element
@@ -119,7 +119,7 @@ pub struct Compose {
   pub extensions: Option<BTreeMap<String, Value>>,
 }
 
-impl Compose {
+impl ComposeFile {
   pub fn new() -> Self {
     Default::default()
   }
@@ -137,6 +137,15 @@ pub enum StringOrList {
 pub enum StringOrNum {
   Num(i64),
   String(String),
+}
+
+impl Display for StringOrNum {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match self {
+      Self::Num(n) => write!(f, "{}", n),
+      Self::String(s) => write!(f, "{}", s),
+    }
+  }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
@@ -1170,7 +1179,7 @@ pub struct TopLevelNetwork {
   /// If set to true, it specifies that this network’s lifecycle is maintained outside of that of the application. Compose doesn't attempt to create these networks, and returns an error if one doesn't exist.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/networks/#external
-  pub external: bool,
+  pub external: Option<bool>,
   /// Custom name for this network.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/networks/#name
@@ -2520,6 +2529,15 @@ pub enum ServiceNetworks {
   Map(BTreeMap<String, ServiceNetworkSettings>),
 }
 
+impl ServiceNetworks {
+  pub fn contains(&self, key: &str) -> bool {
+    match self {
+      Self::List(list) => list.contains(key),
+      Self::Map(map) => map.contains_key(key),
+    }
+  }
+}
+
 fn merge_service_networks(left: &mut Option<ServiceNetworks>, right: Option<ServiceNetworks>) {
   if let Some(right) = right {
     if let Some(left_data) = left {
@@ -2659,7 +2677,7 @@ pub struct TopLevelVolume {
   /// If set to true, it specifies that this volume already exists on the platform and its lifecycle is managed outside of that of the application.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/volumes/#external
-  pub external: bool,
+  pub external: Option<bool>,
 
   /// Sets a custom name for a volume.
   ///

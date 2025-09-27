@@ -2,6 +2,7 @@
 
 # ANCHOR: all
 
+# Docker Compose presets
 # ANCHOR: docker_compose
 docker_compose_presets:
   base:
@@ -11,6 +12,16 @@ docker_compose_presets:
     networks:
       my_network:
         external: true
+
+  extended:
+    extends:
+      - base
+    services:
+      my_service:
+        networks:
+          - my_network
+        volumes:
+          - my_volume:/target
 # ANCHOR_END: docker_compose
 
 # ANCHOR: templates
@@ -248,12 +259,5 @@ typescript:
 
       vitest: base
       # ANCHOR_END: package
-
-      # ANCHOR: ts_templates
-      # Templates to generate in the new package's root
-      with_templates:
-        - template: compose_file
-          output: compose.yaml
-      # ANCHOR_END: ts_templates
 
       # ANCHOR_END: all
