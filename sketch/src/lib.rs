@@ -12,6 +12,7 @@ pub(crate) mod merging_strategies;
 pub(crate) mod templating;
 
 pub mod cli;
+pub mod compose;
 pub mod config;
 pub mod errors;
 pub mod ts;

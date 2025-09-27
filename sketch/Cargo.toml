@@ -36,7 +36,7 @@ semver = { version = "1.0.27" }
 schemars = { version = "1.0.4", features = ["indexmap2"] }
 askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 clap = { version = "4.5.46", features = ["derive"] }
 thiserror = { workspace = true }
