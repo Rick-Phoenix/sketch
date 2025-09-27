@@ -14,21 +14,25 @@ As of now, these presets are available:
     - `.gitignore` (extensible)
     - `.pre-commit-config.yaml` (extensible)
 
-- Typecript
+- Typescript
     - Typescript package
     - `pnpm-workspace.yaml` (extensible)
-    - `package.json` (extensible, extra convenience feature for creating a mini-db for contributors)
+    - `package.json` (extensible, with [extra features](../ts/smart_features.md))
     - `tsconfig.json` (extensible, with merging of values for the `references`, `include`, `exclude` and `files` fields)
     - `.oxlintrc.json` (extensible)
     - `vitest` (not a full configuration for `vitest.config.ts`, but a basic testing setup)
 
+These can be generated either as part of another preset, or with a command (or both, in some cases) you can find more information in the rest of the documentation and in the [cli reference](../cli_docs.md).
+
 # Extending Presets
 
-For those presets that are extensible, merging them works like this:
+Some presets can be extended by inheriting the value from one or multiple presets.
 
-- Collections are merged (and in almost all cases, deduped and sorted)
-- Conflicting values are replaced
+When a preset is extended, the merging strategy for their fields works like this:
+
+- Collections are merged and in almost all cases, deduped and sorted (except for cases where order matters such as a list of command arguments)
 - Values that are also extensible (such as `compilerOptions` in tsconfig) themselves will be merged with the same rules as above
+- All other values are overwritten, except if the previous value was present and the new value is `null`. This is to avoid merging values that come from partially-defined presets, where the missing fields are all unset. Generally speaking, the correct strategy to extend presets is to define a base and then `add` elements to it, rather than replacing them.
 
 # Examples
 

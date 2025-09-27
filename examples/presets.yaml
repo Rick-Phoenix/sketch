@@ -1,5 +1,45 @@
 # yaml-language-server: $schema=../schemas/development.json
 
+# ANCHOR: templates
+templates:
+  dockerfile: |
+    FROM node:23-alpine
+
+    COPY . .
+    EXPOSE {{ docker_dev_port | default(value=5173) }}
+    CMD ["npm", "run", "dev"]
+
+# Templating presets
+templating_presets:
+  single_template:
+    template: "engine feels good, much {{ condition }} than before... amazing"
+    # Local context
+    context:
+      condition: slower
+    output: single.txt
+
+  # Takes an entire directory and renders the templates
+  # in the output dir with the same directory structure
+  structured_template:
+    dir: some/dir/inside/templates_dir
+    context: {}
+
+  # Group of individual templates, for granular control
+  docker:
+    context:
+      # Group context
+      docker_dev_port: 9530
+    templates:
+      # Relative paths are joined with the output
+      # directory specified via command, (or, by default, to the cwd)
+      - output: Dockerfile
+        template: dockerfile
+        # Local context with higher priority
+        context:
+          docker_dev_port: 5173
+
+# ANCHOR_END: templates
+
 # ANCHOR: all
 
 # Docker Compose presets
@@ -22,18 +62,11 @@ docker_compose_presets:
           - my_network
         volumes:
           - my_volume:/target
+    volumes:
+      my_other_volume:
+        external: true
 # ANCHOR_END: docker_compose
 
-# ANCHOR: templates
-templates:
-  dockerfile: |
-    FROM node:23-alpine
-
-    COPY . .
-    EXPOSE {{ docker_dev_port | default(value=5173) }}
-    CMD ["npm", "run", "dev"]
-
-# ANCHOR_END: templates
 # ANCHOR: git
 # Gitignore presets
 gitignore_presets:
@@ -91,35 +124,6 @@ git_presets:
       - template: dockerfile
         output: Dockerfile
     # ANCHOR_END: git_preset
-
-# Templating presets
-templating_presets:
-  single_template:
-    template: "engine feels good, much {{ condition }} than before... amazing"
-    # Local context
-    context:
-      condition: slower
-    output: single.txt
-
-  # Takes an entire directory and renders the templates
-  # in the output dir with the same directory structure
-  structured_template:
-    dir: some/dir/inside/templates_dir
-    context: {}
-
-  # Group of individual templates, for granular control
-  docker:
-    context:
-      # Group context
-      docker_dev_port: 9530
-    templates:
-      # Relative paths are joined with the output
-      # directory specified via command, (or, by default, to the cwd)
-      - output: Dockerfile
-        template: dockerfile
-        # Local context with higher priority
-        context:
-          docker_dev_port: 5173
 
 typescript:
   no_default_deps: true
@@ -213,14 +217,16 @@ typescript:
       # It defaults to the value of `tests_dir`
       out_dir: null
 
-      # The directory to use for tests
+      # The directory to use for tests, from the root of the package
       tests_dir: tests
 
-      # The directory containing the setup files for tests.
-      # (starting from tests_dir)
+      # The directory, inside `tests_dir`, that contains the setup files for tests.
+      # A file named `tests_setup.ts`, containing some basic testing boilerplate,
+      # will be generated inside of it.
       setup_dir: setup
 
       # A list of setup files (the paths will be joined to the `setup_dir`)
+      # `tests_setup.ts` will be added automatically.
       setup_files:
         - somefile.ts
         - anotherfile.ts
