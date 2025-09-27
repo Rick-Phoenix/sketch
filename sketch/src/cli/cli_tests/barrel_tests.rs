@@ -4,7 +4,7 @@ use clap::Parser;
 use indoc::indoc;
 
 use crate::cli::{
-  cli_tests::{get_clean_example_cmd, reset_testing_dir},
+  cli_tests::{get_clean_example_cmd, get_tree_output, reset_testing_dir},
   execute_cli, Cli,
 };
 
@@ -22,32 +22,9 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     };
   }
 
+  get_tree_output("tests/ts_barrel", Some(output_dir.join("tree")))?;
+
   let output_file = output_dir.join("index.ts");
-
-  let basic_cmd = [
-    "sketch",
-    "ts",
-    "barrel",
-    "-o",
-    &output_file.to_string_lossy(),
-    "tests/ts_barrel",
-  ];
-
-  write_command!(basic_cmd, [3, 4], "barrel");
-
-  let basic = Cli::try_parse_from(basic_cmd)?;
-
-  execute_cli(basic).await?;
-
-  let output = read_to_string(&output_file)?;
-
-  assert_eq!(
-    output,
-    indoc! {r###"
-    export * from "nested/file1";
-    export * from "nested/nested2/file2";
-  "###}
-  );
 
   let with_exclude_and_ext_cmd = [
     "sketch",
@@ -97,6 +74,31 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     output,
     indoc! {r###"
     export * from "nested/nested2/file2.ts";
+  "###}
+  );
+
+  let basic_cmd = [
+    "sketch",
+    "ts",
+    "barrel",
+    "-o",
+    &output_file.to_string_lossy(),
+    "tests/ts_barrel",
+  ];
+
+  write_command!(basic_cmd, [3, 4, 5], "barrel");
+
+  let basic = Cli::try_parse_from(basic_cmd)?;
+
+  execute_cli(basic).await?;
+
+  let output = read_to_string(&output_file)?;
+
+  assert_eq!(
+    output,
+    indoc! {r###"
+    export * from "nested/file1";
+    export * from "nested/nested2/file2";
   "###}
   );
 

@@ -22,3 +22,4 @@
 - [Typescript](./ts/summary.md)
     - [Generating A Monorepo](./ts/monorepo.md)
     - [Generating A Package](./ts/package_gen.md)
+    - [Generating A Barrel File](./ts/barrel.md)
