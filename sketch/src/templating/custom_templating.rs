@@ -1,7 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use globset::{Glob, GlobSetBuilder};
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
+use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -11,8 +12,9 @@ use walkdir::WalkDir;
 use crate::{
   config::Config,
   fs::{create_all_dirs, get_abs_path, get_parent_dir, open_file_if_overwriting},
+  merge_index_maps, merge_index_sets, merge_presets, merge_vecs,
   tera_setup::get_default_context,
-  GenError, Preset,
+  Extensible, GenError, Preset,
 };
 
 /// A reference to a templating preset, or a new preset definition.
@@ -32,14 +34,43 @@ pub enum TemplatingPresetReference {
 }
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Merge)]
+#[serde(default)]
 pub struct TemplatingPreset {
+  /// The list of extended preset IDs.
+  #[merge(strategy = merge_index_sets)]
+  pub extends: IndexSet<String>,
   /// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
+  #[merge(strategy = merge_vecs)]
   pub templates: Vec<PresetElement>,
 
   /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
-  #[serde(default)]
+  #[merge(strategy = merge_index_maps)]
   pub context: IndexMap<String, Value>,
+}
+
+impl Extensible for TemplatingPreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extends
+  }
+}
+
+impl TemplatingPreset {
+  pub fn process_data(
+    self,
+    id: &str,
+    store: &IndexMap<String, TemplatingPreset>,
+  ) -> Result<TemplatingPreset, GenError> {
+    if self.extends.is_empty() {
+      return Ok(self);
+    }
+
+    let mut processed_ids: IndexSet<String> = IndexSet::new();
+
+    let merged_preset = merge_presets(Preset::Templates, id, self, store, &mut processed_ids)?;
+
+    Ok(merged_preset)
+  }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
@@ -137,9 +168,10 @@ impl Config {
             .get(&id)
             .ok_or(GenError::PresetNotFound {
               kind: Preset::Templates,
-              name: id,
+              name: id.clone(),
             })?
             .clone()
+            .process_data(id.as_str(), &self.templating_presets)?
         }
         TemplatingPresetReference::Definition(preset) => preset,
       };

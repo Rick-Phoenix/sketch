@@ -174,3 +174,7 @@ pub(crate) fn merge_optional_vecs<T>(left: &mut Option<Vec<T>>, right: Option<Ve
     }
   }
 }
+
+pub(crate) fn merge_vecs<T>(left: &mut Vec<T>, right: Vec<T>) {
+  left.extend(right);
+}

@@ -104,6 +104,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     .assert()
     .stdout("they're taking the hobbits to Isengard!\n");
 
+  // Presets tests
+
   let collection_preset = [
     "sketch",
     "-c",
@@ -143,6 +145,22 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
   exists!("structured/nested/more_nested_file");
 
   get_tree_output("tests/output/custom_templates/structured", None)?;
+
+  let extended_preset = [
+    "sketch",
+    "-c",
+    &config_file.to_string_lossy(),
+    "render-preset",
+    "lotr",
+    "tests/output/custom_templates/extended",
+  ];
+
+  let from_extended_preset = Cli::try_parse_from(extended_preset)?;
+
+  execute_cli(from_extended_preset).await?;
+
+  exists!("extended/hobbits.txt");
+  exists!("extended/subdir/breakfast.txt");
 
   Ok(())
 }

@@ -6,6 +6,9 @@ Some of these presets are used just for defining an easily reproducible configur
 
 As of now, these presets are available:
 
+- Templating
+    - Templating presets (extensible)
+
 - Docker
     - Docker Compose file (extensible)
 

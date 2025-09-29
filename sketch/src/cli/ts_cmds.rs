@@ -182,7 +182,7 @@ pub(crate) async fn handle_ts_commands(
         if !single_templates.is_empty() {
           templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
             templates: single_templates,
-            context: Default::default(),
+            ..Default::default()
           }));
         }
       }
@@ -264,7 +264,7 @@ pub(crate) async fn handle_ts_commands(
         if !single_templates.is_empty() {
           templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
             templates: single_templates,
-            context: Default::default(),
+            ..Default::default()
           }));
         }
       }

@@ -132,7 +132,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         if !single_templates.is_empty() {
           templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
             templates: single_templates,
-            context: Default::default(),
+            ..Default::default()
           }));
         }
       }
@@ -204,7 +204,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         get_cwd(),
         vec![TemplatingPresetReference::Definition(TemplatingPreset {
           templates: vec![PresetElement::Template(template)],
-          context: Default::default(),
+          ..Default::default()
         })],
         cli_vars,
       )?;

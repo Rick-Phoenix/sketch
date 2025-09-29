@@ -4392,12 +4392,22 @@
       "description": "A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.",
       "type": "object",
       "properties": {
+        "extends": {
+          "description": "The list of extended preset IDs.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
         "templates": {
           "description": "The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/PresetElement"
-          }
+          },
+          "default": []
         },
         "context": {
           "description": "Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.",
@@ -4405,10 +4415,7 @@
           "additionalProperties": true,
           "default": {}
         }
-      },
-      "required": [
-        "templates"
-      ]
+      }
     },
     "PresetElement": {
       "anyOf": [

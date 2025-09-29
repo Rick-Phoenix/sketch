@@ -59,3 +59,12 @@ Tree output:
 ```
 {{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
 ```
+# Extending Templating Presets
+
+Templating presets are extensible. When a preset is being extended, its templates will be added to the receiving preset, and the two context maps will be merged, with the new context overwriting the previous context in case of conflicting variables.
+
+```yaml
+{{#include ../../../examples/templating/templating.yaml:extended_preset}}
+```
+
+

@@ -41,4 +41,10 @@ templating_presets:
         context: {}
       - template: breakfast
         output: subdir/breakfast.txt
-# ANCHOR_END: collection_preset
+  # ANCHOR_END: collection_preset
+
+  # ANCHOR: extended_preset
+  extended:
+    extends:
+      - lotr
+  # ANCHOR_END: extended_preset
