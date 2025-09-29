@@ -6,13 +6,13 @@ This document contains the help content for the `sketch` command-line program.
 
 * [`sketch`↴](#sketch)
 * [`sketch cargo-toml`↴](#sketch-cargo-toml)
+* [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
+* [`sketch package-json`↴](#sketch-package-json)
+* [`sketch ts-config`↴](#sketch-ts-config)
+* [`sketch oxlint`↴](#sketch-oxlint)
 * [`sketch docker-compose`↴](#sketch-docker-compose)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
 * [`sketch ts`↴](#sketch-ts)
-* [`sketch ts pnpm-workspace`↴](#sketch-ts-pnpm-workspace)
-* [`sketch ts package-json`↴](#sketch-ts-package-json)
-* [`sketch ts ts-config`↴](#sketch-ts-ts-config)
-* [`sketch ts oxlint`↴](#sketch-ts-oxlint)
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
 * [`sketch ts barrel`↴](#sketch-ts-barrel)
@@ -31,6 +31,10 @@ This document contains the help content for the `sketch` command-line program.
 ###### **Subcommands:**
 
 * `cargo-toml` — Generates a `Cargo.toml` file from a preset
+* `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
+* `package-json` — Generates a `package.json` file from a preset
+* `ts-config` — Generates a `tsconfig.json` file from a preset
+* `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `docker-compose` — Generates a Docker Compose file from a preset
 * `pre-commit` — Generates a `pre-commit` config file from a preset
 * `ts` — Executes typescript-specific commands
@@ -71,6 +75,58 @@ Generates a `Cargo.toml` file from a preset
 
 
 
+## `sketch pnpm-workspace`
+
+Generates a `pnpm-workspace.yaml` file from a preset
+
+**Usage:** `sketch pnpm-workspace <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `pnpm-workspace.yaml`]
+
+
+
+## `sketch package-json`
+
+Generates a `package.json` file from a preset
+
+**Usage:** `sketch package-json <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `package.json`]
+
+
+
+## `sketch ts-config`
+
+Generates a `tsconfig.json` file from a preset
+
+**Usage:** `sketch ts-config <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
+
+
+
+## `sketch oxlint`
+
+Generates a `.oxlintrc.json` file from a preset
+
+**Usage:** `sketch oxlint <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `.oxlintrc.json`]
+
+
+
 ## `sketch docker-compose`
 
 Generates a Docker Compose file from a preset
@@ -105,10 +161,6 @@ Executes typescript-specific commands
 
 ###### **Subcommands:**
 
-* `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
-* `package-json` — Generates a `package.json` file from a preset
-* `ts-config` — Generates a `tsconfig.json` file from a preset
-* `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `monorepo` — Generates a new typescript monorepo
 * `package` — Generates a new typescript package
 * `barrel` — Creates a barrel file
@@ -135,58 +187,6 @@ Executes typescript-specific commands
 
   Possible values: `true`, `false`
 
-
-
-
-## `sketch ts pnpm-workspace`
-
-Generates a `pnpm-workspace.yaml` file from a preset
-
-**Usage:** `sketch ts pnpm-workspace <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `pnpm-workspace.yaml`]
-
-
-
-## `sketch ts package-json`
-
-Generates a `package.json` file from a preset
-
-**Usage:** `sketch ts package-json <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `package.json`]
-
-
-
-## `sketch ts ts-config`
-
-Generates a `tsconfig.json` file from a preset
-
-**Usage:** `sketch ts ts-config <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
-
-
-
-## `sketch ts oxlint`
-
-Generates a `.oxlintrc.json` file from a preset
-
-**Usage:** `sketch ts oxlint <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `.oxlintrc.json`]
 
 
 
