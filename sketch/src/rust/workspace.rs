@@ -11,7 +11,7 @@ use serde_json::Value;
 use crate::{
   merge_btree_maps, merge_btree_sets, merge_optional_btree_maps, merge_optional_btree_sets,
   merge_optional_nested, overwrite_if_some,
-  rust::{DepsSet, Edition, LintGroups, OptionalFile, Publish, Resolver},
+  rust::{Dependency, Edition, Lint, OptionalFile, Publish, Resolver},
 };
 
 /// A manifest can contain both a package and workspace-wide properties
@@ -51,14 +51,14 @@ pub struct Workspace {
   pub resolver: Option<Resolver>,
 
   /// Template for `needs_workspace_inheritance`
-  #[serde(default, skip_serializing_if = "DepsSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub dependencies: DepsSet,
+  pub dependencies: BTreeMap<String, Dependency>,
 
   /// Workspace-level lint groups
-  #[serde(default, skip_serializing_if = "LintGroups::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub lints: LintGroups,
+  pub lints: BTreeMap<String, BTreeMap<String, Lint>>,
 }
 
 /// Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.

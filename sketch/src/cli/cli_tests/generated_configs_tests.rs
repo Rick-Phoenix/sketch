@@ -7,7 +7,8 @@ use super::reset_testing_dir;
 use crate::{
   cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
   docker::compose::{ComposeFile, ServiceVolume},
-  fs::deserialize_yaml,
+  fs::{deserialize_toml, deserialize_yaml},
+  rust::Manifest,
   Config,
 };
 
@@ -76,6 +77,27 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
   let my_other_volume = volumes.get("my_other_volume").unwrap();
 
   assert!(my_other_volume.external.unwrap());
+
+  let output_file = output_dir.join("Cargo.toml");
+
+  let cargo_cmd = [
+    "sketch",
+    "-c",
+    &config_file.to_string_lossy(),
+    "cargo-toml",
+    "extended",
+    &output_file.to_string_lossy(),
+  ];
+
+  let cargo_toml_gen = Cli::try_parse_from(cargo_cmd)?;
+
+  execute_cli(cargo_toml_gen).await?;
+
+  let output: Manifest = deserialize_toml(&output_file)?;
+
+  assert!(output.dependencies.contains_key("serde"));
+  assert!(output.dependencies.contains_key("regex"));
+  assert!(output.dependencies.contains_key("tokio"));
 
   Ok(())
 }

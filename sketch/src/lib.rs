@@ -9,6 +9,7 @@ pub(crate) mod exec;
 pub(crate) mod fs;
 pub(crate) mod init_repo;
 pub(crate) mod merging_strategies;
+pub(crate) mod serde_utils;
 pub(crate) mod templating;
 
 pub mod cli;

@@ -5,6 +5,7 @@ This document contains the help content for the `sketch` command-line program.
 **Command Overview:**
 
 * [`sketch`↴](#sketch)
+* [`sketch cargo-toml`↴](#sketch-cargo-toml)
 * [`sketch docker-compose`↴](#sketch-docker-compose)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
 * [`sketch ts`↴](#sketch-ts)
@@ -29,6 +30,7 @@ This document contains the help content for the `sketch` command-line program.
 
 ###### **Subcommands:**
 
+* `cargo-toml` — Generates a `Cargo.toml` file from a preset
 * `docker-compose` — Generates a Docker Compose file from a preset
 * `pre-commit` — Generates a `pre-commit` config file from a preset
 * `ts` — Executes typescript-specific commands
@@ -53,6 +55,19 @@ This document contains the help content for the `sketch` command-line program.
   Possible values: `true`, `false`
 
 * `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
+
+
+
+## `sketch cargo-toml`
+
+Generates a `Cargo.toml` file from a preset
+
+**Usage:** `sketch cargo-toml <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the created file [default: `Cargo.toml`]
 
 
 

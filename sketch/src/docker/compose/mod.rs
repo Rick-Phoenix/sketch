@@ -1,7 +1,7 @@
 use std::{
   cmp::Ordering,
   collections::{BTreeMap, BTreeSet},
-  fmt::{self, Display},
+  fmt::{self},
 };
 
 use indexmap::{IndexMap, IndexSet};
@@ -12,8 +12,8 @@ use serde_json::Value;
 
 use crate::{
   merge_index_sets, merge_nested, merge_optional_btree_maps, merge_optional_btree_sets,
-  merge_optional_vecs, merge_presets, overwrite_if_some, Extensible, GenError, Preset,
-  StringBTreeMap,
+  merge_optional_vecs, merge_presets, overwrite_if_some, serde_utils::StringOrNum, Extensible,
+  GenError, Preset, StringBTreeMap,
 };
 
 /// A preset for Docker Compose files.
@@ -130,22 +130,6 @@ impl ComposeFile {
 pub enum StringOrList {
   String(String),
   List(Vec<String>),
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
-#[serde(untagged)]
-pub enum StringOrNum {
-  Num(i64),
-  String(String),
-}
-
-impl Display for StringOrNum {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    match self {
-      Self::Num(n) => write!(f, "{}", n),
-      Self::String(s) => write!(f, "{}", s),
-    }
-  }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]

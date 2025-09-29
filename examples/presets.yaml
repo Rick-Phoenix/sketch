@@ -28,6 +28,19 @@ templating_presets:
 
 # ANCHOR: all
 
+# `Cargo.toml` presets
+cargo_toml_presets:
+  base:
+    dependencies:
+      regex: "1"
+      serde: "1"
+
+  extended:
+    extends:
+      - base
+    dependencies:
+      tokio: "1"
+
 # Docker Compose presets
 # ANCHOR: docker_compose
 docker_compose_presets:

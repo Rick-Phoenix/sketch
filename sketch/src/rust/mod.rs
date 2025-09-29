@@ -18,6 +18,7 @@ use crate::{
   merge_btree_maps, merge_btree_sets, merge_index_sets, merge_nested, merge_optional_nested,
   merge_presets, overwrite_if_some,
   rust::{package::Package, profile_settings::Profiles, workspace::Workspace},
+  serde_utils::StringOrNum,
   Extensible, GenError, Preset,
 };
 
@@ -75,24 +76,24 @@ pub struct Manifest {
   pub workspace: Option<Workspace>,
 
   /// Normal dependencies
-  #[serde(default, skip_serializing_if = "DepsSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub dependencies: DepsSet,
+  pub dependencies: BTreeMap<String, Dependency>,
 
   /// Dev/test-only deps
-  #[serde(default, skip_serializing_if = "DepsSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub dev_dependencies: DepsSet,
+  pub dev_dependencies: BTreeMap<String, Dependency>,
 
   /// Build-time deps
-  #[serde(default, skip_serializing_if = "DepsSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub build_dependencies: DepsSet,
+  pub build_dependencies: BTreeMap<String, Dependency>,
 
   /// `[target.cfg.dependencies]`
-  #[serde(default, skip_serializing_if = "TargetDepsSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub target: TargetDepsSet,
+  pub target: BTreeMap<String, Target>,
 
   /// The `[features]` section. This set may be incomplete!
   ///
@@ -102,14 +103,14 @@ pub struct Manifest {
   ///
   /// This crate has an optional [`features`] module for dealing with this
   /// complexity and getting the real list of features.
-  #[serde(default, skip_serializing_if = "FeatureSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub features: FeatureSet,
+  pub features: BTreeMap<String, BTreeSet<String>>,
 
   /// `[patch.crates-io]` section
-  #[serde(default, skip_serializing_if = "PatchSet::is_empty")]
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   #[merge(strategy = merge_btree_maps)]
-  pub patch: PatchSet,
+  pub patch: BTreeMap<String, BTreeMap<String, Dependency>>,
 
   /// Note that due to autolibs feature this is not the complete list
   /// unless you run [`Manifest::complete_from_path`]
@@ -146,7 +147,7 @@ pub struct Manifest {
   /// Lints
   #[serde(default, skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_inheritable_map)]
-  pub lints: Option<Inheritable<LintGroups>>,
+  pub lints: Option<Inheritable<BTreeMap<String, BTreeMap<String, Lint>>>>,
 }
 
 /// Lint level.
@@ -179,33 +180,14 @@ pub struct Lint {
 pub struct Target {
   /// platform-specific normal deps
   #[serde(default)]
-  pub dependencies: DepsSet,
+  pub dependencies: BTreeMap<String, Dependency>,
   /// platform-specific dev-only/test-only deps
   #[serde(default)]
-  pub dev_dependencies: DepsSet,
+  pub dev_dependencies: BTreeMap<String, Dependency>,
   /// platform-specific build-time deps
   #[serde(default)]
-  pub build_dependencies: DepsSet,
+  pub build_dependencies: BTreeMap<String, Dependency>,
 }
-
-/// Dependencies. The keys in this map are not always crate names, this can be overriden by the `package` field, and there may be multiple copies of the same crate.
-///
-/// Optional dependencies may create implicit features, see the [`features`] module for dealing with this.
-pub type DepsSet = BTreeMap<String, Dependency>;
-/// Config target (see [`parse_cfg`](https://lib.rs/parse_cfg) crate) + deps for the target.
-pub type TargetDepsSet = BTreeMap<String, Target>;
-/// The `[features]` section. This set may be incomplete!
-///
-/// The `default` is special, and there may be more features
-/// implied by optional dependencies.
-/// See the [`features`] module for more info.
-pub type FeatureSet = BTreeMap<String, BTreeSet<String>>;
-/// Locally replace dependencies
-pub type PatchSet = BTreeMap<String, DepsSet>;
-/// A set of lints.
-pub type LintSet = BTreeMap<String, Lint>;
-/// Lint groups such as [lints.rust].
-pub type LintGroups = BTreeMap<String, LintSet>;
 
 /// Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.
 ///
@@ -214,7 +196,7 @@ pub type LintGroups = BTreeMap<String, LintSet>;
 #[serde(untagged)]
 pub enum Dependency {
   /// Version requirement (e.g. `^1.5`)
-  Simple(String),
+  Simple(StringOrNum),
   /// Incomplete data
   Inherited(InheritedDependencyDetail), // order is important for serde
   /// `{ version = "^1.5", features = ["a", "b"] }` etc.
@@ -242,7 +224,7 @@ pub struct InheritedDependencyDetail {
 pub struct DependencyDetail {
   /// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub version: Option<String>,
+  pub version: Option<StringOrNum>,
 
   /// If `Some`, use this as the crate name instead of `[dependencies]`'s table key.
   ///
@@ -309,12 +291,15 @@ pub struct DependencyDetail {
   pub unstable: BTreeMap<String, Value>,
 }
 
-/// Placeholder for a property that may be missing from its package, and needs to be copied from a `Workspace`.
+/// A value that can be set to `workspace`
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(untagged)]
 pub enum Inheritable<T> {
+  /// Inherit this setting from the `workspace`
   #[serde(rename = "workspace")]
-  Workspace { workspace: Option<bool> },
-  #[serde(untagged)]
+  Workspace {
+    workspace: Option<bool>,
+  },
   Set(T),
 }
 
