@@ -15,6 +15,7 @@ pub mod cli;
 pub mod config;
 pub mod docker;
 pub mod errors;
+pub mod rust;
 pub mod ts;
 pub mod versions;
 
@@ -47,6 +48,7 @@ pub enum Preset {
   PnpmWorkspace,
   Vitest,
   DockerCompose,
+  CargoToml,
 }
 
 pub(crate) fn log_debug<T: Debug>(name: &str, item: &T) {

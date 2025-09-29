@@ -17,6 +17,9 @@ As of now, these presets are available:
     - `.gitignore` (extensible)
     - `.pre-commit-config.yaml` (extensible)
 
+- Rust
+    - `Cargo.toml` (extensible)
+
 - Typescript
     - Typescript package
     - `pnpm-workspace.yaml` (extensible)

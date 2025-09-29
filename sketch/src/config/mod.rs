@@ -16,6 +16,7 @@ use crate::{
   fs::get_parent_dir,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
   merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
+  rust::CargoTomlPreset,
   ts::TypescriptConfig,
   GenError,
 };
@@ -97,6 +98,11 @@ pub struct Config {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub docker_compose_presets: IndexMap<String, ComposePreset>,
+
+  /// A map that contains presets for `Cargo.toml` files.
+  #[merge(strategy = merge_index_maps)]
+  #[arg(skip)]
+  pub cargo_toml_presets: IndexMap<String, CargoTomlPreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
@@ -185,6 +191,7 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      cargo_toml_presets: Default::default(),
       docker_compose_presets: Default::default(),
       git_presets: Default::default(),
       gitignore_presets: Default::default(),

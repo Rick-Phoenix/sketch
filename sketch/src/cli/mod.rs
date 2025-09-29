@@ -51,6 +51,24 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
+    Commands::CargoToml { output, preset } => {
+      let content = config
+        .cargo_toml_presets
+        .get(&preset)
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::CargoToml,
+          name: preset.clone(),
+        })?
+        .clone()
+        .process_data(preset.as_str(), &config.cargo_toml_presets)?;
+
+      let output = output.unwrap_or_else(|| "Cargo.toml".into());
+
+      create_parent_dirs(&output)?;
+
+      serialize_toml(&content, &output, overwrite)?;
+    }
+
     Commands::DockerCompose { output, preset } => {
       let content = config
         .docker_compose_presets
@@ -331,6 +349,15 @@ pub struct RepoConfigInput {
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
+  /// Generates a `Cargo.toml` file from a preset.
+  CargoToml {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the created file [default: `Cargo.toml`]
+    output: Option<PathBuf>,
+  },
+
   /// Generates a Docker Compose file from a preset.
   DockerCompose {
     /// The preset id
