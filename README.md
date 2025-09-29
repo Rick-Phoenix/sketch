@@ -28,7 +28,7 @@ Some presets can aggregate or use other presets. For example, a git `repo` prese
 
 # Rich Templating Toolset
 
-Sketch uses the [Tera](https://keats.github.io/tera/docs/) to render custom templates, which comes with its own rich featureset, and on top of that, it provides extra features, such as special variables that extract commonly used values such as the user directory or the host's operating system, or functions that perform actions such as making a glob search in a directory, generating a uuid, transforming a relative path into an absolute path or extracting capture groups from a regex (and many other more...).
+Sketch uses the [Tera](https://keats.github.io/tera/docs/) to render custom templates, which comes with its own rich feature set, and on top of that, it provides extra features, such as special variables that extract commonly used values such as the user directory or the host's operating system, or functions that perform actions such as making a glob search in a directory, generating a uuid, transforming a relative path into an absolute path or extracting capture groups from a regex (and many other more...).
 
 All of these are available directly within templates, which greatly extends their flexibility and the variety of scenarios in which they can be applied.
 

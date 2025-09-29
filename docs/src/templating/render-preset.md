@@ -4,29 +4,15 @@ Rendering a single template is for cases when we need a simpler or more flexible
 
 Presets can be rendered with the `render-preset` command, or generated automatically with [another preset](../presets/git.md#adding-templates), such as a git repo preset.
 
-# Types Of Presets
+# Creating A Preset
 
-There are two kinds of templating presets, which are best used under different kinds of situations.
+A preset contains an optional context (which overrides the global context), and a list of two kinds of items, which are best used under different kinds of situations:
 
-### 1. Collection Preset
+## Individual Template
 
-**Features**:
+- An individual template (with manually controlled output path and local context)
 
-- Aggregates individual templates
-- Can define individual output path
-- Can provide group and individual context
-
-**Use case**:
-
-For cases when you need more granular control about the templates that you want to select, their output paths, or their local context.
-
-**How it works**:
-
-You select an individual template, and provide an output path and an optional local context. You can provide a group context which can be overridden by a template's individual context.
-
-Relative paths will resolve from the root of the target directory (which can be defined manually via command for custom templates, or is inferred automatically when the template is being rendered as part of another preset)
-
-#### Example
+### Example
 
 ```yaml
 {{#include ../../../examples/templating/templating.yaml:prop_name}}
@@ -42,20 +28,12 @@ Tree output:
 ```
 {{#include ../../../sketch/tests/output/custom_templates/lotr/tree_output.txt:2:}}
 ```
-### 2. Structured Preset
 
-**Features**:
+## Structured Template
 
-- Recursively collects all templates in a directory
-- Replicates the file tree structure in the output path
+- A path to a directory inside `templates_dir`, to extract all the files inside of it recursively and render them in the output directory, with the same file tree structure
 
-**Use case**:
-
-When you want to have a 1:1 replica of a specific file tree structure.
-
-The other type are what I call `structured` presets, where you do not define an output path for every single file, but rather, you select an entire directory within your `templates_dir`, and then all of the templates inside that dir (and its descendants, recursively) will be rendered with the same exact structure in the output directory. 
-
-#### Example
+### Example
 
 >ℹ️ Any template files that end with the `.j2`, `.jinja` or `.jinja2` extensions will have them automatically removed. So `myfile.json.j2` will just become `myfile.json`.
 

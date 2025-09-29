@@ -7,8 +7,8 @@ use merge::Merge;
 use walkdir::WalkDir;
 
 use crate::{
-  cli::TemplateOutput,
-  custom_templating::{TemplatingPreset, TemplatingPresetReference},
+  cli::cli_elements::TemplateRef,
+  custom_templating::{PresetElement, TemplatingPreset, TemplatingPresetReference},
   exec::launch_command,
   fs::{create_parent_dirs, get_cwd, open_file_if_overwriting, serialize_json, serialize_yaml},
   ts::{
@@ -105,13 +105,11 @@ pub(crate) async fn handle_ts_commands(
       serialize_json(&content, &output, overwrite)?;
     }
     TsCommands::Monorepo {
-      package_args:
-        TsPackageArgs {
-          oxlint,
-          install,
-          with_templates,
-          with_templ_preset,
-        },
+      package_args: TsPackageArgs {
+        oxlint,
+        install,
+        with_templates,
+      },
       root_package_overrides,
       root_package,
       dir,
@@ -166,24 +164,26 @@ pub(crate) async fn handle_ts_commands(
         None
       };
 
-      if let Some(presets) = with_templ_preset {
+      if let Some(template_refs) = with_templates {
         let templates_list = root_package.with_templates.get_or_insert_default();
 
-        for id in presets {
-          templates_list.push(TemplatingPresetReference::Preset {
-            id,
-            context: Default::default(),
-          });
+        let mut single_templates: Vec<PresetElement> = Vec::new();
+
+        for template in template_refs {
+          match template {
+            TemplateRef::PresetId(id) => templates_list.push(TemplatingPresetReference::Preset {
+              id,
+              context: Default::default(),
+            }),
+            TemplateRef::Template(def) => single_templates.push(PresetElement::Template(def)),
+          };
         }
-      }
 
-      if let Some(templates) = with_templates {
-        let templates_list = root_package.with_templates.get_or_insert_default();
-
-        for template in templates {
-          templates_list.push(TemplatingPresetReference::Definition(
-            TemplatingPreset::Single(template),
-          ));
+        if !single_templates.is_empty() {
+          templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
+            templates: single_templates,
+            context: Default::default(),
+          }));
         }
       }
 
@@ -211,13 +211,11 @@ pub(crate) async fn handle_ts_commands(
       update_tsconfig,
       dir,
       vitest,
-      package_args:
-        TsPackageArgs {
-          oxlint,
-          install,
-          with_templates,
-          with_templ_preset,
-        },
+      package_args: TsPackageArgs {
+        oxlint,
+        install,
+        with_templates,
+      },
     } => {
       let mut package = if let Some(preset) = preset {
         typescript
@@ -248,24 +246,26 @@ pub(crate) async fn handle_ts_commands(
         };
       }
 
-      if let Some(presets) = with_templ_preset {
+      if let Some(template_refs) = with_templates {
         let templates_list = package.with_templates.get_or_insert_default();
 
-        for id in presets {
-          templates_list.push(TemplatingPresetReference::Preset {
-            id,
-            context: Default::default(),
-          });
+        let mut single_templates: Vec<PresetElement> = Vec::new();
+
+        for template in template_refs {
+          match template {
+            TemplateRef::PresetId(id) => templates_list.push(TemplatingPresetReference::Preset {
+              id,
+              context: Default::default(),
+            }),
+            TemplateRef::Template(def) => single_templates.push(PresetElement::Template(def)),
+          };
         }
-      }
 
-      if let Some(templates) = with_templates {
-        let templates_list = package.with_templates.get_or_insert_default();
-
-        for template in templates {
-          templates_list.push(TemplatingPresetReference::Definition(
-            TemplatingPreset::Single(template),
-          ));
+        if !single_templates.is_empty() {
+          templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
+            templates: single_templates,
+            context: Default::default(),
+          }));
         }
       }
 
@@ -396,18 +396,13 @@ pub struct TsPackageArgs {
   #[arg(short, long)]
   install: bool,
 
-  /// One or many individual templates to render in the new package's directory
+  /// One or many templates or templating presets to generate in the new package's root
   #[arg(
-      short,
-      long = "with-template",
-      value_name = "id=TEMPLATE_ID,output=PATH",
-      value_parser = TemplateOutput::from_cli
-    )]
-  with_templates: Option<Vec<TemplateOutput>>,
-
-  /// One or many templating presets to render in the new package's directory
-  #[arg(short = 't', long, value_name = "ID")]
-  with_templ_preset: Option<Vec<String>>,
+    short,
+    long = "with-template",
+    value_name = "PRESET_ID|id=TEMPLATE_ID,output=PATH"
+  )]
+  with_templates: Option<Vec<TemplateRef>>,
 }
 
 #[derive(Debug, Clone, Args)]

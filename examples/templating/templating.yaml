@@ -19,29 +19,25 @@ templating_presets:
   # ANCHOR_END: prop_name
   # ANCHOR: structured_preset
   structured:
-    dir: subdir
-    # Glob patterns to exclude certain templates
-    exclude:
-      - "some/glob/pattern/*"
-    # Optional context
-    context: {}
+    # Selecting all the files inside this directory
+    # and its descendants
+    templates:
+      - dir: subdir
+        # Glob patterns to exclude certain templates
+        exclude:
+          - "some/glob/pattern/*"
   # ANCHOR_END: structured_preset
 
   # ANCHOR: collection_preset
-  # A preset can also contain a single template
-  single_preset:
-    template: hobbits
-    context: {}
-    output: isengard.txt
 
-  # Or more commonly, many of them
   lotr:
-    # We can define a group context
+    # Group context, lower priority
     context: {}
     templates:
+      # Selecting individual templates
       - template: hobbits
         output: hobbits.txt
-        # And a local context (higher priority)
+        # Individual context, higher priority
         context: {}
       - template: breakfast
         output: subdir/breakfast.txt

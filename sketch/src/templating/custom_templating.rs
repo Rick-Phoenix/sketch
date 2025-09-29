@@ -1,7 +1,4 @@
-use std::{
-  borrow::Cow,
-  path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use globset::{Glob, GlobSetBuilder};
 use indexmap::IndexMap;
@@ -36,28 +33,32 @@ pub enum TemplatingPresetReference {
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+pub struct TemplatingPreset {
+  /// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
+  pub templates: Vec<PresetElement>,
+
+  /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
+  #[serde(default)]
+  pub context: IndexMap<String, Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 #[serde(untagged)]
-pub enum TemplatingPreset {
-  /// Data for a single template.
-  Single(TemplateOutput),
-  /// A list of individual templates, with extra optional context.
-  Collection {
-    /// A list of individual templates to include in this preset.
-    templates: Vec<TemplateOutput>,
-    /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
-    #[serde(default)]
-    context: IndexMap<String, Value>,
-  },
-  /// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
-  Structured {
-    /// A relative path to a directory starting from `templates_dir`
-    dir: PathBuf,
-    /// A list of glob patterns for the templates to exclude
-    exclude: Option<Vec<String>>,
-    /// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
-    #[serde(default)]
-    context: IndexMap<String, Value>,
-  },
+pub enum PresetElement {
+  /// The data for a single template.
+  Template(TemplateOutput),
+
+  /// A path to a directory inside `templates_dir`, where all templates will be recursively extracted and rendered in the output directory, following the same file tree structure.
+  Structured(StructuredPreset),
+}
+
+/// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+pub struct StructuredPreset {
+  /// A relative path to a directory starting from `templates_dir`
+  dir: PathBuf,
+  /// A list of glob patterns for the templates to exclude
+  exclude: Option<Vec<String>>,
 }
 
 /// The types of configuration values for a template's data.
@@ -111,25 +112,25 @@ impl Config {
   pub fn generate_templates<T: AsRef<Path>>(
     self,
     output_root: T,
-    templates: Vec<TemplatingPresetReference>,
+    preset_refs: Vec<TemplatingPresetReference>,
     cli_overrides: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
     let mut tera = self.initialize_tera()?;
 
-    let mut global_context = Context::from_serialize(self.vars)
+    let mut global_context = Context::from_serialize(&self.vars)
       .map_err(|e| GenError::TemplateContextParsing { source: e })?;
 
     global_context.extend(get_default_context());
 
     let output_root = output_root.as_ref();
 
-    for template in templates {
-      let mut local_context: IndexMap<String, Value> = IndexMap::new();
+    for preset_ref in preset_refs {
+      let mut local_context = global_context.clone();
 
-      let preset = match template {
+      let preset = match preset_ref {
         TemplatingPresetReference::Preset { id, context } => {
-          local_context.extend(context);
+          extend_context(&mut local_context, &context)?;
 
           self
             .templating_presets
@@ -143,60 +144,40 @@ impl Config {
         TemplatingPresetReference::Definition(preset) => preset,
       };
 
-      match preset {
-        TemplatingPreset::Collection { templates, context } => {
-          local_context.extend(context);
+      for element in preset.templates {
+        match element {
+          PresetElement::Template(template) => {
+            extend_context(&mut local_context, &template.context)?;
+            apply_cli_overrides(&mut local_context, cli_overrides.as_deref())?;
 
-          let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
-
-          for template in templates {
             render_template_with_output(
               overwrite,
               &mut tera,
-              &context,
+              &local_context,
               output_root,
               template.output,
               template.template,
             )?;
           }
-        }
-        TemplatingPreset::Structured {
-          dir,
-          context,
-          exclude,
-        } => {
-          local_context.extend(context);
 
-          let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
+          PresetElement::Structured(StructuredPreset { dir, exclude }) => {
+            apply_cli_overrides(&mut local_context, cli_overrides.as_deref())?;
 
-          render_structured_preset(
-            overwrite,
-            &tera,
-            &context,
-            output_root,
-            dir,
-            &self
-              .templates_dir
-              .clone()
-              .ok_or(GenError::Custom(format!("templates_dir not set")))?,
-            exclude,
-          )?;
-        }
-        TemplatingPreset::Single(template) => {
-          local_context.extend(template.context);
-
-          let context = get_context(&global_context, local_context, cli_overrides.as_deref())?;
-
-          render_template_with_output(
-            overwrite,
-            &mut tera,
-            &context,
-            output_root,
-            template.output,
-            template.template,
-          )?;
-        }
-      };
+            render_structured_preset(
+              overwrite,
+              &tera,
+              &local_context,
+              output_root,
+              dir,
+              &self
+                .templates_dir
+                .clone()
+                .ok_or(GenError::Custom(format!("templates_dir not set")))?,
+              exclude,
+            )?;
+          }
+        };
+      }
     }
 
     Ok(())
@@ -344,41 +325,29 @@ fn render_template(
     })
 }
 
-fn get_local_context<'a>(
-  global_context: &'a Context,
-  local_context: IndexMap<String, Value>,
-) -> Result<Cow<'a, Context>, GenError> {
-  if local_context.is_empty() {
-    Ok(Cow::Borrowed(global_context))
-  } else {
-    let mut new_context = global_context.clone();
-
-    new_context.extend(create_context(local_context)?);
-
-    Ok(Cow::Owned(new_context))
-  }
-}
-
-fn get_context<'a>(
-  global_context: &'a Context,
-  mut local_context: IndexMap<String, Value>,
-  overrides: Option<&'a [(String, Value)]>,
-) -> Result<Cow<'a, Context>, GenError> {
-  apply_cli_overrides(&mut local_context, overrides)?;
-  get_local_context(global_context, local_context)
-}
-
-fn create_context(context: IndexMap<String, Value>) -> Result<Context, GenError> {
+fn create_context(context: &IndexMap<String, Value>) -> Result<Context, GenError> {
   Context::from_serialize(context).map_err(|e| GenError::TemplateContextParsing { source: e })
 }
 
+fn extend_context(
+  global_context: &mut Context,
+  new_context: &IndexMap<String, Value>,
+) -> Result<(), GenError> {
+  if !new_context.is_empty() {
+    let new_context = create_context(new_context)?;
+    global_context.extend(new_context);
+  }
+
+  Ok(())
+}
+
 fn apply_cli_overrides(
-  context: &mut IndexMap<String, Value>,
+  context: &mut Context,
   overrides: Option<&[(String, Value)]>,
 ) -> Result<(), GenError> {
   if let Some(overrides) = overrides {
     for (key, val) in overrides {
-      context.insert(key.clone(), val.clone());
+      context.insert(key, val);
     }
   }
 

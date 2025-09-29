@@ -2,7 +2,7 @@
 name = "sketch-it"
 version = "0.1.0-beta.1"
 
-description = "🖌️ Templating made simple. Define and generate reusable structures for all sorts of projects"
+description = "🖌️ Templating made simple. A tool to define and generate files and reusable project structures"
 categories = ["command-line-utilities", "development-tools"]
 keywords = ["boilerplate", "generation", "templating"]
 repository = "https://github.com/Rick-Phoenix/sketch"
@@ -52,13 +52,7 @@ paste = { workspace = true }
 merge = "0.2.0"
 tera = "1.20.0"
 indexmap = { version = "2.11.0", features = ["serde"] }
-uuid = { version = "1.18.1", features = ["v4"], optional = true }
-
-[features]
-## Adds a `uuid` function to generate UUID in custom templates.
-uuid = ["dep:uuid"]
-
-default = ["uuid"]
+uuid = { version = "1.18.1", features = ["v4"] }
 
 [package.metadata.docs.rs]
 all-features = true

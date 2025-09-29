@@ -16,11 +16,13 @@ use Commands::*;
 
 use crate::{
   cli::{
+    cli_elements::TemplateRef,
     config_discovery::get_config_from_cli,
     ts_cmds::{handle_ts_commands, TsCommands},
   },
   custom_templating::{
-    TemplateData, TemplateOutput, TemplateOutputKind, TemplatingPreset, TemplatingPresetReference,
+    PresetElement, TemplateData, TemplateOutput, TemplateOutputKind, TemplatingPreset,
+    TemplatingPresetReference,
   },
   fs::{
     create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
@@ -112,24 +114,26 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         preset.gitignore = Some(GitIgnoreSetting::Id(gitignore));
       }
 
-      if let Some(presets) = input.with_templ_preset {
+      if let Some(template_refs) = input.with_templates {
         let templates_list = preset.with_templates.get_or_insert_default();
 
-        for id in presets {
-          templates_list.push(TemplatingPresetReference::Preset {
-            id: id,
-            context: Default::default(),
-          });
+        let mut single_templates: Vec<PresetElement> = Vec::new();
+
+        for template in template_refs {
+          match template {
+            TemplateRef::PresetId(id) => templates_list.push(TemplatingPresetReference::Preset {
+              id,
+              context: Default::default(),
+            }),
+            TemplateRef::Template(def) => single_templates.push(PresetElement::Template(def)),
+          };
         }
-      }
 
-      if let Some(templates) = input.with_templates {
-        let templates_list = preset.with_templates.get_or_insert_default();
-
-        for template in templates {
-          templates_list.push(TemplatingPresetReference::Definition(
-            TemplatingPreset::Single(template),
-          ));
+        if !single_templates.is_empty() {
+          templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
+            templates: single_templates,
+            context: Default::default(),
+          }));
         }
       }
 
@@ -198,12 +202,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       config.generate_templates(
         get_cwd(),
-        vec![TemplatingPresetReference::Definition(
-          TemplatingPreset::Collection {
-            templates: vec![template],
-            context: Default::default(),
-          },
-        )],
+        vec![TemplatingPresetReference::Definition(TemplatingPreset {
+          templates: vec![PresetElement::Template(template)],
+          context: Default::default(),
+        })],
         cli_vars,
       )?;
     }
@@ -317,17 +319,13 @@ pub struct RepoConfigInput {
   #[arg(long)]
   gitignore: Option<String>,
 
-  /// One or many individual templates to render in the new repo
+  /// One or many individual templates or templating presets to render in the new repo
   #[arg(
     short,
     long = "with-template",
-    value_name = "id=TEMPLATE_ID,output=PATH", value_parser = TemplateOutput::from_cli
+    value_name = "PRESET_ID|id=TEMPLATE_ID,output=PATH"
   )]
-  with_templates: Option<Vec<TemplateOutput>>,
-
-  /// One or many templating presets to render in the new repo
-  #[arg(short = 't', long, value_name = "ID")]
-  with_templ_preset: Option<Vec<String>>,
+  with_templates: Option<Vec<TemplateRef>>,
 }
 
 /// The cli commands.

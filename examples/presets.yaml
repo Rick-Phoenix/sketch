@@ -11,27 +11,13 @@ templates:
 
 # Templating presets
 templating_presets:
-  single_template:
-    template: "engine feels good, much {{ condition }} than before... amazing"
-    # Local context
+  dockerfile:
     context:
-      condition: slower
-    output: single.txt
-
-  # Takes an entire directory and renders the templates
-  # in the output dir with the same directory structure
-  structured_template:
-    dir: some/dir/inside/templates_dir
-    context: {}
-
-  # Group of individual templates, for granular control
-  docker:
-    context:
-      # Group context
+      # Group context, lower priority
       docker_dev_port: 9530
+    # List of templates
     templates:
-      # Relative paths are joined with the output
-      # directory specified via command, (or, by default, to the cwd)
+      # Single template
       - output: Dockerfile
         template: dockerfile
         # Local context with higher priority
@@ -121,8 +107,7 @@ git_presets:
     # Templates that will be generated with this preset
     # starting from the new repo's root
     with_templates:
-      - template: dockerfile
-        output: Dockerfile
+      - id: dockerfile
     # ANCHOR_END: git_preset
 
 typescript:

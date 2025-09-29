@@ -61,10 +61,7 @@ impl Config {
 
     tera.autoescape_on(vec![]);
 
-    #[cfg(feature = "uuid")]
-    {
-      tera.register_function("uuid", tera_uuid);
-    }
+    tera.register_function("uuid", tera_uuid);
 
     tera.register_filter("basename", basename);
     tera.register_filter("parent_dir", parent_dir);

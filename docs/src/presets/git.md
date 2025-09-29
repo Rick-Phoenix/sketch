@@ -24,8 +24,6 @@ Starting from this config, we can run this command:
 
 >`{{#include ../../../sketch/tests/output/presets/cmd}}`
 
-
-
 To get this tree output:
 
 ```

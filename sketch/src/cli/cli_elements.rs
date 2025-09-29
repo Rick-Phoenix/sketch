@@ -2,7 +2,26 @@ use std::{fmt::Display, str::FromStr};
 
 use clap::ValueEnum;
 
-use crate::GenError;
+use crate::{custom_templating::TemplateOutput, GenError};
+
+#[derive(Debug, Clone)]
+pub(crate) enum TemplateRef {
+  PresetId(String),
+  Template(TemplateOutput),
+}
+
+impl FromStr for TemplateRef {
+  type Err = &'static str;
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    let s = s.trim();
+
+    if let Ok(output) = TemplateOutput::from_cli(s) {
+      Ok(Self::Template(output))
+    } else {
+      Ok(Self::PresetId(s.to_string()))
+    }
+  }
+}
 
 #[derive(Clone, Debug, ValueEnum, Default)]
 pub enum ConfigFormat {

@@ -20,7 +20,7 @@ To do that, we add this to the root package's definition:
 {{#include ../../../examples/typescript/root_package.yaml:template_example}}
 ```
 
->ℹ️ You can also use `--with-template <id=TEMPLATE_ID,output=PATH>` as a flag to add more templates when generating a new package.
+>ℹ️ You can also use `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` as a flag to add more templates or templating presets when generating a new package.
 
 # Example
 

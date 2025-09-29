@@ -16,7 +16,7 @@ To generate the new package.
 
 ## Adding Templates
 
-You can also use the `with_templates` field (or the `--with-template` cli flag) to specify a list of templates that should be generated whenever a package preset is being used.
+You can also use the `with_templates` field (or the `--with-template` cli flag) to specify a list of templates or templating presets that should be generated whenever a package preset is being used.
 
 Let's say for example that in a type of package, you always need a `schemas` directory, where you import some common schemas from a shared package and define new ones. 
 

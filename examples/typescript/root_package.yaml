@@ -55,16 +55,17 @@ typescript:
 
       # ANCHOR: template_example
       with_templates:
-        # Relative path from the root of the package
-        - output: docker/dev.dockerfile
-          template:
-            name: dev_dockerfile
-            content: |
-              FROM node:23-alpine
+        - templates:
+            # Relative path from the root of the package
+            - output: docker/dev.dockerfile
+              template:
+                name: dev_dockerfile
+                content: |
+                  FROM node:23-alpine
 
-              COPY . .
-              EXPOSE {{ docker_dev_port }}
-              CMD ["npm", "run", "dev"]
+                  COPY . .
+                  EXPOSE {{ docker_dev_port }}
+                  CMD ["npm", "run", "dev"]
 
 vars:
   docker_dev_port: 5173

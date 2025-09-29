@@ -23,7 +23,7 @@ This document contains the help content for the `sketch` command-line program.
 
 ## `sketch`
 
-🖌️ Templating made simple. Define and generate reusable structures for all sorts of projects
+🖌️ Templating made simple. A tool to define and generate files and reusable project structures
 
 **Usage:** `sketch [OPTIONS] <COMMAND>`
 
@@ -194,8 +194,7 @@ Generates a new typescript monorepo
 * `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
-* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
-* `-t`, `--with-templ-preset <ID>` — One or many templating presets to render in the new package's directory
+* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many templates or templating presets to generate in the new package's root
 
 
 
@@ -215,8 +214,7 @@ Generates a new typescript package
 * `-u`, `--update-tsconfig <UPDATE_TSCONFIG>` — An optional list of tsconfig files where the new tsconfig file will be added as a reference
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
-* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new package's directory
-* `-t`, `--with-templ-preset <ID>` — One or many templating presets to render in the new package's directory
+* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many templates or templating presets to generate in the new package's root
 * `--vitest <ID>` — The vitest preset to use. It can be set to `default` to use the default preset
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
@@ -259,8 +257,7 @@ Creates a new git repo from a preset
 * `--no-pre-commit` — Do not generate a pre-commit config
 * `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
 * `--gitignore <GITIGNORE>` — Selects a gitignore preset
-* `-w`, `--with-template <id=TEMPLATE_ID,output=PATH>` — One or many individual templates to render in the new repo
-* `-t`, `--with-templ-preset <ID>` — One or many templating presets to render in the new repo
+* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
 * `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
 
