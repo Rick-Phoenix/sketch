@@ -326,6 +326,7 @@ Renders a template and executes it as a shell command
 
 ###### **Options:**
 
+* `--print-cmd` — Prints the rendered command to stdout before executing it
 * `-s`, `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--cwd <CWD>` — The cwd for the command to execute [default: `.`]
 * `-f`, `--file <FILE>` — The path to the command's template file, as an absolute path or relative to the cwd

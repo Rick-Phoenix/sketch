@@ -20,7 +20,7 @@ path = "src/main.rs"
 [package.metadata.release]
 tag-message = "chore: Release version {{version}}"
 tag-name = "v{{version}}"
-pre-release-hook = ["sh", "-c", "cd .. && ./pre_release.sh"]
+pre-release-hook = ["bash", "-c", "cd .. && ./pre_release.sh {{version}}"]
 allow-branch = ["main"]
 
 [dev-dependencies]
