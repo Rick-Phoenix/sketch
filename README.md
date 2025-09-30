@@ -71,6 +71,15 @@ Sketch uses [Tera](https://keats.github.io/tera/docs/) to render custom template
 
 All of these are available directly within templates, which greatly extends their flexibility and the variety of scenarios in which they can be applied.
 
+# Installation
+
+Sketch can be installed in two ways:
+
+1. By downloading a pre-built binary from the [github repository](https://github.com/Rick-Phoenix/sketch)
+2. Via `cargo` (`cargo install sketch-it`)
+
 # Documentation
 
 You can find out more about Sketch in the [dedicated website](https://rick-phoenix.github.io/sketch/).
+
+The homepage will always show the docs for the latest version. Each minor version will have its own dedicated subroute (/v0.1, /v0.2 and so on...) 
