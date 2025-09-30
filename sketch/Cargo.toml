@@ -1,6 +1,6 @@
 [package]
 name = "sketch-it"
-version = "0.1.0-beta.1"
+version = "0.1.0"
 
 description = "🖌️ Templating made simple. A tool to define and generate files and reusable project structures"
 categories = ["command-line-utilities", "development-tools"]

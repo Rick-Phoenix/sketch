@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: test
+          ref: main
           fetch-depth: 0
 
       - uses: taiki-e/create-gh-release-action@v1
@@ -87,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: test
+          ref: main
           fetch-depth: 0
 
       - uses: taiki-e/upload-rust-binary-action@v1
