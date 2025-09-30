@@ -456,76 +456,10 @@ pub struct RepoConfigInput {
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
-  /// Generates a `Cargo.toml` file from a preset.
-  CargoToml {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the created file [default: `Cargo.toml`]
+  /// Generates a new config file.
+  New {
+    /// The output file [default: sketch.yaml]
     output: Option<PathBuf>,
-  },
-
-  /// Generates a `pnpm-workspace.yaml` file from a preset.
-  PnpmWorkspace {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the generated file [default: `pnpm-workspace.yaml`]
-    output: Option<PathBuf>,
-  },
-
-  /// Generates a `package.json` file from a preset.
-  PackageJson {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the generated file [default: `package.json`]
-    output: Option<PathBuf>,
-  },
-
-  /// Generates a `tsconfig.json` file from a preset.
-  TsConfig {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the generated file [default: `tsconfig.json`]
-    output: Option<PathBuf>,
-  },
-
-  /// Generates a `.oxlintrc.json` file from a preset.
-  Oxlint {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the generated file [default: `.oxlintrc.json`]
-    output: Option<PathBuf>,
-  },
-
-  /// Generates a Docker Compose file from a preset.
-  DockerCompose {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the created file [default: `compose.yaml`]
-    output: Option<PathBuf>,
-  },
-
-  /// Generates a `pre-commit` config file from a preset.
-  PreCommit {
-    /// The preset id
-    preset: String,
-
-    /// The output path of the created file [default: `.pre-commit-config.yaml`]
-    output: Option<PathBuf>,
-  },
-
-  /// Executes typescript-specific commands.
-  Ts {
-    #[command(flatten)]
-    typescript_overrides: Option<TypescriptConfig>,
-
-    #[command(subcommand)]
-    command: TsCommands,
   },
 
   /// Creates a new git repo from a preset.
@@ -543,12 +477,6 @@ pub enum Commands {
     /// The link of the git remote to use for the new repo.
     #[arg(short, long)]
     remote: Option<String>,
-  },
-
-  /// Generates a new config file.
-  New {
-    /// The output file [default: sketch.yaml]
-    output: Option<PathBuf>,
   },
 
   /// Renders a single template to a file or to stdout
@@ -603,5 +531,77 @@ pub enum Commands {
     /// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
+  },
+
+  /// Generates a Docker Compose file from a preset.
+  DockerCompose {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the created file [default: `compose.yaml`]
+    output: Option<PathBuf>,
+  },
+
+  /// Generates a `pre-commit` config file from a preset.
+  PreCommit {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the created file [default: `.pre-commit-config.yaml`]
+    output: Option<PathBuf>,
+  },
+
+  /// Generates a `Cargo.toml` file from a preset.
+  CargoToml {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the created file [default: `Cargo.toml`]
+    output: Option<PathBuf>,
+  },
+
+  /// Executes typescript-specific commands.
+  Ts {
+    #[command(flatten)]
+    typescript_overrides: Option<TypescriptConfig>,
+
+    #[command(subcommand)]
+    command: TsCommands,
+  },
+
+  /// Generates a `package.json` file from a preset.
+  PackageJson {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the generated file [default: `package.json`]
+    output: Option<PathBuf>,
+  },
+
+  /// Generates a `tsconfig.json` file from a preset.
+  TsConfig {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the generated file [default: `tsconfig.json`]
+    output: Option<PathBuf>,
+  },
+
+  /// Generates a `.oxlintrc.json` file from a preset.
+  Oxlint {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the generated file [default: `.oxlintrc.json`]
+    output: Option<PathBuf>,
+  },
+
+  /// Generates a `pnpm-workspace.yaml` file from a preset.
+  PnpmWorkspace {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the generated file [default: `pnpm-workspace.yaml`]
+    output: Option<PathBuf>,
   },
 }
