@@ -222,6 +222,7 @@ pub struct TopLevelNetwork {
   /// If set to true, it specifies that this network’s lifecycle is maintained outside of that of the application. Compose doesn't attempt to create these networks, and returns an error if one doesn't exist.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/networks/#external
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub external: Option<bool>,
   /// Custom name for this network.
   ///
@@ -852,6 +853,7 @@ pub struct TopLevelVolume {
   /// If set to true, it specifies that this volume already exists on the platform and its lifecycle is managed outside of that of the application.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/volumes/#external
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub external: Option<bool>,
 
   /// Sets a custom name for a volume.
