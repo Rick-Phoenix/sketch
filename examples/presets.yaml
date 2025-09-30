@@ -43,27 +43,45 @@ cargo_toml_presets:
 
 # Docker Compose presets
 # ANCHOR: docker_compose
-docker_compose_presets:
-  base:
-    volumes:
-      my_volume:
-        external: true
-    networks:
-      my_network:
-        external: true
+docker:
+  service_presets:
+    # A base preset with common configurations
+    base_service:
+      environment:
+        TZ: Europe/Berlin
+      networks:
+        - my_network
 
-  extended:
-    extends:
-      - base
-    services:
-      my_service:
-        networks:
-          - my_network
-        volumes:
-          - my_volume:/target
-    volumes:
-      my_other_volume:
-        external: true
+    # A preset for a db service
+    database:
+      extend_presets:
+        - base_service
+      image: postgres
+
+  compose_presets:
+    # Base preset for the entire compose file
+    base:
+      volumes:
+        my_volume:
+          external: true
+      networks:
+        my_network:
+          external: true
+
+    extended:
+      extends:
+        - base
+      services:
+        # Using the service preset by ID
+        db: database
+        my_service:
+          networks:
+            - my_network
+          volumes:
+            - my_volume:/target
+      volumes:
+        my_other_volume:
+          external: true
 # ANCHOR_END: docker_compose
 
 # ANCHOR: git

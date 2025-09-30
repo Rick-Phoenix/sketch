@@ -16,6 +16,18 @@
       ],
       "default": null
     },
+    "docker": {
+      "description": "Configuration and presets for Docker.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DockerConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "shell": {
       "description": "The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].",
       "type": [
@@ -94,14 +106,6 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/RepoPreset"
-      },
-      "default": {}
-    },
-    "docker_compose_presets": {
-      "description": "A map that contains presets for Docker Compose files.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/ComposePreset"
       },
       "default": {}
     },
@@ -5690,851 +5694,27 @@
       },
       "additionalProperties": true
     },
-    "PreCommitPreset": {
-      "description": "A preset for a `.pre-commit-config.yaml` configuration file.",
+    "DockerConfig": {
+      "description": "All settings and presets related to Docker.",
       "type": "object",
       "properties": {
-        "extends": {
-          "description": "The ids of the extended configurations.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        },
-        "minimum_pre_commit_version": {
-          "description": "A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "default_install_hook_types": {
-          "description": "A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "default_language_version": {
-          "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "object",
-            "null"
-          ],
+        "compose_presets": {
+          "description": "A map that contains presets for Docker Compose files.",
+          "type": "object",
           "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "default_stages": {
-          "description": "The default stages of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Stage"
-          }
-        },
-        "files": {
-          "description": "A file include pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "exclude": {
-          "description": "A file exclude pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "fail_fast": {
-          "description": "Whether stop running hooks after a first failure https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ci": {
-          "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/CiSettings"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "repos": {
-          "description": "Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Repo"
+            "$ref": "#/$defs/ComposePreset"
           },
-          "default": [
-            {
-              "repo": "https://github.com/gitleaks/gitleaks",
-              "rev": "v8.28.0",
-              "hooks": [
-                {
-                  "id": "gitleaks"
-                }
-              ]
-            }
-          ]
-        }
-      }
-    },
-    "Stage": {
-      "type": "string",
-      "enum": [
-        "commit",
-        "merge-commit",
-        "push",
-        "prepare-commit-msg",
-        "commit-msg",
-        "post-checkout",
-        "post-commit",
-        "post-merge",
-        "post-rewrite",
-        "pre-commit",
-        "pre-merge-commit",
-        "pre-push",
-        "pre-rebase",
-        "manual"
-      ]
-    },
-    "CiSettings": {
-      "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
-      "type": "object",
-      "properties": {
-        "autofix_commit_msg": {
-          "description": "A commit message for pull request autofixes https://pre-commit.ci/#configuration",
-          "type": [
-            "string",
-            "null"
-          ]
+          "default": {}
         },
-        "autofix_prs": {
-          "description": "Whether to autofix pull requests https://pre-commit.ci/#configuration",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "autoupdate_branch": {
-          "description": "A branch to send pull request's autoupdate to https://pre-commit.ci/#configuration",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "autoupdate_commit_msg": {
-          "description": "A commit message for autoupdate pull requests https://pre-commit.ci/#configuration",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "autoupdate_schedule": {
-          "description": "An autoupdate frequency https://pre-commit.ci/#configuration",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/AutoUpdateSchedule"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "skip": {
-          "description": "List of skipped hook's ids https://pre-commit.ci/#configuration",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "submodules": {
-          "description": "Whether to recursively check out submodules https://pre-commit.ci/#configuration",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      }
-    },
-    "AutoUpdateSchedule": {
-      "type": "string",
-      "enum": [
-        "weekly",
-        "monthly",
-        "quarterly"
-      ]
-    },
-    "Repo": {
-      "description": "A pre-commit repo.",
-      "anyOf": [
-        {
-          "description": "Hooks for checking the pre-commit configuration itself. https://pre-commit.com/#meta-hooks",
+        "service_presets": {
+          "description": "A map that contains presets for Docker services.",
           "type": "object",
-          "properties": {
-            "repo": {
-              "$ref": "#/$defs/MetaRepo"
-            },
-            "hooks": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "#/$defs/MetaRepoHook"
-              }
-            }
+          "additionalProperties": {
+            "$ref": "#/$defs/DockerServicePreset"
           },
-          "required": [
-            "repo",
-            "hooks"
-          ]
-        },
-        {
-          "description": "Hooks for the local repo https://pre-commit.com/#repository-local-hooks",
-          "type": "object",
-          "properties": {
-            "repo": {
-              "$ref": "#/$defs/LocalRepo"
-            },
-            "hooks": {
-              "description": "A list of local hooks https://pre-commit.com/#2-add-a-pre-commit-configuration",
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "#/$defs/Hook"
-              }
-            }
-          },
-          "required": [
-            "repo",
-            "hooks"
-          ]
-        },
-        {
-          "description": "A remote repo",
-          "type": "object",
-          "properties": {
-            "repo": {
-              "description": "A repository url https://pre-commit.com/#2-add-a-pre-commit-configuration",
-              "type": "string"
-            },
-            "rev": {
-              "description": "A revision or tag to clone at https://pre-commit.com/#2-add-a-pre-commit-configuration",
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "hooks": {
-              "description": "A list of hook mappings https://pre-commit.com/#pre-commit-configyaml---hooks.",
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "$ref": "#/$defs/Hook"
-              }
-            }
-          },
-          "required": [
-            "repo",
-            "hooks"
-          ]
-        }
-      ]
-    },
-    "MetaRepo": {
-      "type": "string",
-      "enum": [
-        "meta"
-      ]
-    },
-    "MetaRepoHook": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "$ref": "#/$defs/MetaRepoId"
-        }
-      },
-      "required": [
-        "id"
-      ]
-    },
-    "MetaRepoId": {
-      "type": "string",
-      "enum": [
-        "check-hooks-apply",
-        "check-useless-excludes",
-        "identity"
-      ]
-    },
-    "LocalRepo": {
-      "type": "string",
-      "enum": [
-        "local"
-      ]
-    },
-    "Hook": {
-      "description": "Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks",
-      "type": "object",
-      "properties": {
-        "id": {
-          "description": "An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": "string",
-          "default": ""
-        },
-        "additional_dependencies": {
-          "description": "A list of additional_dependencies of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "alias": {
-          "description": "An additional identifier of the current hook for `pre-commit run <hookid>` https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "always_run": {
-          "description": "Run the current hook when no files matched https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "args": {
-          "description": "List of additional parameters to pass to the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "type": "string"
-          }
-        },
-        "entry": {
-          "description": "A command of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "exclude": {
-          "description": "Exclude files that were matched by files.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "exclude_types": {
-          "description": "A list of file types to exclude of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/FileType"
-          }
-        },
-        "description": {
-          "description": "Description of the hook. used for metadata purposes only.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "files": {
-          "description": "The pattern of files to run on.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "language": {
-          "description": "A language the current hook is written in https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Language"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "language_version": {
-          "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "log_file": {
-          "description": "A log file of the current hook",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "minimum_pre_commit_version": {
-          "description": "Allows one to indicate a minimum compatible pre-commit version.",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "name": {
-          "description": "Name of the hook - shown during hook execution.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "pass_filenames": {
-          "description": "Whether to pass filenames to the current hook or not https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "require_serial": {
-          "description": "If true this hook will execute using a single process instead of in parallel.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "stages": {
-          "description": "A stage of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Stage"
-          }
-        },
-        "types": {
-          "description": "List of file types to run on (AND).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/FileType"
-          }
-        },
-        "types_or": {
-          "description": "List of file types to run on (OR).",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/FileType"
-          }
-        },
-        "verbose": {
-          "description": "Display an output of the current hook even it passes https://pre-commit.com/#pre-commit-configyaml---hooks",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "default": {}
         }
       }
-    },
-    "FileType": {
-      "type": "string",
-      "enum": [
-        "adobe-illustrator",
-        "alpm",
-        "apinotes",
-        "asar",
-        "asciidor",
-        "ash",
-        "asm",
-        "aspectj",
-        "audio",
-        "avif",
-        "awk",
-        "babelrc",
-        "bash",
-        "batch",
-        "bats",
-        "bazel",
-        "bazelrc",
-        "bib",
-        "binary",
-        "bitmap",
-        "bowerrc",
-        "browserslistrc",
-        "bzip2",
-        "c",
-        "c#",
-        "c++",
-        "c2hd",
-        "cbsd",
-        "clojure",
-        "clojurescript",
-        "cmake",
-        "codespellrc",
-        "coffee",
-        "coveragerc",
-        "crystal",
-        "csh",
-        "cson",
-        "csproj",
-        "css",
-        "csslintrc",
-        "csv",
-        "cuda",
-        "cython",
-        "dart",
-        "dash",
-        "def",
-        "diff",
-        "directory",
-        "dockerfile",
-        "dotenv",
-        "dtd",
-        "editor-config",
-        "edn",
-        "ejs",
-        "eot",
-        "eps",
-        "erb",
-        "executable",
-        "expect",
-        "file",
-        "fish",
-        "flake8",
-        "gdscript",
-        "geojson",
-        "gherkin",
-        "gif",
-        "gitattributes",
-        "gitconfig",
-        "gitignore",
-        "gitlint",
-        "gitmodules",
-        "go",
-        "go-mod",
-        "go-sum",
-        "gotimpl",
-        "gpx",
-        "graphql",
-        "gyb",
-        "gyp",
-        "gzip",
-        "handlebars",
-        "haskell",
-        "hcl",
-        "header",
-        "hgrc",
-        "html",
-        "icalendar",
-        "icns",
-        "icon",
-        "idl",
-        "idris",
-        "image",
-        "inc",
-        "ini",
-        "inl",
-        "ino",
-        "inx",
-        "jade",
-        "jar",
-        "java",
-        "java-properties",
-        "javascript",
-        "jenkins",
-        "jinja",
-        "jpeg",
-        "jshintrc",
-        "json",
-        "json5",
-        "jsonnet",
-        "jsx",
-        "jupyter",
-        "kml",
-        "kotlin",
-        "ksh",
-        "lean",
-        "lektor",
-        "lektorproject",
-        "less",
-        "liquid",
-        "literate-haskell",
-        "lua",
-        "mailmap",
-        "makefile",
-        "manifest",
-        "map",
-        "markdown",
-        "mdx",
-        "mention-bot",
-        "meson",
-        "mib",
-        "modulemap",
-        "musescore",
-        "myst",
-        "ngdoc",
-        "nim",
-        "nimble",
-        "nix",
-        "non-executable",
-        "npmignore",
-        "nunjucks",
-        "objective-c",
-        "objective-c++",
-        "ocaml",
-        "otf",
-        "p12",
-        "pdbrc",
-        "pdf",
-        "pem",
-        "perl",
-        "php",
-        "pkgbuild",
-        "plain-text",
-        "plantuml",
-        "plist",
-        "png",
-        "pofile",
-        "powershell",
-        "prettierignore",
-        "prisma",
-        "proto",
-        "puppet",
-        "purescript",
-        "pyi",
-        "pylintrc",
-        "pypirc",
-        "pyproj",
-        "python",
-        "python2",
-        "python3",
-        "pyz",
-        "qml",
-        "r",
-        "relax-ng",
-        "rst",
-        "ruby",
-        "rust",
-        "salt",
-        "sass",
-        "sbt",
-        "scala",
-        "scheme",
-        "scss",
-        "sh",
-        "shell",
-        "sln",
-        "socket",
-        "solidity",
-        "spec",
-        "sql",
-        "stylus",
-        "svelte",
-        "svg",
-        "swf",
-        "swift",
-        "swiftdeps",
-        "symlink",
-        "system-verilog",
-        "tar",
-        "tcsh",
-        "terraform",
-        "tex",
-        "text",
-        "thrift",
-        "tiff",
-        "toml",
-        "ts",
-        "tsv",
-        "tsx",
-        "ttf",
-        "twig",
-        "twisted",
-        "tsxprofile",
-        "urdf",
-        "vb",
-        "vbproj",
-        "vcxproj",
-        "vdx",
-        "verilog",
-        "vhdl",
-        "vim",
-        "vtl",
-        "vue",
-        "wav",
-        "webp",
-        "wheel",
-        "wky",
-        "woff",
-        "woff2",
-        "wsgi",
-        "xhtml",
-        "xml",
-        "xquery",
-        "xsd",
-        "xsl",
-        "yaml",
-        "yamllint",
-        "yang",
-        "yin",
-        "zcml",
-        "zig",
-        "zip",
-        "zpt",
-        "zsh"
-      ]
-    },
-    "Language": {
-      "type": "string",
-      "enum": [
-        "conda",
-        "coursier",
-        "dart",
-        "docker",
-        "docker_image",
-        "dotnet",
-        "fail",
-        "golang",
-        "lua",
-        "node",
-        "perl",
-        "python",
-        "python_venv",
-        "r",
-        "ruby",
-        "rust",
-        "swift",
-        "pygrep",
-        "script",
-        "system"
-      ]
-    },
-    "GitignorePreset": {
-      "description": "A preset for a `.gitignore` file.",
-      "type": "object",
-      "properties": {
-        "extends": {
-          "description": "The ids of the extended presets.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        },
-        "content": {
-          "$ref": "#/$defs/GitIgnore",
-          "default": ""
-        }
-      }
-    },
-    "GitIgnore": {
-      "description": "A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).",
-      "anyOf": [
-        {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        {
-          "type": "string"
-        }
-      ]
-    },
-    "RepoPreset": {
-      "description": "A preset for a git repository.",
-      "type": "object",
-      "properties": {
-        "gitignore": {
-          "description": "Settings for the gitignore file.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/GitIgnoreSetting"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null
-        },
-        "pre_commit": {
-          "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/).",
-          "$ref": "#/$defs/PreCommitSetting",
-          "default": true
-        },
-        "with_templates": {
-          "description": "A set of templates to generate when this preset is used.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "items": {
-            "$ref": "#/$defs/TemplatingPresetReference"
-          },
-          "default": null
-        }
-      }
-    },
-    "GitIgnoreSetting": {
-      "description": "Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/GitIgnore"
-        }
-      ]
-    },
-    "PreCommitSetting": {
-      "description": "Settings for [`pre-commit`](https://pre-commit.com)  Can be a preset id, a newly defined configuration, or a boolean to use defaults or to disable pre-commit.",
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/PreCommitPreset"
-        }
-      ]
     },
     "ComposePreset": {
       "description": "A preset for Docker Compose files.",
@@ -6569,12 +5749,9 @@
         },
         "services": {
           "description": "Defines the services for the Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/services/",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/Service"
+            "$ref": "#/$defs/ServiceData"
           }
         },
         "configs": {
@@ -6703,10 +5880,32 @@
         }
       ]
     },
-    "Service": {
-      "description": "Defines a service for a Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/services/",
+    "ServiceData": {
+      "description": "Ways of representing a service in a Docker preset.",
+      "anyOf": [
+        {
+          "description": "The id of a service preset.",
+          "type": "string"
+        },
+        {
+          "description": "The defitinion for a Docker service.",
+          "$ref": "#/$defs/DockerServicePreset"
+        }
+      ]
+    },
+    "DockerServicePreset": {
+      "description": "A preset for a Docker service",
       "type": "object",
       "properties": {
+        "extend_presets": {
+          "description": "The list of extended presets.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
         "extends": {
           "description": "`extends` lets you share common configurations among different files, or even different projects entirely.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#extends",
           "anyOf": [
@@ -10293,6 +9492,852 @@
         }
       }
     },
+    "PreCommitPreset": {
+      "description": "A preset for a `.pre-commit-config.yaml` configuration file.",
+      "type": "object",
+      "properties": {
+        "extends": {
+          "description": "The ids of the extended configurations.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "minimum_pre_commit_version": {
+          "description": "A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "default_install_hook_types": {
+          "description": "A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "default_language_version": {
+          "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "default_stages": {
+          "description": "The default stages of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Stage"
+          }
+        },
+        "files": {
+          "description": "A file include pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exclude": {
+          "description": "A file exclude pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fail_fast": {
+          "description": "Whether stop running hooks after a first failure https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ci": {
+          "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CiSettings"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repos": {
+          "description": "Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Repo"
+          },
+          "default": [
+            {
+              "repo": "https://github.com/gitleaks/gitleaks",
+              "rev": "v8.28.0",
+              "hooks": [
+                {
+                  "id": "gitleaks"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "Stage": {
+      "type": "string",
+      "enum": [
+        "commit",
+        "merge-commit",
+        "push",
+        "prepare-commit-msg",
+        "commit-msg",
+        "post-checkout",
+        "post-commit",
+        "post-merge",
+        "post-rewrite",
+        "pre-commit",
+        "pre-merge-commit",
+        "pre-push",
+        "pre-rebase",
+        "manual"
+      ]
+    },
+    "CiSettings": {
+      "description": "pre-commit.ci specific settings https://pre-commit.ci/#configuration",
+      "type": "object",
+      "properties": {
+        "autofix_commit_msg": {
+          "description": "A commit message for pull request autofixes https://pre-commit.ci/#configuration",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autofix_prs": {
+          "description": "Whether to autofix pull requests https://pre-commit.ci/#configuration",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "autoupdate_branch": {
+          "description": "A branch to send pull request's autoupdate to https://pre-commit.ci/#configuration",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoupdate_commit_msg": {
+          "description": "A commit message for autoupdate pull requests https://pre-commit.ci/#configuration",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autoupdate_schedule": {
+          "description": "An autoupdate frequency https://pre-commit.ci/#configuration",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoUpdateSchedule"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skip": {
+          "description": "List of skipped hook's ids https://pre-commit.ci/#configuration",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "submodules": {
+          "description": "Whether to recursively check out submodules https://pre-commit.ci/#configuration",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "AutoUpdateSchedule": {
+      "type": "string",
+      "enum": [
+        "weekly",
+        "monthly",
+        "quarterly"
+      ]
+    },
+    "Repo": {
+      "description": "A pre-commit repo.",
+      "anyOf": [
+        {
+          "description": "Hooks for checking the pre-commit configuration itself. https://pre-commit.com/#meta-hooks",
+          "type": "object",
+          "properties": {
+            "repo": {
+              "$ref": "#/$defs/MetaRepo"
+            },
+            "hooks": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/MetaRepoHook"
+              }
+            }
+          },
+          "required": [
+            "repo",
+            "hooks"
+          ]
+        },
+        {
+          "description": "Hooks for the local repo https://pre-commit.com/#repository-local-hooks",
+          "type": "object",
+          "properties": {
+            "repo": {
+              "$ref": "#/$defs/LocalRepo"
+            },
+            "hooks": {
+              "description": "A list of local hooks https://pre-commit.com/#2-add-a-pre-commit-configuration",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Hook"
+              }
+            }
+          },
+          "required": [
+            "repo",
+            "hooks"
+          ]
+        },
+        {
+          "description": "A remote repo",
+          "type": "object",
+          "properties": {
+            "repo": {
+              "description": "A repository url https://pre-commit.com/#2-add-a-pre-commit-configuration",
+              "type": "string"
+            },
+            "rev": {
+              "description": "A revision or tag to clone at https://pre-commit.com/#2-add-a-pre-commit-configuration",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "hooks": {
+              "description": "A list of hook mappings https://pre-commit.com/#pre-commit-configyaml---hooks.",
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/Hook"
+              }
+            }
+          },
+          "required": [
+            "repo",
+            "hooks"
+          ]
+        }
+      ]
+    },
+    "MetaRepo": {
+      "type": "string",
+      "enum": [
+        "meta"
+      ]
+    },
+    "MetaRepoHook": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/MetaRepoId"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "MetaRepoId": {
+      "type": "string",
+      "enum": [
+        "check-hooks-apply",
+        "check-useless-excludes",
+        "identity"
+      ]
+    },
+    "LocalRepo": {
+      "type": "string",
+      "enum": [
+        "local"
+      ]
+    },
+    "Hook": {
+      "description": "Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": "string",
+          "default": ""
+        },
+        "additional_dependencies": {
+          "description": "A list of additional_dependencies of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "alias": {
+          "description": "An additional identifier of the current hook for `pre-commit run <hookid>` https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "always_run": {
+          "description": "Run the current hook when no files matched https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "args": {
+          "description": "List of additional parameters to pass to the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "entry": {
+          "description": "A command of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exclude": {
+          "description": "Exclude files that were matched by files.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "exclude_types": {
+          "description": "A list of file types to exclude of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/FileType"
+          }
+        },
+        "description": {
+          "description": "Description of the hook. used for metadata purposes only.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "description": "The pattern of files to run on.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "language": {
+          "description": "A language the current hook is written in https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Language"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language_version": {
+          "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "log_file": {
+          "description": "A log file of the current hook",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "minimum_pre_commit_version": {
+          "description": "Allows one to indicate a minimum compatible pre-commit version.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Name of the hook - shown during hook execution.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pass_filenames": {
+          "description": "Whether to pass filenames to the current hook or not https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "require_serial": {
+          "description": "If true this hook will execute using a single process instead of in parallel.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "stages": {
+          "description": "A stage of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Stage"
+          }
+        },
+        "types": {
+          "description": "List of file types to run on (AND).",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/FileType"
+          }
+        },
+        "types_or": {
+          "description": "List of file types to run on (OR).",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/FileType"
+          }
+        },
+        "verbose": {
+          "description": "Display an output of the current hook even it passes https://pre-commit.com/#pre-commit-configyaml---hooks",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "FileType": {
+      "type": "string",
+      "enum": [
+        "adobe-illustrator",
+        "alpm",
+        "apinotes",
+        "asar",
+        "asciidor",
+        "ash",
+        "asm",
+        "aspectj",
+        "audio",
+        "avif",
+        "awk",
+        "babelrc",
+        "bash",
+        "batch",
+        "bats",
+        "bazel",
+        "bazelrc",
+        "bib",
+        "binary",
+        "bitmap",
+        "bowerrc",
+        "browserslistrc",
+        "bzip2",
+        "c",
+        "c#",
+        "c++",
+        "c2hd",
+        "cbsd",
+        "clojure",
+        "clojurescript",
+        "cmake",
+        "codespellrc",
+        "coffee",
+        "coveragerc",
+        "crystal",
+        "csh",
+        "cson",
+        "csproj",
+        "css",
+        "csslintrc",
+        "csv",
+        "cuda",
+        "cython",
+        "dart",
+        "dash",
+        "def",
+        "diff",
+        "directory",
+        "dockerfile",
+        "dotenv",
+        "dtd",
+        "editor-config",
+        "edn",
+        "ejs",
+        "eot",
+        "eps",
+        "erb",
+        "executable",
+        "expect",
+        "file",
+        "fish",
+        "flake8",
+        "gdscript",
+        "geojson",
+        "gherkin",
+        "gif",
+        "gitattributes",
+        "gitconfig",
+        "gitignore",
+        "gitlint",
+        "gitmodules",
+        "go",
+        "go-mod",
+        "go-sum",
+        "gotimpl",
+        "gpx",
+        "graphql",
+        "gyb",
+        "gyp",
+        "gzip",
+        "handlebars",
+        "haskell",
+        "hcl",
+        "header",
+        "hgrc",
+        "html",
+        "icalendar",
+        "icns",
+        "icon",
+        "idl",
+        "idris",
+        "image",
+        "inc",
+        "ini",
+        "inl",
+        "ino",
+        "inx",
+        "jade",
+        "jar",
+        "java",
+        "java-properties",
+        "javascript",
+        "jenkins",
+        "jinja",
+        "jpeg",
+        "jshintrc",
+        "json",
+        "json5",
+        "jsonnet",
+        "jsx",
+        "jupyter",
+        "kml",
+        "kotlin",
+        "ksh",
+        "lean",
+        "lektor",
+        "lektorproject",
+        "less",
+        "liquid",
+        "literate-haskell",
+        "lua",
+        "mailmap",
+        "makefile",
+        "manifest",
+        "map",
+        "markdown",
+        "mdx",
+        "mention-bot",
+        "meson",
+        "mib",
+        "modulemap",
+        "musescore",
+        "myst",
+        "ngdoc",
+        "nim",
+        "nimble",
+        "nix",
+        "non-executable",
+        "npmignore",
+        "nunjucks",
+        "objective-c",
+        "objective-c++",
+        "ocaml",
+        "otf",
+        "p12",
+        "pdbrc",
+        "pdf",
+        "pem",
+        "perl",
+        "php",
+        "pkgbuild",
+        "plain-text",
+        "plantuml",
+        "plist",
+        "png",
+        "pofile",
+        "powershell",
+        "prettierignore",
+        "prisma",
+        "proto",
+        "puppet",
+        "purescript",
+        "pyi",
+        "pylintrc",
+        "pypirc",
+        "pyproj",
+        "python",
+        "python2",
+        "python3",
+        "pyz",
+        "qml",
+        "r",
+        "relax-ng",
+        "rst",
+        "ruby",
+        "rust",
+        "salt",
+        "sass",
+        "sbt",
+        "scala",
+        "scheme",
+        "scss",
+        "sh",
+        "shell",
+        "sln",
+        "socket",
+        "solidity",
+        "spec",
+        "sql",
+        "stylus",
+        "svelte",
+        "svg",
+        "swf",
+        "swift",
+        "swiftdeps",
+        "symlink",
+        "system-verilog",
+        "tar",
+        "tcsh",
+        "terraform",
+        "tex",
+        "text",
+        "thrift",
+        "tiff",
+        "toml",
+        "ts",
+        "tsv",
+        "tsx",
+        "ttf",
+        "twig",
+        "twisted",
+        "tsxprofile",
+        "urdf",
+        "vb",
+        "vbproj",
+        "vcxproj",
+        "vdx",
+        "verilog",
+        "vhdl",
+        "vim",
+        "vtl",
+        "vue",
+        "wav",
+        "webp",
+        "wheel",
+        "wky",
+        "woff",
+        "woff2",
+        "wsgi",
+        "xhtml",
+        "xml",
+        "xquery",
+        "xsd",
+        "xsl",
+        "yaml",
+        "yamllint",
+        "yang",
+        "yin",
+        "zcml",
+        "zig",
+        "zip",
+        "zpt",
+        "zsh"
+      ]
+    },
+    "Language": {
+      "type": "string",
+      "enum": [
+        "conda",
+        "coursier",
+        "dart",
+        "docker",
+        "docker_image",
+        "dotnet",
+        "fail",
+        "golang",
+        "lua",
+        "node",
+        "perl",
+        "python",
+        "python_venv",
+        "r",
+        "ruby",
+        "rust",
+        "swift",
+        "pygrep",
+        "script",
+        "system"
+      ]
+    },
+    "GitignorePreset": {
+      "description": "A preset for a `.gitignore` file.",
+      "type": "object",
+      "properties": {
+        "extends": {
+          "description": "The ids of the extended presets.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "content": {
+          "$ref": "#/$defs/GitIgnore",
+          "default": ""
+        }
+      }
+    },
+    "GitIgnore": {
+      "description": "A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "RepoPreset": {
+      "description": "A preset for a git repository.",
+      "type": "object",
+      "properties": {
+        "gitignore": {
+          "description": "Settings for the gitignore file.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GitIgnoreSetting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "pre_commit": {
+          "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/).",
+          "$ref": "#/$defs/PreCommitSetting",
+          "default": true
+        },
+        "with_templates": {
+          "description": "A set of templates to generate when this preset is used.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/TemplatingPresetReference"
+          },
+          "default": null
+        }
+      }
+    },
+    "GitIgnoreSetting": {
+      "description": "Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/GitIgnore"
+        }
+      ]
+    },
+    "PreCommitSetting": {
+      "description": "Settings for [`pre-commit`](https://pre-commit.com)  Can be a preset id, a newly defined configuration, or a boolean to use defaults or to disable pre-commit.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PreCommitPreset"
+        }
+      ]
+    },
     "CargoTomlPreset": {
       "description": "A preset for a `Cargo.toml` file.",
       "type": "object",
@@ -11107,7 +11152,7 @@
       "anyOf": [
         {
           "description": "Version requirement (e.g. `^1.5`)",
-          "type": "string"
+          "$ref": "#/$defs/StringOrNum"
         },
         {
           "description": "Incomplete data",
@@ -11150,9 +11195,13 @@
       "properties": {
         "version": {
           "description": "Semver requirement. Note that a plain version number implies this version *or newer* compatible one.",
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StringOrNum"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "package": {

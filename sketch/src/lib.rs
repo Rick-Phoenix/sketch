@@ -49,6 +49,7 @@ pub enum Preset {
   PnpmWorkspace,
   Vitest,
   DockerCompose,
+  DockerService,
   CargoToml,
 }
 

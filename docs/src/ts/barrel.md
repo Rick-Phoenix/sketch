@@ -9,7 +9,7 @@ Sketch has a dedicated command to make this process easier.
 Target directory:
 
 ```
-{{#include ../../../sketch/tests/output/ts_barrel/tree:2:}}
+{{#include ../../../sketch/tests/output/ts_barrel/tree}}
 ```
 
 Command:

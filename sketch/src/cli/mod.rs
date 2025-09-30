@@ -149,15 +149,21 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     }
 
     Commands::DockerCompose { output, preset } => {
-      let content = config
-        .docker_compose_presets
+      let docker_config = config.docker.unwrap_or_default();
+      let compose_presets = docker_config.compose_presets;
+
+      let content = compose_presets
         .get(&preset)
         .ok_or(GenError::PresetNotFound {
           kind: Preset::DockerCompose,
           name: preset.clone(),
         })?
         .clone()
-        .process_data(preset.as_str(), &config.docker_compose_presets)?;
+        .process_data(
+          preset.as_str(),
+          &compose_presets,
+          &docker_config.service_presets,
+        )?;
 
       let output = output.unwrap_or_else(|| "compose.yaml".into());
 

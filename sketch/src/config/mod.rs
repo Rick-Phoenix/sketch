@@ -12,7 +12,7 @@ use serde_json::Value;
 
 use crate::{
   custom_templating::TemplatingPreset,
-  docker::compose::ComposePreset,
+  docker::DockerConfig,
   fs::get_parent_dir,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
   merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
@@ -47,6 +47,11 @@ pub struct Config {
   #[merge(strategy = merge_optional_nested)]
   #[arg(skip)]
   pub typescript: Option<TypescriptConfig>,
+
+  /// Configuration and presets for Docker.
+  #[merge(strategy = merge_optional_nested)]
+  #[arg(skip)]
+  pub docker: Option<DockerConfig>,
 
   /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
   #[arg(long)]
@@ -93,11 +98,6 @@ pub struct Config {
   #[merge(strategy = merge_index_maps)]
   #[arg(skip)]
   pub git_presets: IndexMap<String, RepoPreset>,
-
-  /// A map that contains presets for Docker Compose files.
-  #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
-  pub docker_compose_presets: IndexMap<String, ComposePreset>,
 
   /// A map that contains presets for `Cargo.toml` files.
   #[merge(strategy = merge_index_maps)]
@@ -191,8 +191,8 @@ impl Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
+      docker: None,
       cargo_toml_presets: Default::default(),
-      docker_compose_presets: Default::default(),
       git_presets: Default::default(),
       gitignore_presets: Default::default(),
       pre_commit_presets: Default::default(),

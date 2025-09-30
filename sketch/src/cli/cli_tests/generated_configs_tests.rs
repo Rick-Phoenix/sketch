@@ -6,7 +6,7 @@ use pretty_assertions::assert_eq;
 use super::reset_testing_dir;
 use crate::{
   cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
-  docker::compose::{ComposeFile, ServiceVolume},
+  docker::compose::{service::ServiceVolume, ComposeFile},
   fs::{deserialize_toml, deserialize_yaml},
   rust::Manifest,
   Config,
@@ -53,9 +53,9 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let output: ComposeFile = deserialize_yaml(&output_file)?;
 
-  let services = output.services.unwrap();
+  let mut services = output.services;
 
-  let service = services.get("my_service").unwrap();
+  let service = services.remove("my_service").unwrap().as_config()?;
 
   assert!(service.networks.as_ref().unwrap().contains("my_network"));
   assert!(service
@@ -63,6 +63,16 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
     .as_ref()
     .unwrap()
     .contains(&ServiceVolume::Simple("my_volume:/target".to_string())));
+
+  let db_service = services.remove("db").unwrap().as_config()?;
+
+  assert!(db_service.image.unwrap() == "postgres");
+  assert!(db_service.networks.as_ref().unwrap().contains("my_network"));
+
+  assert_eq!(
+    db_service.environment.as_ref().unwrap().get("TZ").unwrap(),
+    "Europe/Berlin"
+  );
 
   let networks = output.networks.unwrap();
   let my_network = networks.get("my_network").unwrap();

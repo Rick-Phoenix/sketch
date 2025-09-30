@@ -1,6 +1,6 @@
 # Docker Compose Presets
 
-Sketch can be used to create extensible Docker Compose presets and generate files from them.
+Sketch can be used to create extensible Docker Compose presets. There are presets for entire compose files as well as presets for services.
 
 ## Example
 

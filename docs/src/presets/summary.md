@@ -11,6 +11,7 @@ As of now, these presets are available:
 
 - Docker
     - Docker Compose file (extensible)
+    - Docker Compose service (extensible)
 
 - Git
     - Git repo
