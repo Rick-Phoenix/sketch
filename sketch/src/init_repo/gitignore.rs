@@ -8,15 +8,43 @@ use serde::{Deserialize, Serialize};
 use crate::{merge_index_sets, merge_presets, Extensible, GenError, Preset};
 
 fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
-  let left_as_list = left.as_list();
-  let right_as_list = right.as_list();
+  match left {
+    GitIgnore::List(left_items) => match right {
+      GitIgnore::List(right_items) => {
+        for entry in right_items.into_iter().rev() {
+          left_items.insert(0, entry);
+        }
+      }
+      GitIgnore::String(mut right_string) => {
+        for entry in left_items.iter() {
+          right_string.push('\n');
+          right_string.push_str(&entry);
+        }
 
-  let new: Vec<String> = right_as_list
-    .into_iter()
-    .chain(left_as_list.into_iter())
-    .collect();
+        *left = GitIgnore::String(right_string);
+      }
+    },
+    GitIgnore::String(left_string) => match right {
+      GitIgnore::List(right_items) => {
+        if !right_items.is_empty() {
+          left_string.insert(0, '\n');
+          let len = right_items.len();
 
-  *left = GitIgnore::List(new)
+          for (i, entry) in right_items.into_iter().rev().enumerate() {
+            left_string.insert_str(0, entry.as_str());
+
+            if i != len - 1 {
+              left_string.insert(0, '\n');
+            }
+          }
+        }
+      }
+      GitIgnore::String(right_string) => {
+        left_string.insert(0, '\n');
+        left_string.insert_str(0, &right_string);
+      }
+    },
+  };
 }
 
 /// A preset for a `.gitignore` file.
@@ -74,15 +102,6 @@ pub enum GitIgnore {
 impl Default for GitIgnore {
   fn default() -> Self {
     Self::String(Default::default())
-  }
-}
-
-impl GitIgnore {
-  pub fn as_list(&self) -> Vec<String> {
-    match self {
-      GitIgnore::List(items) => items.clone(),
-      GitIgnore::String(entire) => entire.trim().split('\n').map(|s| s.to_string()).collect(),
-    }
   }
 }
 

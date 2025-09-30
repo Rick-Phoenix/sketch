@@ -40,7 +40,7 @@ pub(crate) fn merge_presets<T: Merge + Extensible + Default + Clone>(
   store: &IndexMap<String, T>,
   processed_ids: &mut IndexSet<String>,
 ) -> Result<T, GenError> {
-  process_preset_id(current_id, processed_ids, Preset::PackageJson)?;
+  process_preset_id(current_id, processed_ids, preset_kind)?;
 
   let presets_to_extend = preset.get_extended();
 
@@ -54,7 +54,7 @@ pub(crate) fn merge_presets<T: Merge + Extensible + Default + Clone>(
     let extend_target = store
       .get(id)
       .ok_or(GenError::PresetNotFound {
-        kind: Preset::PackageJson,
+        kind: preset_kind,
         name: id.to_string(),
       })?
       .clone();
@@ -68,7 +68,7 @@ pub(crate) fn merge_presets<T: Merge + Extensible + Default + Clone>(
     }
   }
 
-  // Can never be none due to the early exit
+  // Can never be None due to the early exit
   let mut aggregated = base.unwrap();
 
   aggregated.merge(preset);

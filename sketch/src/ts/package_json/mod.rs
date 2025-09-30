@@ -48,19 +48,29 @@ impl PackageJsonPreset {
 
     let mut package_json = merged_preset.config;
 
-    for person in package_json.contributors.clone().iter() {
-      if let Person::Id(id) = person && let Some(data) = get_person_data(id.as_str(), &people) {
-        package_json.contributors.remove(person);
-        package_json.contributors.insert(Person::Data(data));
-      }
-    }
+    package_json.contributors = package_json
+      .contributors
+      .into_iter()
+      .map(|person| {
+        if let Person::Id(ref id) = person && let Some(data) = get_person_data(id, &people) {
+          Person::Data(data)
+        } else {
+          person
+        }
+      })
+      .collect();
 
-    for person in package_json.maintainers.clone().iter() {
-      if let Person::Id(id) = person && let Some(data) = get_person_data(id.as_str(), &people) {
-        package_json.maintainers.remove(person);
-        package_json.maintainers.insert(Person::Data(data));
-      }
-    }
+    package_json.maintainers = package_json
+      .maintainers
+      .into_iter()
+      .map(|person| {
+        if let Person::Id(ref id) = person && let Some(data) = get_person_data(id, &people) {
+          Person::Data(data)
+        } else {
+          person
+        }
+      })
+      .collect();
 
     if let Some(author) = package_json.author.as_mut() {
       if let Person::Id(id) = author && let Some(data) = get_person_data(id.as_str(), &people) {

@@ -27,6 +27,7 @@ There are several preset categories, which come with a variety of features (the 
 
 - Docker
     - Docker Compose file (extensible)
+    - Docker Compose service (extensible)
 
 - Git
     - Git repo

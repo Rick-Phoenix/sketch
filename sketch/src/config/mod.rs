@@ -2,7 +2,6 @@ mod config_setup;
 
 use std::path::PathBuf;
 
-use clap::Parser;
 use config_setup::extract_config_from_file;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
@@ -34,80 +33,62 @@ impl Config {
 }
 
 /// The global configuration struct.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, JsonSchema)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct Config {
   #[serde(skip)]
-  #[arg(skip)]
   #[merge(strategy = merge::option::overwrite_none)]
   pub(crate) config_file: Option<PathBuf>,
 
   /// The configuration for typescript projects.
   #[merge(strategy = merge_optional_nested)]
-  #[arg(skip)]
   pub typescript: Option<TypescriptConfig>,
 
   /// Configuration and presets for Docker.
   #[merge(strategy = merge_optional_nested)]
-  #[arg(skip)]
   pub docker: Option<DockerConfig>,
 
   /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
-  #[arg(long)]
   pub shell: Option<String>,
 
-  /// Activates debugging mode.
-  #[arg(long)]
-  pub debug: Option<bool>,
-
   /// The path to the templates directory.
-  #[arg(long, value_name = "DIR")]
   pub templates_dir: Option<PathBuf>,
 
   /// Do not overwrite existing files.
-  #[arg(long)]
   pub no_overwrite: Option<bool>,
 
   /// The paths (absolute, or relative to the originating config file) to the config files to extend.
   #[merge(strategy = merge_index_sets)]
-  #[arg(skip)]
   pub extends: IndexSet<PathBuf>,
 
   /// A map that contains template definitions.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub templates: IndexMap<String, String>,
 
   /// A map that contains templating presets.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub templating_presets: IndexMap<String, TemplatingPreset>,
 
   /// A map that contains pre-commit presets.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
 
   /// A map that contains gitignore presets.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub gitignore_presets: IndexMap<String, GitignorePreset>,
 
   /// A map that contains presets for git repos.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub git_presets: IndexMap<String, RepoPreset>,
 
   /// A map that contains presets for `Cargo.toml` files.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub cargo_toml_presets: IndexMap<String, CargoTomlPreset>,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.
   #[merge(strategy = merge_index_maps)]
-  #[arg(skip)]
   pub vars: IndexMap<String, Value>,
 }
 
@@ -120,8 +101,8 @@ impl Config {
     processed_sources: &mut IndexSet<PathBuf>,
   ) -> Result<(), GenError> {
     // Safe unwrapping due to the check below
-    let current_config_file = self.config_file.clone().unwrap();
-    let current_dir = get_parent_dir(&current_config_file);
+    let current_config_file = self.config_file.as_ref();
+    let current_dir = get_parent_dir(current_config_file.unwrap());
 
     for rel_path in &self.extends {
       let abs_path =
@@ -179,6 +160,7 @@ impl Config {
 
     extended.merge(self);
 
+    // Should not show up in the `extends` list
     processed_sources.swap_remove(&config_file);
 
     // Replace rel paths with abs paths for better debugging
@@ -200,7 +182,6 @@ impl Default for Config {
       templating_presets: Default::default(),
       typescript: None,
       shell: None,
-      debug: None,
       templates_dir: Default::default(),
       templates: Default::default(),
       vars: Default::default(),

@@ -24,11 +24,11 @@ pub struct CreateTsMonorepoSettings<'a> {
 
 impl Config {
   pub async fn create_ts_monorepo(
-    self,
+    mut self,
     settings: CreateTsMonorepoSettings<'_>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
-    let typescript = self.typescript.clone().unwrap_or_default();
+    let typescript = self.typescript.get_or_insert_default();
 
     let package_json_presets = &typescript.package_json_presets;
 

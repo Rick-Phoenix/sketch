@@ -98,14 +98,14 @@ pub enum PackageData {
 impl Config {
   /// Generates a new typescript package.
   pub async fn build_package(
-    self,
+    mut self,
     data: PackageData,
     pkg_root: PathBuf,
     tsconfig_files_to_update: Option<Vec<PathBuf>>,
     cli_vars: Option<Vec<(String, Value)>>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
-    let typescript = self.typescript.clone().unwrap_or_default();
+    let typescript = self.typescript.get_or_insert_default();
 
     let package_json_presets = &typescript.package_json_presets;
 
@@ -222,7 +222,7 @@ impl Config {
 
     let tsconfig_presets = &typescript.ts_config_presets;
 
-    if let Some(tsconfig_directives) = config.ts_config.clone() {
+    if let Some(tsconfig_directives) = config.ts_config {
       for directive in tsconfig_directives {
         let (id, tsconfig) = match directive.config.unwrap_or_default() {
           TsConfigKind::Id(id) => {

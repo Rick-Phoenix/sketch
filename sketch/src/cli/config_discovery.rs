@@ -7,15 +7,25 @@ use std::{
 use merge::Merge;
 
 use crate::{
-  cli::{Cli, Commands},
+  cli::{Commands, ConfigOverrides},
   Config, GenError,
 };
 
-pub(crate) async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
+pub(crate) async fn get_config_from_cli(
+  overrides: ConfigOverrides,
+  command: &Commands,
+) -> Result<Config, GenError> {
+  let ConfigOverrides {
+    templates_dir,
+    no_overwrite,
+    config: config_path,
+    ignore_config,
+  } = overrides;
+
   let mut config = Config::default();
 
-  if !cli.ignore_config {
-    let config_path = if let Some(config_file) = get_config_file_path(cli.config) {
+  if !ignore_config {
+    let config_path = if let Some(config_file) = get_config_file_path(config_path) {
       Some(config_file)
     } else if let Some(config_from_xdg) = get_config_from_xdg() {
       Some(config_from_xdg)
@@ -28,11 +38,15 @@ pub(crate) async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
     }
   }
 
-  if let Some(overrides) = cli.overrides {
-    config.merge(overrides);
+  if let Some(templates_dir) = templates_dir {
+    config.templates_dir = Some(templates_dir);
   }
 
-  match cli.command {
+  if no_overwrite {
+    config.no_overwrite = Some(true);
+  }
+
+  match command {
     Commands::Ts {
       typescript_overrides,
       ..
@@ -40,7 +54,7 @@ pub(crate) async fn get_config_from_cli(cli: Cli) -> Result<Config, GenError> {
       let typescript = config.typescript.get_or_insert_default();
 
       if let Some(typescript_overrides) = typescript_overrides {
-        typescript.merge(typescript_overrides);
+        typescript.merge(typescript_overrides.clone());
       }
     }
     _ => {}

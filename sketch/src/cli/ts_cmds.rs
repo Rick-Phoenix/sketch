@@ -215,7 +215,7 @@ pub(crate) async fn handle_ts_commands(
 
       config
         .build_package(
-          PackageData::Config(package.clone()),
+          PackageData::Config(package),
           package_dir,
           update_tsconfig,
           cli_vars,

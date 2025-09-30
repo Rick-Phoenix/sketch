@@ -46,18 +46,11 @@ This document contains the help content for the `sketch` command-line program.
 
 ###### **Options:**
 
+* `--print-config` — Prints the full parsed config
+* `--templates-dir <DIR>` — The path to the templates directory
+* `--no-overwrite` — Do not overwrite existing files
 * `-c`, `--config <FILE>` — Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
 * `--ignore-config` — Ignores any automatically detected config files, uses cli instructions only
-* `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
-* `--debug <DEBUG>` — Activates debugging mode
-
-  Possible values: `true`, `false`
-
-* `--templates-dir <DIR>` — The path to the templates directory
-* `--no-overwrite <NO_OVERWRITE>` — Do not overwrite existing files
-
-  Possible values: `true`, `false`
-
 * `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
 
 
@@ -333,6 +326,7 @@ Renders a template and executes it as a shell command
 
 ###### **Options:**
 
+* `-s`, `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
 * `--cwd <CWD>` — The cwd for the command to execute [default: `.`]
 * `-f`, `--file <FILE>` — The path to the command's template file, as an absolute path or relative to the cwd
 * `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)

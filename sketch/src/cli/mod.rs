@@ -38,15 +38,14 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 }
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
-  let command = cli.command.clone();
-  let cli_vars = cli.templates_vars.clone();
+  let config = get_config_from_cli(cli.overrides.unwrap_or_default(), &cli.command).await?;
 
-  let config = get_config_from_cli(cli).await?;
+  let command = cli.command;
+  let cli_vars = cli.templates_vars;
 
-  let debug = config.debug.unwrap_or_default();
   let overwrite = config.can_overwrite();
 
-  if debug {
+  if cli.print_config {
     log_debug("Config", &config);
   }
 
@@ -339,6 +338,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       file,
       template,
       cwd,
+      shell,
     } => {
       let command = if let Some(literal) = command {
         TemplateData::Content {
@@ -363,7 +363,12 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       let cwd = cwd.unwrap_or_else(|| get_cwd());
 
-      let shell = config.shell.clone();
+      let shell = if let Some(cli_flag) = shell {
+        Some(cli_flag)
+      } else {
+        config.shell.clone()
+      };
+
       config.execute_command(shell.as_deref(), &cwd, command, cli_vars)?;
     }
     Ts { command, .. } => {
@@ -373,10 +378,16 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   Ok(())
 }
 
-#[derive(Parser, Debug, Clone)]
-#[command(name = "sketch")]
-#[command(version, about, long_about = None)]
-pub struct Cli {
+#[derive(Args, Debug, Clone, Default)]
+pub struct ConfigOverrides {
+  /// The path to the templates directory.
+  #[arg(long, value_name = "DIR")]
+  pub templates_dir: Option<PathBuf>,
+
+  /// Do not overwrite existing files.
+  #[arg(long)]
+  pub no_overwrite: bool,
+
   /// Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
   #[arg(short, long, value_name = "FILE", group = "config-file")]
   pub config: Option<PathBuf>,
@@ -384,12 +395,21 @@ pub struct Cli {
   /// Ignores any automatically detected config files, uses cli instructions only
   #[arg(long, group = "config-file")]
   pub ignore_config: bool,
+}
+
+#[derive(Parser, Debug, Clone)]
+#[command(name = "sketch")]
+#[command(version, about, long_about = None)]
+pub struct Cli {
+  /// Prints the full parsed config
+  #[arg(long)]
+  pub print_config: bool,
 
   #[command(subcommand)]
   pub command: Commands,
 
   #[command(flatten)]
-  pub overrides: Option<Config>,
+  pub overrides: Option<ConfigOverrides>,
 
   /// Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
@@ -561,6 +581,10 @@ pub enum Commands {
     /// The literal definition for the template (incompatible with `--file` or `--template`)
     #[arg(group = "input")]
     cmd: Option<String>,
+
+    /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
+    #[arg(short, long)]
+    shell: Option<String>,
 
     /// The cwd for the command to execute [default: `.`]
     #[arg(long)]
