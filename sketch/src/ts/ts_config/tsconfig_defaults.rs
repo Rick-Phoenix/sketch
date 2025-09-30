@@ -38,7 +38,7 @@ pub(crate) fn get_default_package_tsconfig() -> TsConfig {
   let mut base = get_default_root_tsconfig();
 
   base.merge(TsConfig {
-    extends: Some("./tsconfig.json".to_string()),
+    extends: None,
     references: Some(btreeset![]),
     include: Some(btreeset![
       "src".to_string(),
