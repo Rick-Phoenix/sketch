@@ -22,7 +22,7 @@ use crate::{
 pub struct PreCommitPreset {
   /// The ids of the extended configurations.
   #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
@@ -31,7 +31,7 @@ pub struct PreCommitPreset {
 
 impl Extensible for PreCommitPreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extends
+    &self.extends_presets
   }
 }
 
@@ -41,7 +41,7 @@ impl PreCommitPreset {
     id: &str,
     store: &IndexMap<String, PreCommitPreset>,
   ) -> Result<PreCommitConfig, GenError> {
-    if self.extends.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self.config);
     }
 

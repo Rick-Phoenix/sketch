@@ -26,7 +26,7 @@ fn get_version(v: &str) -> (usize, usize, usize) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let schemas_dir = PathBuf::from("schemas");
+  let schemas_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../schemas");
 
   create_dir_all(&schemas_dir)?;
 

@@ -18,7 +18,7 @@ use crate::{
 
 impl Extensible for PackageJsonPreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extends
+    &self.extends_presets
   }
 }
 
@@ -33,7 +33,7 @@ impl PackageJsonPreset {
     store: &IndexMap<String, PackageJsonPreset>,
     people: &IndexMap<String, PersonData>,
   ) -> Result<PackageJson, GenError> {
-    let merged_preset = if self.extends.is_empty() {
+    let merged_preset = if self.extends_presets.is_empty() {
       self
     } else {
       let mut processed_ids: IndexSet<String> = IndexSet::new();
@@ -78,7 +78,7 @@ impl PackageJsonPreset {
 pub struct PackageJsonPreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
   pub config: PackageJson,

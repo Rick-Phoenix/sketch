@@ -1,13 +1,13 @@
 [typescript]
 
 [typescript.ts_config_presets.one]
-extend_presets = ["two"]
+extends_presets = ["two"]
 
 [typescript.ts_config_presets.two]
-extend_presets = ["three"]
+extends_presets = ["three"]
 
 [typescript.ts_config_presets.three]
-extend_presets = ["one"]
+extends_presets = ["one"]
 
 [typescript.package_presets.circular_tsconfigs]
 name = "circular_tsconfig"

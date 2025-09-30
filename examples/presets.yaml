@@ -36,7 +36,7 @@ cargo_toml_presets:
       serde: "1"
 
   extended:
-    extends:
+    extends_presets:
       - base
     dependencies:
       tokio: "1"
@@ -45,7 +45,7 @@ cargo_toml_presets:
 # ANCHOR: docker_compose
 docker:
   service_presets:
-    # A base preset with common configurations
+    # A base service preset with common configurations
     base_service:
       environment:
         TZ: Europe/Berlin
@@ -54,12 +54,12 @@ docker:
 
     # A preset for a db service
     database:
-      extend_presets:
+      extends_presets:
         - base_service
       image: postgres
 
   compose_presets:
-    # Base preset for the entire compose file
+    # Base preset for a compose file
     base:
       volumes:
         my_volume:
@@ -69,7 +69,7 @@ docker:
           external: true
 
     extended:
-      extends:
+      extends_presets:
         - base
       services:
         # Using the service preset by ID
@@ -94,7 +94,7 @@ gitignore_presets:
       dist
   # Or a list of strings
   ts:
-    extends:
+    extends_presets:
       # When being merged, the new entries are placed at the top
       - base
     content:
@@ -114,7 +114,7 @@ pre_commit_presets:
   # Hooks specific to typescript projects
   typescript:
     # Extending the base preset
-    extends:
+    extends_presets:
       - base
     repos:
       - repo: local
@@ -170,7 +170,7 @@ typescript:
         vite: "*"
 
     svelte_frontend:
-      extends: ["frontend"]
+      extends_presets: ["frontend"]
       # Adding new fields
       license: MIT
       # Overriding others
@@ -194,8 +194,7 @@ typescript:
         verbatimModuleSyntax: true
 
     extended:
-      # Renamed to avoid conflict with the `extends` field
-      extend_presets:
+      extends_presets:
         - base
       # Unlike in real tsconfigs with `extends`, references are merged here,
       # and so are all other collections such as `files` or `include`.
@@ -217,8 +216,7 @@ typescript:
         - "**/node_modules/**"
 
     extended:
-      # Renamed to avoid collisions with oxlint's own `extends` field
-      extend_presets:
+      extends_presets:
         - base
       ignorePatterns:
         - .cache
@@ -263,7 +261,7 @@ typescript:
 
       # ...or we can inline a preset definition
       oxlint:
-        extend_presets:
+        extends_presets:
           - extended
         ignorePatterns:
           - .output
@@ -274,7 +272,7 @@ typescript:
         - output: tsconfig.json
           config:
             # Once again creating a new config here with some extras
-            extend_presets:
+            extends_presets:
               - extended
             include:
               - scripts

@@ -27,7 +27,7 @@ typescript:
     # you can use the above as a base for other package.json files,
     # if the author or contributors are always the same
     some-other-project:
-      extends:
+      extends_presets:
         - people-example
       scripts:
         say-hi: echo hi!

@@ -283,7 +283,7 @@
       "description": "A [`PackageJson`] preset.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,
@@ -2320,7 +2320,7 @@
       "description": "A preset for a `tsconfig` file.",
       "type": "object",
       "properties": {
-        "extend_presets": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,
@@ -3617,7 +3617,7 @@
       "description": "A preset for `.oxlintrc.json`",
       "type": "object",
       "properties": {
-        "extend_presets": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,
@@ -4404,7 +4404,7 @@
       "description": "A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The list of extended preset IDs.",
           "type": "array",
           "uniqueItems": true,
@@ -4634,7 +4634,7 @@
       "description": "A preset for a `pnpm-workspace.yaml` file configuration.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,
@@ -5720,7 +5720,7 @@
       "description": "A preset for Docker Compose files.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,
@@ -5897,14 +5897,14 @@
       "description": "A preset for a Docker service",
       "type": "object",
       "properties": {
-        "extend_presets": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
           },
-          "default": []
+          "writeOnly": true
         },
         "extends": {
           "description": "`extends` lets you share common configurations among different files, or even different projects entirely.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#extends",
@@ -9496,7 +9496,7 @@
       "description": "A preset for a `.pre-commit-config.yaml` configuration file.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The ids of the extended configurations.",
           "type": "array",
           "uniqueItems": true,
@@ -10250,7 +10250,7 @@
       "description": "A preset for a `.gitignore` file.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The ids of the extended presets.",
           "type": "array",
           "uniqueItems": true,
@@ -10342,7 +10342,7 @@
       "description": "A preset for a `Cargo.toml` file.",
       "type": "object",
       "properties": {
-        "extends": {
+        "extends_presets": {
           "description": "The list of extended presets.",
           "type": "array",
           "uniqueItems": true,

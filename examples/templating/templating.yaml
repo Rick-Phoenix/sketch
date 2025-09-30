@@ -45,6 +45,6 @@ templating_presets:
 
   # ANCHOR: extended_preset
   extended:
-    extends:
+    extends_presets:
       - lotr
   # ANCHOR_END: extended_preset

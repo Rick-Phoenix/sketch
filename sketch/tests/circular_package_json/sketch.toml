@@ -10,10 +10,10 @@ package_json = "one"
 dir = "packages/mypkg"
 
 [typescript.package_json_presets.one]
-extends = ["two"]
+extends_presets = ["two"]
 
 [typescript.package_json_presets.two]
-extends = ["three"]
+extends_presets = ["three"]
 
 [typescript.package_json_presets.three]
-extends = ["one"]
+extends_presets = ["one"]

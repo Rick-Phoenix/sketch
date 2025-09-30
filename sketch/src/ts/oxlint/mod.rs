@@ -20,7 +20,7 @@ use crate::{
 pub struct OxlintPreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
-  pub extend_presets: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
@@ -29,7 +29,7 @@ pub struct OxlintPreset {
 
 impl Extensible for OxlintPreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extend_presets
+    &self.extends_presets
   }
 }
 
@@ -39,7 +39,7 @@ impl OxlintPreset {
     id: &str,
     store: &IndexMap<String, OxlintPreset>,
   ) -> Result<OxlintConfig, GenError> {
-    if self.extend_presets.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self.config);
     }
 

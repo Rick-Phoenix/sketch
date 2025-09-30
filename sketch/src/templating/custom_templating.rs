@@ -39,7 +39,7 @@ pub enum TemplatingPresetReference {
 pub struct TemplatingPreset {
   /// The list of extended preset IDs.
   #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
   /// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
   #[merge(strategy = merge_vecs)]
   pub templates: Vec<PresetElement>,
@@ -51,7 +51,7 @@ pub struct TemplatingPreset {
 
 impl Extensible for TemplatingPreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extends
+    &self.extends_presets
   }
 }
 
@@ -61,7 +61,7 @@ impl TemplatingPreset {
     id: &str,
     store: &IndexMap<String, TemplatingPreset>,
   ) -> Result<TemplatingPreset, GenError> {
-    if self.extends.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self);
     }
 

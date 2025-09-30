@@ -25,7 +25,7 @@ fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
 pub struct GitignorePreset {
   /// The ids of the extended presets.
   #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
 
   #[merge(strategy = merge_gitignore)]
   pub content: GitIgnore,
@@ -33,7 +33,7 @@ pub struct GitignorePreset {
 
 impl Extensible for GitignorePreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extends
+    &self.extends_presets
   }
 }
 
@@ -43,7 +43,7 @@ impl GitignorePreset {
     id: &str,
     store: &IndexMap<String, GitignorePreset>,
   ) -> Result<GitIgnore, GenError> {
-    if self.extends.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self.content);
     }
 

@@ -26,7 +26,7 @@ use crate::{
 pub struct PnpmPreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
@@ -35,7 +35,7 @@ pub struct PnpmPreset {
 
 impl Extensible for PnpmPreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extends
+    &self.extends_presets
   }
 }
 
@@ -45,7 +45,7 @@ impl PnpmPreset {
     id: &str,
     store: &IndexMap<String, PnpmPreset>,
   ) -> Result<PnpmWorkspace, GenError> {
-    if self.extends.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self.config);
     }
 

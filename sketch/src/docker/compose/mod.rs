@@ -30,7 +30,7 @@ use crate::{
 pub struct ComposePreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
-  pub extends: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
@@ -39,7 +39,7 @@ pub struct ComposePreset {
 
 impl Extensible for ComposePreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extends
+    &self.extends_presets
   }
 }
 
@@ -50,7 +50,7 @@ impl ComposePreset {
     store: &IndexMap<String, ComposePreset>,
     services_store: &IndexMap<String, DockerServicePreset>,
   ) -> Result<ComposeFile, GenError> {
-    if self.extends.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self.config);
     }
 
@@ -74,7 +74,7 @@ impl ComposePreset {
           *service_data = ServiceData::Config(preset.process_data(id, services_store)?);
         }
         ServiceData::Config(config) => {
-          if !config.extend_presets.is_empty() {
+          if !config.extends_presets.is_empty() {
             *service_data =
               ServiceData::Config(config.clone().process_data("__inlined", services_store)?);
           }

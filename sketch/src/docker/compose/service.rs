@@ -47,7 +47,7 @@ pub struct DockerServicePreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
   #[serde(skip_serializing)]
-  pub extend_presets: IndexSet<String>,
+  pub extends_presets: IndexSet<String>,
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
@@ -56,7 +56,7 @@ pub struct DockerServicePreset {
 
 impl Extensible for DockerServicePreset {
   fn get_extended(&self) -> &IndexSet<String> {
-    &self.extend_presets
+    &self.extends_presets
   }
 }
 
@@ -66,7 +66,7 @@ impl DockerServicePreset {
     id: &str,
     store: &IndexMap<String, DockerServicePreset>,
   ) -> Result<DockerServicePreset, GenError> {
-    if self.extend_presets.is_empty() {
+    if self.extends_presets.is_empty() {
       return Ok(self);
     }
 
