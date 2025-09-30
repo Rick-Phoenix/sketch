@@ -27,7 +27,7 @@ pub(crate) fn get_default_root_tsconfig() -> TsConfig {
       no_unchecked_indexed_access: Some(true),
       allow_synthetic_default_imports: Some(true),
       verbatim_module_syntax: Some(true),
-      no_unchecked_side_effects_imports: Some(true),
+      no_unchecked_side_effect_imports: Some(true),
       ..Default::default()
     }),
     ..Default::default()

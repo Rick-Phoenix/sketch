@@ -109,7 +109,7 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
       rewrite_relative_imports_extensions: Some(true),
       resolve_package_json_imports: Some(true),
       resolve_package_json_exports: Some(true),
-      no_unchecked_side_effects_imports: Some(true),
+      no_unchecked_side_effect_imports: Some(true),
       erasable_syntax_only: Some(true),
       no_check: Some(true),
       generate_trace: Some(true),

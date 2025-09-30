@@ -621,7 +621,7 @@ pub struct CompilerOptions {
   ///
   /// See more: https://www.typescriptlang.org/tsconfig#noUncheckedSideEffectImports
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub no_unchecked_side_effects_imports: Option<bool>,
+  pub no_unchecked_side_effect_imports: Option<bool>,
 
   /// Enable error reporting when a local variable isn't read.
   ///
