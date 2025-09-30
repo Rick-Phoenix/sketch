@@ -40,27 +40,8 @@ impl TypescriptConfig {
   }
 }
 
-impl Default for TypescriptConfig {
-  fn default() -> Self {
-    Self {
-      vitest_presets: Default::default(),
-      pnpm_presets: Default::default(),
-      no_default_deps: None,
-      no_convert_latest_to_range: None,
-      package_json_presets: Default::default(),
-      package_manager: Default::default(),
-      package_presets: Default::default(),
-      catalog: None,
-      version_range: Default::default(),
-      ts_config_presets: Default::default(),
-      oxlint_presets: Default::default(),
-      people: Default::default(),
-    }
-  }
-}
-
 /// All settings related to typescript projects.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema, Default)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct TypescriptConfig {

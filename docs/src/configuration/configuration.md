@@ -30,7 +30,7 @@ The [merging strategy](../presets/summary.md#extending-presets) for config files
 
 # Top Level Configuration
 
-These are the defaults for the top level configuration values:
+These are some of the default settings for the top level configuration values:
 
 ```yaml
 {{#include ../../../examples/top_level_config.yaml:all}}

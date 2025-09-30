@@ -35,7 +35,7 @@ use crate::{fs::get_abs_path, ts::package_json::PackageJson};
 pub(crate) type StringBTreeMap = BTreeMap<String, String>;
 pub(crate) type JsonValueBTreeMap = BTreeMap<String, Value>;
 
-/// The kinds of presets that can be stored in the global config, along with a name key.
+/// The kinds of presets supported by `sketch`.
 #[derive(Debug, Clone, Copy)]
 pub enum Preset {
   PackageJson,
@@ -51,9 +51,4 @@ pub enum Preset {
   DockerCompose,
   DockerService,
   CargoToml,
-}
-
-pub(crate) fn log_debug<T: Debug>(name: &str, item: &T) {
-  eprintln!("DEBUG:");
-  eprintln!("  {}: {:#?}", name, item);
 }

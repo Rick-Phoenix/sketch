@@ -26,6 +26,7 @@ impl Config {
     cwd: &Path,
     command_template: TemplateData,
     cli_vars: Option<Vec<(String, Value)>>,
+    print_cmd: bool,
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
 
@@ -61,6 +62,11 @@ impl Config {
           template: template_name,
           source: e,
         })?;
+
+    if print_cmd {
+      println!("Rendered command:");
+      println!("{rendered_command}");
+    }
 
     let shell = shell.unwrap_or_else(|| default_shell());
 

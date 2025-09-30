@@ -46,7 +46,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let overwrite = config.can_overwrite();
 
   if cli.print_config {
-    log_debug("Config", &config);
+    println!("Full parsed config:");
+    println!("{config:?}");
   }
 
   match command {
@@ -339,6 +340,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       template,
       cwd,
       shell,
+      print_cmd,
     } => {
       let command = if let Some(literal) = command {
         TemplateData::Content {
@@ -369,7 +371,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         config.shell.clone()
       };
 
-      config.execute_command(shell.as_deref(), &cwd, command, cli_vars)?;
+      config.execute_command(shell.as_deref(), &cwd, command, cli_vars, print_cmd)?;
     }
     Ts { command, .. } => {
       handle_ts_commands(config, command, cli_vars).await?;
@@ -581,6 +583,10 @@ pub enum Commands {
     /// The literal definition for the template (incompatible with `--file` or `--template`)
     #[arg(group = "input")]
     cmd: Option<String>,
+
+    /// Prints the rendered command to stdout before executing it
+    #[arg(long)]
+    print_cmd: bool,
 
     /// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
     #[arg(short, long)]

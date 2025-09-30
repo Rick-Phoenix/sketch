@@ -33,7 +33,7 @@ impl Config {
 }
 
 /// The global configuration struct.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, JsonSchema, Default)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct Config {
@@ -167,26 +167,5 @@ impl Config {
     extended.extends = processed_sources;
 
     Ok(extended)
-  }
-}
-
-impl Default for Config {
-  fn default() -> Self {
-    Self {
-      docker: None,
-      cargo_toml_presets: Default::default(),
-      git_presets: Default::default(),
-      gitignore_presets: Default::default(),
-      pre_commit_presets: Default::default(),
-      config_file: None,
-      templating_presets: Default::default(),
-      typescript: None,
-      shell: None,
-      templates_dir: Default::default(),
-      templates: Default::default(),
-      vars: Default::default(),
-      extends: Default::default(),
-      no_overwrite: None,
-    }
   }
 }

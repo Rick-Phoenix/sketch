@@ -119,8 +119,10 @@ impl TemplateData {
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
 pub enum TemplateOutputKind {
+  /// Render the output to stdout
   #[serde(skip)]
   Stdout,
+  /// Render the output to a file
   #[serde(untagged)]
   Path(PathBuf),
 }
