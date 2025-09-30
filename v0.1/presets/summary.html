@@ -1,0 +1,523 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Presets - Sketch</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Sketch</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="presets"><a class="header" href="#presets">Presets</a></h1>
+<p>Templating presets are not the only way to create reusable project structures and configurations. Sketch also supports presets for some of the most common elements that you would find in a typical project.</p>
+<p>Some of these presets are used just for defining an easily reproducible configuration, while others also include extra features such as extensibility.</p>
+<p>As of now, these presets are available:</p>
+<ul>
+<li>
+<p>Templating</p>
+<ul>
+<li>Templating presets (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Docker</p>
+<ul>
+<li>Docker Compose file (extensible)</li>
+<li>Docker Compose service (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Git</p>
+<ul>
+<li>Git repo</li>
+<li><code>.gitignore</code> (extensible)</li>
+<li><code>.pre-commit-config.yaml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Rust</p>
+<ul>
+<li><code>Cargo.toml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Typescript</p>
+<ul>
+<li>Typescript package</li>
+<li><code>pnpm-workspace.yaml</code> (extensible)</li>
+<li><code>package.json</code> (extensible, with <a href="../ts/smart_features.html">extra features</a>)</li>
+<li><code>tsconfig.json</code> (extensible, with merging of values for the <code>references</code>, <code>include</code>, <code>exclude</code> and <code>files</code> fields)</li>
+<li><code>.oxlintrc.json</code> (extensible)</li>
+<li><code>vitest</code> (not a full configuration for <code>vitest.config.ts</code>, but a basic testing setup)</li>
+</ul>
+</li>
+</ul>
+<p>These can be generated either as part of another preset, or with a command (or both, in some cases) you can find more information in the rest of the documentation and in the <a href="../cli_docs.html">cli reference</a>.</p>
+<h1 id="extending-presets"><a class="header" href="#extending-presets">Extending Presets</a></h1>
+<p>Some presets can be extended by inheriting the value from one or multiple presets.</p>
+<p>When a preset is extended, the merging strategy for their fields works like this:</p>
+<ul>
+<li>Collections are merged and in almost all cases, deduped and sorted (except for cases where order matters such as a list of command arguments)</li>
+<li>Values that are also extensible (such as <code>compilerOptions</code> in tsconfig) themselves will be merged with the same rules as above</li>
+<li>All other values are overwritten, except if the previous value was present and the new value is <code>null</code>. This is to avoid merging values that come from partially-defined presets, where the missing fields are all unset. Generally speaking, the correct strategy to extend presets is to define a base and then <code>add</code> elements to it, rather than replacing them.</li>
+</ul>
+<h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
+<p>This is an in-depth example of the various kinds of presets that are available:</p>
+<pre><code class="language-yaml">
+# `Cargo.toml` presets
+cargo_toml_presets:
+  base:
+    dependencies:
+      regex: "1"
+      serde: "1"
+
+  extended:
+    extends_presets:
+      - base
+    dependencies:
+      tokio: "1"
+
+# Docker Compose presets
+docker:
+  service_presets:
+    # A base service preset with common configurations
+    base_service:
+      environment:
+        TZ: Europe/Berlin
+      networks:
+        - my_network
+
+    # A preset for a db service
+    database:
+      extends_presets:
+        - base_service
+      image: postgres
+
+  compose_presets:
+    # Base preset for a compose file
+    base:
+      volumes:
+        my_volume:
+          external: true
+      networks:
+        my_network:
+          external: true
+
+    extended:
+      extends_presets:
+        - base
+      services:
+        # Using the service preset by ID
+        db: database
+        my_service:
+          networks:
+            - my_network
+          volumes:
+            - my_volume:/target
+      volumes:
+        my_other_volume:
+          external: true
+
+# Gitignore presets
+gitignore_presets:
+  # Can be a string
+  base:
+    content: |
+      *.env
+      dist
+  # Or a list of strings
+  ts:
+    extends_presets:
+      # When being merged, the new entries are placed at the top
+      - base
+    content:
+      - "*.tsBuildInfo"
+      - node_modules
+
+# Pre-commit presets
+pre_commit_presets:
+  # Commonly used repo
+  base:
+    repos:
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.28.0
+        hooks:
+          - id: gitleaks
+
+  # Hooks specific to typescript projects
+  typescript:
+    # Extending the base preset
+    extends_presets:
+      - base
+    repos:
+      - repo: local
+        hooks:
+          - id: oxlint
+            name: oxlint
+            entry: oxlint
+            language: system
+            files: '\.svelte$|\.js$|\.ts$'
+            types: [file]
+
+# Git presets
+git_presets:
+  ts_package:
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
+
+    # Templates that will be generated with this preset
+    # starting from the new repo's root
+    with_templates:
+      - id: dockerfile
+
+typescript:
+  no_default_deps: true
+
+  # `pnpm-workspace.yaml` presets
+  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
+
+  # `package.json` presets
+  package_json_presets:
+    # Defining some reusable fields such as some common scripts and dependencies
+    frontend:
+      description: I am the base preset
+      scripts:
+        build: vite build
+        dev: vite dev
+      devDependencies:
+        tailwindcss: "*"
+        vite: "*"
+
+    svelte_frontend:
+      extends_presets: ["frontend"]
+      # Adding new fields
+      license: MIT
+      # Overriding others
+      description: I am the frontend preset
+      # And merging dependencies
+      devDependencies:
+        svelte: "*"
+
+
+  # Tsconfig presets
+  ts_config_presets:
+    base:
+      references:
+        - path: /some/path
+      include:
+        - src
+      compilerOptions:
+        noEmit: true
+        verbatimModuleSyntax: true
+
+    extended:
+      extends_presets:
+        - base
+      # Unlike in real tsconfigs with `extends`, references are merged here,
+      # and so are all other collections such as `files` or `include`.
+      references:
+        - path: /other/path
+      include:
+        - tests
+      compilerOptions:
+        # Whereas other fields are overwritten
+        noEmit: false
+
+
+  # Oxlint presets
+  oxlint_presets:
+    base:
+      ignorePatterns:
+        - "**/node_modules/**"
+
+    extended:
+      extends_presets:
+        - base
+      ignorePatterns:
+        - .cache
+
+  # Vitest presets
+  vitest_presets:
+    base:
+      # Where the config file should be generated, starting from
+      # the root of the package.
+      # It defaults to the value of `tests_dir`
+      out_dir: null
+
+      # The directory to use for tests, from the root of the package
+      tests_dir: tests
+
+      # The directory, inside `tests_dir`, that contains the setup files for tests.
+      # A file named `tests_setup.ts`, containing some basic testing boilerplate,
+      # will be generated inside of it.
+      setup_dir: setup
+
+      # A list of setup files (the paths will be joined to the `setup_dir`)
+      # `tests_setup.ts` will be added automatically.
+      setup_files:
+        - somefile.ts
+        - anotherfile.ts
+      environment: jsdom
+      silent: passed-only
+
+
+  # Package presets
+  package_presets:
+    example:
+      name: example
+
+      # For every preset, we can either refer to them
+      # by their id...
+      package_json: svelte_frontend
+
+      # ...or we can inline a preset definition
+      oxlint:
+        extends_presets:
+          - extended
+        ignorePatterns:
+          - .output
+
+      # We can define one or many tsconfig files
+      ts_config:
+        # Can be omitted, would default to `tsconfig.json`
+        - output: tsconfig.json
+          config:
+            # Once again creating a new config here with some extras
+            extends_presets:
+              - extended
+            include:
+              - scripts
+
+      vitest: base
+
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../templating/render-preset.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../presets/git.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../templating/render-preset.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../presets/git.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
