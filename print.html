@@ -178,67 +178,203 @@
                     <main>
                         <h1 id="-sketch"><a class="header" href="#-sketch">🖌️ Sketch</a></h1>
 <blockquote>
-<p><code>Templating, made portable</code></p>
+<p><code>Templating made simple</code></p>
 </blockquote>
-<p>Templating is awesome. While it is mostly used for websites, it can be a powerful tool for developers as it can allow us to automate some repetitive tasks like setting up projects which share the same basic structure.</p>
-<p>There are very powerful templating engines, which however require a library to work with them, which makes them not exactly portable.</p>
-<p>And there are pieces of software like <code>ansible</code>, which provide better portability and great templating capabilities but still require a significant amount of setup, which makes them slightly overkill for simpler tasks like generating a few files and directories.</p>
-<p>This is why I made <code>sketch</code>.</p>
-<p><code>sketch</code> is portable enough so that the most basic setups require zero configuration whatsoever, but can also sustain more complex setups like extensible, multi-format configuration files with overrides available via cli flags in most cases.</p>
-<p>It makes it very easy to define a template for a file or for an entire project, and set it all up with just a single command.</p>
-<p>And there's more: by leveraging the <a href="https://keats.github.io/tera/docs/">Tera</a> rendering engine, you can take advantage of its built-in filters and functions which can allow you to populate your templates not only with static values but with dynamically calculated ones, such as the current time of the day, a manipulated string, an env variable, or the result of an arithmetic calculation.</p>
-<p>Every setup that used to require several repetitive steps can now be executed in just a single command.</p>
-<p>And speaking of commands, you can use <code>sketch</code> to render the output to stdout (so that it can be piped to other commands), or even to execute it as a shell command directly, which expands its utility for even more creative and flexible use cases.</p>
-<h1 id="typescript-project-generation"><a class="header" href="#typescript-project-generation">Typescript Project Generation</a></h1>
-<p><code>sketch</code> was initially conceived as a typescript-centric tool, because I needed a way to manage the chaotic nature of typescript projects in a structured, orderly and easily reproducible way, that would also give me enough flexibility to be able to customize how each project piece is defined and generated.</p>
-<p>It contains special commands and tools to generate new typescript projects and packages, such as the ability to define reusable, extensible <code>package.json</code> and <code>tsconfig</code> presets, as well as commonly used configuration files such as those belonging to <code>oxlint</code> or <code>vitest</code>.</p>
+<p>Templating is an awesome tool. While it is mostly used for rendering content in a web framework, it can also be used to do much more than that.</p>
+<p>For instance, it can be used to define structures for files or even entire projects. These structures can be standardized enough to provide structure, clarity, familiarity and reproducibility, but also flexible enough as to be able to accept customized or even dynamically generated parameters.</p>
+<p>Taking advantage of these features comes with some serious benefits:</p>
+<ol>
+<li>
+<p>It drastically reduces the time and effort needed to perform the least rewarding aspects of development such as writing boilerplate code or setting up the file structure for a new project or tool</p>
+</li>
+<li>
+<p>It makes project structures standardized and easily reproducible, which makes it much easier to navigate them or to introduce them to others</p>
+</li>
+<li>
+<p>It reduces the time necessary to maintain these structures, as they can now be defined and modified only in one place and reused everywhere else</p>
+</li>
+</ol>
+<p>Sketch is a tool designed to draw on these strenghts, and to combine them with its own structure-oriented philosophy to provide a simple but powerful tool to simplify and automate many of the day-to-day development operations that have to do with creating files or setting up projects.</p>
+<h1 id="presets"><a class="header" href="#presets">Presets</a></h1>
+<p>The concept of <code>preset</code> is central to Sketch's design and configuration.</p>
+<p>There are several preset categories, which come with a variety of features (the full updated list can be found in the documentation website):</p>
+<ul>
+<li>
+<p>Templating</p>
+<ul>
+<li>Templating presets (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Docker</p>
+<ul>
+<li>Docker Compose file (extensible)</li>
+<li>Docker Compose service (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Git</p>
+<ul>
+<li>Git repo</li>
+<li><code>.gitignore</code> (extensible)</li>
+<li><code>.pre-commit-config.yaml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Rust</p>
+<ul>
+<li><code>Cargo.toml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Typescript</p>
+<ul>
+<li>Typescript package</li>
+<li><code>pnpm-workspace.yaml</code> (extensible)</li>
+<li><code>package.json</code> (extensible, with extra features)</li>
+<li><code>tsconfig.json</code> (extensible, with merging of values for the <code>references</code>, <code>include</code>, <code>exclude</code> and <code>files</code> fields)</li>
+<li><code>.oxlintrc.json</code> (extensible)</li>
+<li><code>vitest</code> (not a full configuration for <code>vitest.config.ts</code>, but a basic testing setup)</li>
+</ul>
+</li>
+</ul>
+<h2 id="type-safe-presets"><a class="header" href="#type-safe-presets">Type-safe Presets</a></h2>
+<p>Some presets, such as those that belong to some of the most widely used configuration files such as Rust's <code>Cargo.toml</code>, or Typescript's <code>tsconfig.json</code>, are <strong>fully typed</strong> and documented (as part of the JSON schema for Sketch's configuration file), so that defining them comes with all of the benefits of IDE integration such as type safety and autocompletion.</p>
+<h2 id="extensible-presets"><a class="header" href="#extensible-presets">Extensible Presets</a></h2>
+<p>Some presets are extensible, which means that you can define a base preset containing some common data (such as a list of networks or volumes in a <code>compose.yaml</code> file or a list of dependencies in a <code>package.json</code> file), and then create a preset that extends that base preset, so that you do not need to repeat inputs for all presets that share common settings.</p>
+<h2 id="aggregator-presets"><a class="header" href="#aggregator-presets">Aggregator Presets</a></h2>
+<p>Some presets can aggregate or use other presets. For example, a git <code>repo</code> preset can contain multiple templating presets (which will be generated in the root of the new repo), and also select a specific <code>gitignore</code> or <code>pre-commit</code> preset.</p>
+<h1 id="enhanced-templating-toolset"><a class="header" href="#enhanced-templating-toolset">Enhanced Templating Toolset</a></h1>
+<p>Sketch uses <a href="https://keats.github.io/tera/docs/">Tera</a> to render custom templates, which comes with its own rich feature set, and on top of that, it provides extra features, such as:</p>
+<ul>
+<li>Special variables that extract commonly used values such as the user directory or the host's operating system</li>
+<li>Functions that perform actions such as:
+<ul>
+<li>Making a glob search in a directory</li>
+<li>Generating a uuid</li>
+<li>Transforming a relative path into an absolute path</li>
+<li>Extracting capture groups from a regex</li>
+<li>(and many other more...)</li>
+</ul>
+</li>
+</ul>
+<p>All of these are available directly within templates, which greatly extends their flexibility and the variety of scenarios in which they can be applied.</p>
 <h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
-<p>You can find the full documentation in the <a href="https://rick-phoenix.github.io/sketch/">dedicated website</a>.</p>
+<p>You can find out more about Sketch in the <a href="https://rick-phoenix.github.io/sketch/">dedicated website</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="command-line-help-for-sketch"><a class="header" href="#command-line-help-for-sketch">Command-Line Help for <code>sketch</code></a></h1>
 <p>This document contains the help content for the <code>sketch</code> command-line program.</p>
 <p><strong>Command Overview:</strong></p>
 <ul>
 <li><a href="cli_docs.html#sketch"><code>sketch</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-cargo-toml"><code>sketch cargo-toml</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-pnpm-workspace"><code>sketch pnpm-workspace</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-package-json"><code>sketch package-json</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-ts-config"><code>sketch ts-config</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-oxlint"><code>sketch oxlint</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-docker-compose"><code>sketch docker-compose</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-pre-commit"><code>sketch pre-commit</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-ts"><code>sketch ts</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-ts-monorepo"><code>sketch ts monorepo</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-ts-package"><code>sketch ts package</code>↴</a></li>
-<li><a href="cli_docs.html#sketch-init"><code>sketch init</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-ts-barrel"><code>sketch ts barrel</code>↴</a></li>
+<li><a href="cli_docs.html#sketch-repo"><code>sketch repo</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-new"><code>sketch new</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-render"><code>sketch render</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-render-preset"><code>sketch render-preset</code>↴</a></li>
 <li><a href="cli_docs.html#sketch-exec"><code>sketch exec</code>↴</a></li>
 </ul>
 <h2 id="sketch"><a class="header" href="#sketch"><code>sketch</code></a></h2>
-<p>🖌️ Templating made portable. A tool to generate files, project structures or shell commands via custom templates</p>
+<p>🖌️ Templating made simple. A tool to define and generate files and reusable project structures</p>
 <p><strong>Usage:</strong> <code>sketch [OPTIONS] &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands"><a class="header" href="#subcommands"><strong>Subcommands:</strong></a></h6>
 <ul>
-<li><code>ts</code> — Launches typescript-specific commands</li>
-<li><code>init</code> — Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</li>
-<li><code>new</code> — Generates a new config file with some optional initial values defined via the cli flags</li>
+<li><code>cargo-toml</code> — Generates a <code>Cargo.toml</code> file from a preset</li>
+<li><code>pnpm-workspace</code> — Generates a <code>pnpm-workspace.yaml</code> file from a preset</li>
+<li><code>package-json</code> — Generates a <code>package.json</code> file from a preset</li>
+<li><code>ts-config</code> — Generates a <code>tsconfig.json</code> file from a preset</li>
+<li><code>oxlint</code> — Generates a <code>.oxlintrc.json</code> file from a preset</li>
+<li><code>docker-compose</code> — Generates a Docker Compose file from a preset</li>
+<li><code>pre-commit</code> — Generates a <code>pre-commit</code> config file from a preset</li>
+<li><code>ts</code> — Executes typescript-specific commands</li>
+<li><code>repo</code> — Creates a new git repo from a preset</li>
+<li><code>new</code> — Generates a new config file</li>
 <li><code>render</code> — Renders a single template to a file or to stdout</li>
-<li><code>render-preset</code> — Renders a templating preset defined in the configuration file</li>
-<li><code>exec</code> — Renders a template and launches it as a command</li>
+<li><code>render-preset</code> — Renders a templating preset</li>
+<li><code>exec</code> — Renders a template and executes it as a shell command</li>
 </ul>
 <h6 id="options"><a class="header" href="#options"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>-c</code>, <code>--config &lt;FILE&gt;</code> — Sets a custom config file</li>
-<li><code>--ignore-config-file</code> — Ignores any config files, uses cli instructions only</li>
-<li><code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
-<li><code>--debug</code> — Activates debugging mode</li>
-<li><code>--root-dir &lt;DIR&gt;</code> — The base path for the generated files [default: "."]</li>
-<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the templates directory, starting from the cwd (when set via cli) or from the config file (when defined in one of them)</li>
-<li><code>--no-overwrite</code> — Does not overwrite existing files</li>
-<li><code>--dry-run</code> — Aborts before writing any content to disk</li>
-<li><code>-s</code>, <code>--set &lt;KEY=VALUE&gt;</code> — Set a variable (as key=value) to use in templates. Overrides global and local variables</li>
+<li><code>--print-config</code> — Prints the full parsed config</li>
+<li><code>--templates-dir &lt;DIR&gt;</code> — The path to the templates directory</li>
+<li><code>--no-overwrite</code> — Do not overwrite existing files</li>
+<li><code>-c</code>, <code>--config &lt;FILE&gt;</code> — Sets a custom config file. Any file named <code>sketch.{yaml,json,toml}</code> in the cwd or in <code>XDG_CONFIG_HOME/sketch</code> will be detected automatically. If no file is found, the default settings are used</li>
+<li><code>--ignore-config</code> — Ignores any automatically detected config files, uses cli instructions only</li>
+<li><code>-s</code>, <code>--set &lt;KEY=VALUE&gt;</code> — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON</li>
+</ul>
+<h2 id="sketch-cargo-toml"><a class="header" href="#sketch-cargo-toml"><code>sketch cargo-toml</code></a></h2>
+<p>Generates a <code>Cargo.toml</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch cargo-toml &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments"><a class="header" href="#arguments"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the created file [default: <code>Cargo.toml</code>]</li>
+</ul>
+<h2 id="sketch-pnpm-workspace"><a class="header" href="#sketch-pnpm-workspace"><code>sketch pnpm-workspace</code></a></h2>
+<p>Generates a <code>pnpm-workspace.yaml</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch pnpm-workspace &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-1"><a class="header" href="#arguments-1"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>pnpm-workspace.yaml</code>]</li>
+</ul>
+<h2 id="sketch-package-json"><a class="header" href="#sketch-package-json"><code>sketch package-json</code></a></h2>
+<p>Generates a <code>package.json</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch package-json &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-2"><a class="header" href="#arguments-2"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>package.json</code>]</li>
+</ul>
+<h2 id="sketch-ts-config"><a class="header" href="#sketch-ts-config"><code>sketch ts-config</code></a></h2>
+<p>Generates a <code>tsconfig.json</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch ts-config &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-3"><a class="header" href="#arguments-3"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>tsconfig.json</code>]</li>
+</ul>
+<h2 id="sketch-oxlint"><a class="header" href="#sketch-oxlint"><code>sketch oxlint</code></a></h2>
+<p>Generates a <code>.oxlintrc.json</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch oxlint &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-4"><a class="header" href="#arguments-4"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>.oxlintrc.json</code>]</li>
+</ul>
+<h2 id="sketch-docker-compose"><a class="header" href="#sketch-docker-compose"><code>sketch docker-compose</code></a></h2>
+<p>Generates a Docker Compose file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch docker-compose &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-5"><a class="header" href="#arguments-5"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the created file [default: <code>compose.yaml</code>]</li>
+</ul>
+<h2 id="sketch-pre-commit"><a class="header" href="#sketch-pre-commit"><code>sketch pre-commit</code></a></h2>
+<p>Generates a <code>pre-commit</code> config file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch pre-commit &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-6"><a class="header" href="#arguments-6"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the created file [default: <code>.pre-commit-config.yaml</code>]</li>
 </ul>
 <h2 id="sketch-ts"><a class="header" href="#sketch-ts"><code>sketch ts</code></a></h2>
-<p>Launches typescript-specific commands</p>
+<p>Executes typescript-specific commands</p>
 <p><strong>Usage:</strong> <code>sketch ts [OPTIONS] &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands-1"><a class="header" href="#subcommands-1"><strong>Subcommands:</strong></a></h6>
 <ul>
 <li><code>monorepo</code> — Generates a new typescript monorepo</li>
 <li><code>package</code> — Generates a new typescript package</li>
+<li><code>barrel</code> — Creates a barrel file</li>
 </ul>
 <h6 id="options-1"><a class="header" href="#options-1"><strong>Options:</strong></a></h6>
 <ul>
@@ -247,97 +383,132 @@
 <p>Possible values: <code>pnpm</code>, <code>npm</code>, <code>deno</code>, <code>bun</code>, <code>yarn</code></p>
 </li>
 <li>
-<p><code>--no-default-deps</code> — Does not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
+<p><code>--no-default-deps &lt;NO_DEFAULT_DEPS&gt;</code> — Do not add default dependencies to new <code>package.json</code> files (typescript and oxlint, plus vitest if enabled)</p>
+<p>Possible values: <code>true</code>, <code>false</code></p>
 </li>
 <li>
-<p><code>--version-range &lt;KIND&gt;</code> — The kind of version ranges to use for dependencies that are fetched automatically. [default: minor]</p>
+<p><code>--version-range &lt;KIND&gt;</code> — The kind of version range to use for dependencies that are fetched automatically. [default: minor]</p>
 <p>Possible values: <code>patch</code>, <code>minor</code>, <code>exact</code></p>
 </li>
 <li>
-<p><code>--catalog</code> — Uses the pnpm catalog for default dependencies</p>
+<p><code>--catalog &lt;CATALOG&gt;</code> — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with <code>catalog:</code> to the catalog, if they are missing</p>
+<p>Possible values: <code>true</code>, <code>false</code></p>
 </li>
 <li>
-<p><code>--no-convert-latest</code> — Does not convert dependencies marked as <code>latest</code> to a version range</p>
+<p><code>--no-convert-latest &lt;NO_CONVERT_LATEST_TO_RANGE&gt;</code> — Do not convert dependencies marked as <code>latest</code> to a version range</p>
+<p>Possible values: <code>true</code>, <code>false</code></p>
 </li>
 </ul>
 <h2 id="sketch-ts-monorepo"><a class="header" href="#sketch-ts-monorepo"><code>sketch ts monorepo</code></a></h2>
 <p>Generates a new typescript monorepo</p>
-<p><strong>Usage:</strong> <code>sketch ts monorepo [OPTIONS]</code></p>
+<p><strong>Usage:</strong> <code>sketch ts monorepo [OPTIONS] [DIR]</code></p>
+<h6 id="arguments-7"><a class="header" href="#arguments-7"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;DIR&gt;</code> — The root directory for the new monorepo. [default: <code>ts_root</code>]</li>
+</ul>
 <h6 id="options-2"><a class="header" href="#options-2"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the root package [default: "root"]</li>
-<li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for the root package. If unset, defaults are used</li>
-<li><code>-p</code>, <code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for the root package</li>
-<li><code>--no-oxlint</code> — Does not generate an oxlint config at the root</li>
-<li><code>-i</code>, <code>--install</code> — Install the dependencies at the root after creation</li>
+<li><code>-p</code>, <code>--pnpm &lt;PRESET_ID&gt;</code> — The <code>pnpm-workspace.yaml</code> preset to use for the new monorepo. If it's unset and <code>pnpm</code> is the chosen package manager, the default preset will be used</li>
+<li><code>-r</code>, <code>--root-package &lt;PRESET_ID&gt;</code> — The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags</li>
+<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. It defaults to the name of its directory</li>
+<li><code>--ts-config &lt;id=ID,output=PATH&gt;</code> — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)</li>
+<li><code>--package-json &lt;ID&gt;</code> — The package.json preset ID to use (uses defaults if not provided)</li>
+<li><code>--oxlint &lt;ID&gt;</code> — The oxlint preset to use. It can be set to <code>default</code> to use the default preset</li>
+<li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
+<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many templates or templating presets to generate in the new package's root</li>
 </ul>
 <h2 id="sketch-ts-package"><a class="header" href="#sketch-ts-package"><code>sketch ts package</code></a></h2>
 <p>Generates a new typescript package</p>
 <p><strong>Usage:</strong> <code>sketch ts package [OPTIONS] [DIR]</code></p>
-<h6 id="arguments"><a class="header" href="#arguments"><strong>Arguments:</strong></a></h6>
+<h6 id="arguments-8"><a class="header" href="#arguments-8"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;DIR&gt;</code> — The new package's directory, starting from the <code>root_dir</code>. Defaults to the name of the package</li>
+<li><code>&lt;DIR&gt;</code> — The root directory for the new package. Defaults to the package name</li>
 </ul>
 <h6 id="options-3"><a class="header" href="#options-3"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — The package preset to use</li>
-<li><code>--update-root-tsconfig</code> — Whether the tsconfig file at the workspace root should receive a reference to the new package</li>
-<li><code>--no-vitest</code> — Does not set up vitest for this package</li>
-<li><code>--oxlint</code> — Sets up an oxlint config file for this package</li>
+<li><code>-p</code>, <code>--preset &lt;ID&gt;</code> — The package preset to use. If unset, the default preset is used, along with the values set via cli flags</li>
+<li><code>-u</code>, <code>--update-tsconfig &lt;UPDATE_TSCONFIG&gt;</code> — An optional list of tsconfig files where the new tsconfig file will be added as a reference</li>
+<li><code>--oxlint &lt;ID&gt;</code> — The oxlint preset to use. It can be set to <code>default</code> to use the default preset</li>
 <li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
-<li><code>--app</code> — Marks the package as an application (only relevant for default tsconfigs)</li>
-<li><code>--library</code> — Marks the package as a library (only relevant for default tsconfigs)</li>
-<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. If <code>dir</code> is set, it defaults to the last segment of it</li>
-<li><code>-t</code>, <code>--ts-config &lt;output=PATH,id=ID&gt;</code> — One or many tsconfig files for this package. If unset, defaults are used</li>
-<li><code>--package-json &lt;ID&gt;</code> — The id of the package.json preset to use for this package</li>
+<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many templates or templating presets to generate in the new package's root</li>
+<li><code>--vitest &lt;ID&gt;</code> — The vitest preset to use. It can be set to <code>default</code> to use the default preset</li>
+<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. It defaults to the name of its directory</li>
+<li><code>--ts-config &lt;id=ID,output=PATH&gt;</code> — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)</li>
+<li><code>--package-json &lt;ID&gt;</code> — The package.json preset ID to use (uses defaults if not provided)</li>
 </ul>
-<h2 id="sketch-init"><a class="header" href="#sketch-init"><code>sketch init</code></a></h2>
-<p>Creates a new git repo with a gitignore file. Optionally, it sets up the git remote and the pre-commit config</p>
-<p><strong>Usage:</strong> <code>sketch init [OPTIONS]</code></p>
+<h2 id="sketch-ts-barrel"><a class="header" href="#sketch-ts-barrel"><code>sketch ts barrel</code></a></h2>
+<p>Creates a barrel file</p>
+<p><strong>Usage:</strong> <code>sketch ts barrel [OPTIONS] [DIR]</code></p>
+<h6 id="arguments-9"><a class="header" href="#arguments-9"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;DIR&gt;</code> — The directory where to search recursively for the files and generate the barrel file [default: <code>.</code>]</li>
+</ul>
 <h6 id="options-4"><a class="header" href="#options-4"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>--no-pre-commit</code> — Does not generate a pre-commit config</li>
-<li><code>--remote &lt;REMOTE&gt;</code> — The link to the git remote to use</li>
+<li><code>-o</code>, <code>--output &lt;OUTPUT&gt;</code> — The output path for the barrel file. It defaults to <code>{dir}/index.ts</code></li>
+<li><code>--keep-ext &lt;EXT&gt;</code> — The file extensions that should be kept in export statements</li>
+<li><code>--js-ext</code> — Exports <code>.ts</code> files as <code>.js</code>. It assumes that <code>js</code> is among the file extensions to keep</li>
+<li><code>--exclude &lt;EXCLUDE&gt;</code> — One or more glob patterns to exclude from the imported modules</li>
+</ul>
+<h2 id="sketch-repo"><a class="header" href="#sketch-repo"><code>sketch repo</code></a></h2>
+<p>Creates a new git repo from a preset</p>
+<p><strong>Usage:</strong> <code>sketch repo [OPTIONS] [DIR]</code></p>
+<h6 id="arguments-10"><a class="header" href="#arguments-10"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;DIR&gt;</code> — The directory where the new repo should be generated. [default: <code>.</code>]</li>
+</ul>
+<h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — Selects a git preset from a configuration file</li>
+<li><code>--no-pre-commit</code> — Do not generate a pre-commit config</li>
+<li><code>--pre-commit &lt;PRE_COMMIT&gt;</code> — Selects a pre-commit preset</li>
+<li><code>--gitignore &lt;GITIGNORE&gt;</code> — Selects a gitignore preset</li>
+<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many individual templates or templating presets to render in the new repo</li>
+<li><code>-r</code>, <code>--remote &lt;REMOTE&gt;</code> — The link of the git remote to use for the new repo</li>
 </ul>
 <h2 id="sketch-new"><a class="header" href="#sketch-new"><code>sketch new</code></a></h2>
-<p>Generates a new config file with some optional initial values defined via the cli flags</p>
+<p>Generates a new config file</p>
 <p><strong>Usage:</strong> <code>sketch new [OUTPUT]</code></p>
-<h6 id="arguments-1"><a class="header" href="#arguments-1"><strong>Arguments:</strong></a></h6>
+<h6 id="arguments-11"><a class="header" href="#arguments-11"><strong>Arguments:</strong></a></h6>
 <ul>
 <li><code>&lt;OUTPUT&gt;</code> — The output file [default: sketch.yaml]</li>
 </ul>
 <h2 id="sketch-render"><a class="header" href="#sketch-render"><code>sketch render</code></a></h2>
 <p>Renders a single template to a file or to stdout</p>
 <p><strong>Usage:</strong> <code>sketch render [OPTIONS] &lt;OUTPUT_PATH|--stdout&gt;</code></p>
-<h6 id="arguments-2"><a class="header" href="#arguments-2"><strong>Arguments:</strong></a></h6>
+<h6 id="arguments-12"><a class="header" href="#arguments-12"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;OUTPUT_PATH&gt;</code> — The output file (relative from the cwd)</li>
-</ul>
-<h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
-<ul>
-<li><code>--stdout</code> — Output the result to stdout</li>
-<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the template file, from the cwd</li>
-<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to use</li>
-<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template</li>
-</ul>
-<h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
-<p>Renders a templating preset defined in the configuration file</p>
-<p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt;</code></p>
-<h6 id="arguments-3"><a class="header" href="#arguments-3"><strong>Arguments:</strong></a></h6>
-<ul>
-<li><code>&lt;ID&gt;</code> — The id of the preset</li>
-</ul>
-<h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
-<p>Renders a template and launches it as a command</p>
-<p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
-<h6 id="arguments-4"><a class="header" href="#arguments-4"><strong>Arguments:</strong></a></h6>
-<ul>
-<li><code>&lt;CMD&gt;</code> — The literal definition for the command's template</li>
+<li><code>&lt;OUTPUT_PATH&gt;</code> — The output path for the generated file</li>
 </ul>
 <h6 id="options-6"><a class="header" href="#options-6"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file</li>
-<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id of the template to use</li>
+<li><code>--stdout</code> — Prints the result to stdout</li>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the template file</li>
+<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to use (a name for config-defined templates, or a relative path to a file from <code>templates_dir</code>)</li>
+<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template</li>
+</ul>
+<h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
+<p>Renders a templating preset</p>
+<p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt; [OUT_DIR]</code></p>
+<h6 id="arguments-13"><a class="header" href="#arguments-13"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;ID&gt;</code> — The id of the preset</li>
+<li><code>&lt;OUT_DIR&gt;</code> — The base path to join to relative output paths. [default: <code>.</code>]</li>
+</ul>
+<h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
+<p>Renders a template and executes it as a shell command</p>
+<p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
+<h6 id="arguments-14"><a class="header" href="#arguments-14"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;CMD&gt;</code> — The literal definition for the template (incompatible with <code>--file</code> or <code>--template</code>)</li>
+</ul>
+<h6 id="options-7"><a class="header" href="#options-7"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>--print-cmd</code> — Prints the rendered command to stdout before executing it</li>
+<li><code>-s</code>, <code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
+<li><code>--cwd &lt;CWD&gt;</code> — The cwd for the command to execute [default: <code>.</code>]</li>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file, as an absolute path or relative to the cwd</li>
+<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id of the template to use (a name for config-defined templates, or a relative path to a file from <code>templates_dir</code>)</li>
 </ul>
 <hr/>
 <p><small><i>
@@ -346,27 +517,48 @@ This document was generated automatically by
 </i></small></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="configuration"><a class="header" href="#configuration">Configuration</a></h1>
 <p>Sketch supports <code>yaml</code>, <code>json</code> and <code>toml</code> formats for its configuration file.</p>
-<p>The configuration file can be manually specified with the <code>-c</code> or <code>--config</code> flag. If none is provided, the cli will automatically look for a file named <code>sketch.{yaml, json, toml}</code> in the cwd. If none is found, then it will look in the <code>XDG_CONFIG_HOME</code> directory. If no config is found there, it will use default values.</p>
-<p>You can also use the <code>--ignore-config-file</code> flag to temporarily ignore configuration files and only use cli-set values.</p>
+<p>The strategy for detecting the configuration file works like this:</p>
+<ul>
+<li>If a file is manually specified with <code>--config</code>, that is used.</li>
+<li>Any file named <code>sketch.{yaml, json, toml}</code> in the cwd is used.</li>
+<li>Any file named <code>sketch.{yaml, json, toml}</code> in <code>XDG_CONFIG_HOME</code> or <code>$HOME/.config</code> is used.</li>
+<li>No file detected, using default settings.</li>
+</ul>
+<p>Some of the values from configuration files can also be set via cli flags. When a value is set in a config file but also in a command, the value from the command has the higher priority.</p>
+<p>You can also use the <code>--ignore-config</code> flag to temporarily ignore configuration files and only use cli-set values.</p>
+<h1 id="generating-config-files"><a class="header" href="#generating-config-files">Generating Config Files</a></h1>
+<p>You can use the <code>sketch new &lt;OUTPUT&gt;</code> command to generate a new configuration file in the desired output file and format (the default output is <code>sketch.yaml</code>).</p>
+<h1 id="extending-configurations"><a class="header" href="#extending-configurations">Extending Configurations</a></h1>
+<p>Configuration files can extend one another by using the <code>extends</code> field:</p>
+<pre><code class="language-yaml">extends: ["other_config.yaml"]
+</code></pre>
+<p>Where the path being used can be either an absolute path or a relative path starting from the original config file.</p>
+<p>The <a href="configuration/../presets/summary.html#extending-presets">merging strategy</a> for config files is the same as for all the other presets.</p>
 <h1 id="top-level-configuration"><a class="header" href="#top-level-configuration">Top Level Configuration</a></h1>
-<p>These are the defaults for the top level configuration values:</p>
-<pre><code class="language-yaml"># yaml-language-server: $schema=../schemas/latest.json
+<p>These are some of the default settings for the top level configuration values:</p>
+<pre><code class="language-yaml"># The relative path from the config file (or from the cwd, if set via the cli flag)
+# to the directory containing templates.
+templates_dir: null
 
-# The root path for the generated files.
-# All output paths will start from this directory.
-root_dir: .
+# A map of template definitions.
+templates: {}
 
-# Enables debugging mode
-debug: false
+# The configuration for typescript-related commands.
+typescript: null
+
+# Various kinds of presets
+pre_commit_presets: {}
+
+gitignore_presets: {}
+
+templating_presets: {}
+
+git_presets: {}
+
+docker_compose_presets: {}
 
 # Extends other configuration files
 extends: []
-
-# Settings for the .gitignore file generated via the `init` command.
-# This can be:
-# - A list of directives (to add to the defaults)
-# - A literal string (to replace defaults)
-gitignore: []
 
 # Variables for templates
 vars: {}
@@ -374,60 +566,9 @@ vars: {}
 # Do not overwrite existing files
 no_overwrite: false
 
-# The pre-commit settings, used for the .pre-commit-config file
-# generated with the `init` command.
-# Can be:
-# - A boolean, to use defaults or disable it altogether
-# - A list of repos to populate the config with
-# The default setting includes just the gitleaks repo.
-pre_commit: true
-
 # The shell to use for the `exec` command. Defaults to `cmd.exe` on windows and `sh` elsewhere.
 shell: null
-
-# A map of template definitions.
-templates: {}
-
-# A map of templating presets.
-templating_presets: {}
-
-# The relative path from the config file (or from the cwd, if set via the cli flag)
-# to the directory containing templates.
-templates_dir: null
-
-# The configuration for typescript-related commands.
-typescript: null
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="generating-config-files"><a class="header" href="#generating-config-files">Generating Config Files</a></h1>
-<p>You can use the <code>sketch new</code> command to generate a new configuration file in the desired output file and format.
-The default is <code>sketch.yaml</code>, but any name is supported as long as the format is either <code>json</code>, <code>toml</code> or <code>yaml</code>, and the configuration file is specified with the <code>-c</code> or <code>--config</code> flag.</p>
-<p>If extra arguments are provided, the generated config will populated with the values of these arguments.
-So if we run <code>sketch --templates-dir "/path/to/templates"</code>, <code>templates_dir</code> will be set to that path in the generated config.</p>
-<blockquote>
-<p>⚠️ Since the default <code>sketch.yaml</code> file is always automatically detected, if there is such a file in the cwd and you want to create a new config with certain values, you need to use <code>--ignore-config-file</code> to ignore the config file's values.</p>
-</blockquote>
-<p>Command:</p>
-<pre><code class="language-txt">sketch --templates-dir tests/templates --shell zsh --set hello="there" --set general="kenobi" new tests/output/generated_configs/with_extras.yaml
-</code></pre>
-<p>Output:</p>
-<pre><code class="language-yaml">shell: zsh
-root_dir: tests/output
-templates_dir: tests/templates
-no_overwrite: false
-pre_commit: true
-templates: {}
-templating_presets: {}
-vars:
-  hello: there
-  general: kenobi
-</code></pre>
-<h1 id="repo-setup"><a class="header" href="#repo-setup">Repo Setup</a></h1>
-<p>You can also use the <code>init</code> command to create a new git repo. This command will:</p>
-<ol>
-<li>Create a new git repo in the specified <code>root_dir</code>.</li>
-<li>If a <code>--remote</code> is provided, it will also add that remote as the origin/main for the repo.</li>
-<li>Unless <code>pre-commit</code> is disabled, it will generate a new .pre-commit-config.yaml file in the root, with the repos specified in the config file (if there are any, otherwise it will just add the gitleaks repo). It will then run <code>pre-commit install</code> to install the given hooks.</li>
-</ol>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="lsp-integration"><a class="header" href="#lsp-integration">Lsp Integration</a></h1>
 <p>In order to ensure the best development experience, it is highly recommended to set up your IDE to load the json schema for Sketch's configuration file.</p>
 <p>This will provide type-safety, autocompletion and additional documentation when writing config files.</p>
@@ -446,121 +587,213 @@ vars:
 <p>Toml:</p>
 <pre><code class="language-toml">#:schema https://github.com/Rick-Phoenix/sketch/blob/main/schemas/latest.json
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="extensible-configurations"><a class="header" href="#extensible-configurations">Extensible Configurations</a></h1>
-<p>Configuration files can extend one another by using the <code>extends</code> field:</p>
-<pre><code class="language-yaml">extends: ["other_config.yaml"]
-</code></pre>
-<p>Where the path being used can be either an absolute path or a relative path starting from the original config file.</p>
-<p>The merging strategy works as follows:</p>
+<h1 id="external-configs"><a class="header" href="#external-configs">External Configs</a></h1>
+<p>As of now, these external configurations defined with sketch are all <strong>fully typed and documented</strong>, so they benefit from the same lsp integration as the rest of the other settings:</p>
 <ul>
-<li>For conflicting values, such as opposite booleans, the previous value will be overridden.</li>
-<li>For non-conflicting values such as maps (for example, the global template vars map), the values will be merged.</li>
+<li><code>.pre-commit-config.yaml</code></li>
+<li><code>.oxlintrc.json</code></li>
+<li><code>pnpm-workspace.yaml</code></li>
+<li><code>package.json</code></li>
+<li><code>tsconfig.json</code></li>
+<li><code>compose.yaml</code> (Docker)</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="templating"><a class="header" href="#templating">Templating</a></h1>
 <p>Sketch uses the <a href="https://keats.github.io/tera/docs/">Tera</a> templating engine to render custom templates. Every template, whether it's defined in a file, in the config file, or inlined, can take advantage of all of Tera's functionalities, like using filters, functions, defining and using macros, performing operations and importing other templates.</p>
-<h1 id="special-variables"><a class="header" href="#special-variables">Special variables</a></h1>
-<p>Sketch provides some special variables prefixed with to get access to some commonly used information. All of the following variables are available in templates, prefixed with <code>sketch_</code> (i.e. <code>sketch_os</code> and so on).</p>
+<div class="warning">
+Since all autoescaping is disabled in templates, you should always only use templates that you made or trust.
+</div>
+<h1 id="special-variables"><a class="header" href="#special-variables">Special Variables</a></h1>
+<p>Sketch provides some special variables to get access to commonly used values such as the home directory.</p>
+<p>All of the following variables are available in templates, prefixed with <code>sketch_</code> (i.e. <code>sketch_os</code> and so on).</p>
 <ul>
 <li><code>cwd</code></li>
-<li><code>tmp_dir</code> (obtained with env::temp_dir)</li>
-<li><code>home</code> (obtained with env::home_dir)</li>
-<li><code>os</code> (env OS)</li>
-<li><code>user</code> (env USER)</li>
-<li><code>hostname</code> (env HOSTNAME)</li>
-<li><code>arch</code> (env HOSTTYPE)</li>
-<li><code>xdg_config</code> (env XDG_CONFIG_HOME)</li>
-<li><code>xdg_data</code> (env XDG_DATA_HOME)</li>
-<li><code>xdg_state</code> (env XDG_STATE_HOME)</li>
-<li><code>xdg_cache</code> (env XDG_CACHE_HOME)</li>
+<li><code>tmp_dir</code> (from <code>env::temp_dir</code>)</li>
+<li><code>home</code> (from <code>env::home_dir</code>)</li>
+<li><code>os</code> (from <code>CARGO_CFG_TARGET_OS</code> or env <code>OS</code>)</li>
+<li><code>os_family</code> (from <code>CARGO_CFG_TARGET_FAMILY</code>)</li>
+<li><code>arch</code> (from <code>CARGO_CFG_TARGET_ARCH</code> or env <code>HOSTTYPE</code>)</li>
+<li><code>user</code> (env <code>USER</code>)</li>
+<li><code>hostname</code> (env <code>HOSTNAME</code>)</li>
+<li><code>xdg_config</code> (env <code>XDG_CONFIG_HOME</code>)</li>
+<li><code>xdg_data</code> (env <code>XDG_DATA_HOME</code>)</li>
+<li><code>xdg_state</code> (env <code>XDG_STATE_HOME</code>)</li>
+<li><code>xdg_cache</code> (env <code>XDG_CACHE_HOME</code>)</li>
+<li><code>is_windows</code> (from <code>cfg!(windows)</code>)</li>
+<li><code>is_unix</code> (from <code>cfg!(unix)</code>)</li>
+<li><code>is_wsl</code> (checks <code>/proc/sys/kernel/osrelease</code>)</li>
 </ul>
-<h1 id="filters-and-functions"><a class="header" href="#filters-and-functions">Filters and functions</a></h1>
-<p>All of the builtin filters and functions for <a href="https://keats.github.io/tera/docs/">Tera</a> are available.</p>
-<p>On top of that, Sketch adds a <code>uuid</code> function that can be used to generate a v4 UUID.</p>
-<h2 id="global-and-local-context"><a class="header" href="#global-and-local-context">Global and Local Context</a></h2>
-<p>Variables are evaluated based on the locality of their context. Variables set via cli with the <code>--set</code> flag have the highest priority, followed by variables defined in a local context (the <code>context</code> field in a template preset) and by global variables defined in the config file.</p>
-<blockquote>
-<p>⚠️ Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="rendering-templates"><a class="header" href="#rendering-templates">Rendering Templates</a></h1>
-<p>Templates can be defined in files or directly within a command. The variables can also be defined in the config file or as part of a command.</p>
-<pre><code class="language-toml"># This will be the starting path for the templates' output paths
-root_dir = "../output/custom_templates"
+<h1 id="filters-and-functions"><a class="header" href="#filters-and-functions">Filters And Functions</a></h1>
+<p>All of the builtin functionalities for <a href="https://keats.github.io/tera/docs/">Tera</a> are available.</p>
+<p>On top of that, Sketch adds some extra filters and functions.</p>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<ul>
+<li><code>uuid</code> (generates a v4 UUID)</li>
+</ul>
+<h2 id="filters"><a class="header" href="#filters">Filters</a></h2>
+<h3 id="strings"><a class="header" href="#strings">Strings</a></h3>
+<ul>
+<li><code>capture(regex=REGEX)</code> (matches a regex once and returns the named capture groups)</li>
+<li><code>capture_many(regex=REGEX)</code> (matches a regex repetitively and returns the list of named capture groups)</li>
+<li><code>semver</code> (parses a cargo-style semver and returns the segments)</li>
+<li><code>matches_semver(target=TARGET)</code> (checks if a cargo-style semver matches a target)</li>
+<li><code>strip_prefix(prefix=PREFIX)</code> (strips a prefix from a string, if present)</li>
+<li><code>strip_suffix(suffix=SUFFIX)</code> (strips a suffix from a string, if present)</li>
+</ul>
+<h3 id="filesystem"><a class="header" href="#filesystem">Filesystem</a></h3>
+<ul>
+<li><code>basename</code> (gets the basename of a directory/file)</li>
+<li><code>parent_dir</code> (gets the parent directory of a directory/file)</li>
+<li><code>is_file</code> (checks if a path is a file)</li>
+<li><code>is_dir</code> (checks if a path is a directory)</li>
+<li><code>is_absolute</code> (checks if a path is absolute)</li>
+<li><code>is_relative</code> (checks if a path is relative)</li>
+<li><code>absolute</code> (makes a path absolute)</li>
+<li><code>relative(from=PATH)</code> (returns the relative path between two paths)</li>
+<li><code>read_dir</code> (returns the list of the files contained in a directory and its subdirectories)</li>
+<li><code>glob(pattern=GLOB)</code> (returns the glob matching entries in a directory and its subdirectories)</li>
+<li><code>matches_glob(pattern=GLOB)</code> (checks if a path matches a glob pattern)</li>
+</ul>
+<h1 id="examples-1"><a class="header" href="#examples-1">Examples</a></h1>
+<p>Template:</p>
+<pre><code class="language-jinja">{# Using special variables -#}
 
-vars = { my_var = 15 }
+Current arch is: {{ sketch_arch }}
+Current os is: {{ sketch_os }}
+Current os family is: {{ sketch_os_family }}
+Is unix: {{ sketch_is_unix }}
 
-# We can define templates directly in the config file
-templates = { lit_template = "my_var: {{ my_var }}" }
+{# Functions and filters -#}
 
-# Or as files inside a directory
-templates_dir = "../templates"
+A random uuid is: {{ uuid() }}
+
+{# Generating a random alphanumeric string -#}
+A random string is: {{ uuid() | truncate(length=6, end="") }}
+
+{# Generating a random number -#}
+A random number is: {{ get_random(start=100000, end=9999999) }}
+
+Now is {{ now(utc=true) }}
+
+{# Assigning an env to a variable -#}
+{%- set greeting = get_env(name="GREETING") -%}
+
+{#- Manipulating data -#}
+{%- set segments = greeting | split(pat=",") -%}
+First segment is: {{ segments[0] }}
+Second segment is: {{ segments[1] }}
+
+{% set some_path = "mydir/myfile" -%}
+Basename is: {{ some_path | basename }}
+Parent dir is: {{ some_path | parent_dir }}
+
+{% set dir = "../sketch" -%}
+
+{% if dir | is_dir -%}
+It's a dir!
+{% endif -%}
+
+{% set file = "Cargo.toml" -%}
+
+{% if file | is_file -%}
+It's a file!
+{%- endif %}
+
+Matches glob: {{ file | matches_glob(pattern="**/*.toml") }}
+
+{%- set captures = file | capture(regex="(?&lt;path&gt;.*)\.(?&lt;extension&gt;\w+)") %}
+
+Path is: {{ captures['path'] }}
+Extension is: {{ captures['extension'] }}
+
+{% set words = "They're taking the hobbits to Isengard" | capture_many(regex="(?&lt;word&gt;[\w']+)") -%}
+
+{% for capture in words -%}
+{{ capture['word'] -}} {% if not loop.last %}{{ " " }}{% endif -%}
+{%- endfor -%}!
+
+{% set version = "v0.1.0" -%}
+
+{% set segments = version | semver -%}
+Major is: {{ segments['major'] }}
+Minor is: {{ segments['minor'] }}
+Patch is: {{ segments['patch'] }}
+
+Version matches &gt;=0.1.0: {{ version | matches_semver(target="&gt;=0.1.0") }}
+Version matches &gt;=0.2.0: {{ version | matches_semver(target="&gt;=0.2.0") }}
+
+To camelCase: {{ "my_var" | camel }}
+To snake_case: {{ "myVar" | snake }}
+To SCREAMING_CASE: {{ "myVar" | upper_snake }}
+To PascalCase: {{ "myVar" | pascal }}
+
+Luke, I am your {{ "grandfather" | strip_prefix(prefix="grand") }}!
+
+{% set dir = "../examples/templating/templates" -%}
+
+{% for entry in dir | glob(pattern="example.j2") -%}
+Entry: {{ entry }}
+{% endfor %}
 </code></pre>
-<p>We can then render them singularly, or in groups.</p>
+<p>Cmd:</p>
 <blockquote>
-<p>ℹ️ Single templates can be rendered to stdout with the --stdout flag.</p>
+<p><code>{{#include ../../../sketch/tests/output/templating_examples/cmd}}</code></p>
 </blockquote>
-<h1 id="rendering-a-single-template"><a class="header" href="#rendering-a-single-template">Rendering A Single Template</a></h1>
-<h2 id="using-a-file"><a class="header" href="#using-a-file">Using A File</a></h2>
-<p>If <code>templates_dir</code> is set, all the files in <code>templates_dir</code> can be referenced with their ID, which is the relative path to them from <code>templates_dir</code>.</p>
-<p>So if we have this directory structure in our <code>templates_dir</code>:</p>
-<pre><code>.
-├── abc.j2
-└── subdir
-    └── nested.j2
+<p>Output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/templating_examples/output}}
 </code></pre>
-<p>We can render the contents of <code>nested.j2</code> by running</p>
-<blockquote>
-<p><code>sketch render --id subdir/nested.j2 from_template_file.yaml</code></p>
-</blockquote>
-<p>However, we can also render content from any file, by using the <code>-f</code> flag. In this case, the relative paths will be resolved from the cwd.</p>
-<p>Example:</p>
-<blockquote>
-<p><code>sketch render -f tests/custom_templates/single_file.j2 from_single_file.yaml</code></p>
-</blockquote>
-<h2 id="from-a-config-definition"><a class="header" href="#from-a-config-definition">From A Config Definition</a></h2>
-<p>Templates can be defined inside the configuration file:</p>
-<pre><code class="language-yaml">templates = { lit_template = "my_var: {{ my_var }}" }
+<h1 id="context-priority"><a class="header" href="#context-priority">Context Priority</a></h1>
+<p>Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):</p>
+<ul>
+<li>Global variables</li>
+<li>Preset context</li>
+<li>Single template context</li>
+<li>Cli-set variables</li>
+</ul>
+<div class="warning">
+Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
+</div>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rendering-a-template"><a class="header" href="#rendering-a-template">Rendering A Template</a></h1>
+<p>We can render a template to a file or to stdout with the command <code>sketch render</code>.</p>
+<h2 id="from-a-configuration-file"><a class="header" href="#from-a-configuration-file">From A Configuration File</a></h2>
+<p>A template can be defined as simple text in a config file, inside the <code>templates</code> map. In this case, you can refer to this template by using its map key. This is the easiest method, but it also means slightly worse IDE integration for things like snippets and syntax highlighting.</p>
+<pre><code class="language-yaml">templates_dir: templates
+
+vars:
+  location: Isengard
+  greeting: hello
+  general: kenobi
+  meal: breakfast
+
+templates:
+  hobbits: "they're taking the hobbits to {{ location }}!"
+  breakfast: "what about second {{ meal }}?"
 </code></pre>
+<p>Command:</p>
 <blockquote>
-<p><code>sketch render --id lit_template from_config_template.yaml</code></p>
+<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/from_id}}</code></p>
+</blockquote>
+<h2 id="from-templates_dir"><a class="header" href="#from-templates_dir">From <code>templates_dir</code></a></h2>
+<p>The best method is to use a file inside <code>templates_dir</code>. With this method, the template's ID becomes the relative path from <code>templates_dir</code>. This method provides better IDE integration if you have set up snippets or syntax highlighting for <code>jinja</code> files (Tera, the templating engine used by <code>sketch</code> is based on jinja).</p>
+<h3 id="example"><a class="header" href="#example">Example</a></h3>
+<p>Tree structure of <code>templates_dir</code>:</p>
+<pre><code>{{#include ../../../sketch/tests/output/custom_templates/tree:2:}}
+</code></pre>
+<p>Command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/from_template_file}}</code></p>
+</blockquote>
+<blockquote>
+<p>ℹ️ You can also use the <code>-f</code> flag to render a template from any file, even outside <code>templates_dir</code>.</p>
 </blockquote>
 <h2 id="from-literal-definition"><a class="header" href="#from-literal-definition">From Literal Definition</a></h2>
-<p>...or directly as part of the command:</p>
+<p>Alternatively, a template can also be defined directly within a command:</p>
 <blockquote>
-<p><code>sketch --set location="Isengard" render --content "they're taking the hobbits to {{ location }}!" from_literal.txt</code></p>
+<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}</code></p>
 </blockquote>
-<h1 id="rendering-presets"><a class="header" href="#rendering-presets">Rendering Presets</a></h1>
-<p>Templates can also be defined in groups, which can be rendered all at once starting from the same <code>root_dir</code>.</p>
-<p>This is how groups are defined:</p>
-<pre><code class="language-toml"># A group of templates that will be rendered together
-templating_presets.test = [
-  # Full path to the template file from `templates_dir`
-  { template = "subdir/nested.j2", output = "new_dir/nested.yaml" },
-
-  # Only using the global variables
-  { template = "lit_template", output = "with_global_var.yaml" },
-
-  # Using a local override
-  { template = "lit_template", output = "with_override.yaml", context = { my_var = 20 } },
-
-  # Defining a literal template
-  { template = { name = "literal_inlined", content = "my_var: {{ my_var }}" }, output = "literal_inlined.yaml" },
-]
-</code></pre>
-<p>When we run the command</p>
-<blockquote>
-<p><code>sketch render-preset test</code></p>
-</blockquote>
-<p>These templates will be rendered together, so that the output of the specified <code>root_dir</code> will look like this:</p>
-<pre><code>.
-├── literal_inlined.yaml
-├── new_dir
-│   └── nested.yaml
-├── with_global_var.yaml
-└── with_override.yaml
-</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="executing-templates"><a class="header" href="#executing-templates">Executing Templates</a></h1>
 <p>With the <code>sketch exec</code> command, you can render a template and then execute it as a shell command.</p>
 <p>To do this, you can use a regular file, a template with an id (either defined in the config file or inside the <code>templates_dir</code>), or even one defined within the command itself.</p>
+<h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
 <h3 id="from-template"><a class="header" href="#from-template">From Template</a></h3>
 <p>Let's say that we have a file named <code>cmd_template.j2</code> inside our <code>templates_dir</code>, and it looks like this:</p>
 <pre><code class="language-txt">echo "{{ category }} engine... {{ category }}... argh!" &gt; output_from_templates_dir.txt
@@ -570,443 +803,749 @@ templating_presets.test = [
 </blockquote>
 <p>We can refer to it by its id:</p>
 <blockquote>
-<p><code>sketch --set category="gp2" exec -t cmd_template.j2</code></p>
+<p><code>{{#include ../../../sketch/tests/output/commands_tests/commands/exec_from_template_cmd}}</code></p>
 </blockquote>
-<p>This will create a file containing</p>
-<pre><code class="language-txt">gp2 engine... gp2... argh!
+<p>This will trigger the command and create a file containing</p>
+<pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/output_from_templates_dir.txt}}
 </code></pre>
 <h3 id="from-file"><a class="header" href="#from-file">From File</a></h3>
 <p>We can also use a file that is not inside <code>templates_dir</code> by using the <code>-f</code> flag and providing the path to said file.  Relative paths will be resolved starting from the cwd.</p>
 <p>So let's say that we have this template file:</p>
 <pre><code class="language-txt">echo "all the time you have to leave the {{ something }}!" &gt; output_from_file.txt
 </code></pre>
-<p>We launch the command like this:</p>
+<p>Command:</p>
 <blockquote>
-<p><code>sketch --set something="space" exec -f tests/commands_tests/cmd_from_file.j2</code></p>
+<p><code>{{#include ../../../sketch/tests/output/commands_tests/commands/cmd_from_file}}</code></p>
 </blockquote>
-<p>To create a file containing:</p>
-<pre><code class="language-txt">all the time you have to leave the space!
+<p>Output:</p>
+<pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/output_from_file.txt}}
 </code></pre>
 <h3 id="from-literal-template"><a class="header" href="#from-literal-template">From Literal Template</a></h3>
 <p>Templates can also be defined directly as part of the command.</p>
+<p>Command:</p>
 <blockquote>
-<p><code>sketch --set general="kenobi" exec 'echo "hello there!\ngeneral {{ general }}." &gt; command_output.txt'</code></p>
+<p><code>{{#include ../../../sketch/tests/output/commands_tests/commands/exec_literal_cmd}}</code></p>
 </blockquote>
-<p>This creates a file containing:</p>
-<pre><code class="language-txt">hello there!
-general kenobi.
+<p>Output:</p>
+<pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/command_output.txt}}
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="typescript-projects"><a class="header" href="#typescript-projects">Typescript Projects</a></h1>
-<p>Sketch can be used to quickly generate Typescript monorepos and packages, and uses modular and extensible presets to define some reusable elements that can be shared among different kinds of typical TS projects.</p>
-<p>These are the top level configuration settings for Typescript projects, with their default values:</p>
-<pre><code class="language-yaml"># yaml-language-server: $schema=../../schemas/latest.json
+<div style="break-before: page; page-break-before: always;"></div><h1 id="rendering-a-preset"><a class="header" href="#rendering-a-preset">Rendering A Preset</a></h1>
+<p>Rendering a single template is for cases when we need a simpler or more flexible setup. But things become more interesting with templating presets, which can allow you to define entire project structures and then replicate them very easily (while also being able to modify the context at different levels).</p>
+<p>Presets can be rendered with the <code>render-preset</code> command, or generated automatically with <a href="templating/../presets/git.html#adding-templates">another preset</a>, such as a git repo preset.</p>
+<h1 id="creating-a-preset"><a class="header" href="#creating-a-preset">Creating A Preset</a></h1>
+<p>A preset contains an optional context (which overrides the global context), and a list of two kinds of items, which are best used under different kinds of situations:</p>
+<h2 id="individual-template"><a class="header" href="#individual-template">Individual Template</a></h2>
+<ul>
+<li>An individual template (with manually controlled output path and local context)</li>
+</ul>
+<h3 id="example-1"><a class="header" href="#example-1">Example</a></h3>
+<pre><code class="language-yaml">templating_presets:
+
+  lotr:
+    # Group context, lower priority
+    context: {}
+    templates:
+      # Selecting individual templates
+      - template: hobbits
+        output: hobbits.txt
+        # Individual context, higher priority
+        context: {}
+      - template: breakfast
+        output: subdir/breakfast.txt
+</code></pre>
+<p>Command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/collection_preset}}</code></p>
+</blockquote>
+<p>Tree output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/custom_templates/lotr/tree_output.txt:2:}}
+</code></pre>
+<h2 id="structured-template"><a class="header" href="#structured-template">Structured Template</a></h2>
+<ul>
+<li>A path to a directory inside <code>templates_dir</code>, to extract all the files inside of it recursively and render them in the output directory, with the same file tree structure</li>
+</ul>
+<h3 id="example-2"><a class="header" href="#example-2">Example</a></h3>
+<blockquote>
+<p>ℹ️ Any template files that end with the <code>.j2</code>, <code>.jinja</code> or <code>.jinja2</code> extensions will have them automatically removed. So <code>myfile.json.j2</code> will just become <code>myfile.json</code>.</p>
+</blockquote>
+<p>Let's say that this is our <code>templates_dir</code>:</p>
+<pre><code>{{#include ../../../sketch/tests/output/custom_templates/tree:2:}}
+</code></pre>
+<p>And we define this preset, which is meant to reproduce the entire file structure of <code>subdir</code> in the target directory.</p>
+<pre><code class="language-yaml">templating_presets:
+  structured:
+    # Selecting all the files inside this directory
+    # and its descendants
+    templates:
+      - dir: subdir
+        # Glob patterns to exclude certain templates
+        exclude:
+          - "some/glob/pattern/*"
+</code></pre>
+<p>Command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/structured_preset}}</code></p>
+</blockquote>
+<p>Tree output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
+</code></pre>
+<h1 id="extending-templating-presets"><a class="header" href="#extending-templating-presets">Extending Templating Presets</a></h1>
+<p>Templating presets are extensible. When a preset is being extended, its templates will be added to the receiving preset, and the two context maps will be merged, with the new context overwriting the previous context in case of conflicting variables.</p>
+<pre><code class="language-yaml">  extended:
+    extends_presets:
+      - lotr
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="presets-1"><a class="header" href="#presets-1">Presets</a></h1>
+<p>Templating presets are not the only way to create reusable project structures and configurations. Sketch also supports presets for some of the most common elements that you would find in a typical project.</p>
+<p>Some of these presets are used just for defining an easily reproducible configuration, while others also include extra features such as extensibility.</p>
+<p>As of now, these presets are available:</p>
+<ul>
+<li>
+<p>Templating</p>
+<ul>
+<li>Templating presets (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Docker</p>
+<ul>
+<li>Docker Compose file (extensible)</li>
+<li>Docker Compose service (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Git</p>
+<ul>
+<li>Git repo</li>
+<li><code>.gitignore</code> (extensible)</li>
+<li><code>.pre-commit-config.yaml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Rust</p>
+<ul>
+<li><code>Cargo.toml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Typescript</p>
+<ul>
+<li>Typescript package</li>
+<li><code>pnpm-workspace.yaml</code> (extensible)</li>
+<li><code>package.json</code> (extensible, with <a href="presets/../ts/smart_features.html">extra features</a>)</li>
+<li><code>tsconfig.json</code> (extensible, with merging of values for the <code>references</code>, <code>include</code>, <code>exclude</code> and <code>files</code> fields)</li>
+<li><code>.oxlintrc.json</code> (extensible)</li>
+<li><code>vitest</code> (not a full configuration for <code>vitest.config.ts</code>, but a basic testing setup)</li>
+</ul>
+</li>
+</ul>
+<p>These can be generated either as part of another preset, or with a command (or both, in some cases) you can find more information in the rest of the documentation and in the <a href="presets/../cli_docs.html">cli reference</a>.</p>
+<h1 id="extending-presets"><a class="header" href="#extending-presets">Extending Presets</a></h1>
+<p>Some presets can be extended by inheriting the value from one or multiple presets.</p>
+<p>When a preset is extended, the merging strategy for their fields works like this:</p>
+<ul>
+<li>Collections are merged and in almost all cases, deduped and sorted (except for cases where order matters such as a list of command arguments)</li>
+<li>Values that are also extensible (such as <code>compilerOptions</code> in tsconfig) themselves will be merged with the same rules as above</li>
+<li>All other values are overwritten, except if the previous value was present and the new value is <code>null</code>. This is to avoid merging values that come from partially-defined presets, where the missing fields are all unset. Generally speaking, the correct strategy to extend presets is to define a base and then <code>add</code> elements to it, rather than replacing them.</li>
+</ul>
+<h1 id="examples-3"><a class="header" href="#examples-3">Examples</a></h1>
+<p>This is an in-depth example of the various kinds of presets that are available:</p>
+<pre><code class="language-yaml">
+# `Cargo.toml` presets
+cargo_toml_presets:
+  base:
+    dependencies:
+      regex: "1"
+      serde: "1"
+
+  extended:
+    extends_presets:
+      - base
+    dependencies:
+      tokio: "1"
+
+# Docker Compose presets
+docker:
+  service_presets:
+    # A base service preset with common configurations
+    base_service:
+      environment:
+        TZ: Europe/Berlin
+      networks:
+        - my_network
+
+    # A preset for a db service
+    database:
+      extends_presets:
+        - base_service
+      image: postgres
+
+  compose_presets:
+    # Base preset for a compose file
+    base:
+      volumes:
+        my_volume:
+          external: true
+      networks:
+        my_network:
+          external: true
+
+    extended:
+      extends_presets:
+        - base
+      services:
+        # Using the service preset by ID
+        db: database
+        my_service:
+          networks:
+            - my_network
+          volumes:
+            - my_volume:/target
+      volumes:
+        my_other_volume:
+          external: true
+
+# Gitignore presets
+gitignore_presets:
+  # Can be a string
+  base:
+    content: |
+      *.env
+      dist
+  # Or a list of strings
+  ts:
+    extends_presets:
+      # When being merged, the new entries are placed at the top
+      - base
+    content:
+      - "*.tsBuildInfo"
+      - node_modules
+
+# Pre-commit presets
+pre_commit_presets:
+  # Commonly used repo
+  base:
+    repos:
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.28.0
+        hooks:
+          - id: gitleaks
+
+  # Hooks specific to typescript projects
+  typescript:
+    # Extending the base preset
+    extends_presets:
+      - base
+    repos:
+      - repo: local
+        hooks:
+          - id: oxlint
+            name: oxlint
+            entry: oxlint
+            language: system
+            files: '\.svelte$|\.js$|\.ts$'
+            types: [file]
+
+# Git presets
+git_presets:
+  ts_package:
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
+
+    # Templates that will be generated with this preset
+    # starting from the new repo's root
+    with_templates:
+      - id: dockerfile
 
 typescript:
-  # Convert `latest` to a version range for dependencies
-  no_convert_latest_to_range: false
+  no_default_deps: true
 
-  # Use this kind of version range when converting from `latest`
-  version_range: patch
-
-  # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
-  no_default_deps: false
-
-  # Use the pnpm catalog for default dependencies
-  catalog: false
-
-  package_manager: pnpm
-
-  # Configuration for the generated pnpm-workspace.yaml file
-  pnpm_config:
-    # All dirs listed here will be created automatically
-    packages: ["packages/*"]
-
-  # A map containing extensible package.json presets
-  package_json_presets: {}
-
-  # A map containing extensible package presets
-  package_presets: {}
-
-  # A map containing extensible tsconfig presets
-  tsconfig_presets: {}
-
-  # A map of contributors and maintainers, which can be referred to
-  # in package.json presets with their ID
-  people: {}
-
-  # The configuration for the root package
-  # (only relevant when creating a monorepo)
-  root_package: null
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
-<p>Once we have our settings (or not, if we want to use defaults), we can run</p>
-<blockquote>
-<p><code>sketch ts monorepo</code></p>
-</blockquote>
-<p>to create our new Typescript monorepo.</p>
-<p>For example, if we use this config:</p>
-<pre><code class="language-yaml">typescript:
-  root_package:
-    name: workspace
-
-    package_json:
-      license: Apache-2.0
-      devDependencies:
-        husky: latest
-
-    # The tsconfig files to generate at the root.
-    # If left empty, defaults will be used.
-    ts_config:
-      - output: tsconfig.options.json
-        config:
-          compilerOptions:
-            verbatimModuleSyntax: true
-            strict: true
-
-      - output: tsconfig.json
-        config:
-          files: []
-
-    # Literal oxlint configuration to generate at the root
-    # of the workspace.
-    # Can be set to `true` to use defaults.
-    oxlint: |
-      {
-        "plugins": ["unicorn", "typescript", "oxc"]
-      }
-
-</code></pre>
-<p>And the package.json file of the root package will be like this:</p>
-<pre><code class="language-json">{
-  "name": "workspace",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "license": "Apache-2.0",
-  "packageManager": "pnpm",
-  "scripts": {},
-  "devDependencies": {
-    "husky": "^9.1.7", 
-    "oxlint": "^1.16.0", 
-    "typescript": "^5.9.2"
-  },
-  "dependencies": {}
-}
-</code></pre>
-<p>You can also use the <code>generate_templates</code> field to automatically generate a certain file structure when the monorepo is generated.</p>
-<p>Let's say, for example, that every time that you create a new monorepo, you always want to create a <code>docker</code> directory with a basic <code>dev.dockerfile</code> inside of it, so that you can quickly create a dev environment using docker.</p>
-<p>For the root package, you would do so like this:</p>
-<pre><code class="language-yaml">    generate_templates:
-      - output: docker/dev.dockerfile
-        template:
-          name: dev_dockerfile
-          content: |
-            FROM node:23-alpine
-
-            COPY . .
-            EXPOSE {{ docker_dev_port }}
-            CMD ["npm", "run", "dev"]
-
-vars:
-  docker_dev_port: 5173
-</code></pre>
-<p>So the final tree structure of the output directory will look like this:</p>
-<pre><code>.
-├── .oxlintrc.json
-├── docker
-│   └── dev.dockerfile
-├── package.json
-├── packages
-├── pnpm-workspace.yaml
-├── tsconfig.json
-└── tsconfig.options.json
-</code></pre>
-<blockquote>
-<p>ℹ️ You can use the <code>-i</code> flag to install dependencies for the root package after creating the new monorepo.</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="generating-a-package"><a class="header" href="#generating-a-package">Generating A Package</a></h1>
-<p>You can use the command <code>sketch ts package</code> to generate a new Typescript package.</p>
-<p>For setting up the root package in a monorepo, go look in the dedicated section.</p>
-<p>This is an example of a package-related configuration:</p>
-<pre><code class="language-yaml">typescript:
-  package_presets:
-    frontend:
-      # The name of the package. If this is unset and `dir` is set,
-      # it will use the last segment from it.
-      name: "@myproject/frontend"
-
-      # The package.json config for this package. Can be a preset id
-      # or a literal configuration.
-      package_json:
-        devDependencies:
-          tailwindcss: "^4.0.0"
-
-      # The directory for this package, starting from the `root_dir`
-      dir: packages/frontend
-
-      # The kind of package to generate. Only relevant if you use
-      # default tsconfigs.
-      kind: library
-
-      # Can be set to true (for a default config), a literal config
-      # or to false (which is the default setting) for no oxlint config.
-      oxlint: false
-
-      # Create a vitest setup.
-      # Can be set to true to use defaults (which are as below).
-      vitest:
-        # Where the config file should be generated, starting from
-        # the root of the package.
-        # It defaults to the value of `tests_dir`
-        out_dir: null
-
-        # The directory to use for tests
-        tests_dir: tests
-
-        # The directory containing the setup files for tests.
-        # (starting from tests_dir)
-        setup_dir: setup
-
-        # Can use a list of plugins which will be set up in the config file
-        plugins: []
-</code></pre>
-<p>After setting things up, you can run</p>
-<blockquote>
-<p><code>sketch ts package --preset frontend</code></p>
-</blockquote>
-<p>To generate the new package.</p>
-<h2 id="template-rendering"><a class="header" href="#template-rendering">Template rendering</a></h2>
-<p>You can use the <code>generate_templates</code> field to specify a list of templates that should also be generated whenever a package preset is being generated.</p>
-<p>Let's say for example that in a type of package, you always need a <code>schemas</code> directory, where you import some common schemas from a shared package and define new ones.</p>
-<p>You can use this feature to generate a file inside <code>src/schemas/index.ts</code> automatically like this:</p>
-<pre><code class="language-yaml">      # Inside the package preset configuration
-      generate_templates:
-        - output: src/schemas/index.ts
-          # This can be a template defined in the config file
-          # or file path inside templates_dir
-          template: schemas
-
-templates:
-  schemas: |
-    import z from "zod";
-    import { sharedSchemas } from "{{ schemas_package }}";
-
-vars:
-  schemas_package: "@myproject/schemas"
-</code></pre>
-<p>So the final tree structure of the output directory will look like this:</p>
-<pre><code>.
-├── .oxlintrc.json
-├── package.json
-├── src
-│   ├── index.ts
-│   └── schemas
-│       └── index.ts
-├── tests
-│   ├── setup
-│   │   └── tests_setup.ts
-│   └── vitest.config.ts
-├── tsconfig.dev.json
-├── tsconfig.json
-└── tsconfig.src.json
-</code></pre>
-<blockquote>
-<p>ℹ️ You can also use the <code>-i</code> flag to automatically install the dependencies with your selected package manager whenever a new package is created.</p>
-</blockquote>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="tsconfig-presets"><a class="header" href="#tsconfig-presets">TsConfig Presets</a></h1>
-<p>The configuration file can contain a variety of presets that can be used for generating Tsconfig files.</p>
-<p>These presets contain all of the fields of a normal <code>tsconfig.json</code> file, with the addition of an extra field called <code>extend-presets</code>, which allows you to extend a basic preset from another one.</p>
-<blockquote>
-<p>ℹ️ You can omit the ts_config field entirely, and the defaults will be used.</p>
-</blockquote>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
-<p>Let's start with some basic starting point here:</p>
-<p>Here we define two typical tsconfig settings to use for the packages in our workspace.</p>
-<p>The <code>app</code> preset will not emit any .d.ts or .js files, whereas the <code>library</code> preset, which can be used for internal packages, will have <code>emitDeclarationOnly</code> set to <code>true</code>.</p>
-<pre><code class="language-yaml">typescript:
-  tsconfig_presets:
-    app:
-      compilerOptions:
-        noEmit: true
-      include:
-        - src
-
-    lib:
-      compilerOptions:
-        emitDeclarationOnly: true
-
-</code></pre>
-<p>Now let's say that we want to create another preset which starts from the <code>app</code> preset but adds the <code>tests</code> directory to <code>include</code>:</p>
-<pre><code class="language-yaml">    testing:
-      extend_presets: ["app"]
-      # The two lists will be merged and deduped
-      include: ["tests"]
-</code></pre>
-<p>Now we will set up a package that will generate 2 tsconfig files.</p>
-<ul>
-<li>A basic tsconfig.json file, which we will define literally, and it will have just the <code>files</code> field set to an empty array.</li>
-<li>One which will use the lib preset and extend it with an extra feature of our choice, and that will apply only to the files inside src. We will generate this in <code>tsconfig.src.json</code>.</li>
-<li>A separate config that will take care of typechecking the files inside the <code>tests</code> directory, without emitting files. We will create this inside <code>tsconfig.dev.json</code>.</li>
-</ul>
-<pre><code class="language-yaml">  package_presets:
-    tsconfig-example:
-      dir: packages/tsconfig-example
-      name: "@examples/tsconfig"
-
-      # Tsconfig can also be not defined at all,
-      # and the default presets will be used.
-      ts_config:
-        - output: tsconfig.json
-          # Literal definition
-          config:
-            files: []
-
-        - output: tsconfig.dev.json
-          # Only specifying the preset id here
-          config: testing
-
-        - output: tsconfig.src.json
-          config:
-            # Literal definition that extends a preset
-            extend_presets: ["lib"]
-            compilerOptions:
-              verbatimModuleSyntax: true
-
-</code></pre>
-<p>After running the command</p>
-<blockquote>
-<p><code>sketch ts package --preset tsconfig-example</code></p>
-</blockquote>
-<p>We get the following files:</p>
-<p><code>tsconfig.json</code></p>
-<pre><code class="language-json">{
-  "files": []
-}
-</code></pre>
-<p><code>tsconfig.src.json</code></p>
-<pre><code class="language-json">{
-  "compilerOptions": {
-    "emitDeclarationOnly": true,
-    "verbatimModuleSyntax": true
-  }
-}
-</code></pre>
-<blockquote>
-<p>✏️ Note how the two configs have been merged!</p>
-</blockquote>
-<p><code>tsconfig.dev.json</code></p>
-<pre><code class="language-json">{
-  "include": [
-    "src",
-    "tests"
-  ],
-  "compilerOptions": {
-    "noEmit": true
-  }
-}
-
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="packagejson-presets"><a class="header" href="#packagejson-presets">Package.json Presets</a></h1>
-<p>You can use the config file to store some <code>package.json</code> presets that you can easily reuse among different projects or packages with similar characteristics, like scripts or dependencies.</p>
-<p>Just like <a href="./tsconfig_presets.html">tsconfigs</a> and <a href="./configuration.html">global configurations</a>, <code>package.json</code> presets can also extend one another.</p>
-<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
-<pre><code class="language-yaml">typescript:
-  package_json_presets:
-    # The base from which all the packages from a specific project will start
+  # `pnpm-workspace.yaml` presets
+  pnpm_presets:
     base:
-      author:
-        name: Bruce Wayne
-        email: i-may-or-may-not-be-batman@gotham.com
-      license: Apache-2.0
-      bugs:
-        url: joker.com
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
 
-    # Another preset defining some common dependencies and scripts
+  # `package.json` presets
+  package_json_presets:
+    # Defining some reusable fields such as some common scripts and dependencies
     frontend:
-      extends: ["base"]
+      description: I am the base preset
       scripts:
         build: vite build
         dev: vite dev
       devDependencies:
-        # By default, these will be converted into version ranges
-        # starting from the actual latest version for them
-        tailwindcss: latest
-        svelte: latest
-        vite: latest
+        tailwindcss: "*"
+        vite: "*"
 
-    # This will inherit the settings from `base` and `frontend`
     svelte_frontend:
-      extends: ["frontend"]
-      # But it can also override values selectively
+      extends_presets: ["frontend"]
+      # Adding new fields
       license: MIT
+      # Overriding others
+      description: I am the frontend preset
+      # And merging dependencies
+      devDependencies:
+        svelte: "*"
 
+
+  # Tsconfig presets
+  ts_config_presets:
+    base:
+      references:
+        - path: /some/path
+      include:
+        - src
+      compilerOptions:
+        noEmit: true
+        verbatimModuleSyntax: true
+
+    extended:
+      extends_presets:
+        - base
+      # Unlike in real tsconfigs with `extends`, references are merged here,
+      # and so are all other collections such as `files` or `include`.
+      references:
+        - path: /other/path
+      include:
+        - tests
+      compilerOptions:
+        # Whereas other fields are overwritten
+        noEmit: false
+
+
+  # Oxlint presets
+  oxlint_presets:
+    base:
+      ignorePatterns:
+        - "**/node_modules/**"
+
+    extended:
+      extends_presets:
+        - base
+      ignorePatterns:
+        - .cache
+
+  # Vitest presets
+  vitest_presets:
+    base:
+      # Where the config file should be generated, starting from
+      # the root of the package.
+      # It defaults to the value of `tests_dir`
+      out_dir: null
+
+      # The directory to use for tests, from the root of the package
+      tests_dir: tests
+
+      # The directory, inside `tests_dir`, that contains the setup files for tests.
+      # A file named `tests_setup.ts`, containing some basic testing boilerplate,
+      # will be generated inside of it.
+      setup_dir: setup
+
+      # A list of setup files (the paths will be joined to the `setup_dir`)
+      # `tests_setup.ts` will be added automatically.
+      setup_files:
+        - somefile.ts
+        - anotherfile.ts
+      environment: jsdom
+      silent: passed-only
+
+
+  # Package presets
   package_presets:
-    svelte_frontend:
+    example:
+      name: example
+
+      # For every preset, we can either refer to them
+      # by their id...
       package_json: svelte_frontend
-      dir: packages/svelte_frontend
+
+      # ...or we can inline a preset definition
+      oxlint:
+        extends_presets:
+          - extended
+        ignorePatterns:
+          - .output
+
+      # We can define one or many tsconfig files
+      ts_config:
+        # Can be omitted, would default to `tsconfig.json`
+        - output: tsconfig.json
+          config:
+            # Once again creating a new config here with some extras
+            extends_presets:
+              - extended
+            include:
+              - scripts
+
+      vitest: base
+
 </code></pre>
-<p>After we run</p>
-<blockquote>
-<p><code>sketch ts package --preset svelte_frontend</code></p>
-</blockquote>
-<p>We get this output in the package.json file:</p>
-<blockquote>
-<p>ℹ️ Typescript and Oxlint are always added by default (along with Vitest for non-root packages), unless <code>no_default_deps</code> is set to <code>true</code>.</p>
-</blockquote>
-<pre><code class="language-json">{
-  "name": "svelte_frontend",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "license": "MIT",
-  "packageManager": "pnpm",
-  "scripts": {
-    "build": "vite build", 
-    "dev": "vite dev"
-  },
-  "bugs": {
-    "url": "joker.com"
-  },
-  "author": {
-    "name": "Bruce Wayne",
-    "email": "i-may-or-may-not-be-batman@gotham.com"
-  },
-  "devDependencies": {
-    "oxlint": "^1.16.0", 
-    "svelte": "^5.39.2", 
-    "tailwindcss": "^4.1.13", 
-    "typescript": "^5.9.2", 
-    "vite": "^7.1.6", 
-    "vitest": "^3.2.4"
-  },
-  "dependencies": {}
-}
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generating-a-git-repo"><a class="header" href="#generating-a-git-repo">Generating A Git Repo</a></h1>
+<p>The <code>sketch repo</code> command allows you to generate a new git repository, starting from a preset stored in one of your configuration files.</p>
+<p>A git preset uses (or defines) a preset for its <code>gitignore</code> file and, optionally, for <a href="https://pre-commit.com"><code>pre-commit</code></a>, as well as a list of templates that will be generated inside the root of the new repo when the command is triggered.</p>
+<pre><code class="language-yaml"># Gitignore presets
+gitignore_presets:
+  # Can be a string
+  base:
+    content: |
+      *.env
+      dist
+  # Or a list of strings
+  ts:
+    extends_presets:
+      # When being merged, the new entries are placed at the top
+      - base
+    content:
+      - "*.tsBuildInfo"
+      - node_modules
+
+# Pre-commit presets
+pre_commit_presets:
+  # Commonly used repo
+  base:
+    repos:
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.28.0
+        hooks:
+          - id: gitleaks
+
+  # Hooks specific to typescript projects
+  typescript:
+    # Extending the base preset
+    extends_presets:
+      - base
+    repos:
+      - repo: local
+        hooks:
+          - id: oxlint
+            name: oxlint
+            entry: oxlint
+            language: system
+            files: '\.svelte$|\.js$|\.ts$'
+            types: [file]
+
+# Git presets
+git_presets:
+  ts_package:
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="handling-dependencies"><a class="header" href="#handling-dependencies">Handling Dependencies</a></h1>
+<h1 id="adding-templates"><a class="header" href="#adding-templates">Adding Templates</a></h1>
+<p>We can use the <code>with_templates</code> setting to add a group of templates to a git preset. Let's say that we want to automatically generate a basic docker setup whenever we use this preset:</p>
+<pre><code class="language-yaml"># We define a template in a file or in a config file...
+templates:
+  dockerfile: |
+    FROM node:23-alpine
+
+    COPY . .
+    EXPOSE {{ docker_dev_port | default(value=5173) }}
+    CMD ["npm", "run", "dev"]
+
+# Templating presets
+templating_presets:
+  dockerfile:
+    context:
+      # Group context, lower priority
+      docker_dev_port: 9530
+    # List of templates
+    templates:
+      # Single template
+      - output: Dockerfile
+        template: dockerfile
+        # Local context with higher priority
+        context:
+          docker_dev_port: 5173
+
+
+# ...and then we add it to a preset
+
+# Git presets
+git_presets:
+  ts_package:
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
+
+    # Templates that will be generated with this preset
+    # starting from the new repo's root
+    with_templates:
+      - id: dockerfile
+</code></pre>
+<p>Starting from this config, we can run this command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/presets/cmd}}</code></p>
+</blockquote>
+<p>To get this tree output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/presets/tree_output.txt:2:}}
+</code></pre>
+<blockquote>
+<p>ℹ️ With cli flags, we can override the <code>gitignore</code> and <code>pre-commit</code> presets, as well as adding new templates to generate to the list.</p>
+</blockquote>
+<details>
+<summary>pre-commit-config.yaml output</summary>
+<pre><code class="language-yaml">{{#include ../../../sketch/tests/output/presets/.pre-commit-config.yaml}}
+</code></pre>
+</details>
+<details>
+<summary>gitignore output</summary>
+<pre><code>{{#include ../../../sketch/tests/output/presets/.gitignore}}
+</code></pre>
+</details>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="docker-compose-presets"><a class="header" href="#docker-compose-presets">Docker Compose Presets</a></h1>
+<p>Sketch can be used to create extensible presets for entire compose files as well as individual services.</p>
+<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
+<p>Config:</p>
+<pre><code class="language-yaml">docker:
+  service_presets:
+    # A base service preset with common configurations
+    base_service:
+      environment:
+        TZ: Europe/Berlin
+      networks:
+        - my_network
+
+    # A preset for a db service
+    database:
+      extends_presets:
+        - base_service
+      image: postgres
+
+  compose_presets:
+    # Base preset for a compose file
+    base:
+      volumes:
+        my_volume:
+          external: true
+      networks:
+        my_network:
+          external: true
+
+    extended:
+      extends_presets:
+        - base
+      services:
+        # Using the service preset by ID
+        db: database
+        my_service:
+          networks:
+            - my_network
+          volumes:
+            - my_volume:/target
+      volumes:
+        my_other_volume:
+          external: true
+</code></pre>
+<p>Command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/generated_configs/commands/compose}}</code></p>
+</blockquote>
+<p>Output:</p>
+<pre><code class="language-yaml">{{#include ../../../sketch/tests/output/generated_configs/compose.yaml}}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="typescript-presets"><a class="header" href="#typescript-presets">Typescript Presets</a></h1>
+<p>Many typical components of a typescript project have their own dedicated preset.</p>
+<h2 id="packagejson-presets"><a class="header" href="#packagejson-presets">Package.json Presets</a></h2>
+<pre><code class="language-yaml">  package_json_presets:
+    # Defining some reusable fields such as some common scripts and dependencies
+    frontend:
+      description: I am the base preset
+      scripts:
+        build: vite build
+        dev: vite dev
+      devDependencies:
+        tailwindcss: "*"
+        vite: "*"
+
+    svelte_frontend:
+      extends_presets: ["frontend"]
+      # Adding new fields
+      license: MIT
+      # Overriding others
+      description: I am the frontend preset
+      # And merging dependencies
+      devDependencies:
+        svelte: "*"
+
+</code></pre>
+<p>Just like in actual <code>package.json</code> files, custom fields are allowed.</p>
+<blockquote>
+<p>ℹ️ <code>package.json</code> presets come with extra features. <a href="presets/../ts/smart_features.html">Dedicated section</a></p>
+</blockquote>
+<h2 id="tsconfig-presets"><a class="header" href="#tsconfig-presets">Tsconfig Presets</a></h2>
+<pre><code class="language-yaml">  ts_config_presets:
+    base:
+      references:
+        - path: /some/path
+      include:
+        - src
+      compilerOptions:
+        noEmit: true
+        verbatimModuleSyntax: true
+
+    extended:
+      extends_presets:
+        - base
+      # Unlike in real tsconfigs with `extends`, references are merged here,
+      # and so are all other collections such as `files` or `include`.
+      references:
+        - path: /other/path
+      include:
+        - tests
+      compilerOptions:
+        # Whereas other fields are overwritten
+        noEmit: false
+
+</code></pre>
+<div class="warning">
+<p>Unlike what happens when you merge two <code>tsconfig</code> files by using the <code>extends</code> field, extending presets will merge all collections, including <code>files</code>, <code>include</code>, <code>exclude</code> and <code>references</code>, which would normally be overwritten, rather than merged.</p>
+</div>
+<h2 id="oxlint-presets"><a class="header" href="#oxlint-presets">Oxlint Presets</a></h2>
+<pre><code class="language-yaml">  oxlint_presets:
+    base:
+      ignorePatterns:
+        - "**/node_modules/**"
+
+    extended:
+      extends_presets:
+        - base
+      ignorePatterns:
+        - .cache
+</code></pre>
+<h2 id="pnpm-workspace-presets"><a class="header" href="#pnpm-workspace-presets">Pnpm-workspace Presets</a></h2>
+<pre><code class="language-yaml">  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
+</code></pre>
+<h2 id="vitest-presets"><a class="header" href="#vitest-presets">Vitest Presets</a></h2>
+<pre><code class="language-yaml">  vitest_presets:
+    base:
+      # Where the config file should be generated, starting from
+      # the root of the package.
+      # It defaults to the value of `tests_dir`
+      out_dir: null
+
+      # The directory to use for tests, from the root of the package
+      tests_dir: tests
+
+      # The directory, inside `tests_dir`, that contains the setup files for tests.
+      # A file named `tests_setup.ts`, containing some basic testing boilerplate,
+      # will be generated inside of it.
+      setup_dir: setup
+
+      # A list of setup files (the paths will be joined to the `setup_dir`)
+      # `tests_setup.ts` will be added automatically.
+      setup_files:
+        - somefile.ts
+        - anotherfile.ts
+      environment: jsdom
+      silent: passed-only
+
+</code></pre>
+<h2 id="package-presets"><a class="header" href="#package-presets">Package Presets</a></h2>
+<p>This is what a fully formed package preset looks like. We are going to use the presets defined above in here.</p>
+<pre><code class="language-yaml">  package_presets:
+    example:
+      name: example
+
+      # For every preset, we can either refer to them
+      # by their id...
+      package_json: svelte_frontend
+
+      # ...or we can inline a preset definition
+      oxlint:
+        extends_presets:
+          - extended
+        ignorePatterns:
+          - .output
+
+      # We can define one or many tsconfig files
+      ts_config:
+        # Can be omitted, would default to `tsconfig.json`
+        - output: tsconfig.json
+          config:
+            # Once again creating a new config here with some extras
+            extends_presets:
+              - extended
+            include:
+              - scripts
+
+      vitest: base
+</code></pre>
+<details>
+<summary>Tsconfig output</summary>
+<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/tsconfig.json}}
+</code></pre>
+</details>
+<details>
+<summary>Package.json output</summary>
+<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/package.json}}
+</code></pre>
+</details>
+<details>
+<summary>Oxlintrc.json output</summary>
+<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/.oxlintrc.json}}
+</code></pre>
+</details>
+<details>
+<summary>vitest.config.ts output</summary>
+<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/tests/vitest.config.ts}}
+</code></pre>
+</details>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="smart-features"><a class="header" href="#smart-features">Smart Features</a></h1>
+<p>Sketch provides some additional features that may come in handy when dealing with a typescript project.</p>
 <h2 id="converting-latest-to-a-range"><a class="header" href="#converting-latest-to-a-range">Converting <code>latest</code> to a range</a></h2>
-<p>By default, all <code>latest</code> versions will be converted to a version range (which can be specified in the config) that starts from the actual latest version for that package.</p>
-<p>This means that you can easily use your presets and ensure that they're always going to be updated, without using <code>latest</code>, which is not very good practice.</p>
-<blockquote>
-<p>⚠️ Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api.</p>
-</blockquote>
+<p>By default, all versions marked as <code>latest</code> will be converted to a version range (<code>minor</code> by default, but can be customized) that starts from the actual latest version for that package.</p>
+<p>This means that you can easily reuse your presets over time to start new projects, without needing to manually bump all versions, and while also avoiding <code>latest</code>, which is not suitable for stability.</p>
+<div class="warning">
+<p>Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api, causing an error.</p>
+</div>
 <pre><code class="language-yaml">typescript:
   # Default
   no_convert_latest_to_range: false
 
   # Default
-  version_range: patch
+  version_range: minor
 </code></pre>
 <h2 id="adding-dependencies-to-the-catalog"><a class="header" href="#adding-dependencies-to-the-catalog">Adding dependencies to the catalog</a></h2>
 <p>If you set up your package manager to be <code>pnpm</code> (which is the default) and set <code>catalog</code> to <code>true</code>, whenever you try to generate a new package that has dependencies marked with <code>catalog:</code> (either the default catalog or a named one), each package that is not present in the target catalog inside <code>pnpm-workspace.yaml</code> will be added automatically to it.</p>
-<h3 id="example-2"><a class="header" href="#example-2">Example</a></h3>
-<p>Let's say that we are starting with a basic <code>pnpm-workspace.yaml</code> file, and we generate a package that has <code>catalog</code> dependencies, which are currently absent from their target catalogs:</p>
+<h3 id="example-4"><a class="header" href="#example-4">Example</a></h3>
+<p>Let's say that we are starting with a basic <code>pnpm-workspace.yaml</code> config like this one:</p>
+<pre><code class="language-yaml">  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
+</code></pre>
+<p>and we generate a package that has <code>catalog</code> dependencies, which are currently absent from their target catalogs:</p>
 <pre><code class="language-yaml">typescript:
+  no_default_deps: true
+
   catalog: true
 
   package_presets:
     with_catalog:
       name: with_catalog
-      dir: packages/with_catalog
       package_json:
         devDependencies:
           # Named catalog
@@ -1016,29 +1555,20 @@ vars:
 </code></pre>
 <p>After running</p>
 <blockquote>
-<p><code>sketch ts package --preset with_catalog</code></p>
+<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/catalog_cmd}}</code></p>
 </blockquote>
 <p>We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:</p>
-<pre><code class="language-yaml">packages:
-  - 'packages/*'
-
-catalogs:
-  "svelte":
-    "svelte": ^5.39.2
-
-catalog:
-  "hono": ^4.9.8
-  "oxlint": ^1.16.0
-  "typescript": ^5.9.2
-  "vitest": ^3.2.4
-
+<pre><code class="language-yaml">{{#include ../../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="maintainers-information"><a class="header" href="#maintainers-information">Maintainers Information</a></h1>
+<h2 id="storing-and-reusing-contributors-data"><a class="header" href="#storing-and-reusing-contributors-data">Storing And Reusing Contributors' Data</a></h2>
 <p>When working with a team on a monorepo that is made of several individual packages, it's very common that the same people have to be added to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> fields in the <code>package.json</code> files for these packages.</p>
-<p>To make this job easier and faster, you can use the <code>people</code> field in the typescript config to store information about the contributors that are referred in multiple places, and then you can simply refer them by their ID.</p>
-<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
+<p>To make this job a bit easier, you can use the <code>people</code> field in the typescript config to store information about contributors which you can then simply refer to by their ID.</p>
+<h3 id="example-5"><a class="header" href="#example-5">Example</a></h3>
 <pre><code class="language-yaml">typescript:
+  no_default_deps: true
+
   people:
+    # Person ID
     bruce:
       name: Bruce Wayne
       email: bruce@gotham.com
@@ -1060,55 +1590,233 @@ catalog:
     # you can use the above as a base for other package.json files,
     # if the author or contributors are always the same
     some-other-project:
-      extends:
+      extends_presets:
         - people-example
       scripts:
         say-hi: echo hi!
 
   package_presets:
     people-example:
-      dir: packages/people-example
       package_json: people-example
 
 </code></pre>
 <p>After we run</p>
 <blockquote>
-<p><code>sketch ts package --preset people-example</code></p>
+<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/people_cmd}}</code></p>
 </blockquote>
 <p>We get this <code>package.json</code> file in the root of the new package:</p>
-<pre><code class="language-json">{
-  "name": "people-example",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "packageManager": "pnpm",
-  "scripts": {},
-  "contributors": [
-    {
-      "name": "Bruce Wayne",
-      "email": "bruce@gotham.com",
-      "url": "brucewayne.com" 
-    }
-  ],
-  "maintainers": [
-    {
-      "name": "Bruce Wayne",
-      "email": "bruce@gotham.com",
-      "url": "brucewayne.com" 
-    },
-    {
-      "name": "Clark Kent",
-      "email": "clark-kent@dailyplanet.com",
-      "url": "clarkkent.com" 
-    }
-  ],
-  "devDependencies": {
-    "oxlint": "^1.16.0", 
-    "typescript": "^5.9.2", 
-    "vitest": "^3.2.4"
-  },
-  "dependencies": {}
-}
+<pre><code class="language-json">{{#include ../../../sketch/tests/output/ts_examples/packages/people-example/package.json}}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="typescript-projects"><a class="header" href="#typescript-projects">Typescript Projects</a></h1>
+<p>Sketch was initially conceived as a typescript-centric tool, as I needed a way to deal with the chaotic typescript ecosystem in a structured and easily reproducible way.</p>
+<p>It supports a rich feature set dedicated to typescript, with dedicated <a href="ts/../presets/typescript.html">preset categories</a> (such as <code>tsconfig.json</code> and <code>package.json</code> presets) and <a href="ts/../cli_docs.html#sketch-ts">commands</a> (such as generating individual config files from presets, or generating barrel files).</p>
+<p>These are the top level configuration settings for Typescript projects, with their default values:</p>
+<pre><code class="language-yaml">typescript:
+  # Convert `latest` to a version range for dependencies
+  no_convert_latest_to_range: false
+
+  # Use this kind of version range when converting from `latest`
+  version_range: minor
+
+  # Do not add default dependencies to new `package.json` files (typescript and oxlint, plus vitest if enabled)
+  no_default_deps: false
+
+  # Use the pnpm catalog for default dependencies
+  # and add missing dependencies to it automatically
+  catalog: false
+
+  package_manager: pnpm
+
+  # Configuration for the generated pnpm-workspace.yaml file
+  pnpm:
+    # All dirs listed here will be created automatically
+    packages: ["packages/*"]
+
+  # A map containing extensible package.json presets
+  package_json_presets: {}
+
+  # A map containing extensible package presets
+  package_presets: {}
+
+  # A map containing extensible tsconfig presets
+  ts_config_presets: {}
+
+  # A map containing extensible oxlint presets
+  oxlint_presets: {}
+
+  # A map of contributors and maintainers, which can be referenced
+  # in `package.json` presets with their ID
+  people: {}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
+<p>To set up a basic monorepo with default settings, we can just run the command <code>sketch ts monorepo</code>. But we can also create a package preset and use that for the root package of the monorepo.</p>
+<p>This is a more customized configuration for the root package:</p>
+<pre><code class="language-yaml">typescript:
+  # By default, typescript and oxlint would be added to
+  # the root package's dependencies
+  no_default_deps: true
+
+  # Pnpm is the default, and if selected, it will generate
+  # a pnpm-workspace.yaml file
+  package_manager: pnpm
+
+  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
+
+  package_presets:
+    # Defining a preset for the root package
+    root:
+      name: workspace
+
+      package_json:
+        license: Apache-2.0
+        devDependencies:
+          husky: ^9.0.0
+
+      # The tsconfig files to generate at the root.
+      # If left empty, defaults will be used.
+      ts_config:
+        - output: tsconfig.options.json
+          config:
+            compilerOptions:
+              verbatimModuleSyntax: true
+              strict: true
+
+        - output: tsconfig.json
+          config:
+            files: []
+
+      # Literal oxlint configuration to generate at the root
+      # of the workspace.
+      # Can be set to `true` to use defaults.
+      oxlint:
+        plugins: ["unicorn", "typescript", "oxc"]
+</code></pre>
+<h2 id="adding-templates-1"><a class="header" href="#adding-templates-1">Adding Templates</a></h2>
+<p>You can also use the <code>with_templates</code> field to automatically generate a certain file structure when the monorepo is generated.</p>
+<p>Let's say, for example, that every time that you create a new monorepo, you always want to create a <code>docker</code> directory with a basic <code>dev.dockerfile</code> inside of it, so that you can quickly create a dev environment using docker.</p>
+<p>To do that, we add this to the root package's definition:</p>
+<pre><code class="language-yaml">      with_templates:
+        - templates:
+            # Relative path from the root of the package
+            - output: docker/dev.dockerfile
+              template:
+                name: dev_dockerfile
+                content: |
+                  FROM node:23-alpine
+
+                  COPY . .
+                  EXPOSE {{ docker_dev_port }}
+                  CMD ["npm", "run", "dev"]
+
+vars:
+  docker_dev_port: 5173
+</code></pre>
+<blockquote>
+<p>ℹ️ You can also use <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> as a flag to add more templates or templating presets when generating a new package.</p>
+</blockquote>
+<h1 id="example-6"><a class="header" href="#example-6">Example</a></h1>
+<p>So after setting everything up, we run the command</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}</code></p>
+</blockquote>
+<p>And get this tree output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt:2:}}
+</code></pre>
+<blockquote>
+<p>ℹ️ You can use the <code>-i</code> flag to install dependencies for the root package after creating the new monorepo.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generating-a-package"><a class="header" href="#generating-a-package">Generating A Package</a></h1>
+<p>You can use the command <code>sketch ts package</code> to generate a new Typescript package.</p>
+<p>This is an example of a package-related configuration:</p>
+<pre><code class="language-yaml">typescript:
+  package_presets:
+    frontend:
+      # The name of the package. If this is unset,
+      # the name of the output directory will be used.
+      name: "@myproject/frontend"
+
+      # The `package.json` config for this package. Can be a preset id
+      # or a literal configuration.
+      package_json:
+        devDependencies:
+          tailwindcss: "^4.0.0"
+
+      # Generates an oxlint config file in the root.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
+      oxlint: false
+
+      # Create a vitest setup.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
+      vitest:
+        # Where the config file should be generated, starting from
+        # the root of the package.
+        # It defaults to the value of `tests_dir`
+        out_dir: null
+
+        # The directory to use for tests
+        tests_dir: tests
+
+        # The directory containing the setup files for tests.
+        # (starting from tests_dir)
+        setup_dir: setup
+
+</code></pre>
+<p>After setting things up, you can run</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}</code></p>
+</blockquote>
+<p>To generate the new package.</p>
+<h2 id="adding-templates-2"><a class="header" href="#adding-templates-2">Adding Templates</a></h2>
+<p>You can also use the <code>with_templates</code> field (or the <code>--with-template</code> cli flag) to specify a list of templates or templating presets that should be generated whenever a package preset is being used.</p>
+<p>Let's say for example that in a type of package, you always need a <code>schemas</code> directory, where you import some common schemas from a shared package and define new ones.</p>
+<p>You can use this feature to generate a file inside <code>src/schemas/index.ts</code> automatically like this:</p>
+<pre><code class="language-yaml">      # Inside the package preset configuration
+      with_templates:
+        # We can refer to a preset by id or create a new one locally
+        - templates:
+            - output: src/schemas/index.ts
+              # This can be a template defined in the config file
+              # or file path inside templates_dir
+              template: schemas
+
+templates:
+  schemas: |
+    import z from "zod";
+    import { sharedSchemas } from "{{ schemas_package }}";
+
+vars:
+  schemas_package: "@myproject/schemas"
+</code></pre>
+<p>So the final tree structure of the output directory will look like this:</p>
+<pre><code>{{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt:2:}}
+</code></pre>
+<blockquote>
+<p>ℹ️ You can also use the <code>-i</code> flag to automatically install the dependencies with your selected package manager whenever a new package is created.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="generating-a-barrel-file"><a class="header" href="#generating-a-barrel-file">Generating A Barrel File</a></h1>
+<p>Sometimes it is useful to keep one or many barrel files in a typescript project, to make it easier to import/export elements from a group of modules.</p>
+<p>Sketch has a dedicated command to make this process easier.</p>
+<h2 id="examples-4"><a class="header" href="#examples-4">Examples</a></h2>
+<p>Target directory:</p>
+<pre><code>{{#include ../../../sketch/tests/output/ts_barrel/tree}}
+</code></pre>
+<p>Command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/ts_barrel/commands/barrel}}</code></p>
+</blockquote>
+<p>Output:</p>
+<pre><code class="language-typescript">{{#include ../../../sketch/tests/output/ts_barrel/index.ts}}
 </code></pre>
 
                     </main>

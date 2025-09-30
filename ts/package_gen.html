@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Sketch</title>
+        <title>Generating A Package - Sketch</title>
 
 
         <!-- Custom HTML head -->
@@ -12,34 +12,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="highlight-css" href="highlight.css">
-        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
-        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex.js";
+            window.path_to_searchindex_js = "../searchindex.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc.js"></script>
+        <script src="../toc.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -106,7 +106,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -141,7 +141,7 @@
                     <h1 class="menu-title">Sketch</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
 
@@ -175,98 +175,86 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="-sketch"><a class="header" href="#-sketch">🖌️ Sketch</a></h1>
+                        <h1 id="generating-a-package"><a class="header" href="#generating-a-package">Generating A Package</a></h1>
+<p>You can use the command <code>sketch ts package</code> to generate a new Typescript package.</p>
+<p>This is an example of a package-related configuration:</p>
+<pre><code class="language-yaml">typescript:
+  package_presets:
+    frontend:
+      # The name of the package. If this is unset,
+      # the name of the output directory will be used.
+      name: "@myproject/frontend"
+
+      # The `package.json` config for this package. Can be a preset id
+      # or a literal configuration.
+      package_json:
+        devDependencies:
+          tailwindcss: "^4.0.0"
+
+      # Generates an oxlint config file in the root.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
+      oxlint: false
+
+      # Create a vitest setup.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
+      vitest:
+        # Where the config file should be generated, starting from
+        # the root of the package.
+        # It defaults to the value of `tests_dir`
+        out_dir: null
+
+        # The directory to use for tests
+        tests_dir: tests
+
+        # The directory containing the setup files for tests.
+        # (starting from tests_dir)
+        setup_dir: setup
+
+</code></pre>
+<p>After setting things up, you can run</p>
 <blockquote>
-<p><code>Templating made simple</code></p>
+<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}</code></p>
 </blockquote>
-<p>Templating is an awesome tool. While it is mostly used for rendering content in a web framework, it can also be used to do much more than that.</p>
-<p>For instance, it can be used to define structures for files or even entire projects. These structures can be standardized enough to provide structure, clarity, familiarity and reproducibility, but also flexible enough as to be able to accept customized or even dynamically generated parameters.</p>
-<p>Taking advantage of these features comes with some serious benefits:</p>
-<ol>
-<li>
-<p>It drastically reduces the time and effort needed to perform the least rewarding aspects of development such as writing boilerplate code or setting up the file structure for a new project or tool</p>
-</li>
-<li>
-<p>It makes project structures standardized and easily reproducible, which makes it much easier to navigate them or to introduce them to others</p>
-</li>
-<li>
-<p>It reduces the time necessary to maintain these structures, as they can now be defined and modified only in one place and reused everywhere else</p>
-</li>
-</ol>
-<p>Sketch is a tool designed to draw on these strenghts, and to combine them with its own structure-oriented philosophy to provide a simple but powerful tool to simplify and automate many of the day-to-day development operations that have to do with creating files or setting up projects.</p>
-<h1 id="presets"><a class="header" href="#presets">Presets</a></h1>
-<p>The concept of <code>preset</code> is central to Sketch's design and configuration.</p>
-<p>There are several preset categories, which come with a variety of features (the full updated list can be found in the documentation website):</p>
-<ul>
-<li>
-<p>Templating</p>
-<ul>
-<li>Templating presets (extensible)</li>
-</ul>
-</li>
-<li>
-<p>Docker</p>
-<ul>
-<li>Docker Compose file (extensible)</li>
-<li>Docker Compose service (extensible)</li>
-</ul>
-</li>
-<li>
-<p>Git</p>
-<ul>
-<li>Git repo</li>
-<li><code>.gitignore</code> (extensible)</li>
-<li><code>.pre-commit-config.yaml</code> (extensible)</li>
-</ul>
-</li>
-<li>
-<p>Rust</p>
-<ul>
-<li><code>Cargo.toml</code> (extensible)</li>
-</ul>
-</li>
-<li>
-<p>Typescript</p>
-<ul>
-<li>Typescript package</li>
-<li><code>pnpm-workspace.yaml</code> (extensible)</li>
-<li><code>package.json</code> (extensible, with extra features)</li>
-<li><code>tsconfig.json</code> (extensible, with merging of values for the <code>references</code>, <code>include</code>, <code>exclude</code> and <code>files</code> fields)</li>
-<li><code>.oxlintrc.json</code> (extensible)</li>
-<li><code>vitest</code> (not a full configuration for <code>vitest.config.ts</code>, but a basic testing setup)</li>
-</ul>
-</li>
-</ul>
-<h2 id="type-safe-presets"><a class="header" href="#type-safe-presets">Type-safe Presets</a></h2>
-<p>Some presets, such as those that belong to some of the most widely used configuration files such as Rust's <code>Cargo.toml</code>, or Typescript's <code>tsconfig.json</code>, are <strong>fully typed</strong> and documented (as part of the JSON schema for Sketch's configuration file), so that defining them comes with all of the benefits of IDE integration such as type safety and autocompletion.</p>
-<h2 id="extensible-presets"><a class="header" href="#extensible-presets">Extensible Presets</a></h2>
-<p>Some presets are extensible, which means that you can define a base preset containing some common data (such as a list of networks or volumes in a <code>compose.yaml</code> file or a list of dependencies in a <code>package.json</code> file), and then create a preset that extends that base preset, so that you do not need to repeat inputs for all presets that share common settings.</p>
-<h2 id="aggregator-presets"><a class="header" href="#aggregator-presets">Aggregator Presets</a></h2>
-<p>Some presets can aggregate or use other presets. For example, a git <code>repo</code> preset can contain multiple templating presets (which will be generated in the root of the new repo), and also select a specific <code>gitignore</code> or <code>pre-commit</code> preset.</p>
-<h1 id="enhanced-templating-toolset"><a class="header" href="#enhanced-templating-toolset">Enhanced Templating Toolset</a></h1>
-<p>Sketch uses <a href="https://keats.github.io/tera/docs/">Tera</a> to render custom templates, which comes with its own rich feature set, and on top of that, it provides extra features, such as:</p>
-<ul>
-<li>Special variables that extract commonly used values such as the user directory or the host's operating system</li>
-<li>Functions that perform actions such as:
-<ul>
-<li>Making a glob search in a directory</li>
-<li>Generating a uuid</li>
-<li>Transforming a relative path into an absolute path</li>
-<li>Extracting capture groups from a regex</li>
-<li>(and many other more...)</li>
-</ul>
-</li>
-</ul>
-<p>All of these are available directly within templates, which greatly extends their flexibility and the variety of scenarios in which they can be applied.</p>
-<h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
-<p>You can find out more about Sketch in the <a href="https://rick-phoenix.github.io/sketch/">dedicated website</a>.</p>
+<p>To generate the new package.</p>
+<h2 id="adding-templates"><a class="header" href="#adding-templates">Adding Templates</a></h2>
+<p>You can also use the <code>with_templates</code> field (or the <code>--with-template</code> cli flag) to specify a list of templates or templating presets that should be generated whenever a package preset is being used.</p>
+<p>Let's say for example that in a type of package, you always need a <code>schemas</code> directory, where you import some common schemas from a shared package and define new ones.</p>
+<p>You can use this feature to generate a file inside <code>src/schemas/index.ts</code> automatically like this:</p>
+<pre><code class="language-yaml">      # Inside the package preset configuration
+      with_templates:
+        # We can refer to a preset by id or create a new one locally
+        - templates:
+            - output: src/schemas/index.ts
+              # This can be a template defined in the config file
+              # or file path inside templates_dir
+              template: schemas
+
+templates:
+  schemas: |
+    import z from "zod";
+    import { sharedSchemas } from "{{ schemas_package }}";
+
+vars:
+  schemas_package: "@myproject/schemas"
+</code></pre>
+<p>So the final tree structure of the output directory will look like this:</p>
+<pre><code>{{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt:2:}}
+</code></pre>
+<blockquote>
+<p>ℹ️ You can also use the <code>-i</code> flag to automatically install the dependencies with your selected package manager whenever a new package is created.</p>
+</blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../ts/monorepo.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
-                            <a rel="next prefetch" href="cli_docs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../ts/barrel.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -276,8 +264,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../ts/monorepo.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
-                    <a rel="next prefetch" href="cli_docs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../ts/barrel.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
@@ -292,13 +283,13 @@
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
 
