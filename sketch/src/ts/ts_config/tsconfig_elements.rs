@@ -262,6 +262,9 @@ pub enum ModuleResolution {
   #[serde(rename = "node16", alias = "Node16")]
   Node16,
   /// When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code
+  #[serde(rename = "node20", alias = "Node20")]
+  Node20,
+  /// When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code
   #[serde(rename = "nodenext", alias = "NodeNext", alias = "nodeNext")]
   NodeNext,
   /// For use with bundlers. Like node16 and nodenext, this mode supports package.json "imports" and "exports", but unlike the Node.js resolution modes, bundler never requires file extensions on relative paths in imports.
@@ -273,6 +276,7 @@ impl Display for ModuleResolution {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
       ModuleResolution::Node16 => write!(f, "Node16"),
+      ModuleResolution::Node20 => write!(f, "Node20"),
       ModuleResolution::NodeNext => write!(f, "NodeNext"),
       ModuleResolution::Bundler => write!(f, "Bundler"),
     }
