@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -39,7 +40,7 @@ impl Config {
     preset: RepoPreset,
     remote: Option<&str>,
     out_dir: &Path,
-    cli_vars: Option<Vec<(String, Value)>>,
+    cli_vars: &IndexMap<String, Value>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
 

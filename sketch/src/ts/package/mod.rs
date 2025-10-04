@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use askama::Template;
 use clap::Parser;
+use indexmap::IndexMap;
 use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -108,7 +109,7 @@ impl Config {
     data: PackageData,
     pkg_root: PathBuf,
     tsconfig_files_to_update: Option<Vec<PathBuf>>,
-    cli_vars: Option<Vec<(String, Value)>>,
+    cli_vars: &IndexMap<String, Value>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
     let typescript = self.typescript.get_or_insert_default();

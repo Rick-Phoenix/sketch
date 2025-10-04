@@ -10,6 +10,7 @@ pub(crate) mod parsers;
 use std::{fmt::Debug, fs::read_to_string, path::PathBuf};
 
 use clap::{Args, Parser, Subcommand};
+use indexmap::IndexMap;
 use parsers::parse_serializable_key_value_pair;
 use serde_json::Value;
 use Commands::*;
@@ -25,8 +26,8 @@ use crate::{
     TemplatingPresetReference,
   },
   fs::{
-    create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
-    serialize_yaml, write_file,
+    create_all_dirs, create_parent_dirs, deserialize_json, deserialize_toml, deserialize_yaml,
+    get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml, write_file,
   },
   init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
   licenses::License,
@@ -42,7 +43,28 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   let config = get_config_from_cli(cli.overrides.unwrap_or_default(), &cli.command).await?;
 
   let command = cli.command;
-  let cli_vars = cli.templates_vars;
+  let mut cli_vars: IndexMap<String, Value> = IndexMap::new();
+
+  for file in cli.vars_yaml {
+    let vars: IndexMap<String, Value> = deserialize_yaml(&file)?;
+    cli_vars.extend(vars);
+  }
+
+  for file in cli.vars_toml {
+    let vars: IndexMap<String, Value> = deserialize_toml(&file)?;
+    cli_vars.extend(vars);
+  }
+
+  for file in cli.vars_json {
+    let vars: IndexMap<String, Value> = deserialize_json(&file)?;
+    cli_vars.extend(vars);
+  }
+
+  if let Some(cli_overrides) = cli.vars_overrides {
+    for (name, value) in cli_overrides {
+      cli_vars.insert(name, value);
+    }
+  }
 
   let overwrite = config.can_overwrite();
 
@@ -254,7 +276,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
       create_all_dirs(&out_dir)?;
 
-      config.init_repo(preset, remote.as_deref(), &out_dir, cli_vars)?;
+      config.init_repo(preset, remote.as_deref(), &out_dir, &cli_vars)?;
     }
 
     RenderPreset { id, out_dir } => {
@@ -266,7 +288,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           id,
           context: Default::default(),
         }],
-        cli_vars,
+        &cli_vars,
       )?;
     }
 
@@ -319,7 +341,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
           templates: vec![PresetElement::Template(template)],
           ..Default::default()
         })],
-        cli_vars,
+        &cli_vars,
       )?;
     }
     New { output } => {
@@ -381,10 +403,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         config.shell.clone()
       };
 
-      config.execute_command(shell.as_deref(), &cwd, command, cli_vars, print_cmd)?;
+      config.execute_command(shell.as_deref(), &cwd, command, &cli_vars, print_cmd)?;
     }
     Ts { command, .. } => {
-      handle_ts_commands(config, command, cli_vars).await?;
+      handle_ts_commands(config, command, &cli_vars).await?;
     }
   }
   Ok(())
@@ -425,7 +447,19 @@ pub struct Cli {
 
   /// Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
-  pub templates_vars: Option<Vec<(String, Value)>>,
+  pub vars_overrides: Option<Vec<(String, Value)>>,
+
+  /// One or more paths to yaml files to extract template variables from, in the given order.
+  #[arg(long)]
+  pub vars_yaml: Vec<PathBuf>,
+
+  /// One or more paths to toml files to extract template variables from, in the given order.
+  #[arg(long)]
+  pub vars_toml: Vec<PathBuf>,
+
+  /// One or more paths to json files to extract template variables from, in the given order.
+  #[arg(long)]
+  pub vars_json: Vec<PathBuf>,
 }
 
 #[derive(Args, Debug, Clone)]

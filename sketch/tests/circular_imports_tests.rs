@@ -27,7 +27,7 @@ async fn circular_package_json() -> Result<(), GenError> {
       PackageData::Preset("circular_package_json".to_string()),
       "tests/output/circular_configs".into(),
       None,
-      None,
+      &Default::default(),
     )
     .await;
 
@@ -52,7 +52,7 @@ async fn circular_tsconfig() -> Result<(), GenError> {
       PackageData::Preset("circular_tsconfigs".to_string()),
       "tests/output/circular_configs".into(),
       None,
-      None,
+      &Default::default(),
     )
     .await;
 

@@ -1,5 +1,6 @@
 use std::{fs::create_dir_all, path::Path};
 
+use indexmap::IndexMap;
 use maplit::btreeset;
 use serde_json::Value;
 
@@ -19,7 +20,7 @@ pub struct CreateTsMonorepoSettings<'a> {
   pub root_package: PackageConfig,
   pub out_dir: &'a Path,
   pub pnpm_config: Option<PnpmWorkspace>,
-  pub cli_vars: Option<Vec<(String, Value)>>,
+  pub cli_vars: &'a IndexMap<String, Value>,
 }
 
 impl Config {

@@ -3,6 +3,7 @@ use std::{
   process::{Command, Stdio},
 };
 
+use indexmap::IndexMap;
 use serde_json::Value;
 use tera::Context;
 
@@ -25,7 +26,7 @@ impl Config {
     shell: Option<&str>,
     cwd: &Path,
     command_template: TemplateData,
-    cli_vars: Option<Vec<(String, Value)>>,
+    cli_vars: &IndexMap<String, Value>,
     print_cmd: bool,
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
@@ -35,10 +36,8 @@ impl Config {
 
     context.extend(get_default_context());
 
-    if let Some(overrides) = cli_vars {
-      for (key, val) in overrides {
-        context.insert(&key, &val);
-      }
+    for (key, val) in cli_vars {
+      context.insert(key, val);
     }
 
     let template_name = match command_template {

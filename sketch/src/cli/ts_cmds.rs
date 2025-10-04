@@ -3,6 +3,7 @@ use std::{collections::BTreeSet, path::PathBuf};
 use askama::Template;
 use clap::{Args, Subcommand};
 use globset::{Glob, GlobSetBuilder};
+use indexmap::IndexMap;
 use merge::Merge;
 use walkdir::WalkDir;
 
@@ -25,7 +26,7 @@ use crate::{
 pub(crate) async fn handle_ts_commands(
   mut config: Config,
   command: TsCommands,
-  cli_vars: Option<Vec<(String, Value)>>,
+  cli_vars: &IndexMap<String, Value>,
 ) -> Result<(), GenError> {
   let overwrite = config.can_overwrite();
   let typescript = config.typescript.get_or_insert_default();

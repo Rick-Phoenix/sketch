@@ -88,6 +88,7 @@ Variables can be set at many different stages, with different degrees of priorit
 - Global variables
 - Preset context
 - Single template context
+- Cli-set variable files (in the order that they are given)
 - Cli-set variables
 
 <div class="warning">

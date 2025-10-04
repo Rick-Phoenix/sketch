@@ -146,7 +146,7 @@ impl Config {
     self,
     output_root: T,
     preset_refs: Vec<TemplatingPresetReference>,
-    cli_overrides: Option<Vec<(String, Value)>>,
+    cli_overrides: &IndexMap<String, Value>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
     let mut tera = self.initialize_tera()?;
@@ -182,7 +182,7 @@ impl Config {
         match element {
           PresetElement::Template(template) => {
             extend_context(&mut local_context, &template.context)?;
-            apply_cli_overrides(&mut local_context, cli_overrides.as_deref())?;
+            apply_cli_overrides(&mut local_context, cli_overrides)?;
 
             render_template_with_output(
               overwrite,
@@ -195,7 +195,7 @@ impl Config {
           }
 
           PresetElement::Structured(StructuredPreset { dir, exclude }) => {
-            apply_cli_overrides(&mut local_context, cli_overrides.as_deref())?;
+            apply_cli_overrides(&mut local_context, cli_overrides)?;
 
             render_structured_preset(
               overwrite,
@@ -380,12 +380,10 @@ fn extend_context(
 
 fn apply_cli_overrides(
   context: &mut Context,
-  overrides: Option<&[(String, Value)]>,
+  overrides: &IndexMap<String, Value>,
 ) -> Result<(), GenError> {
-  if let Some(overrides) = overrides {
-    for (key, val) in overrides {
-      context.insert(key, val);
-    }
+  for (key, val) in overrides {
+    context.insert(key, val);
   }
 
   Ok(())
