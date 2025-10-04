@@ -25,7 +25,7 @@ use crate::{
 pub struct Package {
   /// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.
   #[merge(skip)]
-  pub name: String,
+  pub name: Option<String>,
 
   /// See [the `version()` getter for more info](`Package::version()`).
   ///
