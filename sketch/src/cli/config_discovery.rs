@@ -1,8 +1,4 @@
-use std::{
-  env,
-  fs::{exists, read_dir},
-  path::PathBuf,
-};
+use std::{env, fs::exists, path::PathBuf};
 
 use merge::Merge;
 
@@ -63,17 +59,19 @@ pub(crate) async fn get_config_from_cli(
   Ok(config)
 }
 
+const DEFAULT_CONFIG_NAMES: [&str; 3] = ["sketch.yaml", "sketch.toml", "sketch.json"];
+
 fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
   if let Some(cli_arg) = cli_arg {
     Some(cli_arg)
-  } else if exists("sketch.yaml").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.yaml"))
-  } else if exists("sketch.toml").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.toml"))
-  } else if exists("sketch.json").is_ok_and(|exists| exists) {
-    Some(PathBuf::from("sketch.json"))
   } else {
-    None
+    for name in DEFAULT_CONFIG_NAMES {
+      if exists(name).is_ok_and(|exists| exists) {
+        return Some(PathBuf::from(name));
+      }
+    }
+
+    return None;
   }
 }
 
@@ -90,16 +88,10 @@ fn get_config_from_xdg() -> Option<PathBuf> {
     let config_dir = PathBuf::from(xdg_config).join("sketch");
 
     if config_dir.is_dir() {
-      if let Ok(dir_contents) = read_dir(&config_dir) {
-        for item in dir_contents {
-          if let Ok(item) = item {
-            if item.file_name() == "sketch.toml"
-              || item.file_name() == "sketch.yaml"
-              || item.file_name() == "sketch.json"
-            {
-              return Some(item.path());
-            }
-          }
+      for name in DEFAULT_CONFIG_NAMES {
+        let config_path = config_dir.join(name);
+        if exists(&config_path).is_ok_and(|exists| exists) {
+          return Some(config_path);
         }
       }
     }
