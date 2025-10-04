@@ -47,7 +47,6 @@ pub(crate) fn get_default_package_tsconfig() -> TsConfig {
       "scripts".to_string(),
     ]),
     compiler_options: Some(CompilerOptions {
-      root_dir: Some("src".to_string()),
       out_dir: Some(".out".to_string()),
       ts_build_info_file: Some(format!(".out/.tsBuildInfoSrc")),
       emit_declaration_only: Some(true),
