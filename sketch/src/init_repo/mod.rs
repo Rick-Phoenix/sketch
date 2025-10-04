@@ -15,6 +15,7 @@ use crate::{
     gitignore::{GitIgnore, GitIgnoreSetting, DEFAULT_GITIGNORE},
     pre_commit::{PreCommitPreset, PreCommitSetting},
   },
+  licenses::License,
   Config, GenError, Preset,
 };
 
@@ -28,6 +29,8 @@ pub struct RepoPreset {
   pub pre_commit: PreCommitSetting,
   /// A set of templates to generate when this preset is used.
   pub with_templates: Option<Vec<TemplatingPresetReference>>,
+  /// A license file to generate for the new repo.
+  pub license: Option<License>,
 }
 
 impl Config {
@@ -115,6 +118,10 @@ impl Config {
         &out_dir,
         Some("Failed to add the remote to the git repo"),
       )?;
+    }
+
+    if let Some(license) = preset.license {
+      write_file(&out_dir.join("LICENSE"), license.get_content(), overwrite)?;
     }
 
     if let Some(templates) = preset.with_templates {

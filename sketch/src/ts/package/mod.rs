@@ -17,8 +17,9 @@ use crate::{
   custom_templating::TemplatingPresetReference,
   fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, find_file_up, get_abs_path,
-    get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml,
+    get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml, write_file,
   },
+  licenses::License,
   merge_optional_vecs, overwrite_if_some,
   ts::{
     oxlint::{OxlintConfigSetting, OxlintPreset},
@@ -62,6 +63,10 @@ pub struct PackageConfig {
   )]
   pub package_json: Option<PackageJsonData>,
 
+  /// A license file to generate for the new package.
+  #[arg(long)]
+  pub license: Option<License>,
+
   /// One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.
   #[arg(skip)]
   #[merge(strategy = merge_optional_vecs)]
@@ -80,6 +85,7 @@ impl Default for PackageConfig {
   fn default() -> Self {
     Self {
       name: None,
+      license: None,
       package_json: None,
       vitest: Default::default(),
       ts_config: None,
@@ -321,6 +327,10 @@ impl Config {
       let merged_config = oxlint_config.process_data(id.as_str(), &typescript.oxlint_presets)?;
 
       serialize_json(&merged_config, &pkg_root.join(".oxlintrc.json"), overwrite)?;
+    }
+
+    if let Some(license) = config.license {
+      write_file(&pkg_root.join("LICENSE"), license.get_content(), overwrite)?;
     }
 
     if let Some(templates) = config.with_templates && !templates.is_empty() {

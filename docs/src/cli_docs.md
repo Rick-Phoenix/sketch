@@ -5,22 +5,27 @@ This document contains the help content for the `sketch` command-line program.
 **Command Overview:**
 
 * [`sketch`↴](#sketch)
-* [`sketch cargo-toml`↴](#sketch-cargo-toml)
-* [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
-* [`sketch package-json`↴](#sketch-package-json)
-* [`sketch ts-config`↴](#sketch-ts-config)
-* [`sketch oxlint`↴](#sketch-oxlint)
+* [`sketch new`↴](#sketch-new)
+* [`sketch repo`↴](#sketch-repo)
+* [`sketch render`↴](#sketch-render)
+* [`sketch render-preset`↴](#sketch-render-preset)
+* [`sketch exec`↴](#sketch-exec)
 * [`sketch docker-compose`↴](#sketch-docker-compose)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
+* [`sketch cargo-toml`↴](#sketch-cargo-toml)
 * [`sketch ts`↴](#sketch-ts)
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
 * [`sketch ts barrel`↴](#sketch-ts-barrel)
-* [`sketch repo`↴](#sketch-repo)
-* [`sketch new`↴](#sketch-new)
-* [`sketch render`↴](#sketch-render)
-* [`sketch render-preset`↴](#sketch-render-preset)
-* [`sketch exec`↴](#sketch-exec)
+* [`sketch package-json`↴](#sketch-package-json)
+* [`sketch ts-config`↴](#sketch-ts-config)
+* [`sketch oxlint`↴](#sketch-oxlint)
+* [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
+* [`sketch license`↴](#sketch-license)
+* [`sketch license apache2`↴](#sketch-license-apache2)
+* [`sketch license gpl3`↴](#sketch-license-gpl3)
+* [`sketch license agpl3`↴](#sketch-license-agpl3)
+* [`sketch license mit`↴](#sketch-license-mit)
 
 ## `sketch`
 
@@ -30,19 +35,20 @@ This document contains the help content for the `sketch` command-line program.
 
 ###### **Subcommands:**
 
-* `cargo-toml` — Generates a `Cargo.toml` file from a preset
-* `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
-* `package-json` — Generates a `package.json` file from a preset
-* `ts-config` — Generates a `tsconfig.json` file from a preset
-* `oxlint` — Generates a `.oxlintrc.json` file from a preset
-* `docker-compose` — Generates a Docker Compose file from a preset
-* `pre-commit` — Generates a `pre-commit` config file from a preset
-* `ts` — Executes typescript-specific commands
-* `repo` — Creates a new git repo from a preset
 * `new` — Generates a new config file
+* `repo` — Creates a new git repo from a preset
 * `render` — Renders a single template to a file or to stdout
 * `render-preset` — Renders a templating preset
 * `exec` — Renders a template and executes it as a shell command
+* `docker-compose` — Generates a Docker Compose file from a preset
+* `pre-commit` — Generates a `pre-commit` config file from a preset
+* `cargo-toml` — Generates a `Cargo.toml` file from a preset
+* `ts` — Executes typescript-specific commands
+* `package-json` — Generates a `package.json` file from a preset
+* `ts-config` — Generates a `tsconfig.json` file from a preset
+* `oxlint` — Generates a `.oxlintrc.json` file from a preset
+* `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
+* `license` — Generates a new license file
 
 ###### **Options:**
 
@@ -55,68 +61,100 @@ This document contains the help content for the `sketch` command-line program.
 
 
 
-## `sketch cargo-toml`
+## `sketch new`
 
-Generates a `Cargo.toml` file from a preset
+Generates a new config file
 
-**Usage:** `sketch cargo-toml <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the created file [default: `Cargo.toml`]
-
-
-
-## `sketch pnpm-workspace`
-
-Generates a `pnpm-workspace.yaml` file from a preset
-
-**Usage:** `sketch pnpm-workspace <PRESET> [OUTPUT]`
+**Usage:** `sketch new [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `pnpm-workspace.yaml`]
+* `<OUTPUT>` — The output file [default: sketch.yaml]
 
 
 
-## `sketch package-json`
+## `sketch repo`
 
-Generates a `package.json` file from a preset
+Creates a new git repo from a preset
 
-**Usage:** `sketch package-json <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `package.json`]
-
-
-
-## `sketch ts-config`
-
-Generates a `tsconfig.json` file from a preset
-
-**Usage:** `sketch ts-config <PRESET> [OUTPUT]`
+**Usage:** `sketch repo [OPTIONS] [DIR] [LICENSE]`
 
 ###### **Arguments:**
 
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
+* `<DIR>` — The directory where the new repo should be generated. [default: `.`]
+* `<LICENSE>` — A license file to generate for the new repo
+
+  Possible values:
+  - `apache2`:
+    Apache 2.0 license
+  - `gpl3`:
+    GNU GPL 3.0 license
+  - `agpl3`:
+    GNU AGPL 3.0 license
+  - `mit`:
+    MIT license
+
+
+###### **Options:**
+
+* `-p`, `--preset <PRESET>` — Selects a git preset from a configuration file
+* `--no-pre-commit` — Do not generate a pre-commit config
+* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
+* `--gitignore <GITIGNORE>` — Selects a gitignore preset
+* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
+* `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
 
 
-## `sketch oxlint`
+## `sketch render`
 
-Generates a `.oxlintrc.json` file from a preset
+Renders a single template to a file or to stdout
 
-**Usage:** `sketch oxlint <PRESET> [OUTPUT]`
+**Usage:** `sketch render [OPTIONS] <OUTPUT_PATH|--stdout>`
 
 ###### **Arguments:**
 
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `.oxlintrc.json`]
+* `<OUTPUT_PATH>` — The output path for the generated file
+
+###### **Options:**
+
+* `--stdout` — Prints the result to stdout
+* `-f`, `--file <FILE>` — The path to the template file
+* `-i`, `--id <ID>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
+* `-c`, `--content <CONTENT>` — The literal definition for the template
+
+
+
+## `sketch render-preset`
+
+Renders a templating preset
+
+**Usage:** `sketch render-preset <ID> [OUT_DIR]`
+
+###### **Arguments:**
+
+* `<ID>` — The id of the preset
+* `<OUT_DIR>` — The base path to join to relative output paths. [default: `.`]
+
+
+
+## `sketch exec`
+
+Renders a template and executes it as a shell command
+
+**Usage:** `sketch exec [OPTIONS] [CMD]`
+
+###### **Arguments:**
+
+* `<CMD>` — The literal definition for the template (incompatible with `--file` or `--template`)
+
+###### **Options:**
+
+* `--print-cmd` — Prints the rendered command to stdout before executing it
+* `-s`, `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
+* `--cwd <CWD>` — The cwd for the command to execute [default: `.`]
+* `-f`, `--file <FILE>` — The path to the command's template file, as an absolute path or relative to the cwd
+* `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
 
 
 
@@ -143,6 +181,19 @@ Generates a `pre-commit` config file from a preset
 
 * `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the created file [default: `.pre-commit-config.yaml`]
+
+
+
+## `sketch cargo-toml`
+
+Generates a `Cargo.toml` file from a preset
+
+**Usage:** `sketch cargo-toml <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the created file [default: `Cargo.toml`]
 
 
 
@@ -200,6 +251,18 @@ Generates a new typescript monorepo
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
 * `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
+* `--license <LICENSE>` — A license file to generate for the new package
+
+  Possible values:
+  - `apache2`:
+    Apache 2.0 license
+  - `gpl3`:
+    GNU GPL 3.0 license
+  - `agpl3`:
+    GNU AGPL 3.0 license
+  - `mit`:
+    MIT license
+
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many templates or templating presets to generate in the new package's root
@@ -227,6 +290,18 @@ Generates a new typescript package
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
 * `--package-json <ID>` — The package.json preset ID to use (uses defaults if not provided)
+* `--license <LICENSE>` — A license file to generate for the new package
+
+  Possible values:
+  - `apache2`:
+    Apache 2.0 license
+  - `gpl3`:
+    GNU GPL 3.0 license
+  - `agpl3`:
+    GNU AGPL 3.0 license
+  - `mit`:
+    MIT license
+
 
 
 
@@ -249,88 +324,114 @@ Creates a barrel file
 
 
 
-## `sketch repo`
+## `sketch package-json`
 
-Creates a new git repo from a preset
+Generates a `package.json` file from a preset
 
-**Usage:** `sketch repo [OPTIONS] [DIR]`
-
-###### **Arguments:**
-
-* `<DIR>` — The directory where the new repo should be generated. [default: `.`]
-
-###### **Options:**
-
-* `-p`, `--preset <PRESET>` — Selects a git preset from a configuration file
-* `--no-pre-commit` — Do not generate a pre-commit config
-* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
-* `--gitignore <GITIGNORE>` — Selects a gitignore preset
-* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
-* `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
-
-
-
-## `sketch new`
-
-Generates a new config file
-
-**Usage:** `sketch new [OUTPUT]`
+**Usage:** `sketch package-json <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<OUTPUT>` — The output file [default: sketch.yaml]
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `package.json`]
 
 
 
-## `sketch render`
+## `sketch ts-config`
 
-Renders a single template to a file or to stdout
+Generates a `tsconfig.json` file from a preset
 
-**Usage:** `sketch render [OPTIONS] <OUTPUT_PATH|--stdout>`
-
-###### **Arguments:**
-
-* `<OUTPUT_PATH>` — The output path for the generated file
-
-###### **Options:**
-
-* `--stdout` — Prints the result to stdout
-* `-f`, `--file <FILE>` — The path to the template file
-* `-i`, `--id <ID>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
-* `-c`, `--content <CONTENT>` — The literal definition for the template
-
-
-
-## `sketch render-preset`
-
-Renders a templating preset
-
-**Usage:** `sketch render-preset <ID> [OUT_DIR]`
+**Usage:** `sketch ts-config <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<ID>` — The id of the preset
-* `<OUT_DIR>` — The base path to join to relative output paths. [default: `.`]
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
 
 
 
-## `sketch exec`
+## `sketch oxlint`
 
-Renders a template and executes it as a shell command
+Generates a `.oxlintrc.json` file from a preset
 
-**Usage:** `sketch exec [OPTIONS] [CMD]`
+**Usage:** `sketch oxlint <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<CMD>` — The literal definition for the template (incompatible with `--file` or `--template`)
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `.oxlintrc.json`]
 
-###### **Options:**
 
-* `--print-cmd` — Prints the rendered command to stdout before executing it
-* `-s`, `--shell <SHELL>` — The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere]
-* `--cwd <CWD>` — The cwd for the command to execute [default: `.`]
-* `-f`, `--file <FILE>` — The path to the command's template file, as an absolute path or relative to the cwd
-* `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
+
+## `sketch pnpm-workspace`
+
+Generates a `pnpm-workspace.yaml` file from a preset
+
+**Usage:** `sketch pnpm-workspace <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `pnpm-workspace.yaml`]
+
+
+
+## `sketch license`
+
+Generates a new license file
+
+**Usage:** `sketch license [OUTPUT] <COMMAND>`
+
+###### **Subcommands:**
+
+* `apache2` — Apache 2.0 license
+* `gpl3` — GNU GPL 3.0 license
+* `agpl3` — GNU AGPL 3.0 license
+* `mit` — MIT license
+
+###### **Arguments:**
+
+* `<OUTPUT>` — The path of the output file [default: `LICENSE`]
+
+
+
+## `sketch license apache2`
+
+Apache 2.0 license.
+
+See more: https://choosealicense.com/licenses/apache-2.0/
+
+**Usage:** `sketch license apache2`
+
+
+
+## `sketch license gpl3`
+
+GNU GPL 3.0 license.
+
+See more: https://choosealicense.com/licenses/gpl-3.0/
+
+**Usage:** `sketch license gpl3`
+
+
+
+## `sketch license agpl3`
+
+GNU AGPL 3.0 license.
+
+See more: https://choosealicense.com/licenses/agpl-3.0/
+
+**Usage:** `sketch license agpl3`
+
+
+
+## `sketch license mit`
+
+MIT license.
+
+See more: https://choosealicense.com/licenses/mit/
+
+**Usage:** `sketch license mit`
 
 
 

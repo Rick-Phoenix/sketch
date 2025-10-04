@@ -4,7 +4,7 @@ use maplit::btreeset;
 use serde_json::Value;
 
 use crate::{
-  fs::{create_all_dirs, serialize_json, serialize_yaml},
+  fs::{create_all_dirs, serialize_json, serialize_yaml, write_file},
   ts::{
     oxlint::OxlintConfigSetting,
     package::PackageConfig,
@@ -168,6 +168,10 @@ impl Config {
 
     if let Some(oxlint_config) = root_package.oxlint && !matches!(oxlint_config, OxlintConfigSetting::Bool(false)) {
       serialize_json(&oxlint_config, &out_dir.join(".oxlintrc.json"), overwrite)?;
+    }
+
+    if let Some(license) = root_package.license {
+      write_file(&out_dir.join("LICENSE"), license.get_content(), overwrite)?;
     }
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {

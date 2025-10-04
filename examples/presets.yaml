@@ -130,6 +130,8 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
+    # License file to generate
+    license: Apache-2.0
     # Selecting a preset
     gitignore: ts
     pre_commit: typescript

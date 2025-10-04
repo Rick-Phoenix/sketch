@@ -26,9 +26,10 @@ use crate::{
   },
   fs::{
     create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
-    serialize_yaml,
+    serialize_yaml, write_file,
   },
   init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
+  licenses::License,
   ts::TypescriptConfig,
   Config, *,
 };
@@ -51,6 +52,11 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
+    Commands::License { license, output } => {
+      let output = output.unwrap_or_else(|| "LICENSE".into());
+
+      write_file(&output, license.get_content(), overwrite)?;
+    }
     Commands::PnpmWorkspace { output, preset } => {
       let typescript = config.typescript.unwrap_or_default();
 
@@ -238,6 +244,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
             ..Default::default()
           }));
         }
+      }
+
+      if let Some(license) = input.license {
+        preset.license = Some(license);
       }
 
       let out_dir = dir.unwrap_or_else(|| get_cwd());
@@ -444,6 +454,9 @@ pub struct RepoConfigInput {
   #[arg(long)]
   gitignore: Option<String>,
 
+  /// A license file to generate for the new repo.
+  license: Option<License>,
+
   /// One or many individual templates or templating presets to render in the new repo
   #[arg(
     short,
@@ -602,6 +615,15 @@ pub enum Commands {
     preset: String,
 
     /// The output path of the generated file [default: `pnpm-workspace.yaml`]
+    output: Option<PathBuf>,
+  },
+
+  License {
+    #[command(subcommand)]
+    license: License,
+
+    /// The path of the output file [default: `LICENSE`]
+    #[arg(short, long)]
     output: Option<PathBuf>,
   },
 }

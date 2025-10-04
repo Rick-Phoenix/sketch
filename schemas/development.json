@@ -36,14 +36,6 @@
       ],
       "default": null
     },
-    "debug": {
-      "description": "Activates debugging mode.",
-      "type": [
-        "boolean",
-        "null"
-      ],
-      "default": null
-    },
     "templates_dir": {
       "description": "The path to the templates directory.",
       "type": [
@@ -3059,7 +3051,7 @@
             "null"
           ]
         },
-        "noUncheckedSideEffectsImports": {
+        "noUncheckedSideEffectImports": {
           "description": "Check side effect imports.\n\nSee more: https://www.typescriptlang.org/tsconfig#noUncheckedSideEffectImports",
           "type": [
             "boolean",
@@ -3562,6 +3554,11 @@
           "description": "When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code",
           "type": "string",
           "const": "node16"
+        },
+        {
+          "description": "When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code",
+          "type": "string",
+          "const": "node20"
         },
         {
           "description": "When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code",
@@ -4495,10 +4492,7 @@
     "TemplateOutputKind": {
       "anyOf": [
         {
-          "type": "string",
-          "enum": []
-        },
-        {
+          "description": "Render the output to a file",
           "type": "string"
         }
       ]
@@ -10310,6 +10304,17 @@
             "$ref": "#/$defs/TemplatingPresetReference"
           },
           "default": null
+        },
+        "license": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/License"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       }
     },
@@ -10336,6 +10341,15 @@
         {
           "$ref": "#/$defs/PreCommitPreset"
         }
+      ]
+    },
+    "License": {
+      "type": "string",
+      "enum": [
+        "Apache-2.0",
+        "GPL-3.0",
+        "AGPL-3.0",
+        "MIT"
       ]
     },
     "CargoTomlPreset": {
@@ -10495,7 +10509,10 @@
       "properties": {
         "name": {
           "description": "Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "version": {
           "description": "See [the `version()` getter for more info](`Package::version()`).\n\nMust parse as semver, e.g. \"1.9.0\"\n\nThis field may have unknown value when using workspace inheritance,\nand when the `Manifest` has been loaded without its workspace.",
@@ -10748,10 +10765,7 @@
           ],
           "additionalProperties": true
         }
-      },
-      "required": [
-        "name"
-      ]
+      }
     },
     "Inheritable": {
       "description": "A value that can be set to `workspace`",
