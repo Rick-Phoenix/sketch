@@ -301,12 +301,8 @@ fn render_structured_preset(
   };
 
   Ok(
-    for entry in WalkDir::new(&root_dir)
-      .into_iter()
-      .filter_map(|e| e.ok())
-      .filter(|e| e.file_type().is_file())
-    {
-      let template_path = entry
+    for entry in WalkDir::new(&root_dir).into_iter().filter_map(|e| e.ok()) {
+      let input_path = entry
         .path()
         .strip_prefix(&templates_dir)
         .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?;
@@ -317,25 +313,32 @@ fn render_structured_preset(
         .to_path_buf();
 
       if let Some(ref globset) = globset {
-        if globset.is_match(&template_path) {
+        if globset.is_match(&input_path) {
           continue;
         }
       }
 
-      if output_path
-        .extension()
-        .is_some_and(|e| e == "j2" || e == "jinja" || e == "jinja2")
-      {
-        output_path = output_path.with_extension("");
-      }
+      let file_type = entry.file_type();
 
-      render_template(
-        tera,
-        &template_path.to_string_lossy(),
-        &output_root.join(output_path),
-        context,
-        overwrite,
-      )?;
+      if file_type.is_dir() {
+        create_all_dirs(&output_path)?;
+        continue;
+      } else if file_type.is_file() {
+        if output_path
+          .extension()
+          .is_some_and(|e| e == "j2" || e == "jinja" || e == "jinja2")
+        {
+          output_path = output_path.with_extension("");
+        }
+
+        render_template(
+          tera,
+          &input_path.to_string_lossy(),
+          &output_root.join(output_path),
+          context,
+          overwrite,
+        )?;
+      }
     },
   )
 }
