@@ -10,7 +10,7 @@ pub mod pre_commit;
 
 use crate::{
   custom_templating::TemplatingPresetReference,
-  exec::launch_command,
+  exec::{launch_command, Hook},
   fs::{create_all_dirs, serialize_yaml, write_file},
   init_repo::{
     gitignore::{GitIgnore, GitIgnoreSetting, DEFAULT_GITIGNORE},
@@ -32,6 +32,10 @@ pub struct RepoPreset {
   pub with_templates: Option<Vec<TemplatingPresetReference>>,
   /// A license file to generate for the new repo.
   pub license: Option<License>,
+  /// One or many rendered commands to execute before the repo's creation
+  pub hooks_pre: Vec<Hook>,
+  /// One or many rendered commands to execute after the repo's creation
+  pub hooks_post: Vec<Hook>,
 }
 
 impl Config {
@@ -43,6 +47,16 @@ impl Config {
     cli_vars: &IndexMap<String, Value>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
+
+    if !preset.hooks_pre.is_empty() {
+      self.execute_command(
+        self.shell.as_deref(),
+        out_dir,
+        &preset.hooks_pre,
+        cli_vars,
+        false,
+      )?;
+    }
 
     create_all_dirs(&out_dir)?;
 
@@ -127,6 +141,16 @@ impl Config {
 
     if let Some(templates) = preset.with_templates {
       self.generate_templates(&out_dir, templates, cli_vars)?;
+    }
+
+    if !preset.hooks_post.is_empty() {
+      self.execute_command(
+        self.shell.as_deref(),
+        out_dir,
+        &preset.hooks_post,
+        cli_vars,
+        false,
+      )?;
     }
 
     Ok(())

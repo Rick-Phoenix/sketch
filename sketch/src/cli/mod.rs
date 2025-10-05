@@ -25,6 +25,7 @@ use crate::{
     PresetElement, TemplateData, TemplateOutput, TemplateOutputKind, TemplatingPreset,
     TemplatingPresetReference,
   },
+  exec::Hook,
   fs::{
     create_all_dirs, create_parent_dirs, deserialize_json, deserialize_toml, deserialize_yaml,
     get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml, write_file,
@@ -403,7 +404,16 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         config.shell.clone()
       };
 
-      config.execute_command(shell.as_deref(), &cwd, command, &cli_vars, print_cmd)?;
+      config.execute_command(
+        shell.as_deref(),
+        &cwd,
+        &[Hook {
+          command,
+          context: Default::default(),
+        }],
+        &cli_vars,
+        print_cmd,
+      )?;
     }
     Ts { command, .. } => {
       handle_ts_commands(config, command, &cli_vars).await?;

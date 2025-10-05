@@ -1,4 +1,4 @@
-use std::{fs::create_dir_all, path::Path};
+use std::{fs::create_dir_all, mem, path::Path};
 
 use indexmap::IndexMap;
 use maplit::btreeset;
@@ -29,7 +29,8 @@ impl Config {
     settings: CreateTsMonorepoSettings<'_>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
-    let typescript = self.typescript.get_or_insert_default();
+
+    let typescript = mem::take(&mut self.typescript).unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
 
@@ -44,6 +45,16 @@ impl Config {
     } = settings;
 
     create_all_dirs(out_dir)?;
+
+    if let Some(hooks_pre) = root_package.hooks_pre && !hooks_pre.is_empty() {
+      self.execute_command(
+        self.shell.as_deref(),
+        &out_dir,
+        &hooks_pre,
+        cli_vars,
+        false,
+      )?;
+    }
 
     let (package_json_id, package_json_preset) = match root_package.package_json.unwrap_or_default()
     {
@@ -177,6 +188,16 @@ impl Config {
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {
       self.generate_templates(&out_dir, templates, cli_vars)?;
+    }
+
+    if let Some(hooks_post) = root_package.hooks_post && !hooks_post.is_empty() {
+      self.execute_command(
+        self.shell.as_deref(),
+        &out_dir,
+        &hooks_post,
+        cli_vars,
+        false,
+      )?;
     }
 
     Ok(())

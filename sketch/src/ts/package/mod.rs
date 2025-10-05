@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{mem, path::PathBuf};
 
 use askama::Template;
 use clap::Parser;
@@ -16,6 +16,7 @@ use super::{
 };
 use crate::{
   custom_templating::TemplatingPresetReference,
+  exec::Hook,
   fs::{
     create_all_dirs, deserialize_json, deserialize_yaml, find_file_up, get_abs_path,
     get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml, write_file,
@@ -39,7 +40,7 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, JsonSchema, Default)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {
@@ -73,6 +74,24 @@ pub struct PackageConfig {
   #[merge(strategy = merge_optional_vecs)]
   pub with_templates: Option<Vec<TemplatingPresetReference>>,
 
+  /// One or many rendered commands to execute before the repo's creation
+  #[merge(strategy = merge_optional_vecs)]
+  #[arg(
+    long = "hook-pre",
+    help = "One or many IDs of templates to render and execute as commands before the package's creation",
+    value_name = "ID"
+  )]
+  pub hooks_pre: Option<Vec<Hook>>,
+
+  /// One or many rendered commands to execute after the repo's creation
+  #[merge(strategy = merge_optional_vecs)]
+  #[arg(
+    long = "hook-post",
+    help = "One or many IDs of templates to render and execute as commands after the package's creation",
+    value_name = "ID"
+  )]
+  pub hooks_post: Option<Vec<Hook>>,
+
   /// The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
   #[arg(skip)]
   pub vitest: Option<VitestConfigKind>,
@@ -80,20 +99,6 @@ pub struct PackageConfig {
   /// The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
   #[arg(skip)]
   pub oxlint: Option<OxlintConfigSetting>,
-}
-
-impl Default for PackageConfig {
-  fn default() -> Self {
-    Self {
-      name: None,
-      license: None,
-      package_json: None,
-      vitest: Default::default(),
-      ts_config: None,
-      with_templates: Default::default(),
-      oxlint: None,
-    }
-  }
 }
 
 /// The kinds of Ts package data. Either an id pointing to a stored preset, or a custom configuration.
@@ -112,7 +117,8 @@ impl Config {
     cli_vars: &IndexMap<String, Value>,
   ) -> Result<(), GenError> {
     let overwrite = self.can_overwrite();
-    let typescript = self.typescript.get_or_insert_default();
+
+    let typescript = mem::take(&mut self.typescript).unwrap_or_default();
 
     let package_json_presets = &typescript.package_json_presets;
 
@@ -139,6 +145,16 @@ impl Config {
     create_all_dirs(&pkg_root)?;
 
     let pkg_root = get_abs_path(&pkg_root)?;
+
+    if let Some(hooks_pre) = config.hooks_pre && !hooks_pre.is_empty() {
+      self.execute_command(
+        self.shell.as_deref(),
+        &pkg_root,
+        &hooks_pre,
+        cli_vars,
+        false,
+      )?;
+    }
 
     let package_manager = typescript.package_manager.unwrap_or_default();
     let version_ranges = typescript.version_range.unwrap_or_default();
@@ -337,6 +353,16 @@ impl Config {
     if let Some(templates) = config.with_templates && !templates.is_empty() {
       self
         .generate_templates(&pkg_root, templates, cli_vars)?;
+    }
+
+    if let Some(hooks_post) = config.hooks_post && !hooks_post.is_empty() {
+      self.execute_command(
+        self.shell.as_deref(),
+        &pkg_root,
+        &hooks_post,
+        cli_vars,
+        false,
+      )?;
     }
 
     Ok(())

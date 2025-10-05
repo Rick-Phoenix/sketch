@@ -159,7 +159,7 @@ pub struct TemplateOutput {
 impl Config {
   /// A helper to generate custom templates.
   pub fn generate_templates<T: AsRef<Path>>(
-    self,
+    &self,
     output_root: T,
     preset_refs: Vec<TemplatingPresetReference>,
     cli_overrides: &IndexMap<String, Value>,
