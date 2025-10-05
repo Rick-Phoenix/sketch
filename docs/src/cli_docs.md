@@ -58,6 +58,9 @@ This document contains the help content for the `sketch` command-line program.
 * `-c`, `--config <FILE>` — Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
 * `--ignore-config` — Ignores any automatically detected config files, uses cli instructions only
 * `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
+* `--vars-yaml <VARS_YAML>` — One or more paths to yaml files to extract template variables from, in the given order
+* `--vars-toml <VARS_TOML>` — One or more paths to toml files to extract template variables from, in the given order
+* `--vars-json <VARS_JSON>` — One or more paths to json files to extract template variables from, in the given order
 
 
 
@@ -380,7 +383,7 @@ Generates a `pnpm-workspace.yaml` file from a preset
 
 Generates a new license file
 
-**Usage:** `sketch license [OUTPUT] <COMMAND>`
+**Usage:** `sketch license [OPTIONS] <COMMAND>`
 
 ###### **Subcommands:**
 
@@ -389,9 +392,9 @@ Generates a new license file
 * `agpl3` — GNU AGPL 3.0 license
 * `mit` — MIT license
 
-###### **Arguments:**
+###### **Options:**
 
-* `<OUTPUT>` — The path of the output file [default: `LICENSE`]
+* `-o`, `--output <OUTPUT>` — The path of the output file [default: `LICENSE`]
 
 
 

@@ -1,4 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::{
+  env,
+  path::{Path, PathBuf},
+  process::Command,
+};
 
 use globset::{Glob, GlobSetBuilder};
 use indexmap::{IndexMap, IndexSet};
@@ -81,6 +85,18 @@ pub enum PresetElement {
 
   /// A path to a directory inside `templates_dir`, where all templates will be recursively extracted and rendered in the output directory, following the same file tree structure.
   Structured(StructuredPreset),
+
+  /// A preset defined in a git repository.
+  Remote(RemotePreset),
+}
+
+/// A preset defined in a git repository.
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+pub struct RemotePreset {
+  /// The link of the repo where the preset is defined
+  repo: String,
+  /// A list of glob patterns for the templates to exclude
+  exclude: Option<Vec<String>>,
 }
 
 /// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
@@ -180,6 +196,58 @@ impl Config {
 
       for element in preset.templates {
         match element {
+          PresetElement::Remote(RemotePreset { repo, exclude }) => {
+            let repo_name = {
+              let path_segment = repo
+                .rsplit_once(['/', ':'])
+                .map(|(_before, after)| after)
+                .unwrap_or(repo.as_str());
+
+              path_segment.strip_suffix(".git").unwrap_or(repo.as_str())
+            };
+
+            let tmp_dir = env::temp_dir().join("sketch").join(repo_name);
+
+            let clone_result = Command::new("git")
+              .arg("clone")
+              .arg(&repo)
+              .arg(&tmp_dir)
+              .output()
+              .map_err(|e| generic_error!("Could not clone git repo `{}`: {}", repo, e))?;
+
+            if !clone_result.status.success() {
+              let stderr = String::from_utf8_lossy(&clone_result.stderr);
+              return Err(generic_error!(
+                "Could not clone git repo `{}`: {}",
+                repo,
+                stderr
+              ));
+            }
+
+            let new_tera = Tera::new(&format!("{}/**/*", tmp_dir.display())).map_err(|e| {
+              GenError::Custom(format!(
+                "Failed to load the templates from remote template `{}`: {}",
+                repo, e
+              ))
+            })?;
+
+            tera.extend(&new_tera).map_err(|e| {
+              GenError::Custom(format!(
+                "Failed to load the templates from remote template `{}`: {}",
+                repo, e
+              ))
+            })?;
+
+            render_structured_preset(
+              overwrite,
+              &tera,
+              &local_context,
+              output_root,
+              &tmp_dir,
+              &tmp_dir,
+              exclude,
+            )?;
+          }
           PresetElement::Template(template) => {
             extend_context(&mut local_context, &template.context)?;
             apply_cli_overrides(&mut local_context, cli_overrides)?;
@@ -202,7 +270,7 @@ impl Config {
               &tera,
               &local_context,
               output_root,
-              dir,
+              &dir,
               &self
                 .templates_dir
                 .clone()
@@ -268,7 +336,7 @@ fn render_structured_preset(
   tera: &Tera,
   context: &Context,
   output_root: &Path,
-  dir: PathBuf,
+  dir: &Path,
   templates_dir: &Path,
   exclude: Option<Vec<String>>,
 ) -> Result<(), GenError> {
@@ -276,8 +344,9 @@ fn render_structured_preset(
   let root_dir = templates_dir.join(&dir);
   if !root_dir.is_dir() {
     return Err(GenError::Custom(format!(
-      "`{}` is not a valid directory inside `templates_dir`",
-      dir.display()
+      "`{}` is not a valid directory inside `{}`",
+      dir.display(),
+      templates_dir.display()
     )));
   }
 
@@ -302,6 +371,7 @@ fn render_structured_preset(
 
   Ok(
     for entry in WalkDir::new(&root_dir).into_iter().filter_map(|e| e.ok()) {
+      dbg!(&entry.path());
       let input_path = entry
         .path()
         .strip_prefix(&templates_dir)
@@ -312,6 +382,10 @@ fn render_structured_preset(
         .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?
         .to_path_buf();
 
+      if output_path.to_string_lossy().is_empty() {
+        continue;
+      }
+
       if let Some(ref globset) = globset {
         if globset.is_match(&input_path) {
           continue;
@@ -321,6 +395,7 @@ fn render_structured_preset(
       let file_type = entry.file_type();
 
       if file_type.is_dir() {
+        dbg!(&file_type);
         create_all_dirs(&output_path)?;
         continue;
       } else if file_type.is_file() {
