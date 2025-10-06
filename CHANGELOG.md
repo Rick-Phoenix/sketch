@@ -1,3 +1,45 @@
+## [0.2.0] - 2025-10-06
+
+### ⛰️  Features
+
+- Added node20 to tsconfig
+- Create matching output dirs in structured templating presets, even if empty
+- Added common license files generation
+- Including variables from extra files
+- Added git repos as a source for templating presets
+- Added pre and post hooks for repo or ts package generation
+
+### 🐛 Bug Fixes
+
+- Removed dangling extends in default tsconfig
+- Fixed wrong plural in tsconfig prop
+- Removed invalid root_dir directive in default tsconfig
+- Fixed hooks context not being loaded
+
+### 🚜 Refactor
+
+- *(docker)* Skip serialization for external field if undefined
+- *(cli)* Order commands semantically in help
+- Making name optional in cargo.toml presets
+
+### 📚 Documentation
+
+- Added documentation for hooks
+- Fixed issue with homepage routing
+- Added documentation for remote templating presets
+
+### ⚡ Performance
+
+- Removed slow iteration of config dir
+
+### 🧪 Testing
+
+- Added tests for hooks
+- Added tests for vars files and remote presets
+
+### 📦 CI/CD
+
+- Fixed erroneous command for changelog generation on new releases
 ## [0.1.0] - 2025-09-30
 
 ### ⛰️  Features

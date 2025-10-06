@@ -1,5 +1,5 @@
 use std::{
-  fs::{create_dir_all, read_to_string, File},
+  fs::{create_dir_all, File},
   path::PathBuf,
 };
 
@@ -9,8 +9,8 @@ use schemars::schema_for;
 use sketch_it::Config;
 
 #[derive(Debug, Parser)]
-pub(crate) struct SchemaCmd {
-  pub(crate) version: String,
+pub struct SchemaCmd {
+  pub version: String,
 }
 
 fn get_version(v: &str) -> (usize, usize, usize) {
@@ -42,28 +42,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let latest_schema_file = schemas_dir.join("latest.json");
 
-  if latest_schema_file.is_file() {
-    let schema_str: String = serde_json::to_string_pretty(&schema)?;
-    let latest_schema_content = read_to_string(&latest_schema_file)?;
-
-    if latest_schema_content == schema_str {
-      return Ok(());
-    }
-  }
-
   let latest = File::create(latest_schema_file)?;
   serde_json::to_writer_pretty(&latest, &schema)?;
 
-  if version.starts_with('v') {
-    let (major, minor, _) = get_version(&version);
+  let (major, minor, _) = get_version(&version);
 
-    let minor_dir = schemas_dir.join(format!("v{}.{}", major, minor));
+  let minor_dir = schemas_dir.join(format!("v{}.{}", major, minor));
 
-    create_dir_all(&minor_dir)?;
+  create_dir_all(&minor_dir)?;
 
-    let versioned = File::create(minor_dir.join(format!("v{}.json", version)))?;
-    serde_json::to_writer_pretty(&versioned, &schema)?;
-  }
+  let versioned = File::create(minor_dir.join(format!("v{}.json", version)))?;
+  serde_json::to_writer_pretty(&versioned, &schema)?;
 
   Ok(())
 }
