@@ -28,6 +28,14 @@ templating_presets:
           - "some/glob/pattern/*"
   # ANCHOR_END: structured_preset
 
+  # ANCHOR: remote_preset
+  remote:
+    templates:
+      - repo: https://github.com/Rick-Phoenix/sketch-remote-preset-example
+        # Glob patterns to exclude
+        exclude: [.gitignore]
+  # ANCHOR_END: remote_preset
+
   # ANCHOR: collection_preset
 
   lotr:

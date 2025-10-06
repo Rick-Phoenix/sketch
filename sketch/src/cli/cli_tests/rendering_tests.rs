@@ -31,6 +31,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&config_dir.join("templates"), Some(output_dir.join("tree")))?;
 
+  // From known template
+
   let from_template_id_cmd = [
     "sketch",
     "-c",
@@ -48,6 +50,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
   execute_cli(from_template_id).await?;
 
   exists!("from_template_id.txt");
+
+  // From any file
 
   let from_template_file_cmd = [
     "sketch",
@@ -106,6 +110,40 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   // Presets tests
 
+  // Remote
+
+  let out_dir = output_dir.join("remote");
+
+  let from_remote_preset_cmd = [
+    "sketch",
+    "-c",
+    &config_file.to_string_lossy(),
+    "--set",
+    "continuation=\"gp2 engine... gp2!\"",
+    "render-preset",
+    "remote",
+    &out_dir.to_string_lossy(),
+  ];
+
+  let from_remote_preset = Cli::try_parse_from(from_remote_preset_cmd)?;
+
+  execute_cli(from_remote_preset).await?;
+
+  write_command!(from_remote_preset_cmd, [1, 2, 7], "remote");
+  get_tree_output("tests/output/custom_templates/remote", None)?;
+
+  let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
+
+  let top_level_file = read_to_string(out_dir.join("some_file"))?;
+
+  assert_eq!(top_level_file, expected_output);
+
+  let nested_file = read_to_string(out_dir.join("subdir/nested/nested_file"))?;
+
+  assert_eq!(nested_file, expected_output);
+
+  // Granular
+
   let collection_preset = [
     "sketch",
     "-c",
@@ -126,6 +164,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output("tests/output/custom_templates/lotr", None)?;
 
+  // Structured
+
   let structured_preset = [
     "sketch",
     "-c",
@@ -145,6 +185,8 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
   exists!("structured/nested/more_nested_file");
 
   get_tree_output("tests/output/custom_templates/structured", None)?;
+
+  // Extended
 
   let extended_preset = [
     "sketch",

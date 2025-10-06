@@ -1,5 +1,6 @@
 use std::{
   env,
+  fs::remove_dir_all,
   path::{Path, PathBuf},
   process::Command,
 };
@@ -35,6 +36,15 @@ pub enum TemplatingPresetReference {
   },
   /// The definition for a new templating preset.
   Definition(TemplatingPreset),
+}
+
+impl TemplatingPresetReference {
+  pub fn get_context(&self) -> &IndexMap<String, Value> {
+    match self {
+      TemplatingPresetReference::Preset { context, .. } => context,
+      TemplatingPresetReference::Definition(templating_preset) => &templating_preset.context,
+    }
+  }
 }
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
@@ -177,36 +187,33 @@ impl Config {
     for preset_ref in preset_refs {
       let mut local_context = global_context.clone();
 
-      let preset = match preset_ref {
-        TemplatingPresetReference::Preset { id, context } => {
-          extend_context(&mut local_context, &context)?;
+      extend_context(&mut local_context, preset_ref.get_context())?;
 
-          self
-            .templating_presets
-            .get(&id)
-            .ok_or(GenError::PresetNotFound {
-              kind: Preset::Templates,
-              name: id.clone(),
-            })?
-            .clone()
-            .process_data(id.as_str(), &self.templating_presets)?
-        }
+      let preset = match preset_ref {
+        TemplatingPresetReference::Preset { id, .. } => self
+          .templating_presets
+          .get(&id)
+          .ok_or(GenError::PresetNotFound {
+            kind: Preset::Templates,
+            name: id.clone(),
+          })?
+          .clone()
+          .process_data(id.as_str(), &self.templating_presets)?,
         TemplatingPresetReference::Definition(preset) => preset,
       };
 
       for element in preset.templates {
         match element {
           PresetElement::Remote(RemotePreset { repo, exclude }) => {
-            let repo_name = {
-              let path_segment = repo
-                .rsplit_once(['/', ':'])
-                .map(|(_before, after)| after)
-                .unwrap_or(repo.as_str());
+            apply_cli_overrides(&mut local_context, cli_overrides)?;
 
-              path_segment.strip_suffix(".git").unwrap_or(repo.as_str())
-            };
+            let tmp_dir = env::temp_dir().join("sketch/repo");
 
-            let tmp_dir = env::temp_dir().join("sketch").join(repo_name);
+            if tmp_dir.exists() {
+              remove_dir_all(&tmp_dir).map_err(|e| {
+                generic_error!("Could not empty the directory `{tmp_dir:?}`: {}", e)
+              })?;
+            }
 
             let clone_result = Command::new("git")
               .arg("clone")
@@ -223,6 +230,9 @@ impl Config {
                 stderr
               ));
             }
+
+            remove_dir_all(tmp_dir.join(".git"))
+              .map_err(|e| generic_error!("Could not empty the directory `{tmp_dir:?}`: {}", e))?;
 
             let new_tera = Tera::new(&format!("{}/**/*", tmp_dir.display())).map_err(|e| {
               GenError::Custom(format!(
@@ -273,7 +283,7 @@ impl Config {
               &dir,
               &self
                 .templates_dir
-                .clone()
+                .as_ref()
                 .ok_or(GenError::Custom(format!("templates_dir not set")))?,
               exclude,
             )?;
