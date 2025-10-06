@@ -10,5 +10,5 @@ release-test version="patch":
 
 [confirm]
 [working-directory('sketch')]
-release-exec $EXEC_RELEASE="true" version="patch":
-    cargo release {{ version }} --execute
+release-exec version="patch":
+    EXEC_RELEASE=true cargo release {{ version }} --execute

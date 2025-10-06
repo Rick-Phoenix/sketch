@@ -10,6 +10,7 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 echo "Preparing to release version $VERSION"
+echo "EXEC_RELEASE status: $EXEC_RELEASE"
 
 echo "Running tests..."
 
