@@ -663,7 +663,7 @@ pub enum Commands {
   },
 
   License {
-    #[command(subcommand)]
+    #[arg(value_enum)]
     license: License,
 
     /// The path of the output file [default: `LICENSE`]

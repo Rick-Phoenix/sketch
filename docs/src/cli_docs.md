@@ -22,10 +22,6 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch oxlint`↴](#sketch-oxlint)
 * [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
 * [`sketch license`↴](#sketch-license)
-* [`sketch license apache2`↴](#sketch-license-apache2)
-* [`sketch license gpl3`↴](#sketch-license-gpl3)
-* [`sketch license agpl3`↴](#sketch-license-agpl3)
-* [`sketch license mit`↴](#sketch-license-mit)
 
 ## `sketch`
 
@@ -48,7 +44,7 @@ This document contains the help content for the `sketch` command-line program.
 * `ts-config` — Generates a `tsconfig.json` file from a preset
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
-* `license` — Generates a new license file
+* `license` — 
 
 ###### **Options:**
 
@@ -385,60 +381,23 @@ Generates a `pnpm-workspace.yaml` file from a preset
 
 ## `sketch license`
 
-Generates a new license file
-
-**Usage:** `sketch license [OPTIONS] <COMMAND>`
-
-###### **Subcommands:**
-
-* `apache2` — Apache 2.0 license
-* `gpl3` — GNU GPL 3.0 license
-* `agpl3` — GNU AGPL 3.0 license
-* `mit` — MIT license
+**Usage:** `sketch license [OPTIONS] --license <LICENSE>`
 
 ###### **Options:**
 
+* `--license <LICENSE>`
+
+  Possible values:
+  - `apache2`:
+    Apache 2.0 license
+  - `gpl3`:
+    GNU GPL 3.0 license
+  - `agpl3`:
+    GNU AGPL 3.0 license
+  - `mit`:
+    MIT license
+
 * `-o`, `--output <OUTPUT>` — The path of the output file [default: `LICENSE`]
-
-
-
-## `sketch license apache2`
-
-Apache 2.0 license.
-
-See more: https://choosealicense.com/licenses/apache-2.0/
-
-**Usage:** `sketch license apache2`
-
-
-
-## `sketch license gpl3`
-
-GNU GPL 3.0 license.
-
-See more: https://choosealicense.com/licenses/gpl-3.0/
-
-**Usage:** `sketch license gpl3`
-
-
-
-## `sketch license agpl3`
-
-GNU AGPL 3.0 license.
-
-See more: https://choosealicense.com/licenses/agpl-3.0/
-
-**Usage:** `sketch license agpl3`
-
-
-
-## `sketch license mit`
-
-MIT license.
-
-See more: https://choosealicense.com/licenses/mit/
-
-**Usage:** `sketch license mit`
 
 
 

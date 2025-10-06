@@ -3,7 +3,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Generates a new license file
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, ValueEnum, Subcommand)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, ValueEnum)]
 pub enum License {
   /// Apache 2.0 license.
   ///
