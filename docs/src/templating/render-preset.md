@@ -6,11 +6,11 @@ Presets can be rendered with the `render-preset` command, or generated automatic
 
 # Creating A Preset
 
-A preset contains an optional context (which overrides the global context), and a list of two kinds of items, which are best used under different kinds of situations:
+A preset contains an optional context (which overrides the global context), and a list that contains any of these elements:
 
-## Individual Template
+## Individual Presets
 
-- An individual template (with manually controlled output path and local context)
+- An individual template, with manually controlled output path and context
 
 ### Example
 
@@ -59,6 +59,36 @@ Tree output:
 ```
 {{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
 ```
+
+# Remote Template
+
+- A special kind of structured preset which points to a git repository. Every file inside of it will be rendered in the output directory, just like structured templates.
+
+```yaml
+{{#include ../../../examples/templating/templating.yaml:prop_name}}
+{{#include ../../../examples/templating/templating.yaml:remote_preset}}
+```
+
+## Example
+
+We start from this basic [example](https://github.com/Rick-Phoenix/sketch-remote-preset-example)
+
+Command:
+
+>`{{#include ../../../sketch/tests/output/custom_templates/commands/remote}}`
+
+Tree output:
+
+```
+{{#include ../../../sketch/tests/output/custom_templates/remote/tree_output.txt:2:}}
+```
+
+File output:
+
+```
+{{#include ../../../sketch/tests/output/custom_templates/remote/some_file}}
+```
+
 # Extending Templating Presets
 
 Templating presets are extensible. When a preset is being extended, its templates will be added to the receiving preset, and the two context maps will be merged, with the new context overwriting the previous context in case of conflicting variables.

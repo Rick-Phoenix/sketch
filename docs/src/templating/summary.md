@@ -81,7 +81,7 @@ Output:
 {{#include ../../../sketch/tests/output/templating_examples/output}}
 ```
 
-# Context Priority
+# Defining Variables
 
 Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):
 
