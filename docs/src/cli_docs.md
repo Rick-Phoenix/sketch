@@ -266,6 +266,8 @@ Generates a new typescript monorepo
   - `mit`:
     MIT license
 
+* `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
+* `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
 * `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 * `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many templates or templating presets to generate in the new package's root
@@ -305,6 +307,8 @@ Generates a new typescript package
   - `mit`:
     MIT license
 
+* `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
+* `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
 
 
 

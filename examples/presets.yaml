@@ -130,21 +130,6 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
-    # Commands to run before generation, from the root of the new repo
-    hooks_pre:
-      - command:
-          name: pre_hook
-          content: "echo '{{ greeting }}' > pre.txt"
-        context:
-          greeting: hi
-
-    # Commands to run after generation, from the root of the new repo
-    hooks_post:
-      - command:
-          name: post_hook
-          content: "echo '{{ greeting }}' > post.txt"
-        context:
-          greeting: hi
     # License file to generate
     license: Apache-2.0
     # Selecting a preset
@@ -157,6 +142,26 @@ git_presets:
     with_templates:
       - id: dockerfile
     # ANCHOR_END: git_preset
+
+    # ANCHOR: hooks
+    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' > pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' > post.txt"
+        context:
+          greeting: hi
+    # ANCHOR_END: hooks
 
 typescript:
   no_default_deps: true

@@ -8,11 +8,13 @@ This is an example of a package-related configuration:
 {{#include ../../../examples/typescript/new_package.yaml:all}}
 ```
 
-After setting things up, you can run
+# Hooks
 
->`{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}`
+We can define some commands (which can also be templates) to execute before and/or after generating the new package:
 
-To generate the new package.
+```yaml
+{{#include ../../../examples/presets.yaml:hooks}}
+```
 
 ## Adding Templates
 
@@ -26,7 +28,15 @@ You can use this feature to generate a file inside `src/schemas/index.ts` automa
 {{#include ../../../examples/typescript/new_package.yaml:template_example}}
 ```
 
-So the final tree structure of the output directory will look like this:
+# Result
+
+After setting things up, you can run
+
+>`{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}`
+
+To generate the new package.
+
+The final tree structure of the output directory will look like this:
 
 ```
 {{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt:2:}}

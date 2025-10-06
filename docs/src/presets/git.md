@@ -20,6 +20,16 @@ We can use the `with_templates` setting to add a group of templates to a git pre
 {{#include ../../../examples/presets.yaml:git_preset}}
 ```
 
+# Hooks
+
+We can define some commands (which can also be templates) to execute before and/or after generating the new repo:
+
+```yaml
+{{#include ../../../examples/presets.yaml:hooks}}
+```
+
+# Putting It All Together
+
 Starting from this config, we can run this command:
 
 >`{{#include ../../../sketch/tests/output/presets/cmd}}`
@@ -30,7 +40,7 @@ To get this tree output:
 {{#include ../../../sketch/tests/output/presets/tree_output.txt:2:}}
 ```
 
->ℹ️ With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates to generate to the list.
+>ℹ️ With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates or hooks to run or generate when the preset is being used.
 
 <details>
 <summary>pre-commit-config.yaml output</summary>

@@ -22,6 +22,14 @@ To do that, we add this to the root package's definition:
 
 >ℹ️ You can also use `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` as a flag to add more templates or templating presets when generating a new package.
 
+# Hooks
+
+We can define some commands (which can also be templates) to execute before and/or after generating the new monorepo:
+
+```yaml
+{{#include ../../../examples/presets.yaml:hooks}}
+```
+
 # Example
 
 So after setting everything up, we run the command

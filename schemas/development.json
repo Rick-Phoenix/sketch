@@ -4286,6 +4286,18 @@
           ],
           "default": null
         },
+        "license": {
+          "description": "A license file to generate for the new package.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/License"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "with_templates": {
           "description": "One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.",
           "type": [
@@ -4294,6 +4306,28 @@
           ],
           "items": {
             "$ref": "#/$defs/TemplatingPresetReference"
+          },
+          "default": null
+        },
+        "hooks_pre": {
+          "description": "One or many rendered commands to execute before the repo's creation",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/Hook"
+          },
+          "default": null
+        },
+        "hooks_post": {
+          "description": "One or many rendered commands to execute after the repo's creation",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/$defs/Hook"
           },
           "default": null
         },
@@ -4369,6 +4403,31 @@
         }
       ]
     },
+    "License": {
+      "description": "Generates a new license file",
+      "oneOf": [
+        {
+          "description": "Apache 2.0 license.\n\nSee more: https://choosealicense.com/licenses/apache-2.0/",
+          "type": "string",
+          "const": "Apache-2.0"
+        },
+        {
+          "description": "GNU GPL 3.0 license.\n\nSee more: https://choosealicense.com/licenses/gpl-3.0/",
+          "type": "string",
+          "const": "GPL-3.0"
+        },
+        {
+          "description": "GNU AGPL 3.0 license.\n\nSee more: https://choosealicense.com/licenses/agpl-3.0/",
+          "type": "string",
+          "const": "AGPL-3.0"
+        },
+        {
+          "description": "MIT license.\n\nSee more: https://choosealicense.com/licenses/mit/",
+          "type": "string",
+          "const": "MIT"
+        }
+      ]
+    },
     "TemplatingPresetReference": {
       "description": "A reference to a templating preset, or a new preset definition.",
       "anyOf": [
@@ -4435,6 +4494,10 @@
         {
           "description": "A path to a directory inside `templates_dir`, where all templates will be recursively extracted and rendered in the output directory, following the same file tree structure.",
           "$ref": "#/$defs/StructuredPreset"
+        },
+        {
+          "description": "A preset defined in a git repository.",
+          "$ref": "#/$defs/RemotePreset"
         }
       ]
     },
@@ -4518,6 +4581,48 @@
       },
       "required": [
         "dir"
+      ]
+    },
+    "RemotePreset": {
+      "description": "A preset defined in a git repository.",
+      "type": "object",
+      "properties": {
+        "repo": {
+          "description": "The link of the repo where the preset is defined",
+          "type": "string"
+        },
+        "exclude": {
+          "description": "A list of glob patterns for the templates to exclude",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "repo"
+      ]
+    },
+    "Hook": {
+      "description": "A command (rendered as a template) to execute",
+      "type": "object",
+      "properties": {
+        "command": {
+          "description": "The template id or definition for the command to execute",
+          "$ref": "#/$defs/TemplateData"
+        },
+        "context": {
+          "description": "Local context variables (they override previously set variables with the same name)",
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      },
+      "required": [
+        "command"
       ]
     },
     "VitestConfigKind": {
@@ -9716,7 +9821,7 @@
               "type": "array",
               "uniqueItems": true,
               "items": {
-                "$ref": "#/$defs/Hook"
+                "$ref": "#/$defs/Hook2"
               }
             }
           },
@@ -9745,7 +9850,7 @@
               "type": "array",
               "uniqueItems": true,
               "items": {
-                "$ref": "#/$defs/Hook"
+                "$ref": "#/$defs/Hook2"
               }
             }
           },
@@ -9787,7 +9892,7 @@
         "local"
       ]
     },
-    "Hook": {
+    "Hook2": {
       "description": "Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks",
       "type": "object",
       "properties": {
@@ -10306,6 +10411,7 @@
           "default": null
         },
         "license": {
+          "description": "A license file to generate for the new repo.",
           "anyOf": [
             {
               "$ref": "#/$defs/License"
@@ -10315,6 +10421,22 @@
             }
           ],
           "default": null
+        },
+        "hooks_pre": {
+          "description": "One or many rendered commands to execute before the repo's creation",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Hook"
+          },
+          "default": []
+        },
+        "hooks_post": {
+          "description": "One or many rendered commands to execute after the repo's creation",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Hook"
+          },
+          "default": []
         }
       }
     },
@@ -10341,15 +10463,6 @@
         {
           "$ref": "#/$defs/PreCommitPreset"
         }
-      ]
-    },
-    "License": {
-      "type": "string",
-      "enum": [
-        "Apache-2.0",
-        "GPL-3.0",
-        "AGPL-3.0",
-        "MIT"
       ]
     },
     "CargoTomlPreset": {
