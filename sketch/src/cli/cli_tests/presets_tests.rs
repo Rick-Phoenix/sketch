@@ -79,6 +79,14 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     assert!(gitignore_entries.contains(&entry));
   }
 
+  let hook_pre_output = read_to_string(out_dir.join("pre.txt"))?;
+
+  assert_eq!(hook_pre_output, "hi\n");
+
+  let hook_post_output = read_to_string(out_dir.join("post.txt"))?;
+
+  assert_eq!(hook_post_output, "hi\n");
+
   let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
 
   let expected_dockerfile = indoc! {r###"

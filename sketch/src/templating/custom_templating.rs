@@ -115,7 +115,7 @@ pub struct StructuredPreset {
 pub enum TemplateData {
   /// A literal definition for a template.
   Content {
-    /// The id of the newly created template.
+    /// The id of the newly created template. Mostly useful for organizational and debugging purposes.
     name: String,
     /// The content of the new template.
     content: String,
@@ -371,7 +371,6 @@ fn render_structured_preset(
 
   Ok(
     for entry in WalkDir::new(&root_dir).into_iter().filter_map(|e| e.ok()) {
-      dbg!(&entry.path());
       let input_path = entry
         .path()
         .strip_prefix(&templates_dir)
@@ -395,7 +394,6 @@ fn render_structured_preset(
       let file_type = entry.file_type();
 
       if file_type.is_dir() {
-        dbg!(&file_type);
         create_all_dirs(&output_path)?;
         continue;
       } else if file_type.is_file() {

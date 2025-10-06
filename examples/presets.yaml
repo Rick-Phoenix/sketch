@@ -130,6 +130,21 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
+    # Commands to run before generation, from the root of the new repo
+    hooks_pre:
+      - command:
+          name: pre_hook
+          content: "echo '{{ greeting }}' > pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new repo
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' > post.txt"
+        context:
+          greeting: hi
     # License file to generate
     license: Apache-2.0
     # Selecting a preset
