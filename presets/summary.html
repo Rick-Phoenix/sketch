@@ -329,6 +329,8 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
+    # License file to generate
+    license: Apache-2.0
     # Selecting a preset
     gitignore: ts
     pre_commit: typescript
@@ -337,6 +339,24 @@ git_presets:
     # starting from the new repo's root
     with_templates:
       - id: dockerfile
+
+    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
 
 typescript:
   no_default_deps: true

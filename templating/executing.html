@@ -214,6 +214,26 @@
 <p>Output:</p>
 <pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/command_output.txt}}
 </code></pre>
+<h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
+<p>Templates can be executed as commands as <code>pre</code> or <code>post</code> hooks in a git <code>repo</code>, typecript <code>monorepo</code> or typescript <code>package</code> presets:</p>
+<pre><code class="language-yaml">    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
+</code></pre>
 
                     </main>
 

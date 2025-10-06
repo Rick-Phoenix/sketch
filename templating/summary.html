@@ -319,12 +319,13 @@ Entry: {{ entry }}
 <p>Output:</p>
 <pre><code>{{#include ../../../sketch/tests/output/templating_examples/output}}
 </code></pre>
-<h1 id="context-priority"><a class="header" href="#context-priority">Context Priority</a></h1>
+<h1 id="defining-variables"><a class="header" href="#defining-variables">Defining Variables</a></h1>
 <p>Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):</p>
 <ul>
 <li>Global variables</li>
 <li>Preset context</li>
 <li>Single template context</li>
+<li>Cli-set variable files (in the order that they are given)</li>
 <li>Cli-set variables</li>
 </ul>
 <div class="warning">

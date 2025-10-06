@@ -180,41 +180,47 @@
 <p><strong>Command Overview:</strong></p>
 <ul>
 <li><a href="#sketch"><code>sketch</code>↴</a></li>
-<li><a href="#sketch-cargo-toml"><code>sketch cargo-toml</code>↴</a></li>
-<li><a href="#sketch-pnpm-workspace"><code>sketch pnpm-workspace</code>↴</a></li>
-<li><a href="#sketch-package-json"><code>sketch package-json</code>↴</a></li>
-<li><a href="#sketch-ts-config"><code>sketch ts-config</code>↴</a></li>
-<li><a href="#sketch-oxlint"><code>sketch oxlint</code>↴</a></li>
+<li><a href="#sketch-new"><code>sketch new</code>↴</a></li>
+<li><a href="#sketch-repo"><code>sketch repo</code>↴</a></li>
+<li><a href="#sketch-render"><code>sketch render</code>↴</a></li>
+<li><a href="#sketch-render-preset"><code>sketch render-preset</code>↴</a></li>
+<li><a href="#sketch-exec"><code>sketch exec</code>↴</a></li>
 <li><a href="#sketch-docker-compose"><code>sketch docker-compose</code>↴</a></li>
 <li><a href="#sketch-pre-commit"><code>sketch pre-commit</code>↴</a></li>
+<li><a href="#sketch-cargo-toml"><code>sketch cargo-toml</code>↴</a></li>
 <li><a href="#sketch-ts"><code>sketch ts</code>↴</a></li>
 <li><a href="#sketch-ts-monorepo"><code>sketch ts monorepo</code>↴</a></li>
 <li><a href="#sketch-ts-package"><code>sketch ts package</code>↴</a></li>
 <li><a href="#sketch-ts-barrel"><code>sketch ts barrel</code>↴</a></li>
-<li><a href="#sketch-repo"><code>sketch repo</code>↴</a></li>
-<li><a href="#sketch-new"><code>sketch new</code>↴</a></li>
-<li><a href="#sketch-render"><code>sketch render</code>↴</a></li>
-<li><a href="#sketch-render-preset"><code>sketch render-preset</code>↴</a></li>
-<li><a href="#sketch-exec"><code>sketch exec</code>↴</a></li>
+<li><a href="#sketch-package-json"><code>sketch package-json</code>↴</a></li>
+<li><a href="#sketch-ts-config"><code>sketch ts-config</code>↴</a></li>
+<li><a href="#sketch-oxlint"><code>sketch oxlint</code>↴</a></li>
+<li><a href="#sketch-pnpm-workspace"><code>sketch pnpm-workspace</code>↴</a></li>
+<li><a href="#sketch-license"><code>sketch license</code>↴</a></li>
+<li><a href="#sketch-license-apache2"><code>sketch license apache2</code>↴</a></li>
+<li><a href="#sketch-license-gpl3"><code>sketch license gpl3</code>↴</a></li>
+<li><a href="#sketch-license-agpl3"><code>sketch license agpl3</code>↴</a></li>
+<li><a href="#sketch-license-mit"><code>sketch license mit</code>↴</a></li>
 </ul>
 <h2 id="sketch"><a class="header" href="#sketch"><code>sketch</code></a></h2>
 <p>🖌️ Templating made simple. A tool to define and generate files and reusable project structures</p>
 <p><strong>Usage:</strong> <code>sketch [OPTIONS] &lt;COMMAND&gt;</code></p>
 <h6 id="subcommands"><a class="header" href="#subcommands"><strong>Subcommands:</strong></a></h6>
 <ul>
-<li><code>cargo-toml</code> — Generates a <code>Cargo.toml</code> file from a preset</li>
-<li><code>pnpm-workspace</code> — Generates a <code>pnpm-workspace.yaml</code> file from a preset</li>
-<li><code>package-json</code> — Generates a <code>package.json</code> file from a preset</li>
-<li><code>ts-config</code> — Generates a <code>tsconfig.json</code> file from a preset</li>
-<li><code>oxlint</code> — Generates a <code>.oxlintrc.json</code> file from a preset</li>
-<li><code>docker-compose</code> — Generates a Docker Compose file from a preset</li>
-<li><code>pre-commit</code> — Generates a <code>pre-commit</code> config file from a preset</li>
-<li><code>ts</code> — Executes typescript-specific commands</li>
-<li><code>repo</code> — Creates a new git repo from a preset</li>
 <li><code>new</code> — Generates a new config file</li>
+<li><code>repo</code> — Creates a new git repo from a preset</li>
 <li><code>render</code> — Renders a single template to a file or to stdout</li>
 <li><code>render-preset</code> — Renders a templating preset</li>
 <li><code>exec</code> — Renders a template and executes it as a shell command</li>
+<li><code>docker-compose</code> — Generates a Docker Compose file from a preset</li>
+<li><code>pre-commit</code> — Generates a <code>pre-commit</code> config file from a preset</li>
+<li><code>cargo-toml</code> — Generates a <code>Cargo.toml</code> file from a preset</li>
+<li><code>ts</code> — Executes typescript-specific commands</li>
+<li><code>package-json</code> — Generates a <code>package.json</code> file from a preset</li>
+<li><code>ts-config</code> — Generates a <code>tsconfig.json</code> file from a preset</li>
+<li><code>oxlint</code> — Generates a <code>.oxlintrc.json</code> file from a preset</li>
+<li><code>pnpm-workspace</code> — Generates a <code>pnpm-workspace.yaml</code> file from a preset</li>
+<li><code>license</code> — Generates a new license file</li>
 </ul>
 <h6 id="options"><a class="header" href="#options"><strong>Options:</strong></a></h6>
 <ul>
@@ -224,46 +230,85 @@
 <li><code>-c</code>, <code>--config &lt;FILE&gt;</code> — Sets a custom config file. Any file named <code>sketch.{yaml,json,toml}</code> in the cwd or in <code>XDG_CONFIG_HOME/sketch</code> will be detected automatically. If no file is found, the default settings are used</li>
 <li><code>--ignore-config</code> — Ignores any automatically detected config files, uses cli instructions only</li>
 <li><code>-s</code>, <code>--set &lt;KEY=VALUE&gt;</code> — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON</li>
+<li><code>--vars-yaml &lt;VARS_YAML&gt;</code> — One or more paths to yaml files to extract template variables from, in the given order</li>
+<li><code>--vars-toml &lt;VARS_TOML&gt;</code> — One or more paths to toml files to extract template variables from, in the given order</li>
+<li><code>--vars-json &lt;VARS_JSON&gt;</code> — One or more paths to json files to extract template variables from, in the given order</li>
 </ul>
-<h2 id="sketch-cargo-toml"><a class="header" href="#sketch-cargo-toml"><code>sketch cargo-toml</code></a></h2>
-<p>Generates a <code>Cargo.toml</code> file from a preset</p>
-<p><strong>Usage:</strong> <code>sketch cargo-toml &lt;PRESET&gt; [OUTPUT]</code></p>
+<h2 id="sketch-new"><a class="header" href="#sketch-new"><code>sketch new</code></a></h2>
+<p>Generates a new config file</p>
+<p><strong>Usage:</strong> <code>sketch new [OUTPUT]</code></p>
 <h6 id="arguments"><a class="header" href="#arguments"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;PRESET&gt;</code> — The preset id</li>
-<li><code>&lt;OUTPUT&gt;</code> — The output path of the created file [default: <code>Cargo.toml</code>]</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output file [default: sketch.yaml]</li>
 </ul>
-<h2 id="sketch-pnpm-workspace"><a class="header" href="#sketch-pnpm-workspace"><code>sketch pnpm-workspace</code></a></h2>
-<p>Generates a <code>pnpm-workspace.yaml</code> file from a preset</p>
-<p><strong>Usage:</strong> <code>sketch pnpm-workspace &lt;PRESET&gt; [OUTPUT]</code></p>
+<h2 id="sketch-repo"><a class="header" href="#sketch-repo"><code>sketch repo</code></a></h2>
+<p>Creates a new git repo from a preset</p>
+<p><strong>Usage:</strong> <code>sketch repo [OPTIONS] [DIR] [LICENSE]</code></p>
 <h6 id="arguments-1"><a class="header" href="#arguments-1"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;PRESET&gt;</code> — The preset id</li>
-<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>pnpm-workspace.yaml</code>]</li>
+<li>
+<p><code>&lt;DIR&gt;</code> — The directory where the new repo should be generated. [default: <code>.</code>]</p>
+</li>
+<li>
+<p><code>&lt;LICENSE&gt;</code> — A license file to generate for the new repo</p>
+<p>Possible values:</p>
+<ul>
+<li><code>apache2</code>:
+Apache 2.0 license</li>
+<li><code>gpl3</code>:
+GNU GPL 3.0 license</li>
+<li><code>agpl3</code>:
+GNU AGPL 3.0 license</li>
+<li><code>mit</code>:
+MIT license</li>
 </ul>
-<h2 id="sketch-package-json"><a class="header" href="#sketch-package-json"><code>sketch package-json</code></a></h2>
-<p>Generates a <code>package.json</code> file from a preset</p>
-<p><strong>Usage:</strong> <code>sketch package-json &lt;PRESET&gt; [OUTPUT]</code></p>
+</li>
+</ul>
+<h6 id="options-1"><a class="header" href="#options-1"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — Selects a git preset from a configuration file</li>
+<li><code>--no-pre-commit</code> — Do not generate a pre-commit config</li>
+<li><code>--pre-commit &lt;PRE_COMMIT&gt;</code> — Selects a pre-commit preset</li>
+<li><code>--gitignore &lt;GITIGNORE&gt;</code> — Selects a gitignore preset</li>
+<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many individual templates or templating presets to render in the new repo</li>
+<li><code>-r</code>, <code>--remote &lt;REMOTE&gt;</code> — The link of the git remote to use for the new repo</li>
+</ul>
+<h2 id="sketch-render"><a class="header" href="#sketch-render"><code>sketch render</code></a></h2>
+<p>Renders a single template to a file or to stdout</p>
+<p><strong>Usage:</strong> <code>sketch render [OPTIONS] &lt;OUTPUT_PATH|--stdout&gt;</code></p>
 <h6 id="arguments-2"><a class="header" href="#arguments-2"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;PRESET&gt;</code> — The preset id</li>
-<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>package.json</code>]</li>
+<li><code>&lt;OUTPUT_PATH&gt;</code> — The output path for the generated file</li>
 </ul>
-<h2 id="sketch-ts-config"><a class="header" href="#sketch-ts-config"><code>sketch ts-config</code></a></h2>
-<p>Generates a <code>tsconfig.json</code> file from a preset</p>
-<p><strong>Usage:</strong> <code>sketch ts-config &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="options-2"><a class="header" href="#options-2"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>--stdout</code> — Prints the result to stdout</li>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the template file</li>
+<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to use (a name for config-defined templates, or a relative path to a file from <code>templates_dir</code>)</li>
+<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template</li>
+</ul>
+<h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
+<p>Renders a templating preset</p>
+<p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt; [OUT_DIR]</code></p>
 <h6 id="arguments-3"><a class="header" href="#arguments-3"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;PRESET&gt;</code> — The preset id</li>
-<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>tsconfig.json</code>]</li>
+<li><code>&lt;ID&gt;</code> — The id of the preset</li>
+<li><code>&lt;OUT_DIR&gt;</code> — The base path to join to relative output paths. [default: <code>.</code>]</li>
 </ul>
-<h2 id="sketch-oxlint"><a class="header" href="#sketch-oxlint"><code>sketch oxlint</code></a></h2>
-<p>Generates a <code>.oxlintrc.json</code> file from a preset</p>
-<p><strong>Usage:</strong> <code>sketch oxlint &lt;PRESET&gt; [OUTPUT]</code></p>
+<h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
+<p>Renders a template and executes it as a shell command</p>
+<p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
 <h6 id="arguments-4"><a class="header" href="#arguments-4"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;PRESET&gt;</code> — The preset id</li>
-<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>.oxlintrc.json</code>]</li>
+<li><code>&lt;CMD&gt;</code> — The literal definition for the template (incompatible with <code>--file</code> or <code>--template</code>)</li>
+</ul>
+<h6 id="options-3"><a class="header" href="#options-3"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>--print-cmd</code> — Prints the rendered command to stdout before executing it</li>
+<li><code>-s</code>, <code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
+<li><code>--cwd &lt;CWD&gt;</code> — The cwd for the command to execute [default: <code>.</code>]</li>
+<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file, as an absolute path or relative to the cwd</li>
+<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id of the template to use (a name for config-defined templates, or a relative path to a file from <code>templates_dir</code>)</li>
 </ul>
 <h2 id="sketch-docker-compose"><a class="header" href="#sketch-docker-compose"><code>sketch docker-compose</code></a></h2>
 <p>Generates a Docker Compose file from a preset</p>
@@ -281,6 +326,14 @@
 <li><code>&lt;PRESET&gt;</code> — The preset id</li>
 <li><code>&lt;OUTPUT&gt;</code> — The output path of the created file [default: <code>.pre-commit-config.yaml</code>]</li>
 </ul>
+<h2 id="sketch-cargo-toml"><a class="header" href="#sketch-cargo-toml"><code>sketch cargo-toml</code></a></h2>
+<p>Generates a <code>Cargo.toml</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch cargo-toml &lt;PRESET&gt; [OUTPUT]</code></p>
+<h6 id="arguments-7"><a class="header" href="#arguments-7"><strong>Arguments:</strong></a></h6>
+<ul>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the created file [default: <code>Cargo.toml</code>]</li>
+</ul>
 <h2 id="sketch-ts"><a class="header" href="#sketch-ts"><code>sketch ts</code></a></h2>
 <p>Executes typescript-specific commands</p>
 <p><strong>Usage:</strong> <code>sketch ts [OPTIONS] &lt;COMMAND&gt;</code></p>
@@ -290,7 +343,7 @@
 <li><code>package</code> — Generates a new typescript package</li>
 <li><code>barrel</code> — Creates a barrel file</li>
 </ul>
-<h6 id="options-1"><a class="header" href="#options-1"><strong>Options:</strong></a></h6>
+<h6 id="options-4"><a class="header" href="#options-4"><strong>Options:</strong></a></h6>
 <ul>
 <li>
 <p><code>--package-manager &lt;NAME&gt;</code> — The package manager being used. [default: pnpm]</p>
@@ -316,114 +369,190 @@
 <h2 id="sketch-ts-monorepo"><a class="header" href="#sketch-ts-monorepo"><code>sketch ts monorepo</code></a></h2>
 <p>Generates a new typescript monorepo</p>
 <p><strong>Usage:</strong> <code>sketch ts monorepo [OPTIONS] [DIR]</code></p>
-<h6 id="arguments-7"><a class="header" href="#arguments-7"><strong>Arguments:</strong></a></h6>
+<h6 id="arguments-8"><a class="header" href="#arguments-8"><strong>Arguments:</strong></a></h6>
 <ul>
 <li><code>&lt;DIR&gt;</code> — The root directory for the new monorepo. [default: <code>ts_root</code>]</li>
 </ul>
-<h6 id="options-2"><a class="header" href="#options-2"><strong>Options:</strong></a></h6>
+<h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>-p</code>, <code>--pnpm &lt;PRESET_ID&gt;</code> — The <code>pnpm-workspace.yaml</code> preset to use for the new monorepo. If it's unset and <code>pnpm</code> is the chosen package manager, the default preset will be used</li>
-<li><code>-r</code>, <code>--root-package &lt;PRESET_ID&gt;</code> — The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags</li>
-<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. It defaults to the name of its directory</li>
-<li><code>--ts-config &lt;id=ID,output=PATH&gt;</code> — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)</li>
-<li><code>--package-json &lt;ID&gt;</code> — The package.json preset ID to use (uses defaults if not provided)</li>
-<li><code>--oxlint &lt;ID&gt;</code> — The oxlint preset to use. It can be set to <code>default</code> to use the default preset</li>
-<li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
-<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many templates or templating presets to generate in the new package's root</li>
+<li>
+<p><code>-p</code>, <code>--pnpm &lt;PRESET_ID&gt;</code> — The <code>pnpm-workspace.yaml</code> preset to use for the new monorepo. If it's unset and <code>pnpm</code> is the chosen package manager, the default preset will be used</p>
+</li>
+<li>
+<p><code>-r</code>, <code>--root-package &lt;PRESET_ID&gt;</code> — The id of the package preset to use for the root package. If unset, the default preset is used, along with the values set via cli flags</p>
+</li>
+<li>
+<p><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. It defaults to the name of its directory</p>
+</li>
+<li>
+<p><code>--ts-config &lt;id=ID,output=PATH&gt;</code> — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)</p>
+</li>
+<li>
+<p><code>--package-json &lt;ID&gt;</code> — The package.json preset ID to use (uses defaults if not provided)</p>
+</li>
+<li>
+<p><code>--license &lt;LICENSE&gt;</code> — A license file to generate for the new package</p>
+<p>Possible values:</p>
+<ul>
+<li><code>apache2</code>:
+Apache 2.0 license</li>
+<li><code>gpl3</code>:
+GNU GPL 3.0 license</li>
+<li><code>agpl3</code>:
+GNU AGPL 3.0 license</li>
+<li><code>mit</code>:
+MIT license</li>
+</ul>
+</li>
+<li>
+<p><code>--hook-pre &lt;ID&gt;</code> — One or many IDs of templates to render and execute as commands before the package's creation</p>
+</li>
+<li>
+<p><code>--hook-post &lt;ID&gt;</code> — One or many IDs of templates to render and execute as commands after the package's creation</p>
+</li>
+<li>
+<p><code>--oxlint &lt;ID&gt;</code> — The oxlint preset to use. It can be set to <code>default</code> to use the default preset</p>
+</li>
+<li>
+<p><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</p>
+</li>
+<li>
+<p><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many templates or templating presets to generate in the new package's root</p>
+</li>
 </ul>
 <h2 id="sketch-ts-package"><a class="header" href="#sketch-ts-package"><code>sketch ts package</code></a></h2>
 <p>Generates a new typescript package</p>
 <p><strong>Usage:</strong> <code>sketch ts package [OPTIONS] [DIR]</code></p>
-<h6 id="arguments-8"><a class="header" href="#arguments-8"><strong>Arguments:</strong></a></h6>
+<h6 id="arguments-9"><a class="header" href="#arguments-9"><strong>Arguments:</strong></a></h6>
 <ul>
 <li><code>&lt;DIR&gt;</code> — The root directory for the new package. Defaults to the package name</li>
 </ul>
-<h6 id="options-3"><a class="header" href="#options-3"><strong>Options:</strong></a></h6>
+<h6 id="options-6"><a class="header" href="#options-6"><strong>Options:</strong></a></h6>
 <ul>
-<li><code>-p</code>, <code>--preset &lt;ID&gt;</code> — The package preset to use. If unset, the default preset is used, along with the values set via cli flags</li>
-<li><code>-u</code>, <code>--update-tsconfig &lt;UPDATE_TSCONFIG&gt;</code> — An optional list of tsconfig files where the new tsconfig file will be added as a reference</li>
-<li><code>--oxlint &lt;ID&gt;</code> — The oxlint preset to use. It can be set to <code>default</code> to use the default preset</li>
-<li><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</li>
-<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many templates or templating presets to generate in the new package's root</li>
-<li><code>--vitest &lt;ID&gt;</code> — The vitest preset to use. It can be set to <code>default</code> to use the default preset</li>
-<li><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. It defaults to the name of its directory</li>
-<li><code>--ts-config &lt;id=ID,output=PATH&gt;</code> — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)</li>
-<li><code>--package-json &lt;ID&gt;</code> — The package.json preset ID to use (uses defaults if not provided)</li>
+<li>
+<p><code>-p</code>, <code>--preset &lt;ID&gt;</code> — The package preset to use. If unset, the default preset is used, along with the values set via cli flags</p>
+</li>
+<li>
+<p><code>-u</code>, <code>--update-tsconfig &lt;UPDATE_TSCONFIG&gt;</code> — An optional list of tsconfig files where the new tsconfig file will be added as a reference</p>
+</li>
+<li>
+<p><code>--oxlint &lt;ID&gt;</code> — The oxlint preset to use. It can be set to <code>default</code> to use the default preset</p>
+</li>
+<li>
+<p><code>-i</code>, <code>--install</code> — Installs the dependencies with the chosen package manager</p>
+</li>
+<li>
+<p><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many templates or templating presets to generate in the new package's root</p>
+</li>
+<li>
+<p><code>--vitest &lt;ID&gt;</code> — The vitest preset to use. It can be set to <code>default</code> to use the default preset</p>
+</li>
+<li>
+<p><code>-n</code>, <code>--name &lt;NAME&gt;</code> — The name of the new package. It defaults to the name of its directory</p>
+</li>
+<li>
+<p><code>--ts-config &lt;id=ID,output=PATH&gt;</code> — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)</p>
+</li>
+<li>
+<p><code>--package-json &lt;ID&gt;</code> — The package.json preset ID to use (uses defaults if not provided)</p>
+</li>
+<li>
+<p><code>--license &lt;LICENSE&gt;</code> — A license file to generate for the new package</p>
+<p>Possible values:</p>
+<ul>
+<li><code>apache2</code>:
+Apache 2.0 license</li>
+<li><code>gpl3</code>:
+GNU GPL 3.0 license</li>
+<li><code>agpl3</code>:
+GNU AGPL 3.0 license</li>
+<li><code>mit</code>:
+MIT license</li>
+</ul>
+</li>
+<li>
+<p><code>--hook-pre &lt;ID&gt;</code> — One or many IDs of templates to render and execute as commands before the package's creation</p>
+</li>
+<li>
+<p><code>--hook-post &lt;ID&gt;</code> — One or many IDs of templates to render and execute as commands after the package's creation</p>
+</li>
 </ul>
 <h2 id="sketch-ts-barrel"><a class="header" href="#sketch-ts-barrel"><code>sketch ts barrel</code></a></h2>
 <p>Creates a barrel file</p>
 <p><strong>Usage:</strong> <code>sketch ts barrel [OPTIONS] [DIR]</code></p>
-<h6 id="arguments-9"><a class="header" href="#arguments-9"><strong>Arguments:</strong></a></h6>
+<h6 id="arguments-10"><a class="header" href="#arguments-10"><strong>Arguments:</strong></a></h6>
 <ul>
 <li><code>&lt;DIR&gt;</code> — The directory where to search recursively for the files and generate the barrel file [default: <code>.</code>]</li>
 </ul>
-<h6 id="options-4"><a class="header" href="#options-4"><strong>Options:</strong></a></h6>
+<h6 id="options-7"><a class="header" href="#options-7"><strong>Options:</strong></a></h6>
 <ul>
 <li><code>-o</code>, <code>--output &lt;OUTPUT&gt;</code> — The output path for the barrel file. It defaults to <code>{dir}/index.ts</code></li>
 <li><code>--keep-ext &lt;EXT&gt;</code> — The file extensions that should be kept in export statements</li>
 <li><code>--js-ext</code> — Exports <code>.ts</code> files as <code>.js</code>. It assumes that <code>js</code> is among the file extensions to keep</li>
 <li><code>--exclude &lt;EXCLUDE&gt;</code> — One or more glob patterns to exclude from the imported modules</li>
 </ul>
-<h2 id="sketch-repo"><a class="header" href="#sketch-repo"><code>sketch repo</code></a></h2>
-<p>Creates a new git repo from a preset</p>
-<p><strong>Usage:</strong> <code>sketch repo [OPTIONS] [DIR]</code></p>
-<h6 id="arguments-10"><a class="header" href="#arguments-10"><strong>Arguments:</strong></a></h6>
-<ul>
-<li><code>&lt;DIR&gt;</code> — The directory where the new repo should be generated. [default: <code>.</code>]</li>
-</ul>
-<h6 id="options-5"><a class="header" href="#options-5"><strong>Options:</strong></a></h6>
-<ul>
-<li><code>-p</code>, <code>--preset &lt;PRESET&gt;</code> — Selects a git preset from a configuration file</li>
-<li><code>--no-pre-commit</code> — Do not generate a pre-commit config</li>
-<li><code>--pre-commit &lt;PRE_COMMIT&gt;</code> — Selects a pre-commit preset</li>
-<li><code>--gitignore &lt;GITIGNORE&gt;</code> — Selects a gitignore preset</li>
-<li><code>-w</code>, <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> — One or many individual templates or templating presets to render in the new repo</li>
-<li><code>-r</code>, <code>--remote &lt;REMOTE&gt;</code> — The link of the git remote to use for the new repo</li>
-</ul>
-<h2 id="sketch-new"><a class="header" href="#sketch-new"><code>sketch new</code></a></h2>
-<p>Generates a new config file</p>
-<p><strong>Usage:</strong> <code>sketch new [OUTPUT]</code></p>
+<h2 id="sketch-package-json"><a class="header" href="#sketch-package-json"><code>sketch package-json</code></a></h2>
+<p>Generates a <code>package.json</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch package-json &lt;PRESET&gt; [OUTPUT]</code></p>
 <h6 id="arguments-11"><a class="header" href="#arguments-11"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;OUTPUT&gt;</code> — The output file [default: sketch.yaml]</li>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>package.json</code>]</li>
 </ul>
-<h2 id="sketch-render"><a class="header" href="#sketch-render"><code>sketch render</code></a></h2>
-<p>Renders a single template to a file or to stdout</p>
-<p><strong>Usage:</strong> <code>sketch render [OPTIONS] &lt;OUTPUT_PATH|--stdout&gt;</code></p>
+<h2 id="sketch-ts-config"><a class="header" href="#sketch-ts-config"><code>sketch ts-config</code></a></h2>
+<p>Generates a <code>tsconfig.json</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch ts-config &lt;PRESET&gt; [OUTPUT]</code></p>
 <h6 id="arguments-12"><a class="header" href="#arguments-12"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;OUTPUT_PATH&gt;</code> — The output path for the generated file</li>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>tsconfig.json</code>]</li>
 </ul>
-<h6 id="options-6"><a class="header" href="#options-6"><strong>Options:</strong></a></h6>
-<ul>
-<li><code>--stdout</code> — Prints the result to stdout</li>
-<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the template file</li>
-<li><code>-i</code>, <code>--id &lt;ID&gt;</code> — The id of the template to use (a name for config-defined templates, or a relative path to a file from <code>templates_dir</code>)</li>
-<li><code>-c</code>, <code>--content &lt;CONTENT&gt;</code> — The literal definition for the template</li>
-</ul>
-<h2 id="sketch-render-preset"><a class="header" href="#sketch-render-preset"><code>sketch render-preset</code></a></h2>
-<p>Renders a templating preset</p>
-<p><strong>Usage:</strong> <code>sketch render-preset &lt;ID&gt; [OUT_DIR]</code></p>
+<h2 id="sketch-oxlint"><a class="header" href="#sketch-oxlint"><code>sketch oxlint</code></a></h2>
+<p>Generates a <code>.oxlintrc.json</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch oxlint &lt;PRESET&gt; [OUTPUT]</code></p>
 <h6 id="arguments-13"><a class="header" href="#arguments-13"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;ID&gt;</code> — The id of the preset</li>
-<li><code>&lt;OUT_DIR&gt;</code> — The base path to join to relative output paths. [default: <code>.</code>]</li>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>.oxlintrc.json</code>]</li>
 </ul>
-<h2 id="sketch-exec"><a class="header" href="#sketch-exec"><code>sketch exec</code></a></h2>
-<p>Renders a template and executes it as a shell command</p>
-<p><strong>Usage:</strong> <code>sketch exec [OPTIONS] [CMD]</code></p>
+<h2 id="sketch-pnpm-workspace"><a class="header" href="#sketch-pnpm-workspace"><code>sketch pnpm-workspace</code></a></h2>
+<p>Generates a <code>pnpm-workspace.yaml</code> file from a preset</p>
+<p><strong>Usage:</strong> <code>sketch pnpm-workspace &lt;PRESET&gt; [OUTPUT]</code></p>
 <h6 id="arguments-14"><a class="header" href="#arguments-14"><strong>Arguments:</strong></a></h6>
 <ul>
-<li><code>&lt;CMD&gt;</code> — The literal definition for the template (incompatible with <code>--file</code> or <code>--template</code>)</li>
+<li><code>&lt;PRESET&gt;</code> — The preset id</li>
+<li><code>&lt;OUTPUT&gt;</code> — The output path of the generated file [default: <code>pnpm-workspace.yaml</code>]</li>
 </ul>
-<h6 id="options-7"><a class="header" href="#options-7"><strong>Options:</strong></a></h6>
+<h2 id="sketch-license"><a class="header" href="#sketch-license"><code>sketch license</code></a></h2>
+<p>Generates a new license file</p>
+<p><strong>Usage:</strong> <code>sketch license [OPTIONS] &lt;COMMAND&gt;</code></p>
+<h6 id="subcommands-2"><a class="header" href="#subcommands-2"><strong>Subcommands:</strong></a></h6>
 <ul>
-<li><code>--print-cmd</code> — Prints the rendered command to stdout before executing it</li>
-<li><code>-s</code>, <code>--shell &lt;SHELL&gt;</code> — The shell to use for commands [default: <code>cmd.exe</code> on windows and <code>sh</code> elsewhere]</li>
-<li><code>--cwd &lt;CWD&gt;</code> — The cwd for the command to execute [default: <code>.</code>]</li>
-<li><code>-f</code>, <code>--file &lt;FILE&gt;</code> — The path to the command's template file, as an absolute path or relative to the cwd</li>
-<li><code>-t</code>, <code>--template &lt;TEMPLATE&gt;</code> — The id of the template to use (a name for config-defined templates, or a relative path to a file from <code>templates_dir</code>)</li>
+<li><code>apache2</code> — Apache 2.0 license</li>
+<li><code>gpl3</code> — GNU GPL 3.0 license</li>
+<li><code>agpl3</code> — GNU AGPL 3.0 license</li>
+<li><code>mit</code> — MIT license</li>
 </ul>
+<h6 id="options-8"><a class="header" href="#options-8"><strong>Options:</strong></a></h6>
+<ul>
+<li><code>-o</code>, <code>--output &lt;OUTPUT&gt;</code> — The path of the output file [default: <code>LICENSE</code>]</li>
+</ul>
+<h2 id="sketch-license-apache2"><a class="header" href="#sketch-license-apache2"><code>sketch license apache2</code></a></h2>
+<p>Apache 2.0 license.</p>
+<p>See more: https://choosealicense.com/licenses/apache-2.0/</p>
+<p><strong>Usage:</strong> <code>sketch license apache2</code></p>
+<h2 id="sketch-license-gpl3"><a class="header" href="#sketch-license-gpl3"><code>sketch license gpl3</code></a></h2>
+<p>GNU GPL 3.0 license.</p>
+<p>See more: https://choosealicense.com/licenses/gpl-3.0/</p>
+<p><strong>Usage:</strong> <code>sketch license gpl3</code></p>
+<h2 id="sketch-license-agpl3"><a class="header" href="#sketch-license-agpl3"><code>sketch license agpl3</code></a></h2>
+<p>GNU AGPL 3.0 license.</p>
+<p>See more: https://choosealicense.com/licenses/agpl-3.0/</p>
+<p><strong>Usage:</strong> <code>sketch license agpl3</code></p>
+<h2 id="sketch-license-mit"><a class="header" href="#sketch-license-mit"><code>sketch license mit</code></a></h2>
+<p>MIT license.</p>
+<p>See more: https://choosealicense.com/licenses/mit/</p>
+<p><strong>Usage:</strong> <code>sketch license mit</code></p>
 <hr/>
 <p><small><i>
 This document was generated automatically by
@@ -434,7 +563,7 @@ This document was generated automatically by
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../../index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
@@ -448,7 +577,7 @@ This document was generated automatically by
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../../index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 

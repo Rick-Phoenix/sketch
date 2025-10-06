@@ -176,26 +176,38 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="-sketch"><a class="header" href="#-sketch">🖌️ Sketch</a></h1>
-<blockquote>
-<p><code>Templating made simple</code></p>
-</blockquote>
+<p>Sketch is a tool that allows you to define and organize various kinds of templates and presets in order to reduce the time spent creating boilerplate files or code, while making your workspace more organized and easily reproducible.</p>
+<p><strong>Table of contents</strong></p>
+<ul>
+<li><a href="#improving-organization-and-productivity">Improving Organization And Productivity</a></li>
+<li><a href="#enhanced-templating-toolset">Enhanced Templating Toolset</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#documentation">Documentation</a></li>
+</ul>
+<h1 id="improving-organization-and-productivity"><a class="header" href="#improving-organization-and-productivity">Improving Organization And Productivity</a></h1>
 <p>Templating is an awesome tool. While it is mostly used for rendering content in a web framework, it can also be used to do much more than that.</p>
 <p>For instance, it can be used to define structures for files or even entire projects. These structures can be standardized enough to provide structure, clarity, familiarity and reproducibility, but also flexible enough as to be able to accept customized or even dynamically generated parameters.</p>
-<p>Taking advantage of these features comes with some serious benefits:</p>
-<ol>
-<li>
-<p>It drastically reduces the time and effort needed to perform the least rewarding aspects of development such as writing boilerplate code or setting up the file structure for a new project or tool</p>
-</li>
-<li>
-<p>It makes project structures standardized and easily reproducible, which makes it much easier to navigate them or to introduce them to others</p>
-</li>
-<li>
-<p>It reduces the time necessary to maintain these structures, as they can now be defined and modified only in one place and reused everywhere else</p>
-</li>
-</ol>
-<p>Sketch is a tool designed to draw on these strenghts, and to combine them with its own structure-oriented philosophy to provide a simple but powerful tool to simplify and automate many of the day-to-day development operations that have to do with creating files or setting up projects.</p>
+<p>Taking advantage of these features helps in dealing with some common pain points in software development:</p>
+<h2 id="1-boilerplate-generation"><a class="header" href="#1-boilerplate-generation">1. <strong>Boilerplate Generation</strong></a></h2>
+<h4 id="the-problem"><a class="header" href="#the-problem">The Problem</a></h4>
+<p>Creating boilerplate for files or entire projects is an unrewarding and time consuming process. It causes unwanted cognitive load and kills productive momentum.</p>
+<h4 id="the-solution"><a class="header" href="#the-solution">The Solution</a></h4>
+<p>When using presets, a single command can be used to generate a file or an entire project structure. It's orders of magnitude faster than doing it manually, while still being less complex than creating scripts and more flexible than copy-pasting.</p>
+<h2 id="2-structure-and-reproducibility"><a class="header" href="#2-structure-and-reproducibility">2. Structure And Reproducibility</a></h2>
+<h4 id="the-problem-1"><a class="header" href="#the-problem-1">The Problem</a></h4>
+<p>There are many cases in which you need to have a specific configuration file in multiple places: a Docker Compose service, a script, a configuration file for a linter, or anything else.</p>
+<p>When you need to update this configuration file, you then need to update it in every other place where you are using it.
+If this is done manually, each copy may look slightly different than the other (even if the content is the same), maybe for something as simple as ordering fields in a different way from one file to another.</p>
+<p>While this may seem trivial, it causes mental friction and it can compound to outright confusion because each time your brain has to process a slightly different structure.</p>
+<h4 id="the-solution-1"><a class="header" href="#the-solution-1">The Solution</a></h4>
+<p>If you use a preset, then every file generated with that preset will look the exact same. It removes the cognitive penalty caused by ever-slightly-different configuration files, and lets you focus on more important areas of your work.</p>
+<h2 id="3-maintainability"><a class="header" href="#3-maintainability">3. Maintainability</a></h2>
+<h4 id="the-problem-2"><a class="header" href="#the-problem-2">The Problem</a></h4>
+<p>Like in the example above, if you need to use a specific configuration in many projects, that means that every change must be applied to every instance of the same configuration. This is a tedious and error-prone process, that eventually leads to projects being misconfigured and requiring manual review to bring them up to date with the new settings.</p>
+<h4 id="the-solution-2"><a class="header" href="#the-solution-2">The Solution</a></h4>
+<p>With a preset, you can modify the preset itself and then update each instance programmatically. Even if the new changes are very specific and need manual review rather than being immediately applicable everywhere, it's still easier to maintain 1 preset (or even 2 or 10, for that matter) than maintaining 100s of individual files.</p>
 <h1 id="presets"><a class="header" href="#presets">Presets</a></h1>
-<p>The concept of <code>preset</code> is central to Sketch's design and configuration.</p>
+<p>The concept of <code>preset</code> is central to Sketch's design and configuration. The basic concept about presets is that you should be able to define specific configurations that you find yourself using very often, and then use them to generate the files or even as a base for a more detailed preset.</p>
 <p>There are several preset categories, which come with a variety of features (the full updated list can be found in the documentation website):</p>
 <ul>
 <li>
@@ -237,12 +249,13 @@
 </ul>
 </li>
 </ul>
+<p>Some presets also have extra features that make it easier to construct and use them. You can consult the <a href="https://rick-phoenix.github.io/sketch/presets/summary.html">documentation</a> for more in-depth examples of various use cases.</p>
 <h2 id="type-safe-presets"><a class="header" href="#type-safe-presets">Type-safe Presets</a></h2>
 <p>Some presets, such as those that belong to some of the most widely used configuration files such as Rust's <code>Cargo.toml</code>, or Typescript's <code>tsconfig.json</code>, are <strong>fully typed</strong> and documented (as part of the JSON schema for Sketch's configuration file), so that defining them comes with all of the benefits of IDE integration such as type safety and autocompletion.</p>
 <h2 id="extensible-presets"><a class="header" href="#extensible-presets">Extensible Presets</a></h2>
 <p>Some presets are extensible, which means that you can define a base preset containing some common data (such as a list of networks or volumes in a <code>compose.yaml</code> file or a list of dependencies in a <code>package.json</code> file), and then create a preset that extends that base preset, so that you do not need to repeat inputs for all presets that share common settings.</p>
 <h2 id="aggregator-presets"><a class="header" href="#aggregator-presets">Aggregator Presets</a></h2>
-<p>Some presets can aggregate or use other presets. For example, a git <code>repo</code> preset can contain multiple templating presets (which will be generated in the root of the new repo), and also select a specific <code>gitignore</code> or <code>pre-commit</code> preset.</p>
+<p>Some presets can aggregate or use other presets. For example, a git <code>repo</code> preset can contain multiple templating presets (which will be generated in the root of the new repo), select a specific <code>gitignore</code> or <code>pre-commit</code> preset, along with some templates to render and execute as commands in the form of pre or post <code>hooks</code>.</p>
 <h1 id="enhanced-templating-toolset"><a class="header" href="#enhanced-templating-toolset">Enhanced Templating Toolset</a></h1>
 <p>Sketch uses <a href="https://keats.github.io/tera/docs/">Tera</a> to render custom templates, which comes with its own rich feature set, and on top of that, it provides extra features, such as:</p>
 <ul>
@@ -253,13 +266,20 @@
 <li>Generating a uuid</li>
 <li>Transforming a relative path into an absolute path</li>
 <li>Extracting capture groups from a regex</li>
-<li>(and many other more...)</li>
 </ul>
 </li>
 </ul>
+<p>...and many other more, which you can find in more detail in the documentation website.</p>
 <p>All of these are available directly within templates, which greatly extends their flexibility and the variety of scenarios in which they can be applied.</p>
+<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>Sketch can be installed in two ways:</p>
+<ol>
+<li>By downloading a pre-built binary from the <a href="https://github.com/Rick-Phoenix/sketch">github repository</a></li>
+<li>Via <code>cargo</code> (<code>cargo install sketch-it</code>)</li>
+</ol>
 <h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
 <p>You can find out more about Sketch in the <a href="https://rick-phoenix.github.io/sketch/">dedicated website</a>.</p>
+<p>The homepage will always show the docs for the latest version. Each minor version will have its own dedicated subroute (/v0.1, /v0.2 and so on...)</p>
 
                     </main>
 

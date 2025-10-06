@@ -179,10 +179,10 @@
 <p>Rendering a single template is for cases when we need a simpler or more flexible setup. But things become more interesting with templating presets, which can allow you to define entire project structures and then replicate them very easily (while also being able to modify the context at different levels).</p>
 <p>Presets can be rendered with the <code>render-preset</code> command, or generated automatically with <a href="../presets/git.html#adding-templates">another preset</a>, such as a git repo preset.</p>
 <h1 id="creating-a-preset"><a class="header" href="#creating-a-preset">Creating A Preset</a></h1>
-<p>A preset contains an optional context (which overrides the global context), and a list of two kinds of items, which are best used under different kinds of situations:</p>
-<h2 id="individual-template"><a class="header" href="#individual-template">Individual Template</a></h2>
+<p>A preset contains an optional context (which overrides the global context), and a list that contains any of these elements:</p>
+<h2 id="individual-presets"><a class="header" href="#individual-presets">Individual Presets</a></h2>
 <ul>
-<li>An individual template (with manually controlled output path and local context)</li>
+<li>An individual template, with manually controlled output path and context</li>
 </ul>
 <h3 id="example"><a class="header" href="#example">Example</a></h3>
 <pre><code class="language-yaml">templating_presets:
@@ -234,6 +234,29 @@
 </blockquote>
 <p>Tree output:</p>
 <pre><code>{{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
+</code></pre>
+<h1 id="remote-template"><a class="header" href="#remote-template">Remote Template</a></h1>
+<ul>
+<li>A special kind of structured preset which points to a git repository. Every file inside of it will be rendered in the output directory, just like structured templates.</li>
+</ul>
+<pre><code class="language-yaml">templating_presets:
+  remote:
+    templates:
+      - repo: https://github.com/Rick-Phoenix/sketch-remote-preset-example
+        # Glob patterns to exclude
+        exclude: [.gitignore]
+</code></pre>
+<h2 id="example-2"><a class="header" href="#example-2">Example</a></h2>
+<p>We start from this basic <a href="https://github.com/Rick-Phoenix/sketch-remote-preset-example">example</a></p>
+<p>Command:</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/remote}}</code></p>
+</blockquote>
+<p>Tree output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/custom_templates/remote/tree_output.txt:2:}}
+</code></pre>
+<p>File output:</p>
+<pre><code>{{#include ../../../sketch/tests/output/custom_templates/remote/some_file}}
 </code></pre>
 <h1 id="extending-templating-presets"><a class="header" href="#extending-templating-presets">Extending Templating Presets</a></h1>
 <p>Templating presets are extensible. When a preset is being extended, its templates will be added to the receiving preset, and the two context maps will be merged, with the new context overwriting the previous context in case of conflicting variables.</p>

@@ -213,11 +213,26 @@
         setup_dir: setup
 
 </code></pre>
-<p>After setting things up, you can run</p>
-<blockquote>
-<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}</code></p>
-</blockquote>
-<p>To generate the new package.</p>
+<h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
+<p>We can define some commands (which can also be templates) to execute before and/or after generating the new package:</p>
+<pre><code class="language-yaml">    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
+</code></pre>
 <h2 id="adding-templates"><a class="header" href="#adding-templates">Adding Templates</a></h2>
 <p>You can also use the <code>with_templates</code> field (or the <code>--with-template</code> cli flag) to specify a list of templates or templating presets that should be generated whenever a package preset is being used.</p>
 <p>Let's say for example that in a type of package, you always need a <code>schemas</code> directory, where you import some common schemas from a shared package and define new ones.</p>
@@ -239,7 +254,13 @@ templates:
 vars:
   schemas_package: "@myproject/schemas"
 </code></pre>
-<p>So the final tree structure of the output directory will look like this:</p>
+<h1 id="result"><a class="header" href="#result">Result</a></h1>
+<p>After setting things up, you can run</p>
+<blockquote>
+<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}</code></p>
+</blockquote>
+<p>To generate the new package.</p>
+<p>The final tree structure of the output directory will look like this:</p>
 <pre><code>{{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt:2:}}
 </code></pre>
 <blockquote>

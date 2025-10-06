@@ -222,6 +222,8 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
+    # License file to generate
+    license: Apache-2.0
     # Selecting a preset
     gitignore: ts
     pre_commit: typescript
@@ -258,6 +260,8 @@ templating_presets:
 # Git presets
 git_presets:
   ts_package:
+    # License file to generate
+    license: Apache-2.0
     # Selecting a preset
     gitignore: ts
     pre_commit: typescript
@@ -267,6 +271,27 @@ git_presets:
     with_templates:
       - id: dockerfile
 </code></pre>
+<h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
+<p>We can define some commands (which can also be templates) to execute before and/or after generating the new repo:</p>
+<pre><code class="language-yaml">    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
+</code></pre>
+<h1 id="putting-it-all-together"><a class="header" href="#putting-it-all-together">Putting It All Together</a></h1>
 <p>Starting from this config, we can run this command:</p>
 <blockquote>
 <p><code>{{#include ../../../sketch/tests/output/presets/cmd}}</code></p>
@@ -275,7 +300,7 @@ git_presets:
 <pre><code>{{#include ../../../sketch/tests/output/presets/tree_output.txt:2:}}
 </code></pre>
 <blockquote>
-<p>ℹ️ With cli flags, we can override the <code>gitignore</code> and <code>pre-commit</code> presets, as well as adding new templates to generate to the list.</p>
+<p>ℹ️ With cli flags, we can override the <code>gitignore</code> and <code>pre-commit</code> presets, as well as adding new templates or hooks to run or generate when the preset is being used.</p>
 </blockquote>
 <details>
 <summary>pre-commit-config.yaml output</summary>
