@@ -4,3 +4,9 @@ language = "en"
 src = "src"
 title = "Sketch"
 edition = "2024"
+
+[build]
+use-default-preprocessors = false
+
+[preprocessor]
+links = {}
