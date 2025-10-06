@@ -63,11 +63,13 @@ impl Config {
 
     context.extend(get_default_context());
 
-    for (key, val) in cli_vars {
-      context.insert(key, val);
-    }
-
     for cmd in commands {
+      let mut local_context = context.clone();
+
+      for (key, val) in cmd.context.iter().chain(cli_vars.iter()) {
+        local_context.insert(key, val);
+      }
+
       let template_name = match &cmd.command {
         TemplateData::Id(id) => id,
         TemplateData::Content { name, content } => {
@@ -84,7 +86,7 @@ impl Config {
 
       let rendered_command =
         tera
-          .render(&template_name, &context)
+          .render(&template_name, &local_context)
           .map_err(|e| GenError::TemplateParsing {
             template: template_name.to_string(),
             source: e,
