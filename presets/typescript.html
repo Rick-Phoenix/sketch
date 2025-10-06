@@ -313,22 +313,99 @@
 </code></pre>
 <details>
 <summary>Tsconfig output</summary>
-<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/tsconfig.json}}
+<pre><code class="language-json">{
+  "include": [
+    "scripts",
+    "src",
+    "tests"
+  ],
+  "references": [
+    {
+      "path": "/other/path"
+    },
+    {
+      "path": "/some/path"
+    }
+  ],
+  "compilerOptions": {
+    "noEmit": false,
+    "verbatimModuleSyntax": true
+  }
+}
 </code></pre>
 </details>
 <details>
 <summary>Package.json output</summary>
-<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/package.json}}
+<pre><code class="language-json">{
+  "name": "example",
+  "private": null,
+  "version": null,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev"
+  },
+  "description": "I am the frontend preset",
+  "license": "MIT",
+  "packageManager": "pnpm",
+  "dependencies": {},
+  "devDependencies": {
+    "svelte": "*",
+    "tailwindcss": "*",
+    "vite": "*"
+  }
+}
 </code></pre>
 </details>
 <details>
 <summary>Oxlintrc.json output</summary>
-<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/.oxlintrc.json}}
+<pre><code class="language-json">{
+  "plugins": [
+    "oxc",
+    "typescript",
+    "unicorn"
+  ],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    ".cache",
+    ".output"
+  ]
+}
 </code></pre>
 </details>
 <details>
 <summary>vitest.config.ts output</summary>
-<pre><code class="language-json">{{#include ../../../sketch/tests/output/presets/packages/presets_example/tests/vitest.config.ts}}
+<pre><code class="language-json">import { defineConfig } from "vitest/config";
+import { resolve, join } from "node:path";
+
+const j = join;
+const r = resolve;
+
+const dir = import.meta.dirname;
+const setupDir = r(dir, "setup");
+
+export default defineConfig({
+  plugins: [],
+  resolve: {
+    alias: {
+      '@': r(dir, "../src"),
+    },
+  },
+
+  test: { 
+    setupFiles: [ 
+      j(setupDir, "tests_setup.ts"),
+      j(setupDir, "somefile.ts"),
+      j(setupDir, "anotherfile.ts")
+    ], 
+    globals: true,
+    environment: "jsdom",
+    silent: "passed-only",
+    sequence: {
+      setupFiles: "list",
+    },
+  },
+});
 </code></pre>
 </details>
 

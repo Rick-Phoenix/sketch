@@ -223,10 +223,20 @@
 </code></pre>
 <p>After running</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/catalog_cmd}}</code></p>
+<p><code>sketch ts package --preset with_catalog </code></p>
 </blockquote>
 <p>We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:</p>
-<pre><code class="language-yaml">{{#include ../../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
+<pre><code class="language-yaml">packages:
+- apps/*
+- packages/*
+catalog:
+  hono: ^4.9.10
+catalogs:
+  svelte:
+    svelte: ^5.39.9
+onlyBuiltDependencies:
+- esbuild
+minimumReleaseAge: 1440
 </code></pre>
 <h2 id="storing-and-reusing-contributors-data"><a class="header" href="#storing-and-reusing-contributors-data">Storing And Reusing Contributors' Data</a></h2>
 <p>When working with a team on a monorepo that is made of several individual packages, it's very common that the same people have to be added to the <code>author</code>, <code>contributors</code> and <code>maintainers</code> fields in the <code>package.json</code> files for these packages.</p>
@@ -270,10 +280,43 @@
 </code></pre>
 <p>After we run</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/people_cmd}}</code></p>
+<p><code>sketch ts package --preset people-example </code></p>
 </blockquote>
 <p>We get this <code>package.json</code> file in the root of the new package:</p>
-<pre><code class="language-json">{{#include ../../../sketch/tests/output/ts_examples/packages/people-example/package.json}}
+<pre><code class="language-json">{
+  "name": "people-example",
+  "private": null,
+  "version": null,
+  "type": "module",
+  "scripts": {},
+  "author": {
+    "name": "Bruce Wayne",
+    "email": "bruce@gotham.com",
+    "url": "brucewayne.com"
+  },
+  "packageManager": "pnpm",
+  "dependencies": {},
+  "devDependencies": {},
+  "contributors": [
+    {
+      "name": "Bruce Wayne",
+      "email": "bruce@gotham.com",
+      "url": "brucewayne.com"
+    }
+  ],
+  "maintainers": [
+    {
+      "name": "Bruce Wayne",
+      "email": "bruce@gotham.com",
+      "url": "brucewayne.com"
+    },
+    {
+      "name": "Clark Kent",
+      "email": "clark-kent@dailyplanet.com",
+      "url": "clarkkent.com"
+    }
+  ]
+}
 </code></pre>
 
                     </main>

@@ -314,10 +314,53 @@ Entry: {{ entry }}
 </code></pre>
 <p>Cmd:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/templating_examples/cmd}}</code></p>
+<p><code>GREETING="hello,world" sketch render --id example.j2 --stdout</code></p>
 </blockquote>
 <p>Output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/templating_examples/output}}
+<pre><code>Current arch is: x86_64
+Current os is: linux
+Current os family is: unix
+Is unix: true
+
+A random uuid is: 81b1e513-ede2-4dcc-b26b-efff7bfe03ff
+
+A random string is: 4473e6
+
+A random number is: 6846315
+
+Now is 2025-10-06T18:17:48.772079793+00:00
+
+First segment is: hello
+Second segment is: world
+
+Basename is: myfile
+Parent dir is: mydir
+
+It's a dir!
+It's a file!
+
+Matches glob: true
+
+Path is: Cargo
+Extension is: toml
+
+They're taking the hobbits to Isengard!
+
+Major is: 0
+Minor is: 1
+Patch is: 0
+
+Version matches &gt;=0.1.0: true
+Version matches &gt;=0.2.0: false
+
+To camelCase: myVar
+To snake_case: my_var
+To SCREAMING_CASE: MY_VAR
+To PascalCase: MyVar
+
+Luke, I am your father!
+
+Entry: example.j2
 </code></pre>
 <h1 id="defining-variables"><a class="header" href="#defining-variables">Defining Variables</a></h1>
 <p>Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):</p>

@@ -273,10 +273,18 @@ vars:
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
 <p>So after setting everything up, we run the command</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}</code></p>
+<p><code>sketch ts monorepo --root-package root --pnpm base </code></p>
 </blockquote>
 <p>And get this tree output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt:2:}}
+<pre><code>├── .oxlintrc.json
+├── apps
+├── docker
+│   └── dev.dockerfile
+├── package.json
+├── packages
+├── pnpm-workspace.yaml
+├── tsconfig.json
+└── tsconfig.options.json
 </code></pre>
 <blockquote>
 <p>ℹ️ You can use the <code>-i</code> flag to install dependencies for the root package after creating the new monorepo.</p>

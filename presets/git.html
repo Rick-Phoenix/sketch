@@ -294,22 +294,43 @@ git_presets:
 <h1 id="putting-it-all-together"><a class="header" href="#putting-it-all-together">Putting It All Together</a></h1>
 <p>Starting from this config, we can run this command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/presets/cmd}}</code></p>
+<p><code>sketch repo --preset ts_package </code></p>
 </blockquote>
 <p>To get this tree output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/presets/tree_output.txt:2:}}
+<pre><code>├── .gitignore
+├── .pre-commit-config.yaml
+├── Dockerfile
+├── LICENSE
+├── post.txt
+└── pre.txt
 </code></pre>
 <blockquote>
 <p>ℹ️ With cli flags, we can override the <code>gitignore</code> and <code>pre-commit</code> presets, as well as adding new templates or hooks to run or generate when the preset is being used.</p>
 </blockquote>
 <details>
 <summary>pre-commit-config.yaml output</summary>
-<pre><code class="language-yaml">{{#include ../../../sketch/tests/output/presets/.pre-commit-config.yaml}}
+<pre><code class="language-yaml">repos:
+- repo: local
+  hooks:
+  - id: oxlint
+    entry: oxlint
+    files: \.svelte$|\.js$|\.ts$
+    language: system
+    name: oxlint
+    types:
+    - file
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.28.0
+  hooks:
+  - id: gitleaks
 </code></pre>
 </details>
 <details>
 <summary>gitignore output</summary>
-<pre><code>{{#include ../../../sketch/tests/output/presets/.gitignore}}
+<pre><code>*.tsBuildInfo
+node_modules
+*.env
+dist
 </code></pre>
 </details>
 

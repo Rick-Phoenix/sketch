@@ -221,10 +221,29 @@
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/generated_configs/commands/compose}}</code></p>
+<p><code>sketch docker-compose extended </code></p>
 </blockquote>
 <p>Output:</p>
-<pre><code class="language-yaml">{{#include ../../../sketch/tests/output/generated_configs/compose.yaml}}
+<pre><code class="language-yaml">services:
+  db:
+    image: postgres
+    environment:
+      TZ: Europe/Berlin
+    networks:
+    - my_network
+  my_service:
+    networks:
+    - my_network
+    volumes:
+    - my_volume:/target
+networks:
+  my_network:
+    external: true
+volumes:
+  my_other_volume:
+    external: true
+  my_volume:
+    external: true
 </code></pre>
 
                     </main>

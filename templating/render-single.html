@@ -193,17 +193,21 @@ templates:
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/from_id}}</code></p>
+<p><code>sketch render --id hobbits tests/output/custom_templates/from_template_id.txt</code></p>
 </blockquote>
 <h2 id="from-templates_dir"><a class="header" href="#from-templates_dir">From <code>templates_dir</code></a></h2>
 <p>The best method is to use a file inside <code>templates_dir</code>. With this method, the template's ID becomes the relative path from <code>templates_dir</code>. This method provides better IDE integration if you have set up snippets or syntax highlighting for <code>jinja</code> files (Tera, the templating engine used by <code>sketch</code> is based on jinja).</p>
 <h3 id="example"><a class="header" href="#example">Example</a></h3>
 <p>Tree structure of <code>templates_dir</code>:</p>
-<pre><code>{{#include ../../../sketch/tests/output/custom_templates/tree:2:}}
+<pre><code>├── example.j2
+└── subdir
+    ├── nested
+    │   └── more_nested_file.j2
+    └── nested_file.j2
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/from_template_file}}</code></p>
+<p><code>sketch render --id subdir/nested_file.j2 tests/output/custom_templates/from_template_file.txt</code></p>
 </blockquote>
 <blockquote>
 <p>ℹ️ You can also use the <code>-f</code> flag to render a template from any file, even outside <code>templates_dir</code>.</p>
@@ -211,7 +215,7 @@ templates:
 <h2 id="from-literal-definition"><a class="header" href="#from-literal-definition">From Literal Definition</a></h2>
 <p>Alternatively, a template can also be defined directly within a command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}</code></p>
+<p><code>sketch render --content "they're taking the hobbits to {{ location }}!" tests/output/custom_templates/from_literal.txt</code></p>
 </blockquote>
 
                     </main>

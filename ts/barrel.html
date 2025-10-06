@@ -180,14 +180,19 @@
 <p>Sketch has a dedicated command to make this process easier.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <p>Target directory:</p>
-<pre><code>{{#include ../../../sketch/tests/output/ts_barrel/tree}}
+<pre><code>tests/ts_barrel
+└── nested
+    ├── file1.ts
+    └── nested2
+        └── file2.ts
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/ts_barrel/commands/barrel}}</code></p>
+<p><code>sketch ts barrel </code></p>
 </blockquote>
 <p>Output:</p>
-<pre><code class="language-typescript">{{#include ../../../sketch/tests/output/ts_barrel/index.ts}}
+<pre><code class="language-typescript">export * from "nested/file1";
+export * from "nested/nested2/file2";
 </code></pre>
 
                     </main>

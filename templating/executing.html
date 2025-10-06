@@ -188,10 +188,10 @@
 </blockquote>
 <p>We can refer to it by its id:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/commands_tests/commands/exec_from_template_cmd}}</code></p>
+<p><code>sketch --set category="gp2" exec -t cmd_template.j2</code></p>
 </blockquote>
 <p>This will trigger the command and create a file containing</p>
-<pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/output_from_templates_dir.txt}}
+<pre><code class="language-txt">gp2 engine... gp2... argh!
 </code></pre>
 <h3 id="from-file"><a class="header" href="#from-file">From File</a></h3>
 <p>We can also use a file that is not inside <code>templates_dir</code> by using the <code>-f</code> flag and providing the path to said file.  Relative paths will be resolved starting from the cwd.</p>
@@ -200,19 +200,19 @@
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/commands_tests/commands/cmd_from_file}}</code></p>
+<p><code>sketch --set something="space" exec -f tests/commands_tests/cmd_from_file.j2</code></p>
 </blockquote>
 <p>Output:</p>
-<pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/output_from_file.txt}}
+<pre><code class="language-txt">all the time you have to leave the space!
 </code></pre>
 <h3 id="from-literal-template"><a class="header" href="#from-literal-template">From Literal Template</a></h3>
 <p>Templates can also be defined directly as part of the command.</p>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/commands_tests/commands/exec_literal_cmd}}</code></p>
+<p><code>sketch --set condition="slower" exec 'echo "engine feels good... much {{ condition }} than before... amazing" &gt; command_output.txt'</code></p>
 </blockquote>
 <p>Output:</p>
-<pre><code class="language-txt">{{#include ../../../sketch/tests/output/commands_tests/command_output.txt}}
+<pre><code class="language-txt">engine feels good... much slower than before... amazing
 </code></pre>
 <h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
 <p>Templates can be executed as commands as <code>pre</code> or <code>post</code> hooks in a git <code>repo</code>, typecript <code>monorepo</code> or typescript <code>package</code> presets:</p>

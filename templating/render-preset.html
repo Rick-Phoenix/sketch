@@ -201,10 +201,12 @@
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/collection_preset}}</code></p>
+<p><code>sketch render-preset lotr </code></p>
 </blockquote>
 <p>Tree output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/custom_templates/lotr/tree_output.txt:2:}}
+<pre><code>├── hobbits.txt
+└── subdir
+    └── breakfast.txt
 </code></pre>
 <h2 id="structured-template"><a class="header" href="#structured-template">Structured Template</a></h2>
 <ul>
@@ -215,7 +217,11 @@
 <p>ℹ️ Any template files that end with the <code>.j2</code>, <code>.jinja</code> or <code>.jinja2</code> extensions will have them automatically removed. So <code>myfile.json.j2</code> will just become <code>myfile.json</code>.</p>
 </blockquote>
 <p>Let's say that this is our <code>templates_dir</code>:</p>
-<pre><code>{{#include ../../../sketch/tests/output/custom_templates/tree:2:}}
+<pre><code>├── example.j2
+└── subdir
+    ├── nested
+    │   └── more_nested_file.j2
+    └── nested_file.j2
 </code></pre>
 <p>And we define this preset, which is meant to reproduce the entire file structure of <code>subdir</code> in the target directory.</p>
 <pre><code class="language-yaml">templating_presets:
@@ -230,10 +236,12 @@
 </code></pre>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/structured_preset}}</code></p>
+<p><code>sketch render-preset structured </code></p>
 </blockquote>
 <p>Tree output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
+<pre><code>├── nested
+│   └── more_nested_file
+└── nested_file
 </code></pre>
 <h1 id="remote-template"><a class="header" href="#remote-template">Remote Template</a></h1>
 <ul>
@@ -250,13 +258,16 @@
 <p>We start from this basic <a href="https://github.com/Rick-Phoenix/sketch-remote-preset-example">example</a></p>
 <p>Command:</p>
 <blockquote>
-<p><code>{{#include ../../../sketch/tests/output/custom_templates/commands/remote}}</code></p>
+<p><code>sketch --set 'continuation="gp2 engine... gp2!"' render-preset remote </code></p>
 </blockquote>
 <p>Tree output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/custom_templates/remote/tree_output.txt:2:}}
+<pre><code>├── some_file
+└── subdir
+    └── nested
+        └── nested_file
 </code></pre>
 <p>File output:</p>
-<pre><code>{{#include ../../../sketch/tests/output/custom_templates/remote/some_file}}
+<pre><code>Roses are red, violets are blue, gp2 engine... gp2!
 </code></pre>
 <h1 id="extending-templating-presets"><a class="header" href="#extending-templating-presets">Extending Templating Presets</a></h1>
 <p>Templating presets are extensible. When a preset is being extended, its templates will be added to the receiving preset, and the two context maps will be merged, with the new context overwriting the previous context in case of conflicting variables.</p>
