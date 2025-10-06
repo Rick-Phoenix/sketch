@@ -1,24 +1,59 @@
 # 🖌️ Sketch
 
->`Templating made simple`
+Sketch is a tool that allows you to define and organize various kinds of templates and presets in order to reduce the time spent creating boilerplate files or code, while making your workspace more organized and easily reproducible.
+
+**Table of contents**
+- [Improving Organization And Productivity](#improving-organization-and-productivity)
+- [Enhanced Templating Toolset](#enhanced-templating-toolset)
+- [Installation](#installation)
+- [Documentation](#documentation)
+
+# Improving Organization And Productivity
 
 Templating is an awesome tool. While it is mostly used for rendering content in a web framework, it can also be used to do much more than that. 
 
 For instance, it can be used to define structures for files or even entire projects. These structures can be standardized enough to provide structure, clarity, familiarity and reproducibility, but also flexible enough as to be able to accept customized or even dynamically generated parameters.
 
-Taking advantage of these features comes with some serious benefits:
+Taking advantage of these features helps in dealing with some common pain points in software development:
 
-1. It drastically reduces the time and effort needed to perform the least rewarding aspects of development such as writing boilerplate code or setting up the file structure for a new project or tool
+## 1. **Boilerplate Generation**
 
-2. It makes project structures standardized and easily reproducible, which makes it much easier to navigate them or to introduce them to others
+#### The Problem
 
-3. It reduces the time necessary to maintain these structures, as they can now be defined and modified only in one place and reused everywhere else
+Creating boilerplate for files or entire projects is an unrewarding and time consuming process. It causes unwanted cognitive load and kills productive momentum.
 
-Sketch is a tool designed to draw on these strenghts, and to combine them with its own structure-oriented philosophy to provide a simple but powerful tool to simplify and automate many of the day-to-day development operations that have to do with creating files or setting up projects.
+#### The Solution
+
+When using presets, a single command can be used to generate a file or an entire project structure. It's orders of magnitude faster than doing it manually, while still being less complex than creating scripts and more flexible than copy-pasting.
+
+## 2. Structure And Reproducibility
+
+#### The Problem
+
+There are many cases in which you need to have a specific configuration file in multiple places: a Docker Compose service, a script, a configuration file for a linter, or anything else.
+
+When you need to update this configuration file, you then need to update it in every other place where you are using it.
+If this is done manually, each copy may look slightly different than the other (even if the content is the same), maybe for something as simple as ordering fields in a different way from one file to another.
+
+While this may seem trivial, it causes mental friction and it can compound to outright confusion because each time your brain has to process a slightly different structure.
+
+#### The Solution
+
+If you use a preset, then every file generated with that preset will look the exact same. It removes the cognitive penalty caused by ever-slightly-different configuration files, and lets you focus on more important areas of your work.
+
+## 3. Maintainability
+
+#### The Problem
+
+Like in the example above, if you need to use a specific configuration in many projects, that means that every change must be applied to every instance of the same configuration. This is a tedious and error-prone process, that eventually leads to projects being misconfigured and requiring manual review to bring them up to date with the new settings.
+
+#### The Solution
+
+With a preset, you can modify the preset itself and then update each instance programmatically. Even if the new changes are very specific and need manual review rather than being immediately applicable everywhere, it's still easier to maintain 1 preset (or even 2 or 10, for that matter) than maintaining 100s of individual files.
 
 # Presets
 
-The concept of `preset` is central to Sketch's design and configuration.
+The concept of `preset` is central to Sketch's design and configuration. The basic concept about presets is that you should be able to define specific configurations that you find yourself using very often, and then use them to generate the files or even as a base for a more detailed preset.
 
 There are several preset categories, which come with a variety of features (the full updated list can be found in the documentation website):
 
@@ -45,6 +80,8 @@ There are several preset categories, which come with a variety of features (the 
     - `.oxlintrc.json` (extensible)
     - `vitest` (not a full configuration for `vitest.config.ts`, but a basic testing setup)
 
+Some presets also have extra features that make it easier to construct and use them. You can consult the [documentation](https://rick-phoenix.github.io/sketch/presets/summary.html) for more in-depth examples of various use cases.
+
 ## Type-safe Presets
 
 Some presets, such as those that belong to some of the most widely used configuration files such as Rust's `Cargo.toml`, or Typescript's `tsconfig.json`, are **fully typed** and documented (as part of the JSON schema for Sketch's configuration file), so that defining them comes with all of the benefits of IDE integration such as type safety and autocompletion.
@@ -55,7 +92,7 @@ Some presets are extensible, which means that you can define a base preset conta
 
 ## Aggregator Presets
 
-Some presets can aggregate or use other presets. For example, a git `repo` preset can contain multiple templating presets (which will be generated in the root of the new repo), and also select a specific `gitignore` or `pre-commit` preset.
+Some presets can aggregate or use other presets. For example, a git `repo` preset can contain multiple templating presets (which will be generated in the root of the new repo), select a specific `gitignore` or `pre-commit` preset, along with some templates to render and execute as commands in the form of pre or post `hooks`.
 
 # Enhanced Templating Toolset
 
@@ -67,7 +104,8 @@ Sketch uses [Tera](https://keats.github.io/tera/docs/) to render custom template
     - Generating a uuid 
     - Transforming a relative path into an absolute path 
     - Extracting capture groups from a regex 
-    - (and many other more...)
+
+...and many other more, which you can find in more detail in the documentation website.
 
 All of these are available directly within templates, which greatly extends their flexibility and the variety of scenarios in which they can be applied.
 
