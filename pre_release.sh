@@ -16,11 +16,10 @@ echo "Running tests..."
 
 cargo test --all-features -- -q --nocapture
 
-echo "Generating JSON schema"
-
-cargo run --bin json-schema "$VERSION"
-
 if [[ "$EXEC_RELEASE" == "true" ]]; then
+  echo "Generating JSON schema"
+  cargo run --bin json-schema "$VERSION"
+
   echo "Updating changelog"
   git cliff --tag "$VERSION" -o "CHANGELOG.md"
 fi
