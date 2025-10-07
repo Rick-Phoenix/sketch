@@ -10,3 +10,9 @@ use-default-preprocessors = false
 
 [preprocessor]
 links = {}
+
+[output.html]
+additional-css = ["./theme/catppuccin.css"]
+default-theme = "mocha"
+preferred-dark-theme = "mocha"
+git-repository-url = "https://github.com/Rick-Phoenix/sketch"
