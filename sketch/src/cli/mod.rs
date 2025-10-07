@@ -41,30 +41,30 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 }
 
 async fn execute_cli(cli: Cli) -> Result<(), GenError> {
-  let config = get_config_from_cli(cli.overrides.unwrap_or_default(), &cli.command).await?;
+  let mut config = get_config_from_cli(cli.overrides.unwrap_or_default(), &cli.command).await?;
 
   let command = cli.command;
   let mut cli_vars: IndexMap<String, Value> = IndexMap::new();
-
-  for file in cli.vars_yaml {
-    let vars: IndexMap<String, Value> = deserialize_yaml(&file)?;
-    cli_vars.extend(vars);
-  }
-
-  for file in cli.vars_toml {
-    let vars: IndexMap<String, Value> = deserialize_toml(&file)?;
-    cli_vars.extend(vars);
-  }
-
-  for file in cli.vars_json {
-    let vars: IndexMap<String, Value> = deserialize_json(&file)?;
-    cli_vars.extend(vars);
-  }
 
   if let Some(cli_overrides) = cli.vars_overrides {
     for (name, value) in cli_overrides {
       cli_vars.insert(name, value);
     }
+  }
+
+  for file in cli.vars_yaml {
+    let vars: IndexMap<String, Value> = deserialize_yaml(&file)?;
+    config.vars.extend(vars);
+  }
+
+  for file in cli.vars_toml {
+    let vars: IndexMap<String, Value> = deserialize_toml(&file)?;
+    config.vars.extend(vars);
+  }
+
+  for file in cli.vars_json {
+    let vars: IndexMap<String, Value> = deserialize_json(&file)?;
+    config.vars.extend(vars);
   }
 
   let overwrite = config.can_overwrite();

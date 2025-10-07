@@ -86,12 +86,11 @@ Output:
 Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):
 
 - Global variables
+- Cli-set variable files (in the order that they are given)
 - Preset context
 - Single template context
-- Cli-set variable files (in the order that they are given)
 - Cli-set variables
 
 <div class="warning">
 Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
 </div>
-
