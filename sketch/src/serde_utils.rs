@@ -1,10 +1,18 @@
 use std::{
   collections::{BTreeMap, BTreeSet},
   fmt::{self, Display},
+  path::Path,
 };
 
+use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::{
+  fs::{deserialize_json, deserialize_toml, deserialize_yaml},
+  GenError,
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
 #[serde(untagged)]
@@ -50,6 +58,21 @@ impl ListOrMap {
       ListOrMap::Map(map) => map.get(key),
     }
   }
+}
+
+pub(crate) fn deserialize_map(path: &Path) -> Result<IndexMap<String, Value>, GenError> {
+  let ext = path.extension().ok_or(generic_error!(
+    "Could not identify the type of the file `{path:?}` for deserialization"
+  ))?;
+
+  let map: IndexMap<String, Value> = match ext.to_string_lossy().as_ref() {
+    "json" => deserialize_json(path)?,
+    "toml" => deserialize_toml(path)?,
+    "yaml" => deserialize_yaml(path)?,
+    _ => return Err(generic_error!("Could not deserialize file `{path:?}` due to an unsupported extension. Allowed extensions are: yaml, toml, json"))
+  };
+
+  Ok(map)
 }
 
 pub(crate) fn merge_list_or_map(left: &mut Option<ListOrMap>, right: Option<ListOrMap>) {

@@ -27,11 +27,12 @@ use crate::{
   },
   exec::Hook,
   fs::{
-    create_all_dirs, create_parent_dirs, deserialize_json, deserialize_toml, deserialize_yaml,
-    get_cwd, get_extension, serialize_json, serialize_toml, serialize_yaml, write_file,
+    create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
+    serialize_yaml, write_file,
   },
   init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
   licenses::License,
+  serde_utils::deserialize_map,
   ts::TypescriptConfig,
   Config, *,
 };
@@ -52,18 +53,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     }
   }
 
-  for file in cli.vars_yaml {
-    let vars: IndexMap<String, Value> = deserialize_yaml(&file)?;
-    config.vars.extend(vars);
-  }
-
-  for file in cli.vars_toml {
-    let vars: IndexMap<String, Value> = deserialize_toml(&file)?;
-    config.vars.extend(vars);
-  }
-
-  for file in cli.vars_json {
-    let vars: IndexMap<String, Value> = deserialize_json(&file)?;
+  for file in cli.vars_files {
+    let vars = deserialize_map(&file)?;
     config.vars.extend(vars);
   }
 
@@ -459,17 +450,9 @@ pub struct Cli {
   #[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
   pub vars_overrides: Option<Vec<(String, Value)>>,
 
-  /// One or more paths to yaml files to extract template variables from, in the given order.
-  #[arg(long)]
-  pub vars_yaml: Vec<PathBuf>,
-
-  /// One or more paths to toml files to extract template variables from, in the given order.
-  #[arg(long)]
-  pub vars_toml: Vec<PathBuf>,
-
-  /// One or more paths to json files to extract template variables from, in the given order.
-  #[arg(long)]
-  pub vars_json: Vec<PathBuf>,
+  /// One or more paths to json, yaml or toml files to extract template variables from, in the given order.
+  #[arg(long = "vars-file")]
+  pub vars_files: Vec<PathBuf>,
 }
 
 #[derive(Args, Debug, Clone)]

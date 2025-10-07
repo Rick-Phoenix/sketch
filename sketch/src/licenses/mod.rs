@@ -1,4 +1,4 @@
-use clap::{Subcommand, ValueEnum};
+use clap::ValueEnum;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
