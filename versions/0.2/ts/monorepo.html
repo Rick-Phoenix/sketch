@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Templating - Sketch</title>
+        <title>Generating A Monorepo - Sketch</title>
 
 
         <!-- Custom HTML head -->
@@ -175,215 +175,130 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="templating"><a class="header" href="#templating">Templating</a></h1>
-<p>Sketch uses the <a href="https://keats.github.io/tera/docs/">Tera</a> templating engine to render custom templates. Every template, whether it's defined in a file, in the config file, or inlined, can take advantage of all of Tera's functionalities, like using filters, functions, defining and using macros, performing operations and importing other templates.</p>
-<div class="warning">
-Since all autoescaping is disabled in templates, you should always only use templates that you made or trust.
-</div>
-<h1 id="special-variables"><a class="header" href="#special-variables">Special Variables</a></h1>
-<p>Sketch provides some special variables to get access to commonly used values such as the home directory.</p>
-<p>All of the following variables are available in templates, prefixed with <code>sketch_</code> (i.e. <code>sketch_os</code> and so on).</p>
-<ul>
-<li><code>cwd</code></li>
-<li><code>tmp_dir</code> (from <code>env::temp_dir</code>)</li>
-<li><code>home</code> (from <code>env::home_dir</code>)</li>
-<li><code>os</code> (from <code>CARGO_CFG_TARGET_OS</code> or env <code>OS</code>)</li>
-<li><code>os_family</code> (from <code>CARGO_CFG_TARGET_FAMILY</code>)</li>
-<li><code>arch</code> (from <code>CARGO_CFG_TARGET_ARCH</code> or env <code>HOSTTYPE</code>)</li>
-<li><code>user</code> (env <code>USER</code>)</li>
-<li><code>hostname</code> (env <code>HOSTNAME</code>)</li>
-<li><code>xdg_config</code> (env <code>XDG_CONFIG_HOME</code>)</li>
-<li><code>xdg_data</code> (env <code>XDG_DATA_HOME</code>)</li>
-<li><code>xdg_state</code> (env <code>XDG_STATE_HOME</code>)</li>
-<li><code>xdg_cache</code> (env <code>XDG_CACHE_HOME</code>)</li>
-<li><code>is_windows</code> (from <code>cfg!(windows)</code>)</li>
-<li><code>is_unix</code> (from <code>cfg!(unix)</code>)</li>
-<li><code>is_wsl</code> (checks <code>/proc/sys/kernel/osrelease</code>)</li>
-</ul>
-<h1 id="filters-and-functions"><a class="header" href="#filters-and-functions">Filters And Functions</a></h1>
-<p>All of the builtin functionalities for <a href="https://keats.github.io/tera/docs/">Tera</a> are available.</p>
-<p>On top of that, Sketch adds some extra filters and functions.</p>
-<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
-<ul>
-<li><code>uuid</code> (generates a v4 UUID)</li>
-</ul>
-<h2 id="filters"><a class="header" href="#filters">Filters</a></h2>
-<h3 id="strings"><a class="header" href="#strings">Strings</a></h3>
-<ul>
-<li><code>capture(regex=REGEX)</code> (matches a regex once and returns the named capture groups)</li>
-<li><code>capture_many(regex=REGEX)</code> (matches a regex repetitively and returns the list of named capture groups)</li>
-<li><code>semver</code> (parses a cargo-style semver and returns the segments)</li>
-<li><code>matches_semver(target=TARGET)</code> (checks if a cargo-style semver matches a target)</li>
-<li><code>strip_prefix(prefix=PREFIX)</code> (strips a prefix from a string, if present)</li>
-<li><code>strip_suffix(suffix=SUFFIX)</code> (strips a suffix from a string, if present)</li>
-</ul>
-<h3 id="filesystem"><a class="header" href="#filesystem">Filesystem</a></h3>
-<ul>
-<li><code>basename</code> (gets the basename of a directory/file)</li>
-<li><code>parent_dir</code> (gets the parent directory of a directory/file)</li>
-<li><code>is_file</code> (checks if a path is a file)</li>
-<li><code>is_dir</code> (checks if a path is a directory)</li>
-<li><code>is_absolute</code> (checks if a path is absolute)</li>
-<li><code>is_relative</code> (checks if a path is relative)</li>
-<li><code>absolute</code> (makes a path absolute)</li>
-<li><code>relative(from=PATH)</code> (returns the relative path between two paths)</li>
-<li><code>read_dir</code> (returns the list of the files contained in a directory and its subdirectories)</li>
-<li><code>glob(pattern=GLOB)</code> (returns the glob matching entries in a directory and its subdirectories)</li>
-<li><code>matches_glob(pattern=GLOB)</code> (checks if a path matches a glob pattern)</li>
-</ul>
-<h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
-<p>Template:</p>
-<pre><code class="language-jinja">{# Using special variables -#}
+                        <h1 id="monorepo-generation"><a class="header" href="#monorepo-generation">Monorepo Generation</a></h1>
+<p>To set up a basic monorepo with default settings, we can just run the command <code>sketch ts monorepo</code>. But we can also create a package preset and use that for the root package of the monorepo.</p>
+<p>This is a more customized configuration for the root package:</p>
+<pre><code class="language-yaml">typescript:
+  # By default, typescript and oxlint would be added to
+  # the root package's dependencies
+  no_default_deps: true
 
-Current arch is: {{ sketch_arch }}
-Current os is: {{ sketch_os }}
-Current os family is: {{ sketch_os_family }}
-Is unix: {{ sketch_is_unix }}
+  # Pnpm is the default, and if selected, it will generate
+  # a pnpm-workspace.yaml file
+  package_manager: pnpm
 
-{# Functions and filters -#}
+  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
 
-A random uuid is: {{ uuid() }}
+  package_presets:
+    # Defining a preset for the root package
+    root:
+      name: workspace
 
-{# Generating a random alphanumeric string -#}
-A random string is: {{ uuid() | truncate(length=6, end="") }}
+      package_json:
+        license: Apache-2.0
+        devDependencies:
+          husky: ^9.0.0
 
-{# Generating a random number -#}
-A random number is: {{ get_random(start=100000, end=9999999) }}
+      # The tsconfig files to generate at the root.
+      # If left empty, defaults will be used.
+      ts_config:
+        - output: tsconfig.options.json
+          config:
+            compilerOptions:
+              verbatimModuleSyntax: true
+              strict: true
 
-Now is {{ now(utc=true) }}
+        - output: tsconfig.json
+          config:
+            files: []
 
-{# Assigning an env to a variable -#}
-{%- set greeting = get_env(name="GREETING") -%}
-
-{#- Manipulating data -#}
-{%- set segments = greeting | split(pat=",") -%}
-First segment is: {{ segments[0] }}
-Second segment is: {{ segments[1] }}
-
-{% set some_path = "mydir/myfile" -%}
-Basename is: {{ some_path | basename }}
-Parent dir is: {{ some_path | parent_dir }}
-
-{% set dir = "../sketch" -%}
-
-{% if dir | is_dir -%}
-It's a dir!
-{% endif -%}
-
-{% set file = "Cargo.toml" -%}
-
-{% if file | is_file -%}
-It's a file!
-{%- endif %}
-
-Matches glob: {{ file | matches_glob(pattern="**/*.toml") }}
-
-{%- set captures = file | capture(regex="(?&lt;path&gt;.*)\.(?&lt;extension&gt;\w+)") %}
-
-Path is: {{ captures['path'] }}
-Extension is: {{ captures['extension'] }}
-
-{% set words = "They're taking the hobbits to Isengard" | capture_many(regex="(?&lt;word&gt;[\w']+)") -%}
-
-{% for capture in words -%}
-{{ capture['word'] -}} {% if not loop.last %}{{ " " }}{% endif -%}
-{%- endfor -%}!
-
-{% set version = "v0.1.0" -%}
-
-{% set segments = version | semver -%}
-Major is: {{ segments['major'] }}
-Minor is: {{ segments['minor'] }}
-Patch is: {{ segments['patch'] }}
-
-Version matches &gt;=0.1.0: {{ version | matches_semver(target="&gt;=0.1.0") }}
-Version matches &gt;=0.2.0: {{ version | matches_semver(target="&gt;=0.2.0") }}
-
-To camelCase: {{ "my_var" | camel }}
-To snake_case: {{ "myVar" | snake }}
-To SCREAMING_CASE: {{ "myVar" | upper_snake }}
-To PascalCase: {{ "myVar" | pascal }}
-
-Luke, I am your {{ "grandfather" | strip_prefix(prefix="grand") }}!
-
-{% set dir = "../examples/templating/templates" -%}
-
-{% for entry in dir | glob(pattern="example.j2") -%}
-Entry: {{ entry }}
-{% endfor %}
+      # Literal oxlint configuration to generate at the root
+      # of the workspace.
+      # Can be set to `true` to use defaults.
+      oxlint:
+        plugins: ["unicorn", "typescript", "oxc"]
 </code></pre>
-<p>Cmd:</p>
+<h2 id="adding-templates"><a class="header" href="#adding-templates">Adding Templates</a></h2>
+<p>You can also use the <code>with_templates</code> field to automatically generate a certain file structure when the monorepo is generated.</p>
+<p>Let's say, for example, that every time that you create a new monorepo, you always want to create a <code>docker</code> directory with a basic <code>dev.dockerfile</code> inside of it, so that you can quickly create a dev environment using docker.</p>
+<p>To do that, we add this to the root package's definition:</p>
+<pre><code class="language-yaml">      with_templates:
+        - templates:
+            # Relative path from the root of the package
+            - output: docker/dev.dockerfile
+              template:
+                name: dev_dockerfile
+                content: |
+                  FROM node:23-alpine
+
+                  COPY . .
+                  EXPOSE {{ docker_dev_port }}
+                  CMD ["npm", "run", "dev"]
+
+vars:
+  docker_dev_port: 5173
+</code></pre>
 <blockquote>
-<p><code>GREETING="hello,world" sketch render --id example.j2 --stdout</code></p>
+<p>ℹ️ You can also use <code>--with-template &lt;PRESET_ID|id=TEMPLATE_ID,output=PATH&gt;</code> as a flag to add more templates or templating presets when generating a new package.</p>
 </blockquote>
-<p>Output:</p>
-<pre><code>Current arch is: x86_64
-Current os is: linux
-Current os family is: unix
-Is unix: true
+<h1 id="hooks"><a class="header" href="#hooks">Hooks</a></h1>
+<p>We can define some commands (which can also be templates) to execute before and/or after generating the new monorepo:</p>
+<pre><code class="language-yaml">    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
 
-A random uuid is: b2a5884b-1f41-423c-a6be-a38ab832d3fa
-
-A random string is: 44c4a8
-
-A random number is: 6164981
-
-Now is 2025-10-07T10:35:21.375884604+00:00
-
-First segment is: hello
-Second segment is: world
-
-Basename is: myfile
-Parent dir is: mydir
-
-It's a dir!
-It's a file!
-
-Matches glob: true
-
-Path is: Cargo
-Extension is: toml
-
-They're taking the hobbits to Isengard!
-
-Major is: 0
-Minor is: 1
-Patch is: 0
-
-Version matches &gt;=0.1.0: true
-Version matches &gt;=0.2.0: false
-
-To camelCase: myVar
-To snake_case: my_var
-To SCREAMING_CASE: MY_VAR
-To PascalCase: MyVar
-
-Luke, I am your father!
-
-Entry: example.j2
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
 </code></pre>
-<h1 id="defining-variables"><a class="header" href="#defining-variables">Defining Variables</a></h1>
-<p>Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):</p>
-<ul>
-<li>Global variables</li>
-<li>Cli-set variable files</li>
-<li>Preset context</li>
-<li>Single template context</li>
-<li>Cli-set variables</li>
-</ul>
-<div class="warning">
-Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
-</div>
+<h1 id="example"><a class="header" href="#example">Example</a></h1>
+<p>So after setting everything up, we run the command</p>
+<blockquote>
+<p><code>sketch ts monorepo --root-package root --pnpm base </code></p>
+</blockquote>
+<p>And get this tree output:</p>
+<pre><code>├── .oxlintrc.json
+├── apps
+├── docker
+│   └── dev.dockerfile
+├── package.json
+├── packages
+├── pnpm-workspace.yaml
+├── tsconfig.json
+└── tsconfig.options.json
+</code></pre>
+<blockquote>
+<p>ℹ️ You can use the <code>-i</code> flag to install dependencies for the root package after creating the new monorepo.</p>
+</blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../configuration/lsp.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../ts/summary.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../templating/render-single.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../ts/package_gen.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -393,11 +308,11 @@ Variables defined with the <code>--set</code> flag must be formatted in valid js
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../configuration/lsp.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../ts/summary.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../templating/render-single.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../ts/package_gen.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>

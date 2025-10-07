@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Templating - Sketch</title>
+        <title>Presets - Sketch</title>
 
 
         <!-- Custom HTML head -->
@@ -175,215 +175,329 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="templating"><a class="header" href="#templating">Templating</a></h1>
-<p>Sketch uses the <a href="https://keats.github.io/tera/docs/">Tera</a> templating engine to render custom templates. Every template, whether it's defined in a file, in the config file, or inlined, can take advantage of all of Tera's functionalities, like using filters, functions, defining and using macros, performing operations and importing other templates.</p>
-<div class="warning">
-Since all autoescaping is disabled in templates, you should always only use templates that you made or trust.
-</div>
-<h1 id="special-variables"><a class="header" href="#special-variables">Special Variables</a></h1>
-<p>Sketch provides some special variables to get access to commonly used values such as the home directory.</p>
-<p>All of the following variables are available in templates, prefixed with <code>sketch_</code> (i.e. <code>sketch_os</code> and so on).</p>
+                        <h1 id="presets"><a class="header" href="#presets">Presets</a></h1>
+<p>Templating presets are not the only way to create reusable project structures and configurations. Sketch also supports presets for some of the most common elements that you would find in a typical project.</p>
+<p>Some of these presets are used just for defining an easily reproducible configuration, while others also include extra features such as extensibility.</p>
+<p>As of now, these presets are available:</p>
 <ul>
-<li><code>cwd</code></li>
-<li><code>tmp_dir</code> (from <code>env::temp_dir</code>)</li>
-<li><code>home</code> (from <code>env::home_dir</code>)</li>
-<li><code>os</code> (from <code>CARGO_CFG_TARGET_OS</code> or env <code>OS</code>)</li>
-<li><code>os_family</code> (from <code>CARGO_CFG_TARGET_FAMILY</code>)</li>
-<li><code>arch</code> (from <code>CARGO_CFG_TARGET_ARCH</code> or env <code>HOSTTYPE</code>)</li>
-<li><code>user</code> (env <code>USER</code>)</li>
-<li><code>hostname</code> (env <code>HOSTNAME</code>)</li>
-<li><code>xdg_config</code> (env <code>XDG_CONFIG_HOME</code>)</li>
-<li><code>xdg_data</code> (env <code>XDG_DATA_HOME</code>)</li>
-<li><code>xdg_state</code> (env <code>XDG_STATE_HOME</code>)</li>
-<li><code>xdg_cache</code> (env <code>XDG_CACHE_HOME</code>)</li>
-<li><code>is_windows</code> (from <code>cfg!(windows)</code>)</li>
-<li><code>is_unix</code> (from <code>cfg!(unix)</code>)</li>
-<li><code>is_wsl</code> (checks <code>/proc/sys/kernel/osrelease</code>)</li>
+<li>
+<p>Templating</p>
+<ul>
+<li>Templating presets (extensible)</li>
 </ul>
-<h1 id="filters-and-functions"><a class="header" href="#filters-and-functions">Filters And Functions</a></h1>
-<p>All of the builtin functionalities for <a href="https://keats.github.io/tera/docs/">Tera</a> are available.</p>
-<p>On top of that, Sketch adds some extra filters and functions.</p>
-<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+</li>
+<li>
+<p>Docker</p>
 <ul>
-<li><code>uuid</code> (generates a v4 UUID)</li>
+<li>Docker Compose file (extensible)</li>
+<li>Docker Compose service (extensible)</li>
 </ul>
-<h2 id="filters"><a class="header" href="#filters">Filters</a></h2>
-<h3 id="strings"><a class="header" href="#strings">Strings</a></h3>
+</li>
+<li>
+<p>Git</p>
 <ul>
-<li><code>capture(regex=REGEX)</code> (matches a regex once and returns the named capture groups)</li>
-<li><code>capture_many(regex=REGEX)</code> (matches a regex repetitively and returns the list of named capture groups)</li>
-<li><code>semver</code> (parses a cargo-style semver and returns the segments)</li>
-<li><code>matches_semver(target=TARGET)</code> (checks if a cargo-style semver matches a target)</li>
-<li><code>strip_prefix(prefix=PREFIX)</code> (strips a prefix from a string, if present)</li>
-<li><code>strip_suffix(suffix=SUFFIX)</code> (strips a suffix from a string, if present)</li>
+<li>Git repo</li>
+<li><code>.gitignore</code> (extensible)</li>
+<li><code>.pre-commit-config.yaml</code> (extensible)</li>
 </ul>
-<h3 id="filesystem"><a class="header" href="#filesystem">Filesystem</a></h3>
+</li>
+<li>
+<p>Rust</p>
 <ul>
-<li><code>basename</code> (gets the basename of a directory/file)</li>
-<li><code>parent_dir</code> (gets the parent directory of a directory/file)</li>
-<li><code>is_file</code> (checks if a path is a file)</li>
-<li><code>is_dir</code> (checks if a path is a directory)</li>
-<li><code>is_absolute</code> (checks if a path is absolute)</li>
-<li><code>is_relative</code> (checks if a path is relative)</li>
-<li><code>absolute</code> (makes a path absolute)</li>
-<li><code>relative(from=PATH)</code> (returns the relative path between two paths)</li>
-<li><code>read_dir</code> (returns the list of the files contained in a directory and its subdirectories)</li>
-<li><code>glob(pattern=GLOB)</code> (returns the glob matching entries in a directory and its subdirectories)</li>
-<li><code>matches_glob(pattern=GLOB)</code> (checks if a path matches a glob pattern)</li>
+<li><code>Cargo.toml</code> (extensible)</li>
+</ul>
+</li>
+<li>
+<p>Typescript</p>
+<ul>
+<li>Typescript package</li>
+<li><code>pnpm-workspace.yaml</code> (extensible)</li>
+<li><code>package.json</code> (extensible, with <a href="../ts/smart_features.html">extra features</a>)</li>
+<li><code>tsconfig.json</code> (extensible, with merging of values for the <code>references</code>, <code>include</code>, <code>exclude</code> and <code>files</code> fields)</li>
+<li><code>.oxlintrc.json</code> (extensible)</li>
+<li><code>vitest</code> (not a full configuration for <code>vitest.config.ts</code>, but a basic testing setup)</li>
+</ul>
+</li>
+</ul>
+<p>These can be generated either as part of another preset, or with a command (or both, in some cases) you can find more information in the rest of the documentation and in the <a href="../cli_docs.html">cli reference</a>.</p>
+<h1 id="extending-presets"><a class="header" href="#extending-presets">Extending Presets</a></h1>
+<p>Some presets can be extended by inheriting the value from one or multiple presets.</p>
+<p>When a preset is extended, the merging strategy for their fields works like this:</p>
+<ul>
+<li>Collections are merged and in almost all cases, deduped and sorted (except for cases where order matters such as a list of command arguments)</li>
+<li>Values that are also extensible (such as <code>compilerOptions</code> in tsconfig) themselves will be merged with the same rules as above</li>
+<li>All other values are overwritten, except if the previous value was present and the new value is <code>null</code>. This is to avoid merging values that come from partially-defined presets, where the missing fields are all unset. Generally speaking, the correct strategy to extend presets is to define a base and then <code>add</code> elements to it, rather than replacing them.</li>
 </ul>
 <h1 id="examples"><a class="header" href="#examples">Examples</a></h1>
-<p>Template:</p>
-<pre><code class="language-jinja">{# Using special variables -#}
+<p>This is an in-depth example of the various kinds of presets that are available:</p>
+<pre><code class="language-yaml">
+# `Cargo.toml` presets
+cargo_toml_presets:
+  base:
+    dependencies:
+      regex: "1"
+      serde: "1"
 
-Current arch is: {{ sketch_arch }}
-Current os is: {{ sketch_os }}
-Current os family is: {{ sketch_os_family }}
-Is unix: {{ sketch_is_unix }}
+  extended:
+    extends_presets:
+      - base
+    dependencies:
+      tokio: "1"
 
-{# Functions and filters -#}
+# Docker Compose presets
+docker:
+  service_presets:
+    # A base service preset with common configurations
+    base_service:
+      environment:
+        TZ: Europe/Berlin
+      networks:
+        - my_network
 
-A random uuid is: {{ uuid() }}
+    # A preset for a db service
+    database:
+      extends_presets:
+        - base_service
+      image: postgres
 
-{# Generating a random alphanumeric string -#}
-A random string is: {{ uuid() | truncate(length=6, end="") }}
+  compose_presets:
+    # Base preset for a compose file
+    base:
+      volumes:
+        my_volume:
+          external: true
+      networks:
+        my_network:
+          external: true
 
-{# Generating a random number -#}
-A random number is: {{ get_random(start=100000, end=9999999) }}
+    extended:
+      extends_presets:
+        - base
+      services:
+        # Using the service preset by ID
+        db: database
+        my_service:
+          networks:
+            - my_network
+          volumes:
+            - my_volume:/target
+      volumes:
+        my_other_volume:
+          external: true
 
-Now is {{ now(utc=true) }}
+# Gitignore presets
+gitignore_presets:
+  # Can be a string
+  base:
+    content: |
+      *.env
+      dist
+  # Or a list of strings
+  ts:
+    extends_presets:
+      # When being merged, the new entries are placed at the top
+      - base
+    content:
+      - "*.tsBuildInfo"
+      - node_modules
 
-{# Assigning an env to a variable -#}
-{%- set greeting = get_env(name="GREETING") -%}
+# Pre-commit presets
+pre_commit_presets:
+  # Commonly used repo
+  base:
+    repos:
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.28.0
+        hooks:
+          - id: gitleaks
 
-{#- Manipulating data -#}
-{%- set segments = greeting | split(pat=",") -%}
-First segment is: {{ segments[0] }}
-Second segment is: {{ segments[1] }}
+  # Hooks specific to typescript projects
+  typescript:
+    # Extending the base preset
+    extends_presets:
+      - base
+    repos:
+      - repo: local
+        hooks:
+          - id: oxlint
+            name: oxlint
+            entry: oxlint
+            language: system
+            files: '\.svelte$|\.js$|\.ts$'
+            types: [file]
 
-{% set some_path = "mydir/myfile" -%}
-Basename is: {{ some_path | basename }}
-Parent dir is: {{ some_path | parent_dir }}
+# Git presets
+git_presets:
+  ts_package:
+    # License file to generate
+    license: Apache-2.0
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
 
-{% set dir = "../sketch" -%}
+    # Templates that will be generated with this preset
+    # starting from the new repo's root
+    with_templates:
+      - id: dockerfile
 
-{% if dir | is_dir -%}
-It's a dir!
-{% endif -%}
+    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
 
-{% set file = "Cargo.toml" -%}
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
 
-{% if file | is_file -%}
-It's a file!
-{%- endif %}
+typescript:
+  no_default_deps: true
 
-Matches glob: {{ file | matches_glob(pattern="**/*.toml") }}
+  # `pnpm-workspace.yaml` presets
+  pnpm_presets:
+    base:
+      # All the dirs listed here will be created automatically
+      # when new monorepos are created
+      packages:
+        - packages/*
+        - apps/*
+      onlyBuiltDependencies:
+        - esbuild
+      minimumReleaseAge: 1440
 
-{%- set captures = file | capture(regex="(?&lt;path&gt;.*)\.(?&lt;extension&gt;\w+)") %}
+  # `package.json` presets
+  package_json_presets:
+    # Defining some reusable fields such as some common scripts and dependencies
+    frontend:
+      description: I am the base preset
+      scripts:
+        build: vite build
+        dev: vite dev
+      devDependencies:
+        tailwindcss: "*"
+        vite: "*"
 
-Path is: {{ captures['path'] }}
-Extension is: {{ captures['extension'] }}
+    svelte_frontend:
+      extends_presets: ["frontend"]
+      # Adding new fields
+      license: MIT
+      # Overriding others
+      description: I am the frontend preset
+      # And merging dependencies
+      devDependencies:
+        svelte: "*"
 
-{% set words = "They're taking the hobbits to Isengard" | capture_many(regex="(?&lt;word&gt;[\w']+)") -%}
 
-{% for capture in words -%}
-{{ capture['word'] -}} {% if not loop.last %}{{ " " }}{% endif -%}
-{%- endfor -%}!
+  # Tsconfig presets
+  ts_config_presets:
+    base:
+      references:
+        - path: /some/path
+      include:
+        - src
+      compilerOptions:
+        noEmit: true
+        verbatimModuleSyntax: true
 
-{% set version = "v0.1.0" -%}
+    extended:
+      extends_presets:
+        - base
+      # Unlike in real tsconfigs with `extends`, references are merged here,
+      # and so are all other collections such as `files` or `include`.
+      references:
+        - path: /other/path
+      include:
+        - tests
+      compilerOptions:
+        # Whereas other fields are overwritten
+        noEmit: false
 
-{% set segments = version | semver -%}
-Major is: {{ segments['major'] }}
-Minor is: {{ segments['minor'] }}
-Patch is: {{ segments['patch'] }}
 
-Version matches &gt;=0.1.0: {{ version | matches_semver(target="&gt;=0.1.0") }}
-Version matches &gt;=0.2.0: {{ version | matches_semver(target="&gt;=0.2.0") }}
+  # Oxlint presets
+  oxlint_presets:
+    base:
+      ignorePatterns:
+        - "**/node_modules/**"
 
-To camelCase: {{ "my_var" | camel }}
-To snake_case: {{ "myVar" | snake }}
-To SCREAMING_CASE: {{ "myVar" | upper_snake }}
-To PascalCase: {{ "myVar" | pascal }}
+    extended:
+      extends_presets:
+        - base
+      ignorePatterns:
+        - .cache
 
-Luke, I am your {{ "grandfather" | strip_prefix(prefix="grand") }}!
+  # Vitest presets
+  vitest_presets:
+    base:
+      # Where the config file should be generated, starting from
+      # the root of the package.
+      # It defaults to the value of `tests_dir`
+      out_dir: null
 
-{% set dir = "../examples/templating/templates" -%}
+      # The directory to use for tests, from the root of the package
+      tests_dir: tests
 
-{% for entry in dir | glob(pattern="example.j2") -%}
-Entry: {{ entry }}
-{% endfor %}
+      # The directory, inside `tests_dir`, that contains the setup files for tests.
+      # A file named `tests_setup.ts`, containing some basic testing boilerplate,
+      # will be generated inside of it.
+      setup_dir: setup
+
+      # A list of setup files (the paths will be joined to the `setup_dir`)
+      # `tests_setup.ts` will be added automatically.
+      setup_files:
+        - somefile.ts
+        - anotherfile.ts
+      environment: jsdom
+      silent: passed-only
+
+
+  # Package presets
+  package_presets:
+    example:
+      name: example
+
+      # For every preset, we can either refer to them
+      # by their id...
+      package_json: svelte_frontend
+
+      # ...or we can inline a preset definition
+      oxlint:
+        extends_presets:
+          - extended
+        ignorePatterns:
+          - .output
+
+      # We can define one or many tsconfig files
+      ts_config:
+        # Can be omitted, would default to `tsconfig.json`
+        - output: tsconfig.json
+          config:
+            # Once again creating a new config here with some extras
+            extends_presets:
+              - extended
+            include:
+              - scripts
+
+      vitest: base
+
 </code></pre>
-<p>Cmd:</p>
-<blockquote>
-<p><code>GREETING="hello,world" sketch render --id example.j2 --stdout</code></p>
-</blockquote>
-<p>Output:</p>
-<pre><code>Current arch is: x86_64
-Current os is: linux
-Current os family is: unix
-Is unix: true
-
-A random uuid is: b2a5884b-1f41-423c-a6be-a38ab832d3fa
-
-A random string is: 44c4a8
-
-A random number is: 6164981
-
-Now is 2025-10-07T10:35:21.375884604+00:00
-
-First segment is: hello
-Second segment is: world
-
-Basename is: myfile
-Parent dir is: mydir
-
-It's a dir!
-It's a file!
-
-Matches glob: true
-
-Path is: Cargo
-Extension is: toml
-
-They're taking the hobbits to Isengard!
-
-Major is: 0
-Minor is: 1
-Patch is: 0
-
-Version matches &gt;=0.1.0: true
-Version matches &gt;=0.2.0: false
-
-To camelCase: myVar
-To snake_case: my_var
-To SCREAMING_CASE: MY_VAR
-To PascalCase: MyVar
-
-Luke, I am your father!
-
-Entry: example.j2
-</code></pre>
-<h1 id="defining-variables"><a class="header" href="#defining-variables">Defining Variables</a></h1>
-<p>Variables can be set at many different stages, with different degrees of priority which roughly follow this schema (from lowest to highest):</p>
-<ul>
-<li>Global variables</li>
-<li>Cli-set variable files</li>
-<li>Preset context</li>
-<li>Single template context</li>
-<li>Cli-set variables</li>
-</ul>
-<div class="warning">
-Variables defined with the <code>--set</code> flag must be formatted in valid json. This means that, for example, strings must be wrapped in escaped quotes.
-</div>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../configuration/lsp.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../templating/render-preset.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../templating/render-single.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../presets/git.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -393,11 +507,11 @@ Variables defined with the <code>--set</code> flag must be formatted in valid js
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../configuration/lsp.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../templating/render-preset.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../templating/render-single.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../presets/git.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
