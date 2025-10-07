@@ -120,4 +120,4 @@ Sketch can be installed in two ways:
 
 You can find out more about Sketch in the [dedicated website](https://rick-phoenix.github.io/sketch/).
 
-The homepage will always show the docs for the latest version. Each minor version will have its own dedicated subroute (/v0.1, /v0.2 and so on...) 
+The homepage will always show the docs for the latest version. Each minor version will have its own dedicated subroute under `/versions`.

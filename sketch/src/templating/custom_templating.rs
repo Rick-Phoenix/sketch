@@ -456,9 +456,9 @@ pub(crate) fn create_context(context: &IndexMap<String, Value>) -> Result<Contex
   Context::from_serialize(context).map_err(|e| GenError::TemplateContextParsing { source: e })
 }
 
-pub(crate) fn get_local_context<'a>(
+pub(crate) fn get_local_context(
   initial_context: ContextRef,
-  overrides: &'a IndexMap<String, Value>,
+  overrides: &IndexMap<String, Value>,
 ) -> ContextRef {
   if !overrides.is_empty() {
     let mut context = match initial_context {
