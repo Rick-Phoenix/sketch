@@ -398,7 +398,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       config.execute_command(
         shell.as_deref(),
         &cwd,
-        &[Hook {
+        vec![Hook {
           command,
           context: Default::default(),
         }],

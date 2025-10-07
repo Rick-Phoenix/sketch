@@ -3,17 +3,19 @@ use std::{
   path::Path,
   process::{Command, Stdio},
   str::FromStr,
+  sync::Arc,
 };
 
 use indexmap::IndexMap;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tera::Context;
 
 use crate::{
-  custom_templating::TemplateData, fs::create_all_dirs, tera_setup::get_default_context, Config,
-  GenError,
+  custom_templating::{create_context, get_local_context, ContextRef, TemplateData},
+  fs::create_all_dirs,
+  tera_setup::get_default_context,
+  Config, GenError,
 };
 
 /// A command (rendered as a template) to execute
@@ -49,26 +51,26 @@ impl Config {
     &self,
     shell: Option<&str>,
     cwd: &Path,
-    commands: &[Hook],
+    commands: Vec<Hook>,
     cli_vars: &IndexMap<String, Value>,
     print_cmd: bool,
   ) -> Result<(), GenError> {
     let mut tera = self.initialize_tera()?;
 
-    let mut context = Context::new();
-
-    for (name, value) in &self.vars {
-      context.insert(name, value);
-    }
+    let mut context = create_context(&self.vars)?;
 
     context.extend(get_default_context());
 
-    for cmd in commands {
-      let mut local_context = context.clone();
+    let context = Arc::new(context);
 
-      for (key, val) in cmd.context.iter().chain(cli_vars.iter()) {
-        local_context.insert(key, val);
+    for cmd in commands {
+      let mut overrides = cmd.context;
+
+      for (key, val) in cli_vars {
+        overrides.insert(key.clone(), val.clone());
       }
+
+      let local_context = get_local_context(ContextRef::Original(context.clone()), &overrides);
 
       let template_name = match &cmd.command {
         TemplateData::Id(id) => id,
@@ -84,13 +86,12 @@ impl Config {
         }
       };
 
-      let rendered_command =
-        tera
-          .render(&template_name, &local_context)
-          .map_err(|e| GenError::TemplateParsing {
-            template: template_name.to_string(),
-            source: e,
-          })?;
+      let rendered_command = tera
+        .render(&template_name, local_context.as_ref())
+        .map_err(|e| GenError::TemplateParsing {
+          template: template_name.to_string(),
+          source: e,
+        })?;
 
       if print_cmd {
         println!("Rendered command:");

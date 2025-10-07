@@ -3,6 +3,7 @@ use std::{
   fs::remove_dir_all,
   path::{Path, PathBuf},
   process::Command,
+  sync::Arc,
 };
 
 use globset::{Glob, GlobSetBuilder};
@@ -36,15 +37,6 @@ pub enum TemplatingPresetReference {
   },
   /// The definition for a new templating preset.
   Definition(TemplatingPreset),
-}
-
-impl TemplatingPresetReference {
-  pub fn get_context(&self) -> &IndexMap<String, Value> {
-    match self {
-      TemplatingPresetReference::Preset { context, .. } => context,
-      TemplatingPresetReference::Definition(templating_preset) => &templating_preset.context,
-    }
-  }
 }
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
@@ -177,35 +169,45 @@ impl Config {
     let overwrite = self.can_overwrite();
     let mut tera = self.initialize_tera()?;
 
-    let mut global_context = Context::from_serialize(&self.vars)
-      .map_err(|e| GenError::TemplateContextParsing { source: e })?;
+    let mut global_context = create_context(&self.vars)?;
 
     global_context.extend(get_default_context());
+
+    let global_context = Arc::new(global_context);
 
     let output_root = output_root.as_ref();
 
     for preset_ref in preset_refs {
-      let mut local_context = global_context.clone();
+      let (templates, preset_context) = match preset_ref {
+        TemplatingPresetReference::Preset { id, context } => (
+          self
+            .templating_presets
+            .get(&id)
+            .ok_or(GenError::PresetNotFound {
+              kind: Preset::Templates,
+              name: id.clone(),
+            })?
+            .clone()
+            .process_data(id.as_str(), &self.templating_presets)?
+            .templates,
+          context,
+        ),
+        TemplatingPresetReference::Definition(preset) => {
+          let preset_full = preset.process_data("__inlined", &self.templating_presets)?;
 
-      extend_context(&mut local_context, preset_ref.get_context())?;
-
-      let preset = match preset_ref {
-        TemplatingPresetReference::Preset { id, .. } => self
-          .templating_presets
-          .get(&id)
-          .ok_or(GenError::PresetNotFound {
-            kind: Preset::Templates,
-            name: id.clone(),
-          })?
-          .clone()
-          .process_data(id.as_str(), &self.templating_presets)?,
-        TemplatingPresetReference::Definition(preset) => preset,
+          (preset_full.templates, preset_full.context)
+        }
       };
 
-      for element in preset.templates {
+      let mut local_context = get_local_context(
+        ContextRef::Original(global_context.clone()),
+        &preset_context,
+      );
+
+      for element in templates {
         match element {
           PresetElement::Remote(RemotePreset { repo, exclude }) => {
-            apply_cli_overrides(&mut local_context, cli_overrides)?;
+            local_context = get_local_context(local_context, cli_overrides);
 
             let tmp_dir = env::temp_dir().join("sketch/repo");
 
@@ -251,7 +253,7 @@ impl Config {
             render_structured_preset(
               overwrite,
               &tera,
-              &local_context,
+              local_context.as_ref(),
               output_root,
               &tmp_dir,
               &tmp_dir,
@@ -259,13 +261,18 @@ impl Config {
             )?;
           }
           PresetElement::Template(template) => {
-            extend_context(&mut local_context, &template.context)?;
-            apply_cli_overrides(&mut local_context, cli_overrides)?;
+            let mut template_context = template.context;
+
+            for (key, val) in cli_overrides {
+              template_context.insert(key.clone(), val.clone());
+            }
+
+            local_context = get_local_context(local_context, &template_context);
 
             render_template_with_output(
               overwrite,
               &mut tera,
-              &local_context,
+              local_context.as_ref(),
               output_root,
               template.output,
               template.template,
@@ -273,12 +280,12 @@ impl Config {
           }
 
           PresetElement::Structured(StructuredPreset { dir, exclude }) => {
-            apply_cli_overrides(&mut local_context, cli_overrides)?;
+            local_context = get_local_context(local_context, cli_overrides);
 
             render_structured_preset(
               overwrite,
               &tera,
-              &local_context,
+              local_context.as_ref(),
               output_root,
               &dir,
               &self
@@ -445,29 +452,41 @@ fn render_template(
     })
 }
 
-fn create_context(context: &IndexMap<String, Value>) -> Result<Context, GenError> {
+pub(crate) fn create_context(context: &IndexMap<String, Value>) -> Result<Context, GenError> {
   Context::from_serialize(context).map_err(|e| GenError::TemplateContextParsing { source: e })
 }
 
-fn extend_context(
-  global_context: &mut Context,
-  new_context: &IndexMap<String, Value>,
-) -> Result<(), GenError> {
-  if !new_context.is_empty() {
-    let new_context = create_context(new_context)?;
-    global_context.extend(new_context);
-  }
+pub(crate) fn get_local_context<'a>(
+  initial_context: ContextRef,
+  overrides: &'a IndexMap<String, Value>,
+) -> ContextRef {
+  if !overrides.is_empty() {
+    let mut context = match initial_context {
+      ContextRef::Original(context) => (*context).clone(),
+      ContextRef::New(context) => context,
+    };
 
-  Ok(())
+    for (key, val) in overrides {
+      context.insert(key, val);
+    }
+
+    ContextRef::New(context)
+  } else {
+    initial_context
+  }
 }
 
-fn apply_cli_overrides(
-  context: &mut Context,
-  overrides: &IndexMap<String, Value>,
-) -> Result<(), GenError> {
-  for (key, val) in overrides {
-    context.insert(key, val);
-  }
+#[derive(Debug, Clone)]
+pub(crate) enum ContextRef {
+  Original(Arc<Context>),
+  New(Context),
+}
 
-  Ok(())
+impl AsRef<Context> for ContextRef {
+  fn as_ref(&self) -> &Context {
+    match self {
+      ContextRef::Original(ctx) => ctx.as_ref(),
+      ContextRef::New(ctx) => &ctx,
+    }
+  }
 }

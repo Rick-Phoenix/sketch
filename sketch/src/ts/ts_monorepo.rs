@@ -50,7 +50,7 @@ impl Config {
       self.execute_command(
         self.shell.as_deref(),
         &out_dir,
-        &hooks_pre,
+        hooks_pre,
         cli_vars,
         false,
       )?;
@@ -194,7 +194,7 @@ impl Config {
       self.execute_command(
         self.shell.as_deref(),
         &out_dir,
-        &hooks_post,
+        hooks_post,
         cli_vars,
         false,
       )?;
