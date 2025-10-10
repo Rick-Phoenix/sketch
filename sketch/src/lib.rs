@@ -16,6 +16,7 @@ pub mod cli;
 pub mod config;
 pub mod docker;
 pub mod errors;
+pub mod git_workflow;
 pub mod licenses;
 pub mod rust;
 pub mod ts;
@@ -52,4 +53,5 @@ pub enum Preset {
   DockerCompose,
   DockerService,
   CargoToml,
+  GitHubWorkflow,
 }

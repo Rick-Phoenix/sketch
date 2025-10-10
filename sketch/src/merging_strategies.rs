@@ -33,7 +33,7 @@ fn process_preset_id(
   Ok(())
 }
 
-pub(crate) fn merge_presets<T: Merge + Extensible + Default + Clone>(
+pub(crate) fn merge_presets<T: Merge + Extensible + Clone>(
   preset_kind: Preset,
   current_id: &str,
   preset: T,
