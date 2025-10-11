@@ -7,6 +7,14 @@ A git preset uses (or defines) a preset for its `gitignore` file and, optionally
 ```yaml
 {{#include ../../../examples/presets.yaml:git}}
 ```
+# Adding Workflows
+
+We can also include some [Github workflows](https://docs.github.com/en/actions/reference/workflows-and-actions) by using their presets:
+
+```yaml
+{{#include ../../../examples/presets.yaml:using_workflow_preset}}
+```
+
 # Adding Templates
 
 We can use the `with_templates` setting to add a group of templates to a git preset. Let's say that we want to automatically generate a basic docker setup whenever we use this preset:

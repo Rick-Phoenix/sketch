@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=../schemas/development.json
 
+# ANCHOR: workflow_presets
 github:
   workflow_presets:
     # Common settings to extend
@@ -12,6 +13,7 @@ github:
         another_env: anothervalue
 
     extended:
+      # Extending another workflow preset
       extends_presets:
         - base
       on:
@@ -19,7 +21,7 @@ github:
           branches:
             - main
       jobs:
-        # Using the preset ID
+        # Adding a job by using its preset ID
         say_hello: say_hello
         say_goodbye:
           extends_presets:
@@ -42,6 +44,7 @@ github:
           run: ./setup_script.sh
 
     say_hello:
+      # Extending another workflow job preset
       extends_presets:
         - base
       env:
@@ -49,6 +52,7 @@ github:
       steps:
         - name: say_hello
           run: echo "hello!"
+# ANCHOR_END: workflow_presets
 
 # ANCHOR: templates
 templates:
@@ -180,10 +184,12 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
-    # Using github workflows presets
+    # ANCHOR: using_workflow_preset
     workflows:
       - file_name: my_workflow.yaml
+        # Preset ID
         id: extended
+    # ANCHOR_END: using_workflow_preset
     # License file to generate
     license: Apache-2.0
     # Selecting a preset

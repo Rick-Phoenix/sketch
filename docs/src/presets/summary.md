@@ -17,6 +17,8 @@ As of now, these presets are available:
     - Git repo
     - `.gitignore` (extensible)
     - `.pre-commit-config.yaml` (extensible)
+    - Github workflow (extensible)
+    - Github workflow job (extensible)
 
 - Rust
     - `Cargo.toml` (extensible)

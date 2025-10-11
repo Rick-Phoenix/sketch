@@ -128,7 +128,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(gh_workflow).await?;
 
-  get_clean_example_cmd(&gh_workflow_cmd, &[1, 2], &commands_dir.join("workflow"))?;
+  get_clean_example_cmd(&gh_workflow_cmd, &[1, 2, 5], &commands_dir.join("workflow"))?;
 
   verify_generated_workflow(&output_file)?;
 
