@@ -7,15 +7,27 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
   merge_index_maps, merge_index_sets, merge_nested, merge_optional_btree_maps,
-  merge_optional_btree_sets, merge_optional_nested, merge_optional_vecs, merge_presets,
+  merge_optional_btree_sets, merge_optional_nested, merge_optional_vecs, merge_presets, merge_vecs,
   overwrite_if_some,
-  serde_utils::{StringOrList, StringOrNum, StringOrSortedList},
+  serde_utils::{StringOrNum, StringOrSortedList},
   Extensible, GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
 
+/// Configurations and presets relating to Github
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Default, Merge)]
+#[serde(default, rename_all = "kebab-case")]
+#[merge(strategy = merge_index_maps)]
+pub struct GithubConfig {
+  /// A map of presets for Github workflows
+  pub workflow_presets: IndexMap<String, GithubWorkflowPreset>,
+
+  /// A map of presets for Github workflow jobs
+  pub workflow_job_presets: IndexMap<String, JobPreset>,
+}
+
 /// A preset for a gihub workflow.
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge)]
-pub struct GitHubWorkflowPreset {
+pub struct GithubWorkflowPreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
   #[serde(default)]
@@ -26,27 +38,97 @@ pub struct GitHubWorkflowPreset {
   pub config: Workflow,
 }
 
-impl Extensible for GitHubWorkflowPreset {
+impl Extensible for GithubWorkflowPreset {
   fn get_extended(&self) -> &IndexSet<String> {
     &self.extends_presets
   }
 }
 
-impl GitHubWorkflowPreset {
-  pub fn process_data(
-    self,
-    id: &str,
-    store: &IndexMap<String, GitHubWorkflowPreset>,
-  ) -> Result<Workflow, GenError> {
+impl GithubWorkflowPreset {
+  pub fn process_data(self, id: &str, github_config: &GithubConfig) -> Result<Workflow, GenError> {
     if self.extends_presets.is_empty() {
       return Ok(self.config);
     }
 
     let mut processed_ids: IndexSet<String> = IndexSet::new();
 
-    let merged_preset = merge_presets(Preset::GitHubWorkflow, id, self, store, &mut processed_ids)?;
+    let merged_preset = merge_presets(
+      Preset::GithubWorkflow,
+      id,
+      self,
+      &github_config.workflow_presets,
+      &mut processed_ids,
+    )?;
 
-    Ok(merged_preset.config)
+    let mut config = merged_preset.config;
+
+    let mut jobs: IndexMap<String, JobReference> = IndexMap::new();
+
+    for (key, job) in config.jobs.into_iter() {
+      let (id, job_data) = match job {
+        JobReference::Preset(id) => {
+          let data = github_config
+            .workflow_job_presets
+            .get(id.as_str())
+            .ok_or(GenError::PresetNotFound {
+              kind: Preset::GithubWorkflowJob,
+              name: id.clone(),
+            })?
+            .clone();
+
+          (id, data)
+        }
+        JobReference::Data(data) => ("__inlined".to_string(), data),
+      };
+
+      jobs.insert(
+        key,
+        JobReference::Data(job_data.process_data(&id, &github_config.workflow_job_presets)?),
+      );
+    }
+
+    config.jobs = jobs;
+
+    Ok(config)
+  }
+}
+
+/// A preset for a gihub workflow job.
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge)]
+pub struct JobPreset {
+  /// The list of extended presets.
+  #[merge(strategy = merge_index_sets)]
+  #[serde(skip_serializing, default)]
+  pub extends_presets: IndexSet<String>,
+
+  #[serde(flatten)]
+  #[merge(strategy = merge_nested)]
+  pub config: Job,
+}
+
+impl Extensible for JobPreset {
+  fn get_extended(&self) -> &IndexSet<String> {
+    &self.extends_presets
+  }
+}
+
+impl JobPreset {
+  pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
+    if self.extends_presets.is_empty() {
+      return Ok(self);
+    }
+
+    let mut processed_ids: IndexSet<String> = IndexSet::new();
+
+    let merged_preset = merge_presets(
+      Preset::GithubWorkflowJob,
+      id,
+      self,
+      store,
+      &mut processed_ids,
+    )?;
+
+    Ok(merged_preset)
   }
 }
 
@@ -78,14 +160,14 @@ pub struct Workflow {
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_permissions)]
+  #[merge(strategy = merge_optional_nested)]
   pub permissions: Option<Permissions>,
 
   /// A map of variables that are available to the steps of all jobs in the workflow. You can also set variables that are only available to the steps of a single job or to a single step.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#env
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_env)]
+  #[merge(strategy = merge_optional_nested)]
   pub env: Option<Env>,
 
   /// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
@@ -109,7 +191,22 @@ pub struct Workflow {
   /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
   #[serde(default)]
   #[merge(strategy = merge_index_maps)]
-  pub jobs: IndexMap<String, Job>,
+  pub jobs: IndexMap<String, JobReference>,
+}
+
+/// A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.
+///
+/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
+///
+/// You can use a job preset (by referring to it by its ID) or define a new one.
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum JobReference {
+  /// The preset ID for this job
+  Preset(String),
+
+  /// The definition for this job
+  Data(JobPreset),
 }
 
 /// A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.
@@ -125,15 +222,48 @@ pub enum Job {
   Reusable(ReusableWorkflowCallJob),
 }
 
+impl Merge for Job {
+  fn merge(&mut self, other: Self) {
+    match self {
+      Job::Normal(left_job) => match other {
+        Job::Normal(right_job) => {
+          left_job.merge(right_job);
+        }
+        Job::Reusable(right_job) => {
+          overwrite_if_some(&mut left_job.name, right_job.name);
+          merge_optional_nested(&mut left_job.needs, right_job.needs);
+          overwrite_if_some(&mut left_job.if_, right_job.if_);
+          overwrite_if_some(&mut left_job.concurrency, right_job.concurrency);
+          merge_optional_nested(&mut left_job.permissions, right_job.permissions);
+        }
+      },
+      Job::Reusable(left_job) => match other {
+        Job::Reusable(right_job) => {
+          left_job.merge(right_job);
+        }
+        Job::Normal(right_job) => {
+          overwrite_if_some(&mut left_job.name, right_job.name);
+          merge_optional_nested(&mut left_job.needs, right_job.needs);
+          overwrite_if_some(&mut left_job.if_, right_job.if_);
+          overwrite_if_some(&mut left_job.concurrency, right_job.concurrency);
+          merge_optional_nested(&mut left_job.permissions, right_job.permissions);
+        }
+      },
+    }
+  }
+}
+
 /// A workflow run is made up of one or more jobs, which run in parallel by default.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge)]
+#[merge(strategy = overwrite_if_some)]
 pub struct NormalJob {
   /// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
   #[serde(rename = "runs-on")]
+  #[merge(strategy = merge_nested)]
   pub runs_on: RunsOn,
 
   /// The name of the job displayed on GitHub.
@@ -146,7 +276,8 @@ pub struct NormalJob {
   ///
   /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub needs: Option<StringOrList>,
+  #[merge(strategy = merge_optional_nested)]
+  pub needs: Option<StringOrSortedList>,
 
   /// You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.
   ///
@@ -160,6 +291,7 @@ pub struct NormalJob {
   ///
   /// See more: https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
   pub outputs: Option<StringBTreeMap>,
 
   /// A map of default settings that will apply to all steps in the job.
@@ -172,6 +304,7 @@ pub struct NormalJob {
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
   pub permissions: Option<Permissions>,
 
   /// Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time. A concurrency group can be any string or expression.
@@ -190,6 +323,7 @@ pub struct NormalJob {
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idenv
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
   pub env: Option<Env>,
 
   /// The maximum number of minutes to let a workflow run before GitHub automatically cancels it. Default: 360
@@ -222,6 +356,7 @@ pub struct NormalJob {
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idservices
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_btree_maps)]
   pub services: Option<BTreeMap<String, Container>>,
 
   /// A strategy creates a build matrix for your jobs. You can define different variations of an environment to run each job in.
@@ -233,16 +368,19 @@ pub struct NormalJob {
   /// A job contains a sequence of tasks called steps. Steps can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub steps: Option<Vec<Step>>,
+  #[serde(default, skip_serializing_if = "Vec::is_empty")]
+  #[merge(strategy = merge_vecs)]
+  pub steps: Vec<Step>,
 }
 
 /// A reusable job, imported from a file or repo.
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge)]
+#[merge(strategy = overwrite_if_some)]
 pub struct ReusableWorkflowCallJob {
   /// The location and version of a reusable workflow file to run as a job, of the form './{path/to}/{localfile}.yml' or '{owner}/{repo}/{path}/{filename}@{ref}'. {ref} can be a SHA, a release tag, or a branch name. Using the commit SHA is the safest for stability and security.
   ///
   /// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_iduses
+  #[merge(skip)]
   pub uses: String,
 
   /// The name of the job displayed on GitHub.
@@ -255,7 +393,8 @@ pub struct ReusableWorkflowCallJob {
   ///
   /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
   #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub needs: Option<StringOrList>,
+  #[merge(strategy = merge_optional_nested)]
+  pub needs: Option<StringOrSortedList>,
 
   /// You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.
   ///
@@ -275,18 +414,21 @@ pub struct ReusableWorkflowCallJob {
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
   pub permissions: Option<Permissions>,
 
   /// A map of inputs that are passed to the called workflow. Any inputs that you pass must match the input specifications defined in the called workflow. Unlike 'jobs.<job_id>.steps[*].with', the inputs you pass with 'jobs.<job_id>.with' are not be available as environment variables in the called workflow. Instead, you can reference the inputs by using the inputs context.
   ///
   /// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idwith
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
   pub with: Option<Env>,
 
   /// When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow. Any secrets that you pass must match the names defined in the called workflow.
   ///
   /// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets
   #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
   pub secrets: Option<JobSecret>,
 
   /// A build matrix is a set of different configurations of the virtual environment.
@@ -306,6 +448,16 @@ pub enum JobSecret {
   Inherit,
   #[serde(untagged)]
   Env(Env),
+}
+
+impl Merge for JobSecret {
+  fn merge(&mut self, other: Self) {
+    if let Self::Env(left_map) = self && let Self::Env(right_map) = other {
+      left_map.merge(right_map);
+    } else {
+      *self = other;
+    }
+  }
 }
 
 /// A container to run any steps in a job that don't already specify a container. If you have steps that use both script and container actions, the container actions will run as sibling containers on the same network with the same volume mounts.
@@ -515,6 +667,54 @@ pub enum RunsOn {
   },
 }
 
+impl Merge for RunsOn {
+  fn merge(&mut self, right: Self) {
+    match self {
+      RunsOn::String(left_string) => {
+        if let RunsOn::List(mut right_list) = right {
+          right_list.push(left_string.clone());
+          *self = RunsOn::List(right_list);
+        } else {
+          *self = right;
+        }
+      }
+      RunsOn::List(left_list) => match right {
+        RunsOn::String(right_string) => {
+          left_list.push(right_string);
+        }
+        RunsOn::List(right_list) => {
+          left_list.extend(right_list);
+        }
+        _ => {
+          *self = right;
+        }
+      },
+      RunsOn::Object {
+        labels: left_labels,
+        group: left_group,
+      } => {
+        if let RunsOn::Object {
+          labels: right_labels,
+          group: right_group,
+        } = right
+        {
+          *left_group = right_group;
+
+          if let Some(right_labels) = right_labels {
+            if let Some(left_labels) = left_labels {
+              left_labels.merge(right_labels);
+            } else {
+              *left_labels = Some(right_labels);
+            }
+          }
+        } else {
+          *self = right;
+        }
+      }
+    }
+  }
+}
+
 /// You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
@@ -525,23 +725,19 @@ pub enum Permissions {
   Event(PermissionsEvent),
 }
 
-fn merge_permissions(left: &mut Option<Permissions>, right: Option<Permissions>) {
-  if let Some(right) = right {
-    if let Some(left) = left {
-      match left {
-        Permissions::Global(_) => {
-          *left = right;
-        }
-        Permissions::Event(obj_left) => {
-          if let Permissions::Event(obj_right) = right {
-            obj_left.merge(obj_right);
-          } else {
-            *left = right;
-          }
+impl Merge for Permissions {
+  fn merge(&mut self, right: Self) {
+    match self {
+      Permissions::Global(_) => {
+        *self = right;
+      }
+      Permissions::Event(obj_left) => {
+        if let Permissions::Event(obj_right) = right {
+          obj_left.merge(obj_right);
+        } else {
+          *self = right;
         }
       }
-    } else {
-      *left = Some(right);
     }
   }
 }
@@ -723,25 +919,21 @@ pub enum Env {
   Object(BTreeMap<String, StringNumOrBool>),
 }
 
-fn merge_env(left: &mut Option<Env>, right: Option<Env>) {
-  if let Some(right) = right {
-    if let Some(left) = left {
-      match left {
-        Env::String(_) => {
-          *left = right;
-        }
-        Env::Object(obj_left) => {
-          if let Env::Object(obj_right) = right {
-            for (key, val) in obj_right {
-              obj_left.insert(key, val);
-            }
-          } else {
-            *left = right;
+impl Merge for Env {
+  fn merge(&mut self, right: Self) {
+    match self {
+      Env::String(_) => {
+        *self = right;
+      }
+      Env::Object(obj_left) => {
+        if let Env::Object(obj_right) = right {
+          for (key, val) in obj_right {
+            obj_left.insert(key, val);
           }
+        } else {
+          *self = right;
         }
       }
-    } else {
-      *left = Some(right);
     }
   }
 }

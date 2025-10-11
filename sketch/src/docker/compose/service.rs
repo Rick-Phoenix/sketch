@@ -14,7 +14,7 @@ use crate::{
   merge_index_sets, merge_nested, merge_optional_btree_maps, merge_optional_btree_sets,
   merge_optional_vecs, merge_presets, overwrite_if_some,
   serde_utils::{
-    merge_list_or_map, merge_string_or_sorted_list, ListOrMap, SingleValue, StringOrList,
+    merge_list_or_map, merge_optional_string_or_sorted_list, ListOrMap, SingleValue, StringOrList,
     StringOrNum, StringOrSortedList,
   },
   Extensible, GenError, Preset,
@@ -274,7 +274,7 @@ pub struct Service {
 
   /// Custom DNS servers to set on the container network interface configuration. It can be a single value or a list.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_string_or_sorted_list)]
+  #[merge(strategy = merge_optional_string_or_sorted_list)]
   pub dns: Option<StringOrSortedList>,
 
   /// Custom DNS options to be passed to the container’s DNS resolver (/etc/resolv.conf file on Linux).
@@ -284,7 +284,7 @@ pub struct Service {
 
   /// Custom DNS search domains to set on container network interface configuration. It can be a single value or a list.
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_string_or_sorted_list)]
+  #[merge(strategy = merge_optional_string_or_sorted_list)]
   pub dns_search: Option<StringOrSortedList>,
 
   /// A custom domain name to use for the service container. It must be a valid RFC 1123 hostname.
@@ -357,7 +357,7 @@ pub struct Service {
   ///The label_file attribute lets you load labels for a service from an external file or a list of files. This provides a convenient way to manage multiple labels without cluttering the Compose file.
   /// See more: https://docs.docker.com/reference/compose-file/services/#label_file
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_string_or_sorted_list)]
+  #[merge(strategy = merge_optional_string_or_sorted_list)]
   pub label_file: Option<StringOrSortedList>,
 
   /// Defines a network link to containers in another service. Either specify both the service name and a link alias (SERVICE:ALIAS), or just the service name.

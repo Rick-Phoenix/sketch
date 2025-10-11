@@ -13,9 +13,9 @@ use crate::{
   custom_templating::TemplatingPreset,
   docker::DockerConfig,
   fs::get_parent_dir,
-  git_workflow::Workflow,
+  git_workflow::GithubConfig,
   init_repo::{gitignore::GitignorePreset, pre_commit::PreCommitPreset, RepoPreset},
-  merge_index_maps, merge_index_sets, merge_optional_nested, overwrite_if_some,
+  merge_index_maps, merge_index_sets, merge_nested, merge_optional_nested, overwrite_if_some,
   rust::CargoTomlPreset,
   ts::TypescriptConfig,
   GenError,
@@ -87,9 +87,9 @@ pub struct Config {
   #[merge(strategy = merge_index_maps)]
   pub cargo_toml_presets: IndexMap<String, CargoTomlPreset>,
 
-  /// A map that contains presets for github workflows.
-  #[merge(strategy = merge_index_maps)]
-  pub github_workflow_presets: IndexMap<String, Workflow>,
+  /// Configurations and presets relating to Github
+  #[merge(strategy = merge_nested)]
+  pub github: GithubConfig,
 
   /// The global variables that will be available for every template being generated.
   /// They are overridden by vars set in a template's local context or via the cli.

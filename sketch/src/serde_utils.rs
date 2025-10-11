@@ -5,6 +5,7 @@ use std::{
 };
 
 use indexmap::IndexMap;
+use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -98,7 +99,32 @@ pub enum StringOrSortedList {
   List(BTreeSet<String>),
 }
 
-pub(crate) fn merge_string_or_sorted_list(
+impl Merge for StringOrSortedList {
+  fn merge(&mut self, right: Self) {
+    match self {
+      StringOrSortedList::String(left_string) => {
+        if let StringOrSortedList::List(mut right_list) = right {
+          right_list.insert(left_string.clone());
+          *self = StringOrSortedList::List(right_list);
+        } else {
+          *self = right;
+        }
+      }
+      StringOrSortedList::List(left_list) => match right {
+        StringOrSortedList::String(right_string) => {
+          left_list.insert(right_string);
+        }
+        StringOrSortedList::List(right_list) => {
+          for item in right_list {
+            left_list.insert(item);
+          }
+        }
+      },
+    }
+  }
+}
+
+pub(crate) fn merge_optional_string_or_sorted_list(
   left: &mut Option<StringOrSortedList>,
   right: Option<StringOrSortedList>,
 ) {

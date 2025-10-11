@@ -53,5 +53,6 @@ pub enum Preset {
   DockerCompose,
   DockerService,
   CargoToml,
-  GitHubWorkflow,
+  GithubWorkflow,
+  GithubWorkflowJob,
 }
