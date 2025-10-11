@@ -66,6 +66,20 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
+    Commands::GhWorkflow { preset, output } => {
+      let data = config
+        .github
+        .workflow_presets
+        .get(&preset)
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::GithubWorkflow,
+          name: preset.clone(),
+        })?
+        .clone()
+        .process_data(&preset, &config.github)?;
+
+      serialize_yaml(&data, &output, overwrite)?;
+    }
     Commands::License { license, output } => {
       let output = output.unwrap_or_else(|| "LICENSE".into());
 
@@ -571,6 +585,15 @@ pub enum Commands {
     /// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
+  },
+
+  /// Generates a Github workflow.
+  GhWorkflow {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the created file
+    output: PathBuf,
   },
 
   /// Generates a Docker Compose file from a preset.

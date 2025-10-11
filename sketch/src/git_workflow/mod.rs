@@ -15,7 +15,6 @@ use crate::{
 
 /// Configurations and presets relating to Github
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Default, Merge)]
-#[serde(default, rename_all = "kebab-case")]
 #[merge(strategy = merge_index_maps)]
 pub struct GithubConfig {
   /// A map of presets for Github workflows
