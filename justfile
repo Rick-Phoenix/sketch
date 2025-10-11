@@ -1,7 +1,7 @@
 json-schema:
     cargo run --bin json-schema development
 
-test: json-schema
+test:
     cargo test --all-features -- -q --nocapture
 
 [working-directory('sketch')]

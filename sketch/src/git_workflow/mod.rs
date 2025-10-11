@@ -16,6 +16,7 @@ use crate::{
 /// Configurations and presets relating to Github
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Default, Merge)]
 #[merge(strategy = merge_index_maps)]
+#[serde(default)]
 pub struct GithubConfig {
   /// A map of presets for Github workflows
   pub workflow_presets: IndexMap<String, GithubWorkflowPreset>,
@@ -102,7 +103,7 @@ pub struct JobPreset {
 
   #[serde(flatten)]
   #[merge(strategy = merge_nested)]
-  pub config: Job,
+  pub job: Job,
 }
 
 impl Extensible for JobPreset {
@@ -152,6 +153,7 @@ pub struct Workflow {
   /// The name of the GitHub event that triggers the workflow. You can provide a single event string, array of events, array of event types, or an event configuration map that schedules a workflow or restricts the execution of a workflow to specific files, tags, or branch changes.
   ///
   /// For a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_event)]
   pub on: Option<Event>,
 
@@ -261,9 +263,9 @@ pub struct NormalJob {
   /// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
-  #[serde(rename = "runs-on")]
-  #[merge(strategy = merge_nested)]
-  pub runs_on: RunsOn,
+  #[serde(rename = "runs-on", default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
+  pub runs_on: Option<RunsOn>,
 
   /// The name of the job displayed on GitHub.
   ///
@@ -980,7 +982,7 @@ pub enum Shell {
   Pwsh,
   Sh,
   #[serde(untagged)]
-  Other,
+  Other(String),
 }
 
 /// The name of the GitHub event that triggers the workflow. You can provide a single event string, array of events, array of event types, or an event configuration map that schedules a workflow or restricts the execution of a workflow to specific files, tags, or branch changes.

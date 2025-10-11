@@ -8,7 +8,11 @@ use crate::{
   cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
   docker::compose::{service::ServiceVolume, ComposeFile},
   fs::{deserialize_toml, deserialize_yaml},
+  git_workflow::{
+    Env, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool, Workflow,
+  },
   rust::Manifest,
+  serde_utils::StringOrNum,
   Config,
 };
 
@@ -108,6 +112,118 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output.dependencies.contains_key("serde"));
   assert!(output.dependencies.contains_key("regex"));
   assert!(output.dependencies.contains_key("tokio"));
+
+  let output_file = output_dir.join("workflow.yaml");
+
+  let gh_workflow_cmd = [
+    "sketch",
+    "-c",
+    &config_file.to_string_lossy(),
+    "gh-workflow",
+    "extended",
+    &output_file.to_string_lossy(),
+  ];
+
+  let gh_workflow = Cli::try_parse_from(gh_workflow_cmd)?;
+
+  execute_cli(gh_workflow).await?;
+
+  get_clean_example_cmd(&gh_workflow_cmd, &[1, 2], &commands_dir.join("workflow"))?;
+
+  let output: Workflow = deserialize_yaml(&output_file)?;
+
+  let on = if let Event::Object(on) = output.on.unwrap() {
+    on
+  } else {
+    unreachable!();
+  };
+
+  assert!(on.push.unwrap().branches.unwrap().contains("main"));
+
+  let env = if let Env::Object(env) = output.env.unwrap() {
+    env
+  } else {
+    unreachable!();
+  };
+
+  assert_eq!(
+    env.get("my_env").unwrap(),
+    &StringNumOrBool::String("somevalue".to_string())
+  );
+
+  assert_eq!(
+    env.get("another_env").unwrap(),
+    &StringNumOrBool::String("anothervalue".to_string())
+  );
+
+  assert_eq!(output.defaults.unwrap().run.shell.unwrap(), Shell::Bash);
+
+  let mut jobs = output.jobs;
+
+  assert_eq!(jobs.len(), 2);
+
+  let say_hello_job = unwrap_variant!(
+    Job,
+    Normal,
+    unwrap_variant!(JobReference, Data, jobs.shift_remove("say_hello").unwrap()).job
+  );
+
+  let say_goodbye_job = unwrap_variant!(
+    Job,
+    Normal,
+    unwrap_variant!(
+      JobReference,
+      Data,
+      jobs.shift_remove("say_goodbye").unwrap()
+    )
+    .job
+  );
+
+  for (i, job) in [say_hello_job, say_goodbye_job].into_iter().enumerate() {
+    assert_eq!(
+      job.runs_on.unwrap(),
+      RunsOn::String("ubuntu-latest".to_string())
+    );
+
+    let env = unwrap_variant!(Env, Object, job.env.unwrap());
+
+    assert_eq!(
+      env.get("my_env").unwrap(),
+      &StringNumOrBool::String("somevalue".to_string())
+    );
+
+    assert_eq!(
+      env.get("another_env").unwrap(),
+      &StringNumOrBool::String("anothervalue".to_string())
+    );
+
+    if i == 0 {
+      assert_eq!(
+        env.get("another_other_value").unwrap(),
+        &StringNumOrBool::String("yetanothervalue".to_string())
+      );
+    }
+
+    assert_eq!(job.timeout_minutes.unwrap(), StringOrNum::Num(25));
+
+    let continue_on_error = unwrap_variant!(StringOrBool, Bool, job.continue_on_error.unwrap());
+    assert!(!continue_on_error);
+
+    let steps = job.steps;
+
+    assert_eq!(steps.len(), 2);
+
+    assert_eq!(steps[0].name.as_ref().unwrap(), "Initial checkup");
+
+    assert_eq!(steps[0].run.as_ref().unwrap(), "./setup_script.sh");
+
+    if i == 0 {
+      assert_eq!(steps[1].name.as_ref().unwrap(), "say_hello");
+      assert_eq!(steps[1].run.as_ref().unwrap(), "echo \"hello!\"");
+    } else {
+      assert_eq!(steps[1].run.as_ref().unwrap(), "echo \"goodbye!\"");
+    }
+  }
 
   Ok(())
 }

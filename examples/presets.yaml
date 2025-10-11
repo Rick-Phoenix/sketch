@@ -1,5 +1,55 @@
 # yaml-language-server: $schema=../schemas/development.json
 
+github:
+  workflow_presets:
+    # Common settings to extend
+    base:
+      defaults:
+        run:
+          shell: bash
+      env:
+        my_env: somevalue
+        another_env: anothervalue
+
+    extended:
+      extends_presets:
+        - base
+      on:
+        push:
+          branches:
+            - main
+      jobs:
+        # Using the preset ID
+        say_hello: say_hello
+        say_goodbye:
+          extends_presets:
+            - base
+          name: say_goodbye
+          steps:
+            - run: echo "goodbye!"
+
+  workflow_job_presets:
+    # Common settings to extend
+    base:
+      runs-on: ubuntu-latest
+      timeout-minutes: 25
+      continue-on-error: false
+      env:
+        my_env: somevalue
+        another_env: anothervalue
+      steps:
+        - name: Initial checkup
+          run: ./setup_script.sh
+
+    say_hello:
+      extends_presets:
+        - base
+      env:
+        another_other_value: yetanothervalue
+      steps:
+        - name: say_hello
+          run: echo "hello!"
+
 # ANCHOR: templates
 templates:
   dockerfile: |
