@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::Parser;
 use pretty_assertions::assert_eq;
@@ -130,7 +130,13 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   get_clean_example_cmd(&gh_workflow_cmd, &[1, 2], &commands_dir.join("workflow"))?;
 
-  let output: Workflow = deserialize_yaml(&output_file)?;
+  verify_generated_workflow(&output_file)?;
+
+  Ok(())
+}
+
+pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+  let output: Workflow = deserialize_yaml(path)?;
 
   let on = if let Event::Object(on) = output.on.unwrap() {
     on

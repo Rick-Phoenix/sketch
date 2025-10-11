@@ -147,7 +147,7 @@ impl Config {
       write_file(&out_dir.join("LICENSE"), license.get_content(), overwrite)?;
     }
 
-    if preset.workflows.is_empty() {
+    if !preset.workflows.is_empty() {
       let workflows_dir = out_dir.join(".github/workflows");
       create_all_dirs(&workflows_dir)?;
 

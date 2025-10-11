@@ -101,6 +101,7 @@ Creates a new git repo from a preset
 * `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
 * `--gitignore <GITIGNORE>` — Selects a gitignore preset
 * `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
+* `--workflow <id=PRESET_ID,file=PATH>` — One or many workflow presets to use for the new repo. The file path will be joined to `.github/workflows`
 * `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
 
@@ -166,7 +167,7 @@ Generates a Github workflow
 ###### **Arguments:**
 
 * `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the created file
+* `<OUTPUT>` — The output path of the new file
 
 
 

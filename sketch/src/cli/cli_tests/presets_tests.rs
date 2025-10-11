@@ -8,7 +8,9 @@ use pretty_assertions::assert_eq;
 use super::reset_testing_dir;
 use crate::{
   cli::{
-    cli_tests::{get_clean_example_cmd, get_tree_output},
+    cli_tests::{
+      generated_configs_tests::verify_generated_workflow, get_clean_example_cmd, get_tree_output,
+    },
     execute_cli, Cli,
   },
   fs::{deserialize_json, deserialize_yaml},
@@ -45,6 +47,8 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
   get_tree_output(&out_dir, None)?;
 
   get_clean_example_cmd(&git_preset_args, &[1, 2, 6], &out_dir.join("cmd"))?;
+
+  verify_generated_workflow(&out_dir.join(".github/workflows/my_workflow.yaml"))?;
 
   let pre_commit_output: PreCommitConfig =
     deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;

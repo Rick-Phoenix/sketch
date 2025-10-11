@@ -10445,6 +10445,14 @@
             "$ref": "#/$defs/Hook"
           },
           "default": []
+        },
+        "workflows": {
+          "description": "One or many workflows to generate in the new repo.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WorkflowReference"
+          },
+          "default": []
         }
       }
     },
@@ -10473,1393 +10481,46 @@
         }
       ]
     },
-    "CargoTomlPreset": {
-      "description": "A preset for a `Cargo.toml` file.",
-      "type": "object",
-      "properties": {
-        "extends_presets": {
-          "description": "The list of extended presets.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        },
-        "package": {
-          "description": "Package definition (a cargo crate)",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Package"
+    "WorkflowReference": {
+      "description": "The definition for a new Github workflow, or a preset ID.",
+      "anyOf": [
+        {
+          "description": "A reference to a workflow preset",
+          "type": "object",
+          "properties": {
+            "file_name": {
+              "description": "The name of the output file (inside the .github/workflows directory)",
+              "type": "string"
             },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "workspace": {
-          "description": "Workspace-wide settings",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Workspace"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "dependencies": {
-          "description": "Normal dependencies",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "dev-dependencies": {
-          "description": "Dev/test-only deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "build-dependencies": {
-          "description": "Build-time deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "target": {
-          "description": "`[target.cfg.dependencies]`",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Target2"
-          }
-        },
-        "features": {
-          "description": "The `[features]` section. This set may be incomplete!\n\nOptional dependencies may create implied Cargo features.\nThis features section also supports microsyntax with `dep:`, `/`, and `?`\nfor managing dependencies and their features.io\n\nThis crate has an optional [`features`] module for dealing with this\ncomplexity and getting the real list of features.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
+            "id": {
+              "description": "The ID of the preset to use",
               "type": "string"
             }
-          }
-        },
-        "patch": {
-          "description": "`[patch.crates-io]` section",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Dependency"
-            }
-          }
-        },
-        "lib": {
-          "description": "Note that due to autolibs feature this is not the complete list\nunless you run [`Manifest::complete_from_path`]",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Product"
-            },
-            {
-              "type": "null"
-            }
+          },
+          "required": [
+            "file_name",
+            "id"
           ]
         },
-        "profile": {
-          "description": "Compilation/optimization settings",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Profiles"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "bin": {
-          "description": "Note that due to autobins feature this is not the complete list\nunless you run [`Manifest::complete_from_path`]",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Product"
-          }
-        },
-        "bench": {
-          "description": "Benchmarks",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Product"
-          }
-        },
-        "test": {
-          "description": "Integration tests",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Product"
-          }
-        },
-        "example": {
-          "description": "Examples",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "$ref": "#/$defs/Product"
-          }
-        },
-        "lints": {
-          "description": "Lints",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable6"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "Package": {
-      "description": "The `[package]` section of the [`Manifest`]. This is where crate properties are.\n\nNote that most of these properties can be inherited from a workspace, and therefore not available just from reading a single `Cargo.toml`. See [`Manifest::inherit_workspace`].\n\nYou can replace `Metadata` generic type with your own\nto parse into something more useful than a generic toml `Value`",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "version": {
-          "description": "See [the `version()` getter for more info](`Package::version()`).\n\nMust parse as semver, e.g. \"1.9.0\"\n\nThis field may have unknown value when using workspace inheritance,\nand when the `Manifest` has been loaded without its workspace.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "edition": {
-          "description": "Package's edition opt-in. Use [`Package::edition()`] to read it.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable2"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "rust-version": {
-          "description": "MSRV 1.x (beware: does not require semver formatting)",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "build": {
-          "description": "Build script definition",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/OptionalFile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "workspace": {
-          "description": "Workspace this package is a member of (`None` if it's implicit)",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "links": {
-          "description": "It doesn't link to anything",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "description": {
-          "description": "A short blurb about the package. This is not rendered in any format when\nuploaded to crates.io (aka this is not markdown).",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "homepage": {
-          "description": "Project's homepage",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "documentation": {
-          "description": "Path to your custom docs. Unnecssary if you rely on docs.rs.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "readme": {
-          "description": "This points to a file under the package root (relative to this `Cargo.toml`).\nimplied if README.md, README.txt or README exists.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable3"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "keywords": {
-          "description": "Up to 5, for search",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "categories": {
-          "description": "This is a list of up to five categories where this crate would fit.\ne.g. `[\"command-line-utilities\", \"development-tools::cargo-plugins\"]`",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "exclude": {
-          "description": "Don't publish these files",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "include": {
-          "description": "Publish these files",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "license": {
-          "description": "e.g. \"MIT\"",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "license-file": {
-          "description": "If `license` is not standard",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "repository": {
-          "description": "(HTTPS) URL to crate's repository",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "default-run": {
-          "description": "The default binary to run by cargo run.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "autobins": {
-          "description": "Discover binaries from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[bin]]` sections",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "autolib": {
-          "description": "Discover libraries from the file system",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "autoexamples": {
-          "description": "Discover examples from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[example]]` sections",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "autotests": {
-          "description": "Discover tests from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[test]]` sections",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "autobenches": {
-          "description": "Discover benchmarks from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[bench]]` sections",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "publish": {
-          "description": "Disable publishing or select custom registries.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable5"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "resolver": {
-          "description": "The feature resolver version.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Resolver"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "metadata": {
-          "description": "Arbitrary metadata of any type, an extension point for 3rd party tools.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
-        }
-      }
-    },
-    "Inheritable": {
-      "description": "A value that can be set to `workspace`",
-      "anyOf": [
         {
-          "description": "Inherit this setting from the `workspace`",
+          "description": "An inlined definition for a new workflow",
           "type": "object",
           "properties": {
-            "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+            "file_name": {
+              "description": "The name of the output file (inside the .github/workflows directory)",
+              "type": "string"
+            },
+            "config": {
+              "description": "The definition for the new workflow",
+              "$ref": "#/$defs/GithubWorkflowPreset"
             }
-          }
-        },
-        {
-          "type": "string"
-        }
-      ]
-    },
-    "Inheritable2": {
-      "description": "A value that can be set to `workspace`",
-      "anyOf": [
-        {
-          "description": "Inherit this setting from the `workspace`",
-          "type": "object",
-          "properties": {
-            "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            }
-          }
-        },
-        {
-          "$ref": "#/$defs/Edition"
-        }
-      ]
-    },
-    "Edition": {
-      "description": "Edition setting, which opts in to new Rust/Cargo behaviors.",
-      "oneOf": [
-        {
-          "description": "2015",
-          "type": "string",
-          "const": "2015"
-        },
-        {
-          "description": "2018",
-          "type": "string",
-          "const": "2018"
-        },
-        {
-          "description": "2021",
-          "type": "string",
-          "const": "2021"
-        },
-        {
-          "description": "2024",
-          "type": "string",
-          "const": "2024"
-        }
-      ]
-    },
-    "OptionalFile": {
-      "description": "A way specify or disable README or `build.rs`.",
-      "anyOf": [
-        {
-          "description": "Opt-in to default, or explicit opt-out",
-          "type": "boolean"
-        },
-        {
-          "description": "Explicit path",
-          "type": "string"
-        }
-      ]
-    },
-    "Inheritable3": {
-      "description": "A value that can be set to `workspace`",
-      "anyOf": [
-        {
-          "description": "Inherit this setting from the `workspace`",
-          "type": "object",
-          "properties": {
-            "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            }
-          }
-        },
-        {
-          "$ref": "#/$defs/OptionalFile"
-        }
-      ]
-    },
-    "Inheritable4": {
-      "description": "A value that can be set to `workspace`",
-      "anyOf": [
-        {
-          "description": "Inherit this setting from the `workspace`",
-          "type": "object",
-          "properties": {
-            "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            }
-          }
-        },
-        {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      ]
-    },
-    "Inheritable5": {
-      "description": "A value that can be set to `workspace`",
-      "anyOf": [
-        {
-          "description": "Inherit this setting from the `workspace`",
-          "type": "object",
-          "properties": {
-            "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            }
-          }
-        },
-        {
-          "$ref": "#/$defs/Publish"
-        }
-      ]
-    },
-    "Publish": {
-      "description": "Forbids or selects custom registry",
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      ]
-    },
-    "Resolver": {
-      "description": "The feature resolver version.\n\nNeeded in [`Workspace`], but implied by [`Edition`] in packages.",
-      "oneOf": [
-        {
-          "description": "The default for editions prior to 2021.",
-          "type": "string",
-          "const": "1"
-        },
-        {
-          "description": "The default for the 2021 edition.",
-          "type": "string",
-          "const": "2"
-        },
-        {
-          "description": "The default for the 2024 edition.",
-          "type": "string",
-          "const": "3"
-        }
-      ]
-    },
-    "Workspace": {
-      "description": "A manifest can contain both a package and workspace-wide properties",
-      "type": "object",
-      "properties": {
-        "members": {
-          "description": "Relative paths of crates in here",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
           },
-          "default": []
-        },
-        "default-members": {
-          "description": "Members to operate on when in the workspace root.\n\nWhen specified, `default-members` must expand to a subset of `members`.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "package": {
-          "description": "Template for inheritance",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageTemplate"
-            },
-            {
-              "type": "null"
-            }
+          "required": [
+            "file_name",
+            "config"
           ]
-        },
-        "exclude": {
-          "description": "Ignore these dirs",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "metadata": {
-          "description": "Shared info",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
-        },
-        "resolver": {
-          "description": "Compatibility setting",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Resolver"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "dependencies": {
-          "description": "Template for `needs_workspace_inheritance`",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "lints": {
-          "description": "Workspace-level lint groups",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Lint"
-            }
-          }
-        }
-      }
-    },
-    "PackageTemplate": {
-      "description": "Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.",
-      "type": "object",
-      "properties": {
-        "categories": {
-          "description": "See <https://crates.io/category_slugs>",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "description": "Multi-line text, some people use Markdown here",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "documentation": {
-          "description": "URL",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "edition": {
-          "description": "Opt-in to new Rust behaviors",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Edition"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "exclude": {
-          "description": "Don't publish these files, relative to workspace",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "homepage": {
-          "description": "Homepage URL",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "include": {
-          "description": "Publish these files, relative to workspace",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "keywords": {
-          "description": "For search",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "license": {
-          "description": "SPDX",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "license-file": {
-          "description": "If not SPDX",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "publish": {
-          "description": "Block publishing or choose custom registries",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Publish"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "readme": {
-          "description": "Opt-out or custom path, relative to workspace",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/OptionalFile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "repository": {
-          "description": "(HTTPS) repository URL",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "rust-version": {
-          "description": "Minimum required rustc version in format `1.99`",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "version": {
-          "description": "Package version semver",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "Dependency": {
-      "description": "Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.\n\nIt can be simple version number, or detailed settings, or inherited.",
-      "anyOf": [
-        {
-          "description": "Version requirement (e.g. `^1.5`)",
-          "$ref": "#/$defs/StringOrNum"
-        },
-        {
-          "description": "Incomplete data",
-          "$ref": "#/$defs/InheritedDependencyDetail"
-        },
-        {
-          "description": "`{ version = \"^1.5\", features = [\"a\", \"b\"] }` etc.",
-          "$ref": "#/$defs/DependencyDetail"
         }
       ]
-    },
-    "InheritedDependencyDetail": {
-      "description": "When a dependency is defined as `{ workspace = true }`,\nand workspace data hasn't been applied yet.",
-      "type": "object",
-      "properties": {
-        "features": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "optional": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "workspace": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      }
-    },
-    "DependencyDetail": {
-      "description": "When definition of a dependency is more than just a version string.",
-      "type": "object",
-      "properties": {
-        "version": {
-          "description": "Semver requirement. Note that a plain version number implies this version *or newer* compatible one.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringOrNum"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "package": {
-          "description": "If `Some`, use this as the crate name instead of `[dependencies]`'s table key.\n\nBy using this, a crate can have multiple versions of the same dependency.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "registry": {
-          "description": "Fetch this dependency from a custom 3rd party registry (alias defined in Cargo config), not crates-io.\n\nThis depends on local cargo configuration. It becomes `registry_index` after the crate is uploaded to a registry.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "registry-index": {
-          "description": "Directly define custom 3rd party registry URL (may be `sparse+https:`) instead of a config nickname.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "path": {
-          "description": "This path is usually relative to the crate's manifest, but when using workspace inheritance, it may be relative to the workspace!\n\nWhen calling [`Manifest::complete_from_path_and_workspace`] use absolute path for the workspace manifest, and then this will be corrected to be an absolute\npath when inherited from the workspace.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "git": {
-          "description": "Read dependency from git repo URL, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "branch": {
-          "description": "Read dependency from git branch, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tag": {
-          "description": "Read dependency from git tag, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "rev": {
-          "description": "Read dependency from git commit, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "features": {
-          "description": "Enable these features of the dependency.\n\nNote that Cargo interprets `default` in a special way.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "optional": {
-          "description": "NB: Not allowed at workspace level\n\nIf not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.\nSee the [`features`] module for more info.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "default-features": {
-          "description": "Enable the `default` set of features of the dependency (enabled by default).",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": true
-    },
-    "Lint": {
-      "description": "Lint definition.",
-      "type": "object",
-      "properties": {
-        "level": {
-          "description": "allow/warn/deny",
-          "$ref": "#/$defs/LintLevel"
-        },
-        "priority": {
-          "description": "Controls which lints or lint groups override other lint groups.",
-          "type": "integer",
-          "format": "int8",
-          "minimum": -128,
-          "maximum": 127
-        },
-        "config": {
-          "description": "Unstable",
-          "type": "object",
-          "additionalProperties": true
-        }
-      },
-      "required": [
-        "level",
-        "priority",
-        "config"
-      ]
-    },
-    "LintLevel": {
-      "description": "Lint level.",
-      "type": "string",
-      "enum": [
-        "allow",
-        "warn",
-        "force-warn",
-        "deny",
-        "forbid"
-      ]
-    },
-    "Target2": {
-      "description": "Dependencies that are platform-specific or enabled through custom `cfg()`.",
-      "type": "object",
-      "properties": {
-        "dependencies": {
-          "description": "platform-specific normal deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          },
-          "default": {}
-        },
-        "dev-dependencies": {
-          "description": "platform-specific dev-only/test-only deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          },
-          "default": {}
-        },
-        "build-dependencies": {
-          "description": "platform-specific build-time deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          },
-          "default": {}
-        }
-      }
-    },
-    "Product": {
-      "description": "Cargo uses the term \"target\" for both \"target platform\" and \"build target\" (the thing to build),\nwhich makes it ambigous.\nHere Cargo's bin/lib **target** is renamed to **product**.",
-      "type": "object",
-      "properties": {
-        "path": {
-          "description": "This field points at where the crate is located, relative to the `Cargo.toml`.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "name": {
-          "description": "The name of a product is the name of the library or binary that will be generated.\nThis is defaulted to the name of the package, with any dashes replaced\nwith underscores. (Rust `extern crate` declarations reference this name;\ntherefore the value must be a valid Rust identifier to be usable.)",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "test": {
-          "description": "A flag for enabling unit tests for this product. This is used by `cargo test`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "doctest": {
-          "description": "A flag for enabling documentation tests for this product. This is only relevant\nfor libraries, it has no effect on other sections. This is used by\n`cargo test`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "bench": {
-          "description": "A flag for enabling benchmarks for this product. This is used by `cargo bench`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "doc": {
-          "description": "A flag for enabling documentation of this product. This is used by `cargo doc`.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "plugin": {
-          "description": "If the product is meant to be a compiler plugin, this field must be set to true\nfor Cargo to correctly compile it and make it available for all dependencies.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "proc-macro": {
-          "description": "If the product is meant to be a \"macros 1.1\" procedural macro, this field must\nbe set to true.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "harness": {
-          "description": "If set to false, `cargo test` will omit the `--test` flag to rustc, which\nstops it from generating a test harness. This is useful when the binary being\nbuilt manages the test runner itself.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "edition": {
-          "description": "Deprecated. Edition should be set only per package.\n\nIf set then a product can be configured to use a different edition than the\n`[package]` is configured to use, perhaps only compiling a library with the\n2018 edition or only compiling one unit test with the 2015 edition. By default\nall products are compiled with the edition specified in `[package]`.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Edition"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "crate-type": {
-          "description": "The available options are \"dylib\", \"rlib\", \"staticlib\", \"cdylib\", and \"proc-macro\".",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "required-features": {
-          "description": "The `required-features` field specifies which features the product needs in order to be built.\nIf any of the required features are not selected, the product will be skipped.\nThis is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,\nit has no effect on `[lib]`.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        }
-      }
-    },
-    "Profiles": {
-      "description": "Build-in an custom build/optimization settings",
-      "type": "object",
-      "properties": {
-        "release": {
-          "description": "Used for `--release`",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Profile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "dev": {
-          "description": "Used by default, weirdly called `debug` profile.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Profile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "test": {
-          "description": "Used for `cargo test`",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Profile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "bench": {
-          "description": "Used for `cargo bench` (nightly)",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Profile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "additionalProperties": {
-        "$ref": "#/$defs/Profile"
-      }
-    },
-    "Profile": {
-      "description": "Compilation/optimization settings for a workspace",
-      "type": "object",
-      "properties": {
-        "opt-level": {
-          "description": "num or z, s"
-        },
-        "debug": {
-          "description": "0,1,2 or bool",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/DebugSetting"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "split-debuginfo": {
-          "description": "Move debug info to separate files",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "rpath": {
-          "description": "For dynamic libraries",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "lto": {
-          "description": "Link-time-optimization",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/LtoSetting"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "debug-assertions": {
-          "description": "Extra assertions",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "codegen-units": {
-          "description": "Parallel compilation",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint16",
-          "minimum": 0,
-          "maximum": 65535
-        },
-        "panic": {
-          "description": "Handling of panics/unwinding",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "incremental": {
-          "description": "Support for incremental rebuilds",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "overflow-checks": {
-          "description": "Check integer arithmetic",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "strip": {
-          "description": "Remove debug info",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StripSetting"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "package": {
-          "description": "Profile overrides for dependencies, `*` is special.",
-          "type": "object",
-          "additionalProperties": true
-        },
-        "build-override": {
-          "description": "Profile overrides for build dependencies, `*` is special."
-        },
-        "inherits": {
-          "description": "Only relevant for non-standard profiles",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "DebugSetting": {
-      "description": "Verbosity of debug info in a [`Profile`]",
-      "oneOf": [
-        {
-          "description": "0 or false",
-          "type": "string",
-          "const": "none"
-        },
-        {
-          "description": "1 = line tables only",
-          "type": "string",
-          "const": "lines"
-        },
-        {
-          "description": "2 or true",
-          "type": "string",
-          "const": "full"
-        }
-      ]
-    },
-    "LtoSetting": {
-      "description": "Handling of LTO in a build profile",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "thin"
-          ]
-        },
-        {
-          "description": "off",
-          "type": "string",
-          "const": "none"
-        },
-        {
-          "description": "false",
-          "type": "string",
-          "const": "thin-local"
-        },
-        {
-          "description": "True",
-          "type": "string",
-          "const": "fat"
-        }
-      ]
-    },
-    "StripSetting": {
-      "description": "Handling of debug symbols in a build profile",
-      "oneOf": [
-        {
-          "description": "Same as `strip = false`",
-          "type": "string",
-          "const": "none"
-        },
-        {
-          "description": "Detailed debug is stripped, but coarse debug is preserved",
-          "type": "string",
-          "const": "debuginfo"
-        },
-        {
-          "description": "Stronger than the `Debuginfo` setting, same as `strip = true`",
-          "type": "string",
-          "const": "symbols"
-        }
-      ]
-    },
-    "Inheritable6": {
-      "description": "A value that can be set to `workspace`",
-      "anyOf": [
-        {
-          "description": "Inherit this setting from the `workspace`",
-          "type": "object",
-          "properties": {
-            "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Lint"
-            }
-          }
-        }
-      ]
-    },
-    "GithubConfig": {
-      "description": "Configurations and presets relating to Github",
-      "type": "object",
-      "properties": {
-        "workflow_presets": {
-          "description": "A map of presets for Github workflows",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/GithubWorkflowPreset"
-          },
-          "default": {}
-        },
-        "workflow_job_presets": {
-          "description": "A map of presets for Github workflow jobs",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/JobPreset"
-          },
-          "default": {}
-        }
-      }
     },
     "GithubWorkflowPreset": {
       "description": "A preset for a gihub workflow.",
@@ -14353,6 +13014,1394 @@
           "$ref": "#/$defs/Env"
         }
       ]
+    },
+    "CargoTomlPreset": {
+      "description": "A preset for a `Cargo.toml` file.",
+      "type": "object",
+      "properties": {
+        "extends_presets": {
+          "description": "The list of extended presets.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "package": {
+          "description": "Package definition (a cargo crate)",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Package"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workspace": {
+          "description": "Workspace-wide settings",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Workspace"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dependencies": {
+          "description": "Normal dependencies",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "dev-dependencies": {
+          "description": "Dev/test-only deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "build-dependencies": {
+          "description": "Build-time deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "target": {
+          "description": "`[target.cfg.dependencies]`",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Target2"
+          }
+        },
+        "features": {
+          "description": "The `[features]` section. This set may be incomplete!\n\nOptional dependencies may create implied Cargo features.\nThis features section also supports microsyntax with `dep:`, `/`, and `?`\nfor managing dependencies and their features.io\n\nThis crate has an optional [`features`] module for dealing with this\ncomplexity and getting the real list of features.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "patch": {
+          "description": "`[patch.crates-io]` section",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/Dependency"
+            }
+          }
+        },
+        "lib": {
+          "description": "Note that due to autolibs feature this is not the complete list\nunless you run [`Manifest::complete_from_path`]",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Product"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile": {
+          "description": "Compilation/optimization settings",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profiles"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bin": {
+          "description": "Note that due to autobins feature this is not the complete list\nunless you run [`Manifest::complete_from_path`]",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Product"
+          }
+        },
+        "bench": {
+          "description": "Benchmarks",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Product"
+          }
+        },
+        "test": {
+          "description": "Integration tests",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Product"
+          }
+        },
+        "example": {
+          "description": "Examples",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Product"
+          }
+        },
+        "lints": {
+          "description": "Lints",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable6"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Package": {
+      "description": "The `[package]` section of the [`Manifest`]. This is where crate properties are.\n\nNote that most of these properties can be inherited from a workspace, and therefore not available just from reading a single `Cargo.toml`. See [`Manifest::inherit_workspace`].\n\nYou can replace `Metadata` generic type with your own\nto parse into something more useful than a generic toml `Value`",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "See [the `version()` getter for more info](`Package::version()`).\n\nMust parse as semver, e.g. \"1.9.0\"\n\nThis field may have unknown value when using workspace inheritance,\nand when the `Manifest` has been loaded without its workspace.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edition": {
+          "description": "Package's edition opt-in. Use [`Package::edition()`] to read it.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rust-version": {
+          "description": "MSRV 1.x (beware: does not require semver formatting)",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "build": {
+          "description": "Build script definition",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OptionalFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workspace": {
+          "description": "Workspace this package is a member of (`None` if it's implicit)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "links": {
+          "description": "It doesn't link to anything",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "description": "A short blurb about the package. This is not rendered in any format when\nuploaded to crates.io (aka this is not markdown).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "homepage": {
+          "description": "Project's homepage",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "documentation": {
+          "description": "Path to your custom docs. Unnecssary if you rely on docs.rs.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "readme": {
+          "description": "This points to a file under the package root (relative to this `Cargo.toml`).\nimplied if README.md, README.txt or README exists.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "description": "Up to 5, for search",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "categories": {
+          "description": "This is a list of up to five categories where this crate would fit.\ne.g. `[\"command-line-utilities\", \"development-tools::cargo-plugins\"]`",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exclude": {
+          "description": "Don't publish these files",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "include": {
+          "description": "Publish these files",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "license": {
+          "description": "e.g. \"MIT\"",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "license-file": {
+          "description": "If `license` is not standard",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository": {
+          "description": "(HTTPS) URL to crate's repository",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "default-run": {
+          "description": "The default binary to run by cargo run.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "autobins": {
+          "description": "Discover binaries from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[bin]]` sections",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "autolib": {
+          "description": "Discover libraries from the file system",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "autoexamples": {
+          "description": "Discover examples from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[example]]` sections",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "autotests": {
+          "description": "Discover tests from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[test]]` sections",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "autobenches": {
+          "description": "Discover benchmarks from the file system\n\nThis may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[bench]]` sections",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "publish": {
+          "description": "Disable publishing or select custom registries.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Inheritable5"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resolver": {
+          "description": "The feature resolver version.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Resolver"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {
+          "description": "Arbitrary metadata of any type, an extension point for 3rd party tools.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        }
+      }
+    },
+    "Inheritable": {
+      "description": "A value that can be set to `workspace`",
+      "anyOf": [
+        {
+          "description": "Inherit this setting from the `workspace`",
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "Inheritable2": {
+      "description": "A value that can be set to `workspace`",
+      "anyOf": [
+        {
+          "description": "Inherit this setting from the `workspace`",
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/Edition"
+        }
+      ]
+    },
+    "Edition": {
+      "description": "Edition setting, which opts in to new Rust/Cargo behaviors.",
+      "oneOf": [
+        {
+          "description": "2015",
+          "type": "string",
+          "const": "2015"
+        },
+        {
+          "description": "2018",
+          "type": "string",
+          "const": "2018"
+        },
+        {
+          "description": "2021",
+          "type": "string",
+          "const": "2021"
+        },
+        {
+          "description": "2024",
+          "type": "string",
+          "const": "2024"
+        }
+      ]
+    },
+    "OptionalFile": {
+      "description": "A way specify or disable README or `build.rs`.",
+      "anyOf": [
+        {
+          "description": "Opt-in to default, or explicit opt-out",
+          "type": "boolean"
+        },
+        {
+          "description": "Explicit path",
+          "type": "string"
+        }
+      ]
+    },
+    "Inheritable3": {
+      "description": "A value that can be set to `workspace`",
+      "anyOf": [
+        {
+          "description": "Inherit this setting from the `workspace`",
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/OptionalFile"
+        }
+      ]
+    },
+    "Inheritable4": {
+      "description": "A value that can be set to `workspace`",
+      "anyOf": [
+        {
+          "description": "Inherit this setting from the `workspace`",
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "Inheritable5": {
+      "description": "A value that can be set to `workspace`",
+      "anyOf": [
+        {
+          "description": "Inherit this setting from the `workspace`",
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/Publish"
+        }
+      ]
+    },
+    "Publish": {
+      "description": "Forbids or selects custom registry",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "Resolver": {
+      "description": "The feature resolver version.\n\nNeeded in [`Workspace`], but implied by [`Edition`] in packages.",
+      "oneOf": [
+        {
+          "description": "The default for editions prior to 2021.",
+          "type": "string",
+          "const": "1"
+        },
+        {
+          "description": "The default for the 2021 edition.",
+          "type": "string",
+          "const": "2"
+        },
+        {
+          "description": "The default for the 2024 edition.",
+          "type": "string",
+          "const": "3"
+        }
+      ]
+    },
+    "Workspace": {
+      "description": "A manifest can contain both a package and workspace-wide properties",
+      "type": "object",
+      "properties": {
+        "members": {
+          "description": "Relative paths of crates in here",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "default-members": {
+          "description": "Members to operate on when in the workspace root.\n\nWhen specified, `default-members` must expand to a subset of `members`.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "package": {
+          "description": "Template for inheritance",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageTemplate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exclude": {
+          "description": "Ignore these dirs",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "metadata": {
+          "description": "Shared info",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "resolver": {
+          "description": "Compatibility setting",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Resolver"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dependencies": {
+          "description": "Template for `needs_workspace_inheritance`",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "lints": {
+          "description": "Workspace-level lint groups",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/Lint"
+            }
+          }
+        }
+      }
+    },
+    "PackageTemplate": {
+      "description": "Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.",
+      "type": "object",
+      "properties": {
+        "categories": {
+          "description": "See <https://crates.io/category_slugs>",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "description": "Multi-line text, some people use Markdown here",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "documentation": {
+          "description": "URL",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "edition": {
+          "description": "Opt-in to new Rust behaviors",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Edition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exclude": {
+          "description": "Don't publish these files, relative to workspace",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "homepage": {
+          "description": "Homepage URL",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "include": {
+          "description": "Publish these files, relative to workspace",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "keywords": {
+          "description": "For search",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "license": {
+          "description": "SPDX",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "license-file": {
+          "description": "If not SPDX",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publish": {
+          "description": "Block publishing or choose custom registries",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Publish"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "readme": {
+          "description": "Opt-out or custom path, relative to workspace",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OptionalFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository": {
+          "description": "(HTTPS) repository URL",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rust-version": {
+          "description": "Minimum required rustc version in format `1.99`",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "Package version semver",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Dependency": {
+      "description": "Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.\n\nIt can be simple version number, or detailed settings, or inherited.",
+      "anyOf": [
+        {
+          "description": "Version requirement (e.g. `^1.5`)",
+          "$ref": "#/$defs/StringOrNum"
+        },
+        {
+          "description": "Incomplete data",
+          "$ref": "#/$defs/InheritedDependencyDetail"
+        },
+        {
+          "description": "`{ version = \"^1.5\", features = [\"a\", \"b\"] }` etc.",
+          "$ref": "#/$defs/DependencyDetail"
+        }
+      ]
+    },
+    "InheritedDependencyDetail": {
+      "description": "When a dependency is defined as `{ workspace = true }`,\nand workspace data hasn't been applied yet.",
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "workspace": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "DependencyDetail": {
+      "description": "When definition of a dependency is more than just a version string.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "description": "Semver requirement. Note that a plain version number implies this version *or newer* compatible one.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StringOrNum"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "package": {
+          "description": "If `Some`, use this as the crate name instead of `[dependencies]`'s table key.\n\nBy using this, a crate can have multiple versions of the same dependency.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry": {
+          "description": "Fetch this dependency from a custom 3rd party registry (alias defined in Cargo config), not crates-io.\n\nThis depends on local cargo configuration. It becomes `registry_index` after the crate is uploaded to a registry.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry-index": {
+          "description": "Directly define custom 3rd party registry URL (may be `sparse+https:`) instead of a config nickname.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "This path is usually relative to the crate's manifest, but when using workspace inheritance, it may be relative to the workspace!\n\nWhen calling [`Manifest::complete_from_path_and_workspace`] use absolute path for the workspace manifest, and then this will be corrected to be an absolute\npath when inherited from the workspace.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "git": {
+          "description": "Read dependency from git repo URL, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "branch": {
+          "description": "Read dependency from git branch, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag": {
+          "description": "Read dependency from git tag, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rev": {
+          "description": "Read dependency from git commit, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "features": {
+          "description": "Enable these features of the dependency.\n\nNote that Cargo interprets `default` in a special way.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional": {
+          "description": "NB: Not allowed at workspace level\n\nIf not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.\nSee the [`features`] module for more info.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "default-features": {
+          "description": "Enable the `default` set of features of the dependency (enabled by default).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Lint": {
+      "description": "Lint definition.",
+      "type": "object",
+      "properties": {
+        "level": {
+          "description": "allow/warn/deny",
+          "$ref": "#/$defs/LintLevel"
+        },
+        "priority": {
+          "description": "Controls which lints or lint groups override other lint groups.",
+          "type": "integer",
+          "format": "int8",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "config": {
+          "description": "Unstable",
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "level",
+        "priority",
+        "config"
+      ]
+    },
+    "LintLevel": {
+      "description": "Lint level.",
+      "type": "string",
+      "enum": [
+        "allow",
+        "warn",
+        "force-warn",
+        "deny",
+        "forbid"
+      ]
+    },
+    "Target2": {
+      "description": "Dependencies that are platform-specific or enabled through custom `cfg()`.",
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "description": "platform-specific normal deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          },
+          "default": {}
+        },
+        "dev-dependencies": {
+          "description": "platform-specific dev-only/test-only deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          },
+          "default": {}
+        },
+        "build-dependencies": {
+          "description": "platform-specific build-time deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          },
+          "default": {}
+        }
+      }
+    },
+    "Product": {
+      "description": "Cargo uses the term \"target\" for both \"target platform\" and \"build target\" (the thing to build),\nwhich makes it ambigous.\nHere Cargo's bin/lib **target** is renamed to **product**.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "This field points at where the crate is located, relative to the `Cargo.toml`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The name of a product is the name of the library or binary that will be generated.\nThis is defaulted to the name of the package, with any dashes replaced\nwith underscores. (Rust `extern crate` declarations reference this name;\ntherefore the value must be a valid Rust identifier to be usable.)",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "test": {
+          "description": "A flag for enabling unit tests for this product. This is used by `cargo test`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "doctest": {
+          "description": "A flag for enabling documentation tests for this product. This is only relevant\nfor libraries, it has no effect on other sections. This is used by\n`cargo test`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "bench": {
+          "description": "A flag for enabling benchmarks for this product. This is used by `cargo bench`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "doc": {
+          "description": "A flag for enabling documentation of this product. This is used by `cargo doc`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "plugin": {
+          "description": "If the product is meant to be a compiler plugin, this field must be set to true\nfor Cargo to correctly compile it and make it available for all dependencies.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "proc-macro": {
+          "description": "If the product is meant to be a \"macros 1.1\" procedural macro, this field must\nbe set to true.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "harness": {
+          "description": "If set to false, `cargo test` will omit the `--test` flag to rustc, which\nstops it from generating a test harness. This is useful when the binary being\nbuilt manages the test runner itself.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "edition": {
+          "description": "Deprecated. Edition should be set only per package.\n\nIf set then a product can be configured to use a different edition than the\n`[package]` is configured to use, perhaps only compiling a library with the\n2018 edition or only compiling one unit test with the 2015 edition. By default\nall products are compiled with the edition specified in `[package]`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Edition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "crate-type": {
+          "description": "The available options are \"dylib\", \"rlib\", \"staticlib\", \"cdylib\", and \"proc-macro\".",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "required-features": {
+          "description": "The `required-features` field specifies which features the product needs in order to be built.\nIf any of the required features are not selected, the product will be skipped.\nThis is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,\nit has no effect on `[lib]`.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    },
+    "Profiles": {
+      "description": "Build-in an custom build/optimization settings",
+      "type": "object",
+      "properties": {
+        "release": {
+          "description": "Used for `--release`",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dev": {
+          "description": "Used by default, weirdly called `debug` profile.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "test": {
+          "description": "Used for `cargo test`",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bench": {
+          "description": "Used for `cargo bench` (nightly)",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/Profile"
+      }
+    },
+    "Profile": {
+      "description": "Compilation/optimization settings for a workspace",
+      "type": "object",
+      "properties": {
+        "opt-level": {
+          "description": "num or z, s"
+        },
+        "debug": {
+          "description": "0,1,2 or bool",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DebugSetting"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "split-debuginfo": {
+          "description": "Move debug info to separate files",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rpath": {
+          "description": "For dynamic libraries",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "lto": {
+          "description": "Link-time-optimization",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LtoSetting"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "debug-assertions": {
+          "description": "Extra assertions",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "codegen-units": {
+          "description": "Parallel compilation",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "panic": {
+          "description": "Handling of panics/unwinding",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "incremental": {
+          "description": "Support for incremental rebuilds",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "overflow-checks": {
+          "description": "Check integer arithmetic",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "strip": {
+          "description": "Remove debug info",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StripSetting"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "package": {
+          "description": "Profile overrides for dependencies, `*` is special.",
+          "type": "object",
+          "additionalProperties": true
+        },
+        "build-override": {
+          "description": "Profile overrides for build dependencies, `*` is special."
+        },
+        "inherits": {
+          "description": "Only relevant for non-standard profiles",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "DebugSetting": {
+      "description": "Verbosity of debug info in a [`Profile`]",
+      "oneOf": [
+        {
+          "description": "0 or false",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "1 = line tables only",
+          "type": "string",
+          "const": "lines"
+        },
+        {
+          "description": "2 or true",
+          "type": "string",
+          "const": "full"
+        }
+      ]
+    },
+    "LtoSetting": {
+      "description": "Handling of LTO in a build profile",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "thin"
+          ]
+        },
+        {
+          "description": "off",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "false",
+          "type": "string",
+          "const": "thin-local"
+        },
+        {
+          "description": "True",
+          "type": "string",
+          "const": "fat"
+        }
+      ]
+    },
+    "StripSetting": {
+      "description": "Handling of debug symbols in a build profile",
+      "oneOf": [
+        {
+          "description": "Same as `strip = false`",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "Detailed debug is stripped, but coarse debug is preserved",
+          "type": "string",
+          "const": "debuginfo"
+        },
+        {
+          "description": "Stronger than the `Debuginfo` setting, same as `strip = true`",
+          "type": "string",
+          "const": "symbols"
+        }
+      ]
+    },
+    "Inheritable6": {
+      "description": "A value that can be set to `workspace`",
+      "anyOf": [
+        {
+          "description": "Inherit this setting from the `workspace`",
+          "type": "object",
+          "properties": {
+            "workspace": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/Lint"
+            }
+          }
+        }
+      ]
+    },
+    "GithubConfig": {
+      "description": "Configurations and presets relating to Github",
+      "type": "object",
+      "properties": {
+        "workflow_presets": {
+          "description": "A map of presets for Github workflows",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/GithubWorkflowPreset"
+          },
+          "default": {}
+        },
+        "workflow_job_presets": {
+          "description": "A map of presets for Github workflow jobs",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/JobPreset"
+          },
+          "default": {}
+        }
+      }
     }
   }
 }

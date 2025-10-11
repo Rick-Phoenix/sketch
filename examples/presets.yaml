@@ -180,6 +180,10 @@ pre_commit_presets:
 # Git presets
 git_presets:
   ts_package:
+    # Using github workflows presets
+    workflows:
+      - file_name: my_workflow.yaml
+        id: extended
     # License file to generate
     license: Apache-2.0
     # Selecting a preset

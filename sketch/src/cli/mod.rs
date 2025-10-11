@@ -67,7 +67,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
-    Commands::GhWorkflow { preset, file, dir } => {
+    Commands::GhWorkflow { preset, output } => {
       let data = config
         .github
         .workflow_presets
@@ -79,9 +79,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         .clone()
         .process_data(&preset, &config.github)?;
 
-      let workflows_dir = dir.unwrap_or_else(|| PathBuf::from(".github/workflows"));
-
-      let output = workflows_dir.join(file);
+      create_parent_dirs(&output)?;
 
       serialize_yaml(&data, &output, overwrite)?;
     }
@@ -617,12 +615,8 @@ pub enum Commands {
     /// The preset id
     preset: String,
 
-    /// The name of the workflow's file, to join to the workflows directory
-    file: PathBuf,
-
-    /// The path to the workflows dir [default: `.github/workflows`]
-    #[arg(short, long)]
-    dir: Option<PathBuf>,
+    /// The output path of the new file
+    output: PathBuf,
   },
 
   /// Generates a Docker Compose file from a preset.
