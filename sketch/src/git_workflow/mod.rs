@@ -1,4 +1,7 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::{
+  collections::{BTreeMap, BTreeSet},
+  path::PathBuf,
+};
 
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
@@ -6,12 +9,72 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+  cli::parsers::parse_key_value_pairs,
   merge_index_maps, merge_index_sets, merge_nested, merge_optional_btree_maps,
   merge_optional_btree_sets, merge_optional_nested, merge_optional_vecs, merge_presets, merge_vecs,
   overwrite_if_some,
   serde_utils::{StringOrNum, StringOrSortedList},
   Extensible, GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
+
+impl WorkflowReference {
+  pub(crate) fn from_cli(s: &str) -> Result<WorkflowReference, String> {
+    let mut file: Option<PathBuf> = None;
+    let mut id: Option<String> = None;
+
+    let pairs = parse_key_value_pairs("WorkflowReference", s)?;
+
+    for (key, val) in pairs {
+      match key {
+        "file" => {
+          file = if val.is_empty() {
+            None
+          } else {
+            Some(val.into())
+          }
+        }
+        "id" => {
+          id = if val.is_empty() {
+            None
+          } else {
+            Some(val.to_string())
+          }
+        }
+        _ => return Err(format!("Invalid key for WorkflowReference: {}", key)),
+      };
+    }
+
+    let error_message = "Invalid input for a github workflow reference";
+
+    let reference = WorkflowReference::Preset {
+      file_name: file.ok_or_else(|| error_message.to_string())?,
+      id: id.ok_or_else(|| error_message.to_string())?,
+    };
+
+    Ok(reference)
+  }
+}
+
+/// The definition for a new Github workflow, or a preset ID.
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum WorkflowReference {
+  /// A reference to a workflow preset
+  Preset {
+    /// The name of the output file (inside the .github/workflows directory)
+    file_name: PathBuf,
+    /// The ID of the preset to use
+    id: String,
+  },
+
+  /// An inlined definition for a new workflow
+  Data {
+    /// The name of the output file (inside the .github/workflows directory)
+    file_name: PathBuf,
+    /// The definition for the new workflow
+    config: GithubWorkflowPreset,
+  },
+}
 
 /// Configurations and presets relating to Github
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Default, Merge)]

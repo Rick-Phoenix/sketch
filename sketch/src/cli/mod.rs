@@ -30,6 +30,7 @@ use crate::{
     create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
     serialize_yaml, write_file,
   },
+  git_workflow::WorkflowReference,
   init_repo::{gitignore::GitIgnoreSetting, pre_commit::PreCommitSetting, RepoPreset},
   licenses::License,
   serde_utils::deserialize_map,
@@ -66,7 +67,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
-    Commands::GhWorkflow { preset, output } => {
+    Commands::GhWorkflow { preset, file, dir } => {
       let data = config
         .github
         .workflow_presets
@@ -77,6 +78,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?
         .clone()
         .process_data(&preset, &config.github)?;
+
+      let workflows_dir = dir.unwrap_or_else(|| PathBuf::from(".github/workflows"));
+
+      let output = workflows_dir.join(file);
 
       serialize_yaml(&data, &output, overwrite)?;
     }
@@ -224,7 +229,15 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     }
     Repo {
       remote,
-      input,
+      input:
+        RepoConfigInput {
+          no_pre_commit,
+          pre_commit,
+          gitignore,
+          license,
+          with_templates,
+          workflows,
+        },
       preset,
       dir,
     } => {
@@ -241,17 +254,17 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         RepoPreset::default()
       };
 
-      if input.no_pre_commit {
+      if no_pre_commit {
         preset.pre_commit = PreCommitSetting::Bool(false)
-      } else if let Some(preset_id) = input.pre_commit {
+      } else if let Some(preset_id) = pre_commit {
         preset.pre_commit = PreCommitSetting::Id(preset_id);
       };
 
-      if let Some(gitignore) = input.gitignore {
+      if let Some(gitignore) = gitignore {
         preset.gitignore = Some(GitIgnoreSetting::Id(gitignore));
       }
 
-      if let Some(template_refs) = input.with_templates {
+      if let Some(template_refs) = with_templates {
         let templates_list = preset.with_templates.get_or_insert_default();
 
         let mut single_templates: Vec<PresetElement> = Vec::new();
@@ -274,8 +287,12 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         }
       }
 
-      if let Some(license) = input.license {
+      if let Some(license) = license {
         preset.license = Some(license);
+      }
+
+      if let Some(workflows) = workflows {
+        preset.workflows.extend(workflows);
       }
 
       let out_dir = dir.unwrap_or_else(|| get_cwd());
@@ -505,6 +522,14 @@ pub struct RepoConfigInput {
     value_name = "PRESET_ID|id=TEMPLATE_ID,output=PATH"
   )]
   with_templates: Option<Vec<TemplateRef>>,
+
+  /// One or many workflow presets to use for the new repo. The file path will be joined to `.github/workflows`
+  #[arg(
+    long = "workflow",
+    value_name = "id=PRESET_ID,file=PATH",
+    value_parser = WorkflowReference::from_cli
+  )]
+  workflows: Option<Vec<WorkflowReference>>,
 }
 
 /// The cli commands.
@@ -592,8 +617,12 @@ pub enum Commands {
     /// The preset id
     preset: String,
 
-    /// The output path of the created file
-    output: PathBuf,
+    /// The name of the workflow's file, to join to the workflows directory
+    file: PathBuf,
+
+    /// The path to the workflows dir [default: `.github/workflows`]
+    #[arg(short, long)]
+    dir: Option<PathBuf>,
   },
 
   /// Generates a Docker Compose file from a preset.

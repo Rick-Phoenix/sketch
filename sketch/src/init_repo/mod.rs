@@ -12,6 +12,7 @@ use crate::{
   custom_templating::TemplatingPresetReference,
   exec::{launch_command, Hook},
   fs::{create_all_dirs, serialize_yaml, write_file},
+  git_workflow::WorkflowReference,
   init_repo::{
     gitignore::{GitIgnore, GitIgnoreSetting, DEFAULT_GITIGNORE},
     pre_commit::{PreCommitPreset, PreCommitSetting},
@@ -26,16 +27,23 @@ use crate::{
 pub struct RepoPreset {
   /// Settings for the gitignore file.
   pub gitignore: Option<GitIgnoreSetting>,
+
   /// Configuration settings for [`pre-commit`](https://pre-commit.com/).
   pub pre_commit: PreCommitSetting,
+
   /// A set of templates to generate when this preset is used.
   pub with_templates: Option<Vec<TemplatingPresetReference>>,
   /// A license file to generate for the new repo.
   pub license: Option<License>,
+
   /// One or many rendered commands to execute before the repo's creation
   pub hooks_pre: Vec<Hook>,
+
   /// One or many rendered commands to execute after the repo's creation
   pub hooks_post: Vec<Hook>,
+
+  /// One or many workflows to generate in the new repo.
+  pub workflows: Vec<WorkflowReference>,
 }
 
 impl Config {
@@ -137,6 +145,35 @@ impl Config {
 
     if let Some(license) = preset.license {
       write_file(&out_dir.join("LICENSE"), license.get_content(), overwrite)?;
+    }
+
+    if preset.workflows.is_empty() {
+      let workflows_dir = out_dir.join(".github/workflows");
+      create_all_dirs(&workflows_dir)?;
+
+      for workflow in preset.workflows {
+        match workflow {
+          WorkflowReference::Preset { file_name, id } => {
+            let data = self
+              .github
+              .workflow_presets
+              .get(&id)
+              .ok_or(GenError::PresetNotFound {
+                kind: Preset::GithubWorkflow,
+                name: id.clone(),
+              })?
+              .clone()
+              .process_data(&id, &self.github)?;
+
+            serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;
+          }
+          WorkflowReference::Data { file_name, config } => {
+            let data = config.process_data("__inlined", &self.github)?;
+
+            serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;
+          }
+        }
+      }
     }
 
     if let Some(templates) = preset.with_templates {
