@@ -1,18 +1,16 @@
-# Rendering A Preset
+# Templating Presets
 
-Rendering a single template is for cases when we need a simpler or more flexible setup. But things become more interesting with templating presets, which can allow you to define entire project structures and then replicate them very easily (while also being able to modify the context at different levels). 
+Rendering a single template is for cases when we need a simpler or more flexible setup. But things become more interesting with **templating presets**, where different kinds of templates can be aggregated and used in order to define easily reproducible project structures. 
 
-Presets can be rendered with the `render-preset` command, or generated automatically with [another preset](../presets/git.md#adding-templates), such as a git repo preset.
+Templating presets can be rendered with the `render-preset` command, or as part of [another preset](../presets/git.md#adding-templates), such as a git repo preset.
 
-# Creating A Preset
+A templating preset contains an optional context (which overrides the global context), and one or many of these items:
 
-A preset contains an optional context (which overrides the global context), and a list that contains any of these elements:
+### 1. Individual Templates
 
-## Individual Presets
+- Individual templates, which provide a manually controlled output path and their own local context
 
-- An individual template, with manually controlled output path and context
-
-### Example
+#### Example
 
 ```yaml
 {{#include ../../../examples/templating/templating.yaml:prop_name}}
@@ -29,13 +27,13 @@ Tree output:
 {{#include ../../../sketch/tests/output/custom_templates/lotr/tree_output.txt:2:}}
 ```
 
-## Structured Template
+### 2. Template Directory
 
-- A path to a directory inside `templates_dir`, to extract all the files inside of it recursively and render them in the output directory, with the same file tree structure
-
-### Example
+- A path to a directory inside `templates_dir`, where all templates will be recursively rendered in the output directory, with the same file tree structure
 
 >ℹ️ Any template files that end with the `.j2`, `.jinja` or `.jinja2` extensions will have them automatically removed. So `myfile.json.j2` will just become `myfile.json`.
+
+#### Example
 
 Let's say that this is our `templates_dir`:
 
@@ -60,16 +58,16 @@ Tree output:
 {{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
 ```
 
-# Remote Template
+### 3. Remote Template
 
-- A special kind of structured preset which points to a git repository. Every file inside of it will be rendered in the output directory, just like structured templates.
+- A special kind of template which points to a git repository. Every file inside of it will be rendered in the output directory.
 
 ```yaml
 {{#include ../../../examples/templating/templating.yaml:prop_name}}
 {{#include ../../../examples/templating/templating.yaml:remote_preset}}
 ```
 
-## Example
+#### Example
 
 We start from this basic [example](https://github.com/Rick-Phoenix/sketch-remote-preset-example)
 
@@ -89,12 +87,10 @@ File output:
 {{#include ../../../sketch/tests/output/custom_templates/remote/some_file}}
 ```
 
-# Extending Templating Presets
+## Extending Templating Presets
 
 Templating presets are extensible. When a preset is being extended, its templates will be added to the receiving preset, and the two context maps will be merged, with the new context overwriting the previous context in case of conflicting variables.
 
 ```yaml
 {{#include ../../../examples/templating/templating.yaml:extended_preset}}
 ```
-
-

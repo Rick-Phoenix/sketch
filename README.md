@@ -1,6 +1,6 @@
 # 🖌️ Sketch
 
-Sketch is a tool designed to **reduce boilerplate**, **increase productivity**, and facilitate the creation and management of **organized**, **structured** and **easily reproducible** workspaces.
+Sketch is a tool designed to **reduce boilerplate**, **increase productivity**, and facilitate the creation and management of **structured** and **easily reproducible** workspaces.
 
 **Table of contents**
 - [Goals And Design Philosophy](#goals-and-design-philosophy)
@@ -13,15 +13,15 @@ Sketch is a tool designed to **reduce boilerplate**, **increase productivity**, 
 
 ## Goals And Design Philosophy
 
-Templating is mostly used to render webpages, but it can also be used to generate files used in day-to-day development, and even more, it can be define structures for files or even entire projects in a way that can be standardized enough to provide structure and clarity, but also flexible enough as to make use of customized or even dynamically generated parameters.
+Templating is mostly used to render webpages, but it can also be used to generate files used in day-to-day development, and even more, it can be used to define structures for entire projects in a way that can be **standardized** enough to provide structure and clarity, but also **flexible** enough as to make use of customized or even dynamically generated parameters.
 
-While templating is a powerful technology on its own, it needs a frontend, a *framework* of sort, to make use of its flexible toolset, enhance it with with extra features, and to provide an **ergonomic** API that simplifies most if not all activities related to creating and managing files and projects.
+While templating is a powerful technology on its own, it needs a frontend, a *framework* of sort, to make use of its flexible toolset, enhance it with with extra features, and to wrap it with an **ergonomic** API explicitely designed with the intent of simplifying most if not all activities related to creating and managing files and projects.
 
 This is that Sketch aims to be, and it all starts with the concept of `preset`. 
 
 ### Presets
 
-The basic concept about presets is that you should be able to define specific configurations that you find yourself using very often, and then use them to generate the files or even as a base for a more detailed preset.
+The basic concept about presets is that you should be able to define specific configurations that you find yourself using very often, and then use them to generate the files that you need or as the base for a more detailed preset.
 
 Presets come in different forms and shapes and with different features.
 

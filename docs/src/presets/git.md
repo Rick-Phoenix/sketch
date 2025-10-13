@@ -7,7 +7,7 @@ A git preset uses (or defines) a preset for its `gitignore` file and, optionally
 ```yaml
 {{#include ../../../examples/presets.yaml:git}}
 ```
-# Adding Workflows
+## Adding Workflows
 
 We can also include some [Github workflows](https://docs.github.com/en/actions/reference/workflows-and-actions) by using their presets:
 
@@ -15,7 +15,7 @@ We can also include some [Github workflows](https://docs.github.com/en/actions/r
 {{#include ../../../examples/presets.yaml:using_workflow_preset}}
 ```
 
-# Adding Templates
+## Adding Templates
 
 We can use the `with_templates` setting to add a group of templates to a git preset. Let's say that we want to automatically generate a basic docker setup whenever we use this preset:
 
@@ -28,7 +28,7 @@ We can use the `with_templates` setting to add a group of templates to a git pre
 {{#include ../../../examples/presets.yaml:git_preset}}
 ```
 
-# Hooks
+## Hooks
 
 We can define some commands (which can also be templates) to execute before and/or after generating the new repo:
 
@@ -36,7 +36,7 @@ We can define some commands (which can also be templates) to execute before and/
 {{#include ../../../examples/presets.yaml:hooks}}
 ```
 
-# Putting It All Together
+## Example
 
 Starting from this config, we can run this command:
 

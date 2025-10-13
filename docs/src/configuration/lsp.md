@@ -42,3 +42,4 @@ As of now, these external configurations defined with sketch are all **fully typ
 - `package.json`
 - `tsconfig.json`
 - `compose.yaml` (Docker)
+- [github workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)

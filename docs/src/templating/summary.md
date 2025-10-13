@@ -6,7 +6,7 @@ Sketch uses the [Tera](https://keats.github.io/tera/docs/) templating engine to 
 Since all autoescaping is disabled in templates, you should always only use templates that you made or trust.
 </div>
 
-# Context And Variables
+## Context And Variables
 
 Each template can be populated with `context` variables. These variables can be set at many different stages, with different degrees of priority (from lowest to highest):
 

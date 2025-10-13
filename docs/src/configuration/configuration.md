@@ -12,11 +12,11 @@ Some of the values from configuration files can also be set via cli flags. When 
 
 You can also use the `--ignore-config` flag to temporarily ignore configuration files and only use cli-set values.
 
-# Generating Config Files
+## Generating Config Files
 
 You can use the `sketch new <OUTPUT>` command to generate a new configuration file in the desired output file and format (the default output is `sketch.yaml`).
 
-# Extending Configurations
+## Extending Configurations
 
 Configuration files can extend one another by using the `extends` field:
 
@@ -27,11 +27,3 @@ extends: ["other_config.yaml"]
 Where the path being used can be either an absolute path or a relative path starting from the original config file.
 
 The [merging strategy](../presets/summary.md#extending-presets) for config files is the same as for all the other presets.
-
-# Top Level Configuration
-
-These are some of the default settings for the top level configuration values:
-
-```yaml
-{{#include ../../../examples/top_level_config.yaml:all}}
-```
