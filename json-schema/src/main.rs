@@ -47,11 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let (major, minor, _) = get_version(&version);
 
-  let minor_dir = schemas_dir.join(format!("v{}.{}", major, minor));
-
-  create_dir_all(&minor_dir)?;
-
-  let versioned = File::create(minor_dir.join(format!("v{}.json", version)))?;
+  let versioned = File::create(schemas_dir.join(format!("v{major}.{minor}.json")))?;
   serde_json::to_writer_pretty(&versioned, &schema)?;
 
   Ok(())
