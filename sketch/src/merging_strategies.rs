@@ -12,6 +12,16 @@ pub trait Extensible {
   fn get_extended(&self) -> &IndexSet<String>;
 }
 
+pub(crate) fn merge_if_not_default<T: Default + PartialEq>(left: &mut T, right: T) {
+  if !is_default(&right) {
+    *left = right
+  }
+}
+
+pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
+  v == &T::default()
+}
+
 pub(crate) fn merge_nested_maps<T>(
   left: &mut BTreeMap<String, BTreeMap<String, T>>,
   right: BTreeMap<String, BTreeMap<String, T>>,

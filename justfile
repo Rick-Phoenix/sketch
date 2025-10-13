@@ -2,7 +2,7 @@ json-schema:
     cargo run --bin json-schema development
 
 test:
-    cargo test --all-features -- -q --nocapture
+    cargo test --all-features -p sketch -- -q --nocapture
 
 [working-directory('sketch')]
 release-test version="patch":

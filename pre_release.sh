@@ -14,7 +14,7 @@ echo "EXEC_RELEASE status: $EXEC_RELEASE"
 
 echo "Running tests..."
 
-cargo test --all-features -- -q --nocapture
+cargo test --all-features -p sketch -- -q --nocapture
 
 if [[ "$EXEC_RELEASE" == "true" ]]; then
   MINOR_VERSION=$(echo "$VERSION" | cut -d'.' -f1-2)
@@ -26,7 +26,7 @@ if [[ "$EXEC_RELEASE" == "true" ]]; then
 
   echo "Generating JSON schema"
 
-  TARGET_SCHEMA="schemas/v$MINOR_VERSION"
+  TARGET_SCHEMA="schemas/v$MINOR_VERSION.json"
 
   cargo run --bin json-schema "$VERSION"
 

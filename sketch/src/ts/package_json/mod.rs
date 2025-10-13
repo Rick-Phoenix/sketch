@@ -123,10 +123,12 @@ pub struct PackageJson {
   pub name: Option<String>,
 
   /// If set to true, then npm will refuse to publish it.
-  pub private: Option<bool>,
+  #[merge(strategy = merge::bool::overwrite_true)]
+  pub private: bool,
 
   /// Version must be parsable by node-semver, which is bundled with npm as a dependency.
-  pub version: Option<String>,
+  #[merge(strategy= merge_if_not_default)]
+  pub version: String,
 
   /// When set to `module`, the type field allows a package to specify all .js files within are ES modules. If the `type` field is omitted or set to `commonjs`, all .js files are treated as CommonJS.
   #[serde(rename = "type")]
@@ -315,13 +317,13 @@ impl Default for PackageJson {
       catalog: Default::default(),
       catalogs: Default::default(),
       name: None,
-      private: None,
+      private: true,
       pnpm: None,
       overrides: None,
       bin: None,
       funding: None,
       type_: JsPackageType::Module,
-      version: None,
+      version: "0.1.0".to_string(),
       dependencies: Default::default(),
       peer_dependencies_meta: None,
       dev_dependencies: Default::default(),
@@ -499,7 +501,7 @@ mod test {
         }
         }
       }),
-      private: Some(true),
+      private: true,
       type_: JsPackageType::Module,
       bin: Some(Bin::Map(btreemap! {
         "bin1".to_string() => "bin/bin1".to_string(),
@@ -521,7 +523,7 @@ mod test {
           "override".to_string() => "setting".to_string()
         })
       }),
-      version: Some("0.1.0".to_string()),
+      version: "0.1.0".to_string(),
       exports: btreemap! {
         ".".to_string() => Exports::Path("src/index.js".to_string()),
         "main".to_string() => Exports::Data {
