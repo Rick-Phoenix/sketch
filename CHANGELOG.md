@@ -1,3 +1,41 @@
+## [0.3.0] - 2025-10-13
+
+### ⛰️  Features
+
+- Added git workflow configuration
+- Added github workflow job presets
+- Added workflow presets to git presets
+- Labels and descriptions for action runners
+- Short flag for gitignore in repo command
+- Is_linux and is_macos special variables
+
+### 🐛 Bug Fixes
+
+- Changed license command so that it doesn't clutter the top level help message
+- License should be a flag and not a positional argument for the repo command
+
+### 🚜 Refactor
+
+- [**breaking**] Change variables priority order so that variable files do not override local context
+- [**breaking**] Json schemas will now be stored in the path format `schemas/v{major}.{minor}.json`
+
+### 📚 Documentation
+
+- Added some theming for the docs
+- Added documentation about workflow presets
+
+### 🚀 Performance
+
+- Wrapped context in enum so that it is not cloned needlessly when no overrides are applied
+
+### 🧪 Testing
+
+- Added tests for github workflow generation
+- Added tests for generating workflows as part of git presets
+
+### 📦 CI/CD
+
+- Added script for docs deployment
 ## [0.2.0] - 2025-10-06
 
 ### ⛰️  Features
@@ -28,7 +66,7 @@
 - Fixed issue with homepage routing
 - Added documentation for remote templating presets
 
-### ⚡ Performance
+### 🚀 Performance
 
 - Removed slow iteration of config dir
 
