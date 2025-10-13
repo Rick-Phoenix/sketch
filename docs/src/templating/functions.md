@@ -33,6 +33,11 @@ On top of that, Sketch adds some extra filters and functions.
 - `glob(pattern=GLOB)` (returns the glob matching entries in a directory and its subdirectories)
 - `matches_glob(pattern=GLOB)` (checks if a path matches a glob pattern)
 
+### Serialization
+
+- `to_yaml` (serializes input into yaml)
+- `to_toml` (serializes input into prettified toml)
+
 ## Examples
 
 Template:

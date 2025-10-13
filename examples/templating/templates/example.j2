@@ -48,6 +48,12 @@ Matches glob: {{ file | matches_glob(pattern="**/*.toml") }}
 Path is: {{ captures['path'] }}
 Extension is: {{ captures['extension'] }}
 
+In yaml form:
+{{ captures | to_yaml }}
+
+In toml form:
+{{ captures | to_toml }}
+
 {% set words = "They're taking the hobbits to Isengard" | capture_many(regex="(?<word>[\w']+)") -%}
 
 {% for capture in words -%}

@@ -10,7 +10,7 @@ use crate::{
   tera_filters::{
     absolute, basename, camel, capture, capture_many, glob, is_absolute, is_dir, is_file,
     is_relative, matches_glob, matches_semver, parent_dir, pascal, read_dir, relative, semver,
-    snake, strip_prefix, strip_suffix, upper_snake,
+    snake, strip_prefix, strip_suffix, to_toml, to_yaml, upper_snake,
   },
   tera_functions::tera_uuid,
   GenError,
@@ -84,6 +84,8 @@ impl Config {
     tera.register_filter("read_dir", read_dir);
     tera.register_filter("glob", glob);
     tera.register_filter("matches_glob", matches_glob);
+    tera.register_filter("to_yaml", to_yaml);
+    tera.register_filter("to_toml", to_toml);
 
     for (name, template) in &self.templates {
       tera

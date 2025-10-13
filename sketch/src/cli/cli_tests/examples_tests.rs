@@ -187,6 +187,8 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("To PascalCase: MyVar"));
   assert!(output_str.contains("Luke, I am your father!"));
   assert!(output_str.contains("Entry: example.j2"));
+  assert!(output_str.contains("In yaml form:\npath: Cargo\nextension: toml"));
+  assert!(output_str.contains("In toml form:\npath = \"Cargo\"\nextension = \"toml\""));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
   write_file(&output_dir.join("output"), &output_str, true)?;

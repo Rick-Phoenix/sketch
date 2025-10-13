@@ -30,6 +30,20 @@ fn extract_string_arg<'a>(
   )
 }
 
+pub(crate) fn to_toml(value: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let output = toml::to_string_pretty(value)
+    .map_err(|e| Error::call_filter("to_toml", format!("Could not serialize to toml: {e}")))?;
+
+  Ok(output.into())
+}
+
+pub(crate) fn to_yaml(value: &Value, _: &HashMap<String, Value>) -> Result<Value, Error> {
+  let output = serde_yaml_ng::to_string(value)
+    .map_err(|e| Error::call_filter("to_yaml", format!("Could not serialize to yaml: {e}")))?;
+
+  Ok(output.into())
+}
+
 pub(crate) fn strip_prefix(text: &Value, args: &HashMap<String, Value>) -> Result<Value, Error> {
   let text = extract_string("strip_prefix", text)?;
 
