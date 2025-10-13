@@ -7,14 +7,47 @@ use super::reset_testing_dir;
 use crate::{
   cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
   docker::compose::{service::ServiceVolume, ComposeFile},
-  fs::{deserialize_toml, deserialize_yaml},
+  fs::{deserialize_json, deserialize_toml, deserialize_yaml},
   git_workflow::{
     ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool, Workflow,
   },
   rust::Manifest,
   serde_utils::StringOrNum,
+  ts::package_json::PackageJson,
   Config,
 };
+
+#[tokio::test]
+async fn js_catalog() -> Result<(), Box<dyn std::error::Error>> {
+  let output_dir = PathBuf::from("tests/output/bun_package");
+  let config_path = PathBuf::from("tests/bun.yaml");
+
+  reset_testing_dir(&output_dir);
+
+  let cmd = Cli::try_parse_from([
+    "sketch",
+    "-c",
+    &config_path.to_string_lossy(),
+    "ts",
+    "package",
+    "--preset",
+    "with_catalog",
+    &output_dir.to_string_lossy(),
+  ])?;
+
+  execute_cli(cmd).await?;
+
+  let target_package_json: PackageJson = deserialize_json(&output_dir.join("package.json"))?;
+
+  assert!(target_package_json.catalog.contains_key("hono"));
+  assert!(target_package_json
+    .catalogs
+    .get("svelte")
+    .unwrap()
+    .contains_key("svelte"));
+
+  Ok(())
+}
 
 #[tokio::test]
 async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
