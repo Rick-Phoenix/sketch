@@ -47,8 +47,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let (major, minor, _) = get_version(&version);
 
-  let versioned = File::create(schemas_dir.join(format!("v{major}.{minor}.json")))?;
+  let new_schema_path = schemas_dir.join(format!("v{major}.{minor}.json"));
+
+  let versioned = File::create(&new_schema_path)?;
   serde_json::to_writer_pretty(&versioned, &schema)?;
+
+  println!("Created new json schema in {}", new_schema_path.display());
 
   Ok(())
 }
