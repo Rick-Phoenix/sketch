@@ -692,6 +692,7 @@ pub enum Commands {
     output: Option<PathBuf>,
   },
 
+  /// Generates a license file
   License {
     #[arg(value_enum)]
     license: License,
