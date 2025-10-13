@@ -1,3 +1,19 @@
+## [0.4.0] - 2025-10-13
+
+### ⛰️  Features
+
+- *(typescript)* Automatic creation of directories listed in package.json's `workspaces`
+- Added support for catalogs in package.json (used by bun)
+- Tera filters for yaml and toml serialization
+
+### 🐛 Bug Fixes
+
+- Missing description for license command
+- Limited parallel requests to the npm api as to avoid rate limiting
+
+### 🧪 Testing
+
+- Added test for new package.json catalog handling
 ## [0.3.0] - 2025-10-13
 
 ### ⛰️  Features

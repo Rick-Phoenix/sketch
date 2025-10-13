@@ -162,7 +162,7 @@
           "default": null
         },
         "catalog": {
-          "description": "Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.",
+          "description": "Uses the default catalog (supported by pnpm and bun) for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.",
           "type": [
             "boolean",
             "null"
@@ -453,6 +453,23 @@
             "null"
           ],
           "additionalProperties": true
+        },
+        "catalog": {
+          "description": "Catalog of dependencies to use with `bun`\n\nSee more: https://bun.com/docs/install/catalogs#1-define-catalogs-in-root-package-json",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "catalogs": {
+          "description": "Named catalogs to use with `bun`\n\nSee more: https://bun.com/docs/install/catalogs#catalog-vs-catalogs",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
         },
         "dependencies": {
           "description": "Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.",
