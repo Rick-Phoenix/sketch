@@ -76,12 +76,19 @@ Generates a new config file
 
 Creates a new git repo from a preset
 
-**Usage:** `sketch repo [OPTIONS] [DIR] [LICENSE]`
+**Usage:** `sketch repo [OPTIONS] [DIR]`
 
 ###### **Arguments:**
 
 * `<DIR>` — The directory where the new repo should be generated. [default: `.`]
-* `<LICENSE>` — A license file to generate for the new repo
+
+###### **Options:**
+
+* `-p`, `--preset <PRESET>` — Selects a git preset from a configuration file
+* `--no-pre-commit` — Do not generate a pre-commit config
+* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
+* `-g`, `--gitignore <GITIGNORE>` — Selects a gitignore preset
+* `-l`, `--license <LICENSE>` — A license file to generate for the new repo
 
   Possible values:
   - `apache2`:
@@ -93,13 +100,6 @@ Creates a new git repo from a preset
   - `mit`:
     MIT license
 
-
-###### **Options:**
-
-* `-p`, `--preset <PRESET>` — Selects a git preset from a configuration file
-* `--no-pre-commit` — Do not generate a pre-commit config
-* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
-* `--gitignore <GITIGNORE>` — Selects a gitignore preset
 * `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
 * `--workflow <id=PRESET_ID,file=PATH>` — One or many workflow presets to use for the new repo. The file path will be joined to `.github/workflows`
 * `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
@@ -180,7 +180,7 @@ Generates a Docker Compose file from a preset
 ###### **Arguments:**
 
 * `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the created file [default: `compose.yaml`]
+* `<OUTPUT>` — The output path of the new file [default: `compose.yaml`]
 
 
 
@@ -193,7 +193,7 @@ Generates a `pre-commit` config file from a preset
 ###### **Arguments:**
 
 * `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the created file [default: `.pre-commit-config.yaml`]
+* `<OUTPUT>` — The output path of the new file [default: `.pre-commit-config.yaml`]
 
 
 
@@ -206,7 +206,7 @@ Generates a `Cargo.toml` file from a preset
 ###### **Arguments:**
 
 * `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the created file [default: `Cargo.toml`]
+* `<OUTPUT>` — The output path of the new file [default: `Cargo.toml`]
 
 
 

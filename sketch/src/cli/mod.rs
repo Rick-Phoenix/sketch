@@ -507,7 +507,7 @@ pub struct RepoConfigInput {
   pre_commit: Option<String>,
 
   /// Selects a gitignore preset
-  #[arg(long)]
+  #[arg(short, long)]
   gitignore: Option<String>,
 
   /// A license file to generate for the new repo.
