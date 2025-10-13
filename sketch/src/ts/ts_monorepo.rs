@@ -177,7 +177,7 @@ impl Config {
 
       pnpm_data
         .add_dependencies_to_catalog(version_ranges, &package_json_data)
-        .await;
+        .await?;
 
       serialize_yaml(&pnpm_data, &out_dir.join("pnpm-workspace.yaml"), overwrite)?;
     }

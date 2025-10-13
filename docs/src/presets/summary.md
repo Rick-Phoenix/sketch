@@ -35,7 +35,7 @@ These can be generated individually, or as part of another preset. You can find 
 
 Some presets can extend other presets. When a preset is extended, the merging strategy for their fields works like this:
 
-- Collections are merged and, in almost all cases, also deduped and sorted (except for cases where order matters such as a list of command arguments)
+- Collections are merged and, in almost all cases, also deduped and sorted (except for cases where order matters such as a list of command arguments). If the collection is a map and the values in it are also maps (as is the case for the `catalogs` field in `package.json` or `pnpm-workspace.yaml`), the inner maps will be merged.
 - Values that are also extensible (such as `compilerOptions` in a `tsconfig` preset) will be merged with the same rules as above
 - All other values are overwritten, except if the previous value was present and the new value is `null`. This is to avoid merging values that come from partially-defined presets, where the missing fields are all unset. Generally speaking, the correct strategy to extend presets is to define a base and then `add` elements to it, rather than replacing other values.
 

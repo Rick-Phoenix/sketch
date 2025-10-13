@@ -12,6 +12,21 @@ pub trait Extensible {
   fn get_extended(&self) -> &IndexSet<String>;
 }
 
+pub(crate) fn merge_nested_maps<T>(
+  left: &mut BTreeMap<String, BTreeMap<String, T>>,
+  right: BTreeMap<String, BTreeMap<String, T>>,
+) {
+  for (key, right_map) in right {
+    if let Some(left_map) = left.get_mut(&key) {
+      for (inner_key, inner_val) in right_map {
+        left_map.insert(inner_key, inner_val);
+      }
+    } else {
+      left.insert(key, right_map);
+    }
+  }
+}
+
 fn process_preset_id(
   id: &str,
   processed_ids: &mut IndexSet<String>,

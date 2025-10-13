@@ -10,7 +10,7 @@ This means that you can easily reuse your presets over time to start new project
 
 <div class="warning">
 
-Sketch uses the npm api to fetch the latest version for any given package. Depending on how many requests are made in a given timeframe, you might be rate limited by the api, causing an error.
+Sketch uses the npm api to fetch the latest version for any given package. It sends a maximum of 10 parallel requests, but depending on how many requests are made in a given timeframe, you might still be rate limited by the api, causing an error.
 </div>
 
 

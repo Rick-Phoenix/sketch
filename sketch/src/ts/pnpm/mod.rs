@@ -1,21 +1,22 @@
+use futures::StreamExt;
 mod pnpm_elements;
 
 use std::{
   collections::{BTreeMap, BTreeSet},
   path::PathBuf,
-  sync::LazyLock,
 };
 
+use futures::stream;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 pub use pnpm_elements::*;
-use regex::Regex;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-  merge_btree_maps, merge_btree_sets, merge_index_sets, merge_nested, merge_optional_btree_maps,
-  merge_optional_btree_sets, merge_presets, overwrite_if_some,
+  merge_btree_maps, merge_btree_sets, merge_index_sets, merge_nested, merge_nested_maps,
+  merge_optional_btree_maps, merge_optional_btree_sets, merge_presets, overwrite_if_some,
+  ts::CATALOG_REGEX,
   versions::{get_latest_npm_version, VersionRange},
   Extensible, GenError, JsonValueBTreeMap, PackageJson, Preset, StringBTreeMap,
 };
@@ -84,7 +85,7 @@ pub struct PnpmWorkspace {
 
   /// A map of named catalogs and the dependencies listed in them.
   #[serde(skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
+  #[merge(strategy = merge_nested_maps)]
   pub catalogs: BTreeMap<String, StringBTreeMap>,
 
   /// A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts.
@@ -971,17 +972,13 @@ pub struct PnpmWorkspace {
   pub extra: Option<JsonValueBTreeMap>,
 }
 
-static CATALOG_REGEX: LazyLock<Regex> = LazyLock::new(|| {
-  Regex::new(r"^catalog:(?<name>\w+)?$").expect("Failed to initialize the catalog regex")
-});
-
 impl PnpmWorkspace {
   /// A helper to add all [`PackageJson`] dependencies (dev, optional, peer, etc) marked with `catalog:` to the pnpm catalogs.
   pub async fn add_dependencies_to_catalog(
     &mut self,
     range_kind: VersionRange,
     package_json: &PackageJson,
-  ) {
+  ) -> Result<(), GenError> {
     let names_to_add: Vec<(String, Option<String>)> = package_json
       .dependencies
       .iter()
@@ -990,8 +987,8 @@ impl PnpmWorkspace {
       .chain(package_json.optional_dependencies.iter())
       .filter_map(|(name, version)| match CATALOG_REGEX.captures(version) {
         Some(captures) => {
-          let catalog_name = captures.name("name");
-          Some((name.clone(), catalog_name.map(|n| n.as_str().to_string())))
+          let catalog_name = captures.name("name").map(|n| n.as_str().to_string());
+          Some((name.clone(), catalog_name))
         }
         None => None,
       })
@@ -1005,27 +1002,37 @@ impl PnpmWorkspace {
     &mut self,
     range_kind: VersionRange,
     entries: Vec<(String, Option<String>)>,
-  ) {
-    for (name, catalog_name) in entries {
-      let target_catalog = if let Some(name) = catalog_name {
-        self.catalogs.entry(name.as_str().to_string()).or_default()
-      } else {
-        &mut self.catalog
+  ) -> Result<(), GenError> {
+    let handles = entries.into_iter().map(|(name, catalog_name)| async move {
+      let actual_latest = get_latest_npm_version(&name).await?;
+
+      Ok((name, catalog_name, actual_latest))
+    });
+
+    let stream = stream::iter(handles).buffer_unordered(10);
+
+    let results: Vec<Result<(String, Option<String>, String), GenError>> = stream.collect().await;
+
+    for result in results {
+      match result {
+        Ok((name, catalog_name, actual_latest)) => {
+          let target_catalog = if let Some(catalog_name) = catalog_name {
+            self
+              .catalogs
+              .entry(catalog_name.as_str().to_string())
+              .or_default()
+          } else {
+            &mut self.catalog
+          };
+
+          let range = range_kind.create(actual_latest);
+
+          target_catalog.insert(name.to_string(), range);
+        }
+        Err(e) => return Err(e),
       };
-
-      let version = get_latest_npm_version(&name)
-          .await
-          .unwrap_or_else(|e| {
-            eprintln!(
-              "Could not get the latest valid version range for '{}' due to the following error: {}.\nFalling back to 'latest'...",
-              name,
-              e,
-            );
-            "latest".to_string()
-          });
-      let range = range_kind.create(version);
-
-      target_catalog.insert(name.to_string(), range);
     }
+
+    Ok(())
   }
 }

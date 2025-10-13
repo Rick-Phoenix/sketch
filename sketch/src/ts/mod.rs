@@ -9,11 +9,13 @@ pub mod vitest;
 use std::{
   fmt::Display,
   path::{Path, PathBuf},
+  sync::LazyLock,
 };
 
 use clap::{Parser, ValueEnum};
 use indexmap::IndexMap;
 use merge::Merge;
+use regex::Regex;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -58,7 +60,7 @@ pub struct TypescriptConfig {
   #[arg(long, value_name = "KIND")]
   pub version_range: Option<VersionRange>,
 
-  /// Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.
+  /// Uses the default catalog (supported by pnpm and bun) for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.
   #[arg(long)]
   pub catalog: Option<bool>,
 
@@ -155,3 +157,7 @@ impl Display for PackageManager {
     }
   }
 }
+
+pub(crate) static CATALOG_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+  Regex::new(r"^catalog:(?<name>\w+)?$").expect("Failed to initialize the catalog regex")
+});
