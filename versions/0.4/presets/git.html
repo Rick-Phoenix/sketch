@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Filters And Functions - Sketch</title>
+        <title>Git Repo Presets - Sketch</title>
 
 
         <!-- Custom HTML head -->
@@ -178,199 +178,192 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="filters-and-functions"><a class="header" href="#filters-and-functions">Filters And Functions</a></h1>
-<p>All of the builtin functionalities for <a href="https://keats.github.io/tera/docs/">Tera</a> are available.</p>
-<p>On top of that, Sketch adds some extra filters and functions.</p>
-<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
-<ul>
-<li><code>uuid</code> (generates a v4 UUID)</li>
-</ul>
-<h2 id="filters"><a class="header" href="#filters">Filters</a></h2>
-<h3 id="strings"><a class="header" href="#strings">Strings</a></h3>
-<ul>
-<li><code>capture(regex=REGEX)</code> (matches a regex once and returns the named capture groups)</li>
-<li><code>capture_many(regex=REGEX)</code> (matches a regex repetitively and returns the list of named capture groups)</li>
-<li><code>semver</code> (parses a cargo-style semver and returns the segments)</li>
-<li><code>matches_semver(target=TARGET)</code> (checks if a cargo-style semver matches a target)</li>
-<li><code>strip_prefix(prefix=PREFIX)</code> (strips a prefix from a string, if present)</li>
-<li><code>strip_suffix(suffix=SUFFIX)</code> (strips a suffix from a string, if present)</li>
-</ul>
-<h3 id="filesystem"><a class="header" href="#filesystem">Filesystem</a></h3>
-<ul>
-<li><code>basename</code> (gets the basename of a directory/file)</li>
-<li><code>parent_dir</code> (gets the parent directory of a directory/file)</li>
-<li><code>is_file</code> (checks if a path is a file)</li>
-<li><code>is_dir</code> (checks if a path is a directory)</li>
-<li><code>is_absolute</code> (checks if a path is absolute)</li>
-<li><code>is_relative</code> (checks if a path is relative)</li>
-<li><code>absolute</code> (makes a path absolute)</li>
-<li><code>relative(from=PATH)</code> (returns the relative path between two paths)</li>
-<li><code>read_dir</code> (returns the list of the files contained in a directory and its subdirectories)</li>
-<li><code>glob(pattern=GLOB)</code> (returns the glob matching entries in a directory and its subdirectories)</li>
-<li><code>matches_glob(pattern=GLOB)</code> (checks if a path matches a glob pattern)</li>
-</ul>
-<h3 id="serialization"><a class="header" href="#serialization">Serialization</a></h3>
-<ul>
-<li><code>to_yaml</code> (serializes input into yaml)</li>
-<li><code>to_toml</code> (serializes input into prettified toml)</li>
-</ul>
-<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
-<p>Template:</p>
-<pre><code class="language-jinja">{# Using special variables -#}
+                        <h1 id="generating-a-git-repo"><a class="header" href="#generating-a-git-repo">Generating A Git Repo</a></h1>
+<p>The <code>sketch repo</code> command allows you to generate a new git repository, starting from a preset stored in one of your configuration files.</p>
+<p>A git preset uses (or defines) a preset for its <code>gitignore</code> file and, optionally, for <a href="https://pre-commit.com"><code>pre-commit</code></a>, as well as a list of templates that will be generated inside the root of the new repo when the command is triggered.</p>
+<pre><code class="language-yaml"># Gitignore presets
+gitignore_presets:
+  # Can be a string
+  base:
+    content: |
+      *.env
+      dist
+  # Or a list of strings
+  ts:
+    extends_presets:
+      # When being merged, the new entries are placed at the top
+      - base
+    content:
+      - "*.tsBuildInfo"
+      - node_modules
 
-Current arch is: {{ sketch_arch }}
-Current os is: {{ sketch_os }}
-Current os family is: {{ sketch_os_family }}
-Is unix: {{ sketch_is_unix }}
+# Pre-commit presets
+pre_commit_presets:
+  # Commonly used repo
+  base:
+    repos:
+      - repo: https://github.com/gitleaks/gitleaks
+        rev: v8.28.0
+        hooks:
+          - id: gitleaks
 
-{# Functions and filters -#}
+  # Hooks specific to typescript projects
+  typescript:
+    # Extending the base preset
+    extends_presets:
+      - base
+    repos:
+      - repo: local
+        hooks:
+          - id: oxlint
+            name: oxlint
+            entry: oxlint
+            language: system
+            files: '\.svelte$|\.js$|\.ts$'
+            types: [file]
 
-A random uuid is: {{ uuid() }}
-
-{# Generating a random alphanumeric string -#}
-A random string is: {{ uuid() | truncate(length=6, end="") }}
-
-{# Generating a random number -#}
-A random number is: {{ get_random(start=100000, end=9999999) }}
-
-Now is {{ now(utc=true) }}
-
-{# Assigning an env to a variable -#}
-{%- set greeting = get_env(name="GREETING") -%}
-
-{#- Manipulating data -#}
-{%- set segments = greeting | split(pat=",") -%}
-First segment is: {{ segments[0] }}
-Second segment is: {{ segments[1] }}
-
-{% set some_path = "mydir/myfile" -%}
-Basename is: {{ some_path | basename }}
-Parent dir is: {{ some_path | parent_dir }}
-
-{% set dir = "../sketch" -%}
-
-{% if dir | is_dir -%}
-It's a dir!
-{% endif -%}
-
-{% set file = "Cargo.toml" -%}
-
-{% if file | is_file -%}
-It's a file!
-{%- endif %}
-
-Matches glob: {{ file | matches_glob(pattern="**/*.toml") }}
-
-{%- set captures = file | capture(regex="(?&lt;path&gt;.*)\.(?&lt;extension&gt;\w+)") %}
-
-Path is: {{ captures['path'] }}
-Extension is: {{ captures['extension'] }}
-
-In yaml form:
-{{ captures | to_yaml }}
-
-In toml form:
-{{ captures | to_toml }}
-
-{% set words = "They're taking the hobbits to Isengard" | capture_many(regex="(?&lt;word&gt;[\w']+)") -%}
-
-{% for capture in words -%}
-{{ capture['word'] -}} {% if not loop.last %}{{ " " }}{% endif -%}
-{%- endfor -%}!
-
-{% set version = "v0.1.0" -%}
-
-{% set segments = version | semver -%}
-Major is: {{ segments['major'] }}
-Minor is: {{ segments['minor'] }}
-Patch is: {{ segments['patch'] }}
-
-Version matches &gt;=0.1.0: {{ version | matches_semver(target="&gt;=0.1.0") }}
-Version matches &gt;=0.2.0: {{ version | matches_semver(target="&gt;=0.2.0") }}
-
-To camelCase: {{ "my_var" | camel }}
-To snake_case: {{ "myVar" | snake }}
-To SCREAMING_CASE: {{ "myVar" | upper_snake }}
-To PascalCase: {{ "myVar" | pascal }}
-
-Luke, I am your {{ "grandfather" | strip_prefix(prefix="grand") }}!
-
-{% set dir = "../examples/templating/templates" -%}
-
-{% for entry in dir | glob(pattern="example.j2") -%}
-Entry: {{ entry }}
-{% endfor %}
+# Git presets
+git_presets:
+  ts_package:
+    workflows:
+      - file_name: my_workflow.yaml
+        # Preset ID
+        id: extended
+    # License file to generate
+    license: Apache-2.0
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
 </code></pre>
-<p>Cmd:</p>
+<h2 id="adding-workflows"><a class="header" href="#adding-workflows">Adding Workflows</a></h2>
+<p>We can also include some <a href="https://docs.github.com/en/actions/reference/workflows-and-actions">Github workflows</a> by using their presets:</p>
+<pre><code class="language-yaml">    workflows:
+      - file_name: my_workflow.yaml
+        # Preset ID
+        id: extended
+</code></pre>
+<h2 id="adding-templates"><a class="header" href="#adding-templates">Adding Templates</a></h2>
+<p>We can use the <code>with_templates</code> setting to add a group of templates to a git preset. Let's say that we want to automatically generate a basic docker setup whenever we use this preset:</p>
+<pre><code class="language-yaml"># We define a template in a file or in a config file...
+templates:
+  dockerfile: |
+    FROM node:23-alpine
+
+    COPY . .
+    EXPOSE {{ docker_dev_port | default(value=5173) }}
+    CMD ["npm", "run", "dev"]
+
+# Templating presets
+templating_presets:
+  dockerfile:
+    context:
+      # Group context, lower priority
+      docker_dev_port: 9530
+    # List of templates
+    templates:
+      # Single template
+      - output: Dockerfile
+        template: dockerfile
+        # Local context with higher priority
+        context:
+          docker_dev_port: 5173
+
+
+# ...and then we add it to a preset
+
+# Git presets
+git_presets:
+  ts_package:
+    workflows:
+      - file_name: my_workflow.yaml
+        # Preset ID
+        id: extended
+    # License file to generate
+    license: Apache-2.0
+    # Selecting a preset
+    gitignore: ts
+    pre_commit: typescript
+
+    # Templates that will be generated with this preset
+    # starting from the new repo's root
+    with_templates:
+      - id: dockerfile
+</code></pre>
+<h2 id="hooks"><a class="header" href="#hooks">Hooks</a></h2>
+<p>We can define some commands (which can also be templates) to execute before and/or after generating the new repo:</p>
+<pre><code class="language-yaml">    # Commands to run before generation, from the root of the new project
+    hooks_pre:
+      - command:
+          # Inlining a new template definition here,
+          # but as always, we can use stored templates too
+          name: pre_hook
+          content: "echo '{{ greeting }}' &gt; pre.txt"
+        context:
+          greeting: hi
+
+    # Commands to run after generation, from the root of the new project
+    hooks_post:
+      - command:
+          name: post_hook
+          content: "echo '{{ greeting }}' &gt; post.txt"
+        context:
+          greeting: hi
+</code></pre>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>Starting from this config, we can run this command:</p>
 <blockquote>
-<p><code>GREETING="hello,world" sketch render --id example.j2 --stdout</code></p>
+<p><code>sketch repo --preset ts_package </code></p>
 </blockquote>
-<p>Output:</p>
-<pre><code>Current arch is: x86_64
-Current os is: linux
-Current os family is: unix
-Is unix: true
-
-A random uuid is: eb3d1680-cc02-48db-8234-9834be4472e8
-
-A random string is: 5d299f
-
-A random number is: 7207732
-
-Now is 2025-10-13T18:32:37.764454206+00:00
-
-First segment is: hello
-Second segment is: world
-
-Basename is: myfile
-Parent dir is: mydir
-
-It's a dir!
-It's a file!
-
-Matches glob: true
-
-Path is: Cargo
-Extension is: toml
-
-In yaml form:
-path: Cargo
-extension: toml
-
-
-In toml form:
-path = "Cargo"
-extension = "toml"
-
-
-They're taking the hobbits to Isengard!
-
-Major is: 0
-Minor is: 1
-Patch is: 0
-
-Version matches &gt;=0.1.0: true
-Version matches &gt;=0.2.0: false
-
-To camelCase: myVar
-To snake_case: my_var
-To SCREAMING_CASE: MY_VAR
-To PascalCase: MyVar
-
-Luke, I am your father!
-
-Entry: example.j2
+<p>To get this tree output:</p>
+<pre><code>├── .github
+│   └── workflows
+│       └── my_workflow.yaml
+├── .gitignore
+├── .pre-commit-config.yaml
+├── Dockerfile
+├── LICENSE
+├── post.txt
+└── pre.txt
 </code></pre>
+<blockquote>
+<p>ℹ️ With cli flags, we can override the <code>gitignore</code> and <code>pre-commit</code> presets, as well as adding new templates or hooks to run or generate when the preset is being used.</p>
+</blockquote>
+<details>
+<summary>pre-commit-config.yaml output</summary>
+<pre><code class="language-yaml">repos:
+- repo: local
+  hooks:
+  - id: oxlint
+    entry: oxlint
+    files: \.svelte$|\.js$|\.ts$
+    language: system
+    name: oxlint
+    types:
+    - file
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.28.0
+  hooks:
+  - id: gitleaks
+</code></pre>
+</details>
+<details>
+<summary>gitignore output</summary>
+<pre><code>*.tsBuildInfo
+node_modules
+*.env
+dist
+</code></pre>
+</details>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../templating/variables.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../presets/templating-presets.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../templating/render-single.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../presets/gh-workflow.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -380,11 +373,11 @@ Entry: example.j2
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../templating/variables.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../presets/templating-presets.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../templating/render-single.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../presets/gh-workflow.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
