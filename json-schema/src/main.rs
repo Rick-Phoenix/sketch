@@ -40,11 +40,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     return Ok(());
   }
 
-  let latest_schema_file = schemas_dir.join("latest.json");
-
-  let latest = File::create(latest_schema_file)?;
-  serde_json::to_writer_pretty(&latest, &schema)?;
-
   let (major, minor, _) = get_version(&version);
 
   let new_schema_path = schemas_dir.join(format!("v{major}.{minor}.json"));
@@ -52,7 +47,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let versioned = File::create(&new_schema_path)?;
   serde_json::to_writer_pretty(&versioned, &schema)?;
 
-  println!("Created new json schema in {}", new_schema_path.display());
+  eprintln!("Created new json schema in {}", new_schema_path.display());
+
+  let latest_schema_file = schemas_dir.join("latest.json");
+
+  let latest = File::create(latest_schema_file)?;
+  serde_json::to_writer_pretty(&latest, &schema)?;
 
   Ok(())
 }
