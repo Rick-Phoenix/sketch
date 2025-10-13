@@ -12626,12 +12626,13 @@
       "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
       "anyOf": [
         {
-          "type": "string"
+          "$ref": "#/$defs/ActionRunner"
         },
         {
           "type": "array",
+          "uniqueItems": true,
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/ActionRunner"
           }
         },
         {
@@ -12656,6 +12657,82 @@
           "required": [
             "group"
           ]
+        }
+      ]
+    },
+    "ActionRunner": {
+      "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ubuntu-latest",
+            "windows-latest",
+            "macos-latest"
+          ]
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md",
+          "type": "string",
+          "const": "ubuntu-24.04"
+        },
+        {
+          "description": "See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-ubuntu-24-image.md",
+          "type": "string",
+          "const": "ubuntu-24.04-arm"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md",
+          "type": "string",
+          "const": "ubuntu-22.04"
+        },
+        {
+          "description": "See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-ubuntu-22-image.md",
+          "type": "string",
+          "const": "ubuntu-22.04-arm"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md",
+          "type": "string",
+          "const": "windows2025"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md",
+          "type": "string",
+          "const": "windows2022"
+        },
+        {
+          "description": "See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-windows-11-image.md",
+          "type": "string",
+          "const": "windows-11-arm"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md",
+          "type": "string",
+          "const": "macos-26"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md",
+          "type": "string",
+          "const": "macos-15"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md",
+          "type": "string",
+          "const": "macos-15-intel"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md",
+          "type": "string",
+          "const": "macos-14"
+        },
+        {
+          "description": "See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md",
+          "type": "string",
+          "const": "macos-13"
+        },
+        {
+          "type": "string"
         }
       ]
     },

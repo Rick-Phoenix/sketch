@@ -167,7 +167,10 @@ impl Config {
 
             serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;
           }
-          WorkflowReference::Data { file_name, config } => {
+          WorkflowReference::Data {
+            file_name,
+            workflow: config,
+          } => {
             let data = config.process_data("__inlined", &self.github)?;
 
             serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;

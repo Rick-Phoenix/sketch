@@ -9,7 +9,7 @@ use crate::{
   docker::compose::{service::ServiceVolume, ComposeFile},
   fs::{deserialize_toml, deserialize_yaml},
   git_workflow::{
-    Env, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool, Workflow,
+    ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool, Workflow,
   },
   rust::Manifest,
   serde_utils::StringOrNum,
@@ -146,11 +146,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 
   assert!(on.push.unwrap().branches.unwrap().contains("main"));
 
-  let env = if let Env::Object(env) = output.env.unwrap() {
-    env
-  } else {
-    unreachable!();
-  };
+  let env = output.env;
 
   assert_eq!(
     env.get("my_env").unwrap(),
@@ -188,10 +184,10 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
   for (i, job) in [say_hello_job, say_goodbye_job].into_iter().enumerate() {
     assert_eq!(
       job.runs_on.unwrap(),
-      RunsOn::String("ubuntu-latest".to_string())
+      RunsOn::Single(ActionRunner::UbuntuLatest)
     );
 
-    let env = unwrap_variant!(Env, Object, job.env.unwrap());
+    let env = job.env;
 
     assert_eq!(
       env.get("my_env").unwrap(),

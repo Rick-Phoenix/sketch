@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
   cli::parsers::parse_key_value_pairs,
-  merge_index_maps, merge_index_sets, merge_nested, merge_optional_btree_maps,
+  merge_btree_maps, merge_index_maps, merge_index_sets, merge_nested, merge_optional_btree_maps,
   merge_optional_btree_sets, merge_optional_nested, merge_optional_vecs, merge_presets, merge_vecs,
   overwrite_if_some,
   serde_utils::{StringOrNum, StringOrSortedList},
@@ -55,7 +55,7 @@ impl WorkflowReference {
   }
 }
 
-/// The definition for a new Github workflow, or a preset ID.
+/// The definition for a new Github workflow, or a reference to a preset.
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum WorkflowReference {
@@ -72,7 +72,7 @@ pub enum WorkflowReference {
     /// The name of the output file (inside the .github/workflows directory)
     file_name: PathBuf,
     /// The definition for the new workflow
-    config: GithubWorkflowPreset,
+    workflow: GithubWorkflowPreset,
   },
 }
 
@@ -230,9 +230,9 @@ pub struct Workflow {
   /// A map of variables that are available to the steps of all jobs in the workflow. You can also set variables that are only available to the steps of a single job or to a single step.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#env
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_nested)]
-  pub env: Option<Env>,
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub env: BTreeMap<String, StringNumOrBool>,
 
   /// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
   ///
@@ -323,7 +323,7 @@ impl Merge for Job {
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge)]
 #[merge(strategy = overwrite_if_some)]
 pub struct NormalJob {
-  /// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.
+  /// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
   #[serde(rename = "runs-on", default, skip_serializing_if = "Option::is_none")]
@@ -338,6 +338,8 @@ pub struct NormalJob {
 
   /// Identifies any jobs that must complete successfully before this job will run. It can be a string or array of strings. If a job fails, all jobs that need it are skipped unless the jobs use a conditional statement that causes the job to continue.
   ///
+  /// Can be a string or a list of strings.
+  ///
   /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
   #[serde(default, skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_nested)]
@@ -349,7 +351,7 @@ pub struct NormalJob {
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idif
   #[serde(default, rename = "if", skip_serializing_if = "Option::is_none")]
-  pub if_: Option<StringNumOrBool>,
+  pub if_: Option<String>,
 
   /// A map of outputs for a job. Job outputs are available to all downstream jobs that depend on this job.
   ///
@@ -366,6 +368,8 @@ pub struct NormalJob {
 
   /// For a specific job, you can use jobs.<job_id>.permissions to modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.
   ///
+  /// Permissions can be defined globally, with `write-all` `or read-all`, or by event.
+  ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_nested)]
@@ -377,7 +381,7 @@ pub struct NormalJob {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub concurrency: Option<Concurrency>,
 
-  /// The environment that the job references.
+  /// The environment that the job references. You can provide the environment as only the environment name, or as an environment object with the `name` and `url`.
   ///
   /// See more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -386,9 +390,9 @@ pub struct NormalJob {
   /// A map of environment variables that are available to all steps in the job.
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idenv
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_nested)]
-  pub env: Option<Env>,
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub env: BTreeMap<String, StringNumOrBool>,
 
   /// The maximum number of minutes to let a workflow run before GitHub automatically cancels it. Default: 360
   ///
@@ -466,7 +470,7 @@ pub struct ReusableWorkflowCallJob {
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idif
   #[serde(default, rename = "if", skip_serializing_if = "Option::is_none")]
-  pub if_: Option<StringNumOrBool>,
+  pub if_: Option<String>,
 
   /// Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time. A concurrency group can be any string or expression. The expression can use any context except for the secrets context.
   ///
@@ -484,9 +488,9 @@ pub struct ReusableWorkflowCallJob {
   /// A map of inputs that are passed to the called workflow. Any inputs that you pass must match the input specifications defined in the called workflow. Unlike 'jobs.<job_id>.steps[*].with', the inputs you pass with 'jobs.<job_id>.with' are not be available as environment variables in the called workflow. Instead, you can reference the inputs by using the inputs context.
   ///
   /// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idwith
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_nested)]
-  pub with: Option<Env>,
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub env: BTreeMap<String, StringNumOrBool>,
 
   /// When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow. Any secrets that you pass must match the names defined in the called workflow.
   ///
@@ -510,14 +514,18 @@ pub enum JobSecret {
   /// Use the `inherit` keyword to pass all the calling workflow's secrets to the called workflow. This includes all secrets the calling workflow has access to, namely organization, repository, and environment secrets. The `inherit` keyword can be used to pass secrets across repositories within the same organization, or across organizations within the same enterprise.
   #[serde(rename = "inherit")]
   Inherit,
+
+  /// A map of secrets that are passed to the called workflow.
   #[serde(untagged)]
-  Env(Env),
+  Object(BTreeMap<String, StringNumOrBool>),
 }
 
 impl Merge for JobSecret {
   fn merge(&mut self, other: Self) {
-    if let Self::Env(left_map) = self && let Self::Env(right_map) = other {
-      left_map.merge(right_map);
+    if let Self::Object(left_map) = self && let Self::Object(right_map) = other {
+      for (key,val) in right_map {
+        left_map.insert(key, val);
+      }
     } else {
       *self = other;
     }
@@ -543,8 +551,8 @@ pub struct Container {
   /// Sets an array of environment variables in the container.
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainerenv
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub env: Option<Env>,
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  pub env: BTreeMap<String, StringNumOrBool>,
 
   /// Sets an array of ports to expose on the container.
   ///
@@ -625,7 +633,7 @@ pub struct Step {
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsif
   #[serde(default, rename = "if", skip_serializing_if = "Option::is_none")]
-  pub if_: Option<StringNumOrBool>,
+  pub if_: Option<String>,
 
   /// Selects an action to run as part of a step in your job. An action is a reusable unit of code. You can use an action defined in the same repository as the workflow, a public repository, or in a published Docker container image.
   ///
@@ -662,8 +670,8 @@ pub struct Step {
   /// Sets environment variables for steps to use in the virtual environment. You can also set environment variables for the entire workflow or a job.
   ///
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsenv
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  pub env: Option<Env>,
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  pub env: BTreeMap<String, StringNumOrBool>,
 
   /// Use `shell` to define the shell for a step.
   ///
@@ -688,13 +696,16 @@ pub struct Step {
   pub run: Option<String>,
 }
 
-/// The environment that the job references
+/// The environment that the job references. You can provide the environment as only the environment name, or as an environment object with the `name` and `url`.
 ///
 /// See more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum Environment {
+  /// The environment name.
   String(String),
+
+  /// An environment object with the `name` and `url`.
   Object {
     /// The name of the environment configured in the repo.
     ///
@@ -709,15 +720,19 @@ pub enum Environment {
   },
 }
 
-/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.
+/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
 #[serde(untagged)]
 pub enum RunsOn {
-  String(String),
-  List(Vec<String>),
-  Object {
+  Single(ActionRunner),
+  List(BTreeSet<ActionRunner>),
+
+  /// You can use `runs-on` to target runner groups, so that the job will execute on any runner that is a member of that group. For more granular control, you can also combine runner groups with labels.
+  ///
+  /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#choosing-runners-in-a-group
+  Group {
     /// You can use `runs-on` to target runner groups, so that the job will execute on any runner that is a member of that group. For more granular control, you can also combine runner groups with labels.
     ///
     /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#choosing-runners-in-a-group
@@ -731,20 +746,93 @@ pub enum RunsOn {
   },
 }
 
+/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.
+///
+/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
+#[allow(non_camel_case_types)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "kebab-case")]
+pub enum ActionRunner {
+  /// A runner with the latest LTS version of Ubuntu.
+  ///
+  /// See more: https://github.com/actions/runner-images/blob/main/images/ubuntu
+  UbuntuLatest,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md
+  #[serde(rename = "ubuntu-24.04")]
+  Ubuntu24_04,
+
+  /// See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-ubuntu-24-image.md
+  #[serde(rename = "ubuntu-24.04-arm")]
+  Ubuntu24_04_Arm,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+  #[serde(rename = "ubuntu-22.04")]
+  Ubuntu22_04,
+
+  /// See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-ubuntu-22-image.md
+  #[serde(rename = "ubuntu-22.04-arm")]
+  Ubuntu22_04_Arm,
+
+  /// A runner with the latest version of Windows.
+  ///
+  /// See more: https://github.com/actions/runner-images/blob/main/images/windows
+  WindowsLatest,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md
+  Windows2025,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+  Windows2022,
+
+  /// See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-windows-11-image.md
+  #[serde(rename = "windows-11-arm")]
+  Windows11_Arm,
+
+  /// A runner with the latest version of MacOS.
+  ///
+  /// See more: https://github.com/actions/runner-images/blob/main/images/macos
+  #[serde(rename = "macos-latest")]
+  MacOsLatest,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md
+  #[serde(rename = "macos-26")]
+  MacOs26,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-15-arm64-Readme.md
+  #[serde(rename = "macos-15")]
+  MacOs15,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md
+  #[serde(rename = "macos-15-intel")]
+  MacOs15_Intel,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-14-arm64-Readme.md
+  #[serde(rename = "macos-14")]
+  MacOs14,
+
+  /// See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md
+  #[serde(rename = "macos-13")]
+  MacOs13,
+
+  #[serde(untagged)]
+  Other(String),
+}
+
 impl Merge for RunsOn {
   fn merge(&mut self, right: Self) {
     match self {
-      RunsOn::String(left_string) => {
+      RunsOn::Single(left_string) => {
         if let RunsOn::List(mut right_list) = right {
-          right_list.push(left_string.clone());
+          right_list.insert(left_string.clone());
           *self = RunsOn::List(right_list);
         } else {
           *self = right;
         }
       }
       RunsOn::List(left_list) => match right {
-        RunsOn::String(right_string) => {
-          left_list.push(right_string);
+        RunsOn::Single(right_string) => {
+          left_list.insert(right_string);
         }
         RunsOn::List(right_list) => {
           left_list.extend(right_list);
@@ -753,11 +841,11 @@ impl Merge for RunsOn {
           *self = right;
         }
       },
-      RunsOn::Object {
+      RunsOn::Group {
         labels: left_labels,
         group: left_group,
       } => {
-        if let RunsOn::Object {
+        if let RunsOn::Group {
           labels: right_labels,
           group: right_group,
         } = right
@@ -780,6 +868,8 @@ impl Merge for RunsOn {
 }
 
 /// You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.
+///
+/// Permissions can be defined globally, with `write-all` `or read-all`, or by event.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
@@ -942,14 +1032,7 @@ pub enum ModelsPermissions {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
 #[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(untagged)]
-pub enum Concurrency {
-  String(String),
-  Object(ConcurrencyObject),
-}
-
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-pub struct ConcurrencyObject {
+pub struct Concurrency {
   /// When a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-using-concurrency-to-cancel-any-in-progress-job-or-run-1
@@ -971,35 +1054,6 @@ pub struct ConcurrencyObject {
 pub enum StringOrBool {
   String(String),
   Bool(bool),
-}
-
-/// To set custom environment variables, you need to specify the variables in the workflow file. You can define environment variables for a step, job, or entire workflow using the jobs.<job_id>.steps[*].env, jobs.<job_id>.env, and env keywords.
-///
-/// For more information, see https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsenv
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
-#[serde(untagged)]
-pub enum Env {
-  String(String),
-  Object(BTreeMap<String, StringNumOrBool>),
-}
-
-impl Merge for Env {
-  fn merge(&mut self, right: Self) {
-    match self {
-      Env::String(_) => {
-        *self = right;
-      }
-      Env::Object(obj_left) => {
-        if let Env::Object(obj_right) = right {
-          for (key, val) in obj_right {
-            obj_left.insert(key, val);
-          }
-        } else {
-          *self = right;
-        }
-      }
-    }
-  }
 }
 
 /// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
