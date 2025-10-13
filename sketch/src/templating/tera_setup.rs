@@ -161,6 +161,8 @@ pub(crate) fn get_default_context() -> Context {
 
   context.insert("sketch_is_windows", &cfg!(windows));
   context.insert("sketch_is_unix", &cfg!(unix));
+  context.insert("sketch_is_macos", &cfg!(target_os = "macos"));
+  context.insert("sketch_is_linux", &cfg!(target_os = "linux"));
   context.insert("sketch_is_wsl", &is_wsl());
 
   add_env_to_context!(user);

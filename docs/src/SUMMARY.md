@@ -11,6 +11,8 @@
 - [Configuration](./configuration/configuration.md)
     - [Lsp Integration](./configuration/lsp.md)
 - [Templating](./templating/summary.md)
+    - [Special Variables](./templating/variables.md)
+    - [Filters And Functions](./templating/functions.md)
     - [Rendering A Template](./templating/render-single.md)
     - [Executing A Template](./templating/executing.md)
     - [Rendering A Preset](./templating/render-preset.md)
