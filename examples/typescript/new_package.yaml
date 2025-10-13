@@ -2,6 +2,10 @@
 
 # ANCHOR: all
 typescript:
+  # By default, typescript and oxlint are added to
+  # the dependencies
+  no_default_deps: true
+
   package_presets:
     frontend:
       # The name of the package. If this is unset,

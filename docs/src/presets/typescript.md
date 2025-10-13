@@ -38,11 +38,11 @@ Unlike what happens when you merge two `tsconfig` files by using the `extends` f
 
 ## Package Presets
 
-This is what a fully formed package preset looks like. We are going to use the presets defined above in here.
+A package preset can be used to collect other presets, such as in this example:
+
 ```yaml
 {{#include ../../../examples/presets.yaml:package}}
 ```
-
 
 <details>
 <summary>Tsconfig output</summary>

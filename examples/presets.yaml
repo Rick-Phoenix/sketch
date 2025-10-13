@@ -224,7 +224,16 @@ git_presets:
     # ANCHOR_END: hooks
 
 typescript:
+  # By default, typescript and oxlint are added to
+  # the dependencies
   no_default_deps: true
+
+  # By default, all versions marked with `latest` are converted to
+  # a version range starting from the current version
+  no_convert_latest_to_range: true
+
+  # Version range to use when converting from `latest`
+  version_range: patch
 
   # `pnpm-workspace.yaml` presets
   pnpm_presets:

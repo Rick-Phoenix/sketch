@@ -6,6 +6,9 @@ typescript:
 
   catalog: true
 
+  # Default
+  package_manager: pnpm
+
   package_presets:
     with_catalog:
       name: with_catalog

@@ -21,7 +21,7 @@ Sketch uses the npm api to fetch the latest version for any given package. It se
 
 ## Adding dependencies to the catalog
 
-If you set up your package manager to be `pnpm` (which is the default) and set `catalog` to `true`, whenever you try to generate a new package that has dependencies marked with `catalog:` (either the default catalog or a named one), each package that is not present in the target catalog inside `pnpm-workspace.yaml` will be added automatically to it.
+If you set up your package manager to be `pnpm` (which is the default) or `bun` and set `catalog` to `true`, whenever you try to generate a new package that has dependencies marked with `catalog:`, each package that is not present in the target catalog (inside `pnpm-workspace.yaml` for pnpm, and inside `package.json` for bun) will be added automatically to it.
 
 ### Example
 
