@@ -511,6 +511,7 @@ pub struct RepoConfigInput {
   gitignore: Option<String>,
 
   /// A license file to generate for the new repo.
+  #[arg(short, long)]
   license: Option<License>,
 
   /// One or many individual templates or templating presets to render in the new repo
@@ -624,7 +625,7 @@ pub enum Commands {
     /// The preset id
     preset: String,
 
-    /// The output path of the created file [default: `compose.yaml`]
+    /// The output path of the new file [default: `compose.yaml`]
     output: Option<PathBuf>,
   },
 
@@ -633,7 +634,7 @@ pub enum Commands {
     /// The preset id
     preset: String,
 
-    /// The output path of the created file [default: `.pre-commit-config.yaml`]
+    /// The output path of the new file [default: `.pre-commit-config.yaml`]
     output: Option<PathBuf>,
   },
 
@@ -642,7 +643,7 @@ pub enum Commands {
     /// The preset id
     preset: String,
 
-    /// The output path of the created file [default: `Cargo.toml`]
+    /// The output path of the new file [default: `Cargo.toml`]
     output: Option<PathBuf>,
   },
 
