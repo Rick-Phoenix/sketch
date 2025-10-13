@@ -87,7 +87,6 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     .unwrap()
     .contains("esbuild"));
   assert!(pnpm_file.packages.contains("packages/*"));
-  assert!(pnpm_file.packages.contains("apps/*"));
   assert!(pnpm_file.catalog.get("hono").unwrap().starts_with('^'));
   assert!(pnpm_file
     .catalogs
@@ -97,6 +96,10 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     .unwrap()
     .starts_with('^'));
   assert_eq!(pnpm_file.minimum_release_age.unwrap(), 1440);
+
+  // Check if the workspaces directories were created correctly
+  assert!(output_dir.join("packages").is_dir());
+  assert!(output_dir.join("apps/test").is_dir());
 
   let package_gen_cmd = [
     "sketch",

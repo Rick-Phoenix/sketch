@@ -18,8 +18,9 @@ use crate::{
   custom_templating::TemplatingPresetReference,
   exec::Hook,
   fs::{
-    create_all_dirs, deserialize_json, deserialize_yaml, find_file_up, get_abs_path,
-    get_relative_path, open_file_if_overwriting, serialize_json, serialize_yaml, write_file,
+    create_all_dirs, create_dirs_from_stripped_glob, deserialize_json, deserialize_yaml,
+    find_file_up, get_abs_path, get_relative_path, open_file_if_overwriting, serialize_json,
+    serialize_yaml, write_file,
   },
   licenses::License,
   merge_optional_vecs, overwrite_if_some,
@@ -217,6 +218,12 @@ impl Config {
       package_json_data
         .convert_latest_to_range(version_ranges)
         .await?;
+    }
+
+    if let Some(workspaces) = &package_json_data.workspaces {
+      for path in workspaces {
+        create_dirs_from_stripped_glob(&pkg_root.join(path))?;
+      }
     }
 
     serialize_json(

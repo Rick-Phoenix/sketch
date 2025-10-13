@@ -3,12 +3,50 @@ use std::{
   ffi::OsStr,
   fs::{create_dir_all, read_to_string, File},
   io::Write,
-  path::{Path, PathBuf},
+  path::{Component, Path, PathBuf},
 };
 
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::GenError;
+
+pub fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), GenError> {
+  let glob_str = glob.to_string_lossy();
+
+  // Skip complex glob patterns
+  if glob_str.contains('{')
+    || glob_str.contains('[')
+    || glob_str.contains('?')
+    || glob_str.contains('!')
+  {
+    return Ok(());
+  }
+
+  let glob_path = Path::new(glob);
+  let mut target_path = PathBuf::new();
+
+  for component in glob_path.components() {
+    if let Component::Normal(part) = component {
+      let part_str = part.to_string_lossy();
+
+      if part_str.contains('*') {
+        // Skip entirely if the segment is a mixed glob like `something-*`
+        if part_str != "*" && part_str != "**" {
+          return Ok(());
+        } else {
+          // Just skip the single segment
+          continue;
+        }
+      }
+    }
+
+    target_path.push(component);
+  }
+
+  create_all_dirs(&target_path)?;
+
+  Ok(())
+}
 
 pub fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
   let mut current_dir = start_dir;

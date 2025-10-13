@@ -46,7 +46,7 @@ This document contains the help content for the `sketch` command-line program.
 * `ts-config` — Generates a `tsconfig.json` file from a preset
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
-* `license` — 
+* `license` — Generates a license file
 
 ###### **Options:**
 
@@ -394,6 +394,8 @@ Generates a `pnpm-workspace.yaml` file from a preset
 
 
 ## `sketch license`
+
+Generates a license file
 
 **Usage:** `sketch license [OPTIONS] <LICENSE>`
 

@@ -17,7 +17,6 @@ typescript:
       # when new monorepos are created
       packages:
         - packages/*
-        - apps/*
       onlyBuiltDependencies:
         - esbuild
       minimumReleaseAge: 1440
@@ -29,6 +28,10 @@ typescript:
       name: workspace
 
       package_json:
+        workspaces:
+          # All dirs listed here are also created automatically
+          # unless they contain '{', '[', '?' or '!'
+          - apps/**/test
         license: Apache-2.0
         devDependencies:
           husky: ^9.0.0

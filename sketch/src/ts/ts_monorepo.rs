@@ -1,11 +1,13 @@
-use std::{fs::create_dir_all, mem, path::Path};
+use std::{mem, path::Path};
 
 use indexmap::IndexMap;
 use maplit::btreeset;
 use serde_json::Value;
 
 use crate::{
-  fs::{create_all_dirs, serialize_json, serialize_yaml, write_file},
+  fs::{
+    create_all_dirs, create_dirs_from_stripped_glob, serialize_json, serialize_yaml, write_file,
+  },
   ts::{
     oxlint::OxlintConfigSetting,
     package::PackageConfig,
@@ -108,6 +110,12 @@ impl Config {
 
     package_json_data.name = Some(root_package_name.clone());
 
+    if let Some(workspaces) = &package_json_data.workspaces {
+      for path in workspaces {
+        create_dirs_from_stripped_glob(&out_dir.join(path))?;
+      }
+    }
+
     serialize_json(&package_json_data, &out_dir.join("package.json"), overwrite)?;
 
     let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
@@ -164,11 +172,7 @@ impl Config {
 
     if let Some(mut pnpm_data) = pnpm_config {
       for dir in &pnpm_data.packages {
-        let dir = dir.strip_suffix("/*").unwrap_or(dir);
-        create_dir_all(out_dir.join(dir)).map_err(|e| GenError::DirCreation {
-          path: out_dir.to_path_buf(),
-          source: e,
-        })?;
+        create_dirs_from_stripped_glob(&out_dir.join(dir))?;
       }
 
       pnpm_data
