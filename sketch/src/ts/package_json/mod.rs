@@ -2,7 +2,6 @@ pub mod package_json_elements;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use futures::future;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 pub use package_json_elements::*;
@@ -11,8 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
   merging_strategies::*,
-  ts::pnpm::PnpmWorkspace,
-  versions::{get_latest_npm_version, VersionRange},
+  ts::{pnpm::PnpmWorkspace, PackageManager, CATALOG_REGEX},
+  versions::{get_batch_latest_npm_versions, VersionRange},
   GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
 };
 
@@ -201,6 +200,20 @@ pub struct PackageJson {
   #[merge(strategy = merge_optional_btree_maps)]
   pub overrides: Option<JsonValueBTreeMap>,
 
+  /// Catalog of dependencies to use with `bun`
+  ///
+  /// See more: https://bun.com/docs/install/catalogs#1-define-catalogs-in-root-package-json
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub catalog: StringBTreeMap,
+
+  /// Named catalogs to use with `bun`
+  ///
+  /// See more: https://bun.com/docs/install/catalogs#catalog-vs-catalogs
+  #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_nested_maps)]
+  pub catalogs: BTreeMap<String, StringBTreeMap>,
+
   /// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
   #[merge(strategy = merge_btree_maps)]
   pub dependencies: StringBTreeMap,
@@ -299,6 +312,8 @@ pub struct PackageJson {
 impl Default for PackageJson {
   fn default() -> Self {
     Self {
+      catalog: Default::default(),
+      catalogs: Default::default(),
       name: None,
       private: None,
       pnpm: None,
@@ -342,23 +357,48 @@ impl Default for PackageJson {
 }
 
 impl PackageJson {
-  #[allow(clippy::filter_map_bool_then)]
   /// Converts dependencies marked with `latest` into a version range starting from the latest version fetched with the npm API.
-  pub async fn convert_latest_to_range(
+  pub async fn process_dependencies(
     &mut self,
+    package_manager: PackageManager,
+    convert_latest: bool,
     range_kind: VersionRange,
   ) -> Result<(), GenError> {
-    #[allow(clippy::type_complexity)]
-    let mut handles: Vec<tokio::task::JoinHandle<Result<(DepKind, String, String), GenError>>> =
-      Vec::new();
+    let is_bun = matches!(package_manager, PackageManager::Bun);
 
-    let mut names_to_update: Vec<(DepKind, String)> = Vec::new();
+    if !convert_latest && !is_bun {
+      return Ok(());
+    }
+
+    let mut names_to_update: Vec<(JsDepKind, String)> = Vec::new();
 
     macro_rules! get_latest {
       ($list:ident, $kind:ident) => {
         for (name, version) in &self.$list {
-          if version == "latest" {
-            names_to_update.push((DepKind::$kind, name.clone()));
+          if convert_latest && version == "latest" {
+            names_to_update.push((JsDepKind::$kind, name.clone()));
+          } else if is_bun && let Some(captures) = CATALOG_REGEX.captures(version) {
+            let catalog_name = captures.name("name").map(|n| n.as_str().to_string());
+
+            match catalog_name {
+              Some(catalog_name) => {
+                if !self
+                  .catalogs
+                  .get(&catalog_name)
+                  .is_some_and(|c| c.contains_key(name))
+                {
+                  names_to_update.push((
+                    JsDepKind::CatalogDependency(Some(catalog_name)),
+                    name.clone(),
+                  ));
+                }
+              }
+              None => {
+                if !self.catalog.contains_key(name) {
+                  names_to_update.push((JsDepKind::CatalogDependency(None), name.clone()));
+                }
+              }
+            };
           }
         }
       };
@@ -369,44 +409,41 @@ impl PackageJson {
     get_latest!(optional_dependencies, OptionalDependency);
     get_latest!(peer_dependencies, PeerDependency);
 
-    for (kind, name) in names_to_update {
-      let handle = tokio::spawn(async move {
-        let actual_latest = get_latest_npm_version(&name).await.map_err(|e| {
-          GenError::Custom(format!(
-            "Could not get the latest version for npm package '{}': {}",
-            name, e
-          ))
-        })?;
-
-        Ok((kind, name, actual_latest))
-      });
-
-      handles.push(handle);
-    }
-
-    let results = future::join_all(handles).await;
+    let results = get_batch_latest_npm_versions(names_to_update).await;
 
     for result in results {
       match result {
-        Ok(Ok((kind, name, actual_latest))) => {
+        Ok((kind, name, actual_latest)) => {
           let new_version_range = range_kind.create(actual_latest);
 
           match kind {
-            DepKind::Dependency => self.dependencies.insert(name, new_version_range),
-            DepKind::DevDependency => self.dev_dependencies.insert(name, new_version_range),
-            DepKind::OptionalDependency => {
-              self.optional_dependencies.insert(name, new_version_range)
+            JsDepKind::CatalogDependency(catalog_name) => {
+              let target_catalog = if let Some(catalog_name) = catalog_name {
+                self
+                  .catalogs
+                  .entry(catalog_name.as_str().to_string())
+                  .or_default()
+              } else {
+                &mut self.catalog
+              };
+
+              target_catalog.insert(name, new_version_range);
             }
-            DepKind::PeerDependency => self.peer_dependencies.insert(name, new_version_range),
+            JsDepKind::Dependency => {
+              self.dependencies.insert(name, new_version_range);
+            }
+            JsDepKind::DevDependency => {
+              self.dev_dependencies.insert(name, new_version_range);
+            }
+            JsDepKind::OptionalDependency => {
+              self.optional_dependencies.insert(name, new_version_range);
+            }
+            JsDepKind::PeerDependency => {
+              self.peer_dependencies.insert(name, new_version_range);
+            }
           }
         }
-        Ok(Err(task_error)) => return Err(task_error),
-        Err(join_error) => {
-          return Err(GenError::Custom(format!(
-            "Failed to fetch an npm package's version due to an async task's failure: {}",
-            join_error
-          )))
-        }
+        Err(task_error) => return Err(task_error),
       };
     }
 
@@ -445,6 +482,8 @@ mod test {
   #[test]
   fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
     let test_package_json = PackageJson {
+      catalog: Default::default(),
+      catalogs: Default::default(),
       pnpm: None,
       peer_dependencies_meta: Some(btreemap! {
         "abc".to_string() => PeerDependencyMeta { optional: Some(true), extras: btreemap! {

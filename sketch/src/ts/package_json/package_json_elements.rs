@@ -206,10 +206,11 @@ impl Display for JsPackageType {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub(crate) enum DepKind {
+#[derive(Debug, Clone)]
+pub enum JsDepKind {
   Dependency,
   DevDependency,
   OptionalDependency,
   PeerDependency,
+  CatalogDependency(Option<String>),
 }

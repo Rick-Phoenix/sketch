@@ -214,11 +214,11 @@ impl Config {
 
     package_json_data.name = Some(package_name.clone());
 
-    if !typescript.no_convert_latest_to_range.unwrap_or_default() {
-      package_json_data
-        .convert_latest_to_range(version_ranges)
-        .await?;
-    }
+    let convert_latest = !typescript.no_convert_latest_to_range.unwrap_or_default();
+
+    package_json_data
+      .process_dependencies(package_manager, convert_latest, version_ranges)
+      .await?;
 
     if let Some(workspaces) = &package_json_data.workspaces {
       for path in workspaces {

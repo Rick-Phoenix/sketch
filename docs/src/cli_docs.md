@@ -236,7 +236,7 @@ Executes typescript-specific commands
 
   Possible values: `patch`, `minor`, `exact`
 
-* `--catalog <CATALOG>` — Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
+* `--catalog <CATALOG>` — Uses the default catalog (supported by pnpm and bun) for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
 
   Possible values: `true`, `false`
 
