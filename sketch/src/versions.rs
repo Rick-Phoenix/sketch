@@ -13,9 +13,12 @@ use crate::{ts::package_json::JsDepKind, GenError};
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, JsonSchema)]
 #[serde(rename_all = "lowercase")]
 pub enum VersionRange {
+  // Only allow updates within the same semVer `patch` range (i.e. 1.0.x)
   Patch,
+  // Only allow updates within the same semVer `minor` range (i.e. 1.x.x)
   #[default]
   Minor,
+  // Use the exact version given
   Exact,
 }
 
