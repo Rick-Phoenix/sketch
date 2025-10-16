@@ -67,50 +67,13 @@ impl CargoTomlPreset {
 #[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "kebab-case")]
 pub struct Manifest {
-  /// Package definition (a cargo crate)
-  #[merge(strategy = merge_optional_nested)]
-  pub package: Option<Package>,
-
   /// Workspace-wide settings
   #[merge(strategy = merge_optional_nested)]
   pub workspace: Option<Workspace>,
 
-  /// Normal dependencies
-  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub dependencies: BTreeMap<String, Dependency>,
-
-  /// Dev/test-only deps
-  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub dev_dependencies: BTreeMap<String, Dependency>,
-
-  /// Build-time deps
-  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub build_dependencies: BTreeMap<String, Dependency>,
-
-  /// `[target.cfg.dependencies]`
-  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub target: BTreeMap<String, Target>,
-
-  /// The `[features]` section. This set may be incomplete!
-  ///
-  /// Optional dependencies may create implied Cargo features.
-  /// This features section also supports microsyntax with `dep:`, `/`, and `?`
-  /// for managing dependencies and their features.io
-  ///
-  /// This crate has an optional [`features`] module for dealing with this
-  /// complexity and getting the real list of features.
-  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub features: BTreeMap<String, BTreeSet<String>>,
-
-  /// `[patch.crates-io]` section
-  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
-  pub patch: BTreeMap<String, BTreeMap<String, Dependency>>,
+  /// Package definition (a cargo crate)
+  #[merge(strategy = merge_optional_nested)]
+  pub package: Option<Package>,
 
   /// Note that due to autolibs feature this is not the complete list
   /// unless you run [`Manifest::complete_from_path`]
@@ -118,16 +81,26 @@ pub struct Manifest {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub lib: Option<Product>,
 
-  /// Compilation/optimization settings
-  #[serde(default, skip_serializing_if = "Option::is_none")]
-  #[merge(strategy = merge_optional_nested)]
-  pub profile: Option<Profiles>,
-
   /// Note that due to autobins feature this is not the complete list
   /// unless you run [`Manifest::complete_from_path`]
   #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub bin: BTreeSet<Product>,
+
+  /// `[target.cfg.dependencies]`
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub target: BTreeMap<String, Target>,
+
+  /// `[patch.crates-io]` section
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub patch: BTreeMap<String, BTreeMap<String, Dependency>>,
+
+  /// Compilation/optimization settings
+  #[serde(default, skip_serializing_if = "Option::is_none")]
+  #[merge(strategy = merge_optional_nested)]
+  pub profile: Option<Profiles>,
 
   /// Benchmarks
   #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -148,6 +121,33 @@ pub struct Manifest {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_inheritable_map)]
   pub lints: Option<Inheritable<BTreeMap<String, BTreeMap<String, Lint>>>>,
+
+  /// The `[features]` section. This set may be incomplete!
+  ///
+  /// Optional dependencies may create implied Cargo features.
+  /// This features section also supports microsyntax with `dep:`, `/`, and `?`
+  /// for managing dependencies and their features.io
+  ///
+  /// This crate has an optional [`features`] module for dealing with this
+  /// complexity and getting the real list of features.
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub features: BTreeMap<String, BTreeSet<String>>,
+
+  /// Normal dependencies
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub dependencies: BTreeMap<String, Dependency>,
+
+  /// Dev/test-only deps
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub dev_dependencies: BTreeMap<String, Dependency>,
+
+  /// Build-time deps
+  #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+  #[merge(strategy = merge_btree_maps)]
+  pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
 /// Lint level.
@@ -503,7 +503,7 @@ pub struct Product {
   /// If any of the required features are not selected, the product will be skipped.
   /// This is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,
   /// it has no effect on `[lib]`.
-  #[serde(default)]
+  #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
   #[merge(strategy = merge_btree_sets)]
   pub required_features: BTreeSet<String>,
 }
