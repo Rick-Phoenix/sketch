@@ -24,11 +24,8 @@ use crate::{
 #[serde(rename_all = "kebab-case")]
 pub struct Package {
   /// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.
-  #[merge(skip)]
   pub name: Option<String>,
 
-  /// See [the `version()` getter for more info](`Package::version()`).
-  ///
   /// Must parse as semver, e.g. "1.9.0"
   ///
   /// This field may have unknown value when using workspace inheritance,
