@@ -50,13 +50,14 @@ impl ComposePreset {
     store: &IndexMap<String, ComposePreset>,
     services_store: &IndexMap<String, DockerServicePreset>,
   ) -> Result<ComposeFile, GenError> {
-    if self.extends_presets.is_empty() {
-      return Ok(self.config);
-    }
-
     let mut processed_ids: IndexSet<String> = IndexSet::new();
 
-    let merged_preset = merge_presets(Preset::DockerCompose, id, self, store, &mut processed_ids)?;
+    // Must not skip here in case of no extended presets, because services must be processed regardless
+    let merged_preset = if self.extends_presets.is_empty() {
+      self
+    } else {
+      merge_presets(Preset::DockerCompose, id, self, store, &mut processed_ids)?
+    };
 
     let mut config = merged_preset.config;
 
@@ -130,6 +131,7 @@ pub struct ComposeFile {
   /// The named networks for the Compose application.
   ///
   /// See more: https://docs.docker.com/reference/compose-file/networks/
+  #[serde(skip_serializing_if = "Option::is_none")]
   #[merge(strategy = merge_optional_btree_maps)]
   pub networks: Option<BTreeMap<String, TopLevelNetwork>>,
 
@@ -181,7 +183,7 @@ pub struct IncludeSettings {
 
 impl PartialOrd for IncludeSettings {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -324,7 +326,7 @@ pub struct IpamConfig {
 
 impl PartialOrd for IpamConfig {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -475,7 +477,7 @@ pub struct DiscreteResourceSpec {
 
 impl PartialOrd for DiscreteResourceSpec {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -516,7 +518,7 @@ pub struct Device {
 
 impl PartialOrd for Device {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -712,7 +714,7 @@ pub enum ServiceConfigOrSecret {
 
 impl PartialOrd for ServiceConfigOrSecretSettings {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -832,7 +834,7 @@ pub struct TopLevelModel {
 
 impl PartialOrd for TopLevelModel {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
