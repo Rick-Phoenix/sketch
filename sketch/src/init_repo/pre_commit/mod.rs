@@ -120,20 +120,20 @@ pub struct PreCommitConfig {
 #[serde(untagged)]
 pub enum Repo {
   /// Hooks for checking the pre-commit configuration itself. https://pre-commit.com/#meta-hooks
-  MetaRepo {
+  Meta {
     repo: MetaRepo,
     #[serde(skip_serializing_if = "BTreeSet::is_empty")]
     hooks: BTreeSet<MetaRepoHook>,
   },
   /// Hooks for the local repo https://pre-commit.com/#repository-local-hooks
-  LocalRepo {
+  Local {
     repo: LocalRepo,
     /// A list of local hooks https://pre-commit.com/#2-add-a-pre-commit-configuration
     #[serde(skip_serializing_if = "BTreeSet::is_empty")]
     hooks: BTreeSet<Hook>,
   },
   /// A remote repo
-  UriRepo {
+  Uri {
     /// A repository url https://pre-commit.com/#2-add-a-pre-commit-configuration
     repo: String,
     /// A revision or tag to clone at https://pre-commit.com/#2-add-a-pre-commit-configuration
@@ -260,7 +260,7 @@ pub struct Hook {
 
 impl PartialOrd for Hook {
   fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 

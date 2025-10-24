@@ -929,19 +929,19 @@ pub struct PermissionsEvent {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub attestations: Option<PermissionsLevel>,
 
-  ///	Work with check runs and check suites. For example, `checks: write` permits an action to create a check run.
+  /// Work with check runs and check suites. For example, `checks: write` permits an action to create a check run.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub checks: Option<PermissionsLevel>,
 
-  ///	Work with the contents of the repository. For example, `contents: read` permits an action to list the commits, and `contents: write` allows the action to create a release.
+  /// Work with the contents of the repository. For example, `contents: read` permits an action to list the commits, and `contents: write` allows the action to create a release.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub contents: Option<PermissionsLevel>,
 
-  ///	Work with deployments. For example, `deployments: write` permits an action to create a new deployment.
+  /// Work with deployments. For example, `deployments: write` permits an action to create a new deployment.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -953,7 +953,7 @@ pub struct PermissionsEvent {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub discussions: Option<PermissionsLevel>,
 
-  ///	Fetch an OpenID Connect (OIDC) token. This requires `id-token: write`.
+  /// Fetch an OpenID Connect (OIDC) token. This requires `id-token: write`.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, rename = "id-token", skip_serializing_if = "Option::is_none")]
@@ -971,13 +971,13 @@ pub struct PermissionsEvent {
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub models: Option<ModelsPermissions>,
 
-  ///	Work with GitHub Packages. For example, `packages: write` permits an action to upload and publish packages on GitHub Packages.
+  /// Work with GitHub Packages. For example, `packages: write` permits an action to upload and publish packages on GitHub Packages.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
   pub packages: Option<PermissionsLevel>,
 
-  ///	Work with GitHub Pages. For example, `pages: write` permits an action to request a GitHub Pages build.
+  /// Work with GitHub Pages. For example, `pages: write` permits an action to request a GitHub Pages build.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1000,7 +1000,7 @@ pub struct PermissionsEvent {
   )]
   pub repository_projects: Option<PermissionsLevel>,
 
-  ///	Work with GitHub code scanning alerts. For example, `security-events: read` permits an action to list the code scanning alerts for the repository, and `security-events: write` allows an action to update the status of a code scanning alert.
+  /// Work with GitHub code scanning alerts. For example, `security-events: read` permits an action to list the code scanning alerts for the repository, and `security-events: write` allows an action to update the status of a code scanning alert.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(
@@ -1010,7 +1010,7 @@ pub struct PermissionsEvent {
   )]
   pub security_events: Option<PermissionsLevel>,
 
-  ///	Work with commit statuses. For example, `statuses:read` permits an action to list the commit statuses for a given reference.
+  /// Work with commit statuses. For example, `statuses:read` permits an action to list the commit statuses for a given reference.
   ///
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
   #[serde(default, skip_serializing_if = "Option::is_none")]

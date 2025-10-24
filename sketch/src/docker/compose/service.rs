@@ -699,7 +699,7 @@ pub struct GpuSettings {
 
 impl PartialOrd for GpuSettings {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -754,7 +754,7 @@ pub struct ServiceModelSettings {
 
 impl PartialOrd for ServiceModelSettings {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -1334,7 +1334,7 @@ pub struct BlkioLimit {
 
 impl PartialOrd for BlkioLimit {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -1362,7 +1362,7 @@ pub struct BlkioWeight {
 
 impl PartialOrd for BlkioWeight {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -1470,7 +1470,7 @@ pub struct WatchItem {
 
 impl PartialOrd for WatchItem {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -1549,7 +1549,7 @@ pub struct DeviceMappingSettings {
 
 impl PartialOrd for DeviceMappingSettings {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -1568,7 +1568,7 @@ pub enum ServiceVolume {
 
 impl PartialOrd for ServiceVolume {
   fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-    Some(self.cmp(&other))
+    Some(self.cmp(other))
   }
 }
 
@@ -1576,7 +1576,7 @@ impl Ord for ServiceVolume {
   fn cmp(&self, other: &Self) -> std::cmp::Ordering {
     match self {
       ServiceVolume::Simple(s) => match other {
-        ServiceVolume::Simple(other_s) => s.cmp(&other_s),
+        ServiceVolume::Simple(other_s) => s.cmp(other_s),
         ServiceVolume::Advanced(_) => Ordering::Greater,
       },
       ServiceVolume::Advanced(v) => match other {

@@ -58,7 +58,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     PreCommitConfig {
       repos: btreeset! {
         GITLEAKS_REPO.clone(),
-        Repo::LocalRepo { repo: LocalRepo::Local, hooks: btreeset! {
+        Repo::Local { repo: LocalRepo::Local, hooks: btreeset! {
             Hook {
               id: "oxlint".to_string(),
               name: Some("oxlint".to_string()),

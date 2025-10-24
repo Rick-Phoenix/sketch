@@ -325,15 +325,15 @@ impl Config {
       let file_parent_dir = vitest
         .out_dir
         .as_deref()
-        .unwrap_or_else(|| tests_dir.as_path());
+        .unwrap_or(tests_dir.as_path());
 
       let file_path = file_parent_dir.join("vitest.config.ts");
 
-      let src_rel_path = get_relative_path(&file_parent_dir, &src_dir)?;
+      let src_rel_path = get_relative_path(file_parent_dir, &src_dir)?;
 
       vitest.src_rel_path = src_rel_path.to_string_lossy().to_string();
 
-      vitest.setup_dir = get_relative_path(&file_parent_dir, &tests_setup_dir)?
+      vitest.setup_dir = get_relative_path(file_parent_dir, &tests_setup_dir)?
         .to_string_lossy()
         .to_string();
 

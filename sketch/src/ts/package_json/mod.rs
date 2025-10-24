@@ -51,7 +51,7 @@ impl PackageJsonPreset {
       .contributors
       .into_iter()
       .map(|person| {
-        if let Person::Id(ref id) = person && let Some(data) = get_person_data(id, &people) {
+        if let Person::Id(ref id) = person && let Some(data) = get_person_data(id, people) {
           Person::Data(data)
         } else {
           person
@@ -63,7 +63,7 @@ impl PackageJsonPreset {
       .maintainers
       .into_iter()
       .map(|person| {
-        if let Person::Id(ref id) = person && let Some(data) = get_person_data(id, &people) {
+        if let Person::Id(ref id) = person && let Some(data) = get_person_data(id, people) {
           Person::Data(data)
         } else {
           person
@@ -71,11 +71,10 @@ impl PackageJsonPreset {
       })
       .collect();
 
-    if let Some(author) = package_json.author.as_mut() {
-      if let Person::Id(id) = author && let Some(data) = get_person_data(id.as_str(), &people) {
+    if let Some(author) = package_json.author.as_mut()
+      && let Person::Id(id) = author && let Some(data) = get_person_data(id.as_str(), people) {
         *author = Person::Data(data);
-      }
-    };
+      };
 
     Ok(package_json)
   }
@@ -103,7 +102,7 @@ pub enum PackageJsonData {
 
 impl Default for PackageJsonData {
   fn default() -> Self {
-    Self::Config(PackageJsonPreset::default().into())
+    Self::Config(PackageJsonPreset::default())
   }
 }
 

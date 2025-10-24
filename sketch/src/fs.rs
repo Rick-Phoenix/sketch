@@ -84,7 +84,7 @@ pub fn serialize_toml<T: Serialize>(
   })?;
 
   output_file
-    .write_all(&content.as_bytes())
+    .write_all(content.as_bytes())
     .map_err(|e| GenError::WriteError {
       path: path.to_path_buf(),
       source: e,
@@ -169,12 +169,12 @@ pub fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), Gen
 
 pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, GenError> {
   if overwrite {
-    File::create(&path).map_err(|e| GenError::WriteError {
+    File::create(path).map_err(|e| GenError::WriteError {
       path: path.to_path_buf(),
       source: e,
     })
   } else {
-    File::create_new(&path).map_err(|e| match e.kind() {
+    File::create_new(path).map_err(|e| match e.kind() {
       std::io::ErrorKind::AlreadyExists => GenError::Custom(format!(
         "The file `{}` already exists. Set `no_overwrite` to false to overwrite existing files",
         path.display()

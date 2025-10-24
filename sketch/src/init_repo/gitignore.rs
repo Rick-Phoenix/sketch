@@ -18,7 +18,7 @@ fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
       GitIgnore::String(mut right_string) => {
         for entry in left_items.iter() {
           right_string.push('\n');
-          right_string.push_str(&entry);
+          right_string.push_str(entry);
         }
 
         *left = GitIgnore::String(right_string);

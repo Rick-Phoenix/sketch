@@ -36,7 +36,7 @@ fn get_tree_output<T: Into<PathBuf>>(
   }
 
   Command::new("tree")
-    .arg(&dir.to_string_lossy().to_string())
+    .arg(dir.to_string_lossy().to_string())
     .arg("-a")
     .arg("-I")
     .arg("tree_output.txt")

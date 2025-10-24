@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let version = SchemaCmd::parse().version;
 
   if version == "development" {
-    let file = File::create(&schemas_dir.join("development.json"))?;
+    let file = File::create(schemas_dir.join("development.json"))?;
     serde_json::to_writer_pretty(&file, &schema)?;
     return Ok(());
   }

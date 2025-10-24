@@ -1,4 +1,8 @@
-#![allow(clippy::result_large_err)]
+#![allow(
+  clippy::result_large_err,
+  clippy::large_enum_variant,
+  clippy::field_reassign_with_default
+)]
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 

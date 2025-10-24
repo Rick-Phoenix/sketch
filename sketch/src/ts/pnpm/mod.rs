@@ -1011,6 +1011,7 @@ impl PnpmWorkspace {
 
     let stream = stream::iter(handles).buffer_unordered(10);
 
+    #[allow(clippy::type_complexity)]
     let results: Vec<Result<(String, Option<String>, String), GenError>> = stream.collect().await;
 
     for result in results {

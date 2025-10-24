@@ -76,7 +76,7 @@ impl Config {
         TemplateData::Id(id) => id,
         TemplateData::Content { name, content } => {
           tera
-            .add_raw_template(&name, &content)
+            .add_raw_template(name, content)
             .map_err(|e| GenError::TemplateParsing {
               template: name.clone(),
               source: e,
@@ -87,7 +87,7 @@ impl Config {
       };
 
       let rendered_command = tera
-        .render(&template_name, local_context.as_ref())
+        .render(template_name, local_context.as_ref())
         .map_err(|e| GenError::TemplateParsing {
           template: template_name.to_string(),
           source: e,

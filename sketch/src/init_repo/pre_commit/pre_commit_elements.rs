@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{Hook, Repo};
 
-pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::UriRepo {
+pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::Uri {
   repo: "https://github.com/gitleaks/gitleaks".to_string(),
   rev: Some("v8.28.0".to_string()),
   hooks: btreeset! { Hook { id: "gitleaks".to_string(), ..Default::default() } },
@@ -86,6 +86,7 @@ pub enum FileType {
   #[serde(rename = "c#")]
   CSharp,
   #[serde(rename = "c++")]
+  #[allow(clippy::upper_case_acronyms)]
   CPP,
   C2hd,
   Cbsd,

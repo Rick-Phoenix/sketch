@@ -293,7 +293,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         preset.workflows.extend(workflows);
       }
 
-      let out_dir = dir.unwrap_or_else(|| get_cwd());
+      let out_dir = dir.unwrap_or_else(get_cwd);
 
       create_all_dirs(&out_dir)?;
 
@@ -301,7 +301,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     }
 
     RenderPreset { id, out_dir } => {
-      let out_dir = out_dir.unwrap_or_else(|| get_cwd());
+      let out_dir = out_dir.unwrap_or(get_cwd());
 
       config.generate_templates(
         &out_dir,
@@ -381,9 +381,9 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         }
         "json" => serialize_json(&new_config, &output_path, overwrite)?,
         _ => {
-          return Err(GenError::Custom(format!(
-            "Invalid config format. Allowed formats are: yaml, toml, json"
-          )))
+          return Err(GenError::Custom(
+            "Invalid config format. Allowed formats are: yaml, toml, json".to_string(),
+          ))
         }
       };
     }
@@ -416,7 +416,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         panic!("At least one between command and file must be set.")
       };
 
-      let cwd = cwd.unwrap_or_else(|| get_cwd());
+      let cwd = cwd.unwrap_or_else(get_cwd);
 
       let shell = if let Some(cli_flag) = shell {
         Some(cli_flag)

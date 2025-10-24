@@ -39,7 +39,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   write_command!(monorepo_cmd, [1, 2, 9], "monorepo_cmd");
 
-  let monorepo_setup = Cli::try_parse_from(&monorepo_cmd)?;
+  let monorepo_setup = Cli::try_parse_from(monorepo_cmd)?;
 
   execute_cli(monorepo_setup).await?;
 
@@ -118,7 +118,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(package_gen).await?;
 
-  get_tree_output(&output_dir.join("packages/frontend"), None)?;
+  get_tree_output(output_dir.join("packages/frontend"), None)?;
 
   Ok(())
 }
@@ -191,7 +191,7 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   assert!(output_str.contains("In toml form:\npath = \"Cargo\"\nextension = \"toml\""));
 
   write_file(&output_dir.join("cmd"), &cmd_str, true)?;
-  write_file(&output_dir.join("output"), &output_str, true)?;
+  write_file(&output_dir.join("output"), output_str, true)?;
 
   Ok(())
 }

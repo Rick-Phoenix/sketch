@@ -37,7 +37,7 @@ impl License {
   }
 }
 
-const APACHE_2_LICENSE: &'static str = include_str!("./templates/apache-2.0");
-const MIT_LICENSE: &'static str = include_str!("./templates/mit");
-const GPL_3_LICENSE: &'static str = include_str!("./templates/gpl-3.0");
-const AGPL_3_LICENSE: &'static str = include_str!("./templates/agpl-3.0");
+const APACHE_2_LICENSE: &str = include_str!("./templates/apache-2.0");
+const MIT_LICENSE: &str = include_str!("./templates/mit");
+const GPL_3_LICENSE: &str = include_str!("./templates/gpl-3.0");
+const AGPL_3_LICENSE: &str = include_str!("./templates/agpl-3.0");

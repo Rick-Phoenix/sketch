@@ -7,7 +7,7 @@ async fn vars_files() -> Result<(), Box<dyn std::error::Error>> {
 
     let cmd = bin
       .args([
-        &format!("--vars-file"),
+        "--vars-file",
         &format!("tests/vars_files/vars.{ext}"),
         "render",
         "--content",

@@ -39,8 +39,8 @@ impl TemplateOutput {
       };
     }
 
-    let output = output.ok_or_else(|| "Missing template output from command")?;
-    let template = template.ok_or_else(|| "Missing template id from command")?;
+    let output = output.ok_or("Missing template output from command")?;
+    let template = template.ok_or("Missing template id from command")?;
 
     Ok(TemplateOutput {
       template,
@@ -111,7 +111,7 @@ fn get_env(vars: &[&str]) -> Option<String> {
 
 fn get_env_with_fallback(context: &mut Context, name: &str, vars: &[&str]) {
   context.insert(
-    &format!("sketch_{}", name),
+    format!("sketch_{}", name),
     &get_env(vars).unwrap_or_else(|| "unknown".to_string()),
   );
 }
@@ -119,12 +119,11 @@ fn get_env_with_fallback(context: &mut Context, name: &str, vars: &[&str]) {
 /// Test if the program is running under WSL
 #[cfg(target_os = "linux")]
 pub fn is_wsl() -> bool {
-  if let Ok(b) = std::fs::read("/proc/sys/kernel/osrelease") {
-    if let Ok(s) = std::str::from_utf8(&b) {
+  if let Ok(b) = std::fs::read("/proc/sys/kernel/osrelease")
+    && let Ok(s) = std::str::from_utf8(&b) {
       let a = s.to_ascii_lowercase();
       return a.contains("microsoft") || a.contains("wsl");
     }
-  }
   false
 }
 

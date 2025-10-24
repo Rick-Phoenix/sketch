@@ -66,7 +66,7 @@ impl Config {
       )?;
     }
 
-    create_all_dirs(&out_dir)?;
+    create_all_dirs(out_dir)?;
 
     let gitignore = if let Some(data) = preset.gitignore {
       match data {
@@ -94,7 +94,7 @@ impl Config {
     launch_command(
       "git",
       &["init"],
-      &out_dir,
+      out_dir,
       Some("Failed to initialize a new git repo"),
     )?;
 
@@ -129,7 +129,7 @@ impl Config {
       launch_command(
         "pre-commit",
         &["install"],
-        &out_dir,
+        out_dir,
         Some("Failed to install the pre-commit hooks"),
       )?;
     }
@@ -138,7 +138,7 @@ impl Config {
       launch_command(
         "git",
         &["remote", "add", "origin", remote],
-        &out_dir,
+        out_dir,
         Some("Failed to add the remote to the git repo"),
       )?;
     }
@@ -180,7 +180,7 @@ impl Config {
     }
 
     if let Some(templates) = preset.with_templates {
-      self.generate_templates(&out_dir, templates, cli_vars)?;
+      self.generate_templates(out_dir, templates, cli_vars)?;
     }
 
     if !preset.hooks_post.is_empty() {

@@ -29,7 +29,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
   reset_testing_dir(&output_dir);
   reset_testing_dir(&commands_dir);
 
-  get_tree_output(&config_dir.join("templates"), Some(output_dir.join("tree")))?;
+  get_tree_output(config_dir.join("templates"), Some(output_dir.join("tree")))?;
 
   // From known template
 

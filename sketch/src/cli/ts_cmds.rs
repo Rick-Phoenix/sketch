@@ -74,7 +74,7 @@ pub(crate) async fn handle_ts_commands(
         };
       }
 
-      let package_manager = typescript.package_manager.get_or_insert_default().clone();
+      let package_manager = *typescript.package_manager.get_or_insert_default();
       let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
       let pnpm_config = if let Some(id) = pnpm {
@@ -204,7 +204,7 @@ pub(crate) async fn handle_ts_commands(
         dir.unwrap_or_else(|| package.name.as_deref().unwrap_or("new_package").into());
 
       if install {
-        let package_manager = typescript.package_manager.get_or_insert_default().clone();
+        let package_manager = *typescript.package_manager.get_or_insert_default();
 
         launch_command(
           package_manager.to_string().as_str(),
@@ -339,7 +339,7 @@ fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError>
     output,
   } = args;
 
-  let dir = dir.unwrap_or_else(|| get_cwd());
+  let dir = dir.unwrap_or_else(get_cwd);
 
   if !dir.is_dir() {
     return Err(generic_error!("`{:?}` is not a directory", dir));

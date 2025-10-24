@@ -12,7 +12,7 @@ use crate::fs::{get_abs_path, get_relative_path};
 fn extract_string<'a>(filter_name: &'a str, value: &'a Value) -> Result<&'a str, Error> {
   value.as_str().ok_or(Error::call_filter(
     filter_name,
-    format!("Value `{}` is not a string", value.to_string()),
+    format!("Value `{}` is not a string", value),
   ))
 }
 
@@ -82,7 +82,7 @@ pub(crate) fn glob(dir: &Value, args: &HashMap<String, Value>) -> Result<Value, 
     .filter(|e| e.file_type().is_file())
   {
     let path = entry.path().strip_prefix(&dir).unwrap();
-    if globset.is_match(&path) {
+    if globset.is_match(path) {
       files.push(path.to_string_lossy().to_string());
     }
   }
@@ -166,7 +166,7 @@ pub(crate) fn semver(text: &Value, _: &HashMap<String, Value>) -> Result<Value, 
 
   text = text.strip_prefix('v').unwrap_or(text);
 
-  let version = Version::parse(&text).map_err(|e| {
+  let version = Version::parse(text).map_err(|e| {
     Error::call_filter(
       "semver",
       format!("Could not parse `{}` as a semver: {}", text, e),
@@ -187,7 +187,7 @@ pub(crate) fn matches_semver(text: &Value, args: &HashMap<String, Value>) -> Res
 
   text = text.strip_prefix('v').unwrap_or(text);
 
-  let version = Version::parse(&text).map_err(|e| {
+  let version = Version::parse(text).map_err(|e| {
     Error::call_filter(
       "matches_semver",
       format!("Could not parse `{}` as a semver: {}", text, e),
@@ -198,7 +198,7 @@ pub(crate) fn matches_semver(text: &Value, args: &HashMap<String, Value>) -> Res
     "matches_semver",
     args.get("target").ok_or(Error::call_filter(
       "matches_semver",
-      format!("Could not find the `target` argument"),
+      "Could not find the `target` argument",
     ))?,
   )?;
 
@@ -206,7 +206,7 @@ pub(crate) fn matches_semver(text: &Value, args: &HashMap<String, Value>) -> Res
     .strip_prefix('v')
     .unwrap_or(target_version_text);
 
-  let target_version = VersionReq::parse(&target_version_text).map_err(|e| {
+  let target_version = VersionReq::parse(target_version_text).map_err(|e| {
     Error::call_filter(
       "matches_semver",
       format!(
@@ -290,7 +290,7 @@ pub(crate) fn parent_dir(path: &Value, _: &HashMap<String, Value>) -> Result<Val
 pub(crate) fn capture(text: &Value, args: &HashMap<String, Value>) -> Result<Value, Error> {
   let pattern = extract_string_arg("capture", "regex", args)?;
 
-  let regex = Regex::new(&pattern.to_string()).map_err(|e| {
+  let regex = Regex::new(pattern).map_err(|e| {
     Error::call_filter(
       "capture",
       format!("Regex creation error for `{}`: {}", pattern, e),
@@ -301,12 +301,10 @@ pub(crate) fn capture(text: &Value, args: &HashMap<String, Value>) -> Result<Val
 
   let mut captured_groups: Map<String, Value> = Map::new();
 
-  if let Some(caps) = regex.captures(&text) {
-    for group in regex.capture_names() {
-      if let Some(name) = group {
-        if let Some(captured_text) = caps.name(name) {
-          captured_groups.insert(name.to_string(), captured_text.as_str().to_string().into());
-        }
+  if let Some(caps) = regex.captures(text) {
+    for name in regex.capture_names().flatten() {
+      if let Some(captured_text) = caps.name(name) {
+        captured_groups.insert(name.to_string(), captured_text.as_str().to_string().into());
       }
     }
   }
@@ -317,7 +315,7 @@ pub(crate) fn capture(text: &Value, args: &HashMap<String, Value>) -> Result<Val
 pub(crate) fn capture_many(text: &Value, args: &HashMap<String, Value>) -> Result<Value, Error> {
   let pattern = extract_string_arg("capture_many", "regex", args)?;
 
-  let regex = Regex::new(&pattern.to_string()).map_err(|e| {
+  let regex = Regex::new(pattern).map_err(|e| {
     Error::call_filter(
       "capture_many",
       format!("Regex creation error for `{}`: {}", pattern, e),
@@ -328,14 +326,12 @@ pub(crate) fn capture_many(text: &Value, args: &HashMap<String, Value>) -> Resul
 
   let mut all_captures: Vec<Map<String, Value>> = Vec::new();
 
-  for cap in regex.captures_iter(&text) {
+  for cap in regex.captures_iter(text) {
     let mut captured_groups: Map<String, Value> = Map::new();
 
-    for group in regex.capture_names() {
-      if let Some(name) = group {
-        if let Some(captured_text) = cap.name(name) {
-          captured_groups.insert(name.to_string(), captured_text.as_str().to_string().into());
-        }
+    for name in regex.capture_names().flatten() {
+      if let Some(captured_text) = cap.name(name) {
+        captured_groups.insert(name.to_string(), captured_text.as_str().to_string().into());
       }
     }
 

@@ -288,10 +288,10 @@ impl Config {
               local_context.as_ref(),
               output_root,
               &dir,
-              &self
+              self
                 .templates_dir
                 .as_ref()
-                .ok_or(GenError::Custom(format!("templates_dir not set")))?,
+                .ok_or(GenError::Custom("templates_dir not set".to_string()))?,
               exclude,
             )?;
           }
@@ -358,7 +358,7 @@ fn render_structured_preset(
   exclude: Option<Vec<String>>,
 ) -> Result<(), GenError> {
   let templates_dir = get_abs_path(templates_dir)?;
-  let root_dir = templates_dir.join(&dir);
+  let root_dir = templates_dir.join(dir);
   if !root_dir.is_dir() {
     return Err(GenError::Custom(format!(
       "`{}` is not a valid directory inside `{}`",
@@ -386,51 +386,49 @@ fn render_structured_preset(
     None
   };
 
-  Ok(
-    for entry in WalkDir::new(&root_dir).into_iter().filter_map(|e| e.ok()) {
-      let input_path = entry
-        .path()
-        .strip_prefix(&templates_dir)
-        .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?;
-      let mut output_path = entry
-        .path()
-        .strip_prefix(&root_dir)
-        .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?
-        .to_path_buf();
+  let _: () = for entry in WalkDir::new(&root_dir).into_iter().filter_map(|e| e.ok()) {
+    let input_path = entry
+      .path()
+      .strip_prefix(&templates_dir)
+      .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?;
+    let mut output_path = entry
+      .path()
+      .strip_prefix(&root_dir)
+      .map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?
+      .to_path_buf();
 
-      if output_path.to_string_lossy().is_empty() {
+    if output_path.to_string_lossy().is_empty() {
+      continue;
+    }
+
+    if let Some(ref globset) = globset
+      && globset.is_match(input_path) {
         continue;
       }
 
-      if let Some(ref globset) = globset {
-        if globset.is_match(&input_path) {
-          continue;
-        }
+    let file_type = entry.file_type();
+
+    if file_type.is_dir() {
+      create_all_dirs(&output_path)?;
+      continue;
+    } else if file_type.is_file() {
+      if output_path
+        .extension()
+        .is_some_and(|e| e == "j2" || e == "jinja" || e == "jinja2")
+      {
+        output_path = output_path.with_extension("");
       }
 
-      let file_type = entry.file_type();
-
-      if file_type.is_dir() {
-        create_all_dirs(&output_path)?;
-        continue;
-      } else if file_type.is_file() {
-        if output_path
-          .extension()
-          .is_some_and(|e| e == "j2" || e == "jinja" || e == "jinja2")
-        {
-          output_path = output_path.with_extension("");
-        }
-
-        render_template(
-          tera,
-          &input_path.to_string_lossy(),
-          &output_root.join(output_path),
-          context,
-          overwrite,
-        )?;
-      }
-    },
-  )
+      render_template(
+        tera,
+        &input_path.to_string_lossy(),
+        &output_root.join(output_path),
+        context,
+        overwrite,
+      )?;
+    }
+  };
+  Ok(())
 }
 
 fn render_template(
@@ -440,12 +438,12 @@ fn render_template(
   context: &Context,
   overwrite: bool,
 ) -> Result<(), GenError> {
-  create_all_dirs(get_parent_dir(&output_path))?;
+  create_all_dirs(get_parent_dir(output_path))?;
 
-  let mut output_file = open_file_if_overwriting(overwrite, &output_path)?;
+  let mut output_file = open_file_if_overwriting(overwrite, output_path)?;
 
   tera
-    .render_to(template_name, &context, &mut output_file)
+    .render_to(template_name, context, &mut output_file)
     .map_err(|e| GenError::TemplateRendering {
       template: template_name.to_string(),
       source: e,
@@ -486,7 +484,7 @@ impl AsRef<Context> for ContextRef {
   fn as_ref(&self) -> &Context {
     match self {
       ContextRef::Original(ctx) => ctx.as_ref(),
-      ContextRef::New(ctx) => &ctx,
+      ContextRef::New(ctx) => ctx,
     }
   }
 }

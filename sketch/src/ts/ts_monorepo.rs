@@ -51,7 +51,7 @@ impl Config {
     if let Some(hooks_pre) = root_package.hooks_pre && !hooks_pre.is_empty() {
       self.execute_command(
         self.shell.as_deref(),
-        &out_dir,
+        out_dir,
         hooks_pre,
         cli_vars,
         false,
@@ -191,13 +191,13 @@ impl Config {
     }
 
     if let Some(templates) = root_package.with_templates && !templates.is_empty() {
-      self.generate_templates(&out_dir, templates, cli_vars)?;
+      self.generate_templates(out_dir, templates, cli_vars)?;
     }
 
     if let Some(hooks_post) = root_package.hooks_post && !hooks_post.is_empty() {
       self.execute_command(
         self.shell.as_deref(),
-        &out_dir,
+        out_dir,
         hooks_post,
         cli_vars,
         false,

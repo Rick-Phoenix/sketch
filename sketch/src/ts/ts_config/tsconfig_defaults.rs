@@ -48,7 +48,7 @@ pub(crate) fn get_default_package_tsconfig() -> TsConfig {
     ]),
     compiler_options: Some(CompilerOptions {
       out_dir: Some(".out".to_string()),
-      ts_build_info_file: Some(format!(".out/.tsBuildInfoSrc")),
+      ts_build_info_file: Some(".out/.tsBuildInfoSrc".to_string()),
       emit_declaration_only: Some(true),
       ..Default::default()
     }),

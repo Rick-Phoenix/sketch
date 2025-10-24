@@ -23,10 +23,8 @@ pub(crate) async fn get_config_from_cli(
   if !ignore_config {
     let config_path = if let Some(config_file) = get_config_file_path(config_path) {
       Some(config_file)
-    } else if let Some(config_from_xdg) = get_config_from_xdg() {
-      Some(config_from_xdg)
     } else {
-      None
+      get_config_from_xdg()
     };
 
     if let Some(config_path) = config_path {
@@ -42,18 +40,16 @@ pub(crate) async fn get_config_from_cli(
     config.no_overwrite = Some(true);
   }
 
-  match command {
-    Commands::Ts {
-      typescript_overrides,
-      ..
-    } => {
-      let typescript = config.typescript.get_or_insert_default();
+  if let Commands::Ts {
+    typescript_overrides,
+    ..
+  } = command
+  {
+    let typescript = config.typescript.get_or_insert_default();
 
-      if let Some(typescript_overrides) = typescript_overrides {
-        typescript.merge(typescript_overrides.clone());
-      }
+    if let Some(typescript_overrides) = typescript_overrides {
+      typescript.merge(typescript_overrides.clone());
     }
-    _ => {}
   };
 
   Ok(config)
@@ -71,21 +67,19 @@ fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
       }
     }
 
-    return None;
+    None
   }
 }
 
 fn get_config_from_xdg() -> Option<PathBuf> {
   let xdg_config = if let Ok(env_val) = env::var("XDG_CONFIG_HOME") {
     Some(PathBuf::from(env_val))
-  } else if let Some(home) = env::home_dir() {
-    Some(home.join(".config"))
   } else {
-    None
+    env::home_dir().map(|home| home.join(".config"))
   };
 
   if let Some(xdg_config) = xdg_config {
-    let config_dir = PathBuf::from(xdg_config).join("sketch");
+    let config_dir = xdg_config.join("sketch");
 
     if config_dir.is_dir() {
       for name in DEFAULT_CONFIG_NAMES {
