@@ -323,6 +323,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     }
 
     Render {
+      template,
       content,
       output,
       id,
@@ -330,6 +331,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
     } => {
       let template_data = if let Some(id) = id {
         TemplateData::Id(id)
+      } else if let Some(template) = template {
+        TemplateData::Id(template)
       } else if let Some(content) = content {
         TemplateData::Content {
           name: "__from_cli".to_string(),
@@ -575,9 +578,13 @@ pub enum Commands {
     #[arg(short, long, group = "input")]
     file: Option<PathBuf>,
 
-    /// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
+    /// The id of the template to use
     #[arg(short, long, group = "input")]
     id: Option<String>,
+
+    /// The path to a template file, starting from `templates_dir`
+    #[arg(short, long, group = "input")]
+    template: Option<String>,
 
     /// The literal definition for the template
     #[arg(short, long, group = "input")]
