@@ -167,8 +167,12 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       serialize_json(&content, &output, overwrite)?;
     }
 
-    Commands::CargoToml { output, preset } => {
-      let content = config
+    Commands::CargoToml {
+      name,
+      output,
+      preset,
+    } => {
+      let mut content = config
         .cargo_toml_presets
         .get(&preset)
         .ok_or(GenError::PresetNotFound {
@@ -177,6 +181,11 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
         })?
         .clone()
         .process_data(preset.as_str(), &config.cargo_toml_presets)?;
+
+      if let Some(name) = name {
+        let package = content.package.get_or_insert_default();
+        package.name = Some(name);
+      }
 
       let output = output.unwrap_or_else(|| "Cargo.toml".into());
 
@@ -645,6 +654,10 @@ pub enum Commands {
 
     /// The output path of the new file [default: `Cargo.toml`]
     output: Option<PathBuf>,
+
+    /// Sets the name of the package in the new file. Overrides the value in the preset.
+    #[arg(short, long)]
+    name: Option<String>,
   },
 
   /// Executes typescript-specific commands.

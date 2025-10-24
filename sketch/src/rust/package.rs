@@ -19,7 +19,7 @@ use crate::{
 ///
 /// You can replace `Metadata` generic type with your own
 /// to parse into something more useful than a generic toml `Value`
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Merge)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Merge, Default)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "kebab-case")]
 pub struct Package {
