@@ -11,7 +11,7 @@ use serde_json::Value;
 use crate::{
   merge_btree_maps, merge_btree_sets, merge_optional_btree_maps, merge_optional_btree_sets,
   merge_optional_nested, overwrite_if_some,
-  rust::{Dependency, Edition, Lint, OptionalFile, Publish, Resolver},
+  rust::{merge_dependencies, Dependency, Edition, Lint, OptionalFile, Publish, Resolver},
 };
 
 /// A manifest can contain both a package and workspace-wide properties
@@ -52,7 +52,7 @@ pub struct Workspace {
 
   /// Template for `needs_workspace_inheritance`
   #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
+  #[merge(strategy = merge_dependencies)]
   pub dependencies: BTreeMap<String, Dependency>,
 
   /// Workspace-level lint groups

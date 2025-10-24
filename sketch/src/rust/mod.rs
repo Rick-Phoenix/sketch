@@ -5,6 +5,7 @@ pub mod workspace;
 
 use std::{
   collections::{BTreeMap, BTreeSet},
+  mem,
   path::PathBuf,
 };
 
@@ -18,7 +19,6 @@ use crate::{
   merge_btree_maps, merge_btree_sets, merge_index_sets, merge_nested, merge_optional_nested,
   merge_presets, overwrite_if_some,
   rust::{package::Package, profile_settings::Profiles, workspace::Workspace},
-  serde_utils::StringOrNum,
   Extensible, GenError, Preset,
 };
 
@@ -136,17 +136,17 @@ pub struct Manifest {
 
   /// Normal dependencies
   #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
+  #[merge(strategy = merge_dependencies)]
   pub dependencies: BTreeMap<String, Dependency>,
 
   /// Dev/test-only deps
   #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
+  #[merge(strategy = merge_dependencies)]
   pub dev_dependencies: BTreeMap<String, Dependency>,
 
   /// Build-time deps
   #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-  #[merge(strategy = merge_btree_maps)]
+  #[merge(strategy = merge_dependencies)]
   pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
@@ -203,11 +203,68 @@ pub enum Dependency {
   Detailed(Box<DependencyDetail>),
 }
 
+pub(crate) fn merge_dependencies(
+  left: &mut BTreeMap<String, Dependency>,
+  right: BTreeMap<String, Dependency>,
+) {
+  for (name, dep) in right {
+    if let Some(previous) = left.get_mut(&name) {
+      previous.merge(dep);
+    } else {
+      left.insert(name, dep);
+    }
+  }
+}
+
+impl Merge for Dependency {
+  fn merge(&mut self, other: Self) {
+    match self {
+      Dependency::Simple(_) => {
+        *self = other;
+      }
+      Dependency::Inherited(left_options) => match other {
+        Dependency::Simple(_) => *self = other,
+        Dependency::Inherited(right) => left_options.merge(right),
+        Dependency::Detailed(mut right) => {
+          if let Some(optional) = left_options.optional && right.optional.is_none() {
+              right.optional = Some(optional);
+            }
+
+          let left_features = mem::take(&mut left_options.features);
+
+          right.features.extend(left_features);
+
+          *self = Dependency::Detailed(right);
+        }
+      },
+      Dependency::Detailed(left) => match other {
+        Dependency::Simple(_) => *self = other,
+        Dependency::Inherited(mut right) => {
+          if let Some(optional) = left.optional && right.optional.is_none() {
+              right.optional = Some(optional);
+            }
+
+          let left_features = mem::take(&mut left.features);
+
+          right.features.extend(left_features);
+
+          *self = Dependency::Inherited(right);
+        }
+        Dependency::Detailed(right) => {
+          left.merge(*right);
+        }
+      },
+    }
+  }
+}
+
 /// When a dependency is defined as `{ workspace = true }`,
 /// and workspace data hasn't been applied yet.
-#[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize, Merge)]
 #[serde(rename_all = "kebab-case")]
+#[merge(strategy = overwrite_if_some)]
 pub struct InheritedDependencyDetail {
+  #[merge(strategy = merge_btree_sets)]
   #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
   pub features: BTreeSet<String>,
 
@@ -219,8 +276,9 @@ pub struct InheritedDependencyDetail {
 }
 
 /// When definition of a dependency is more than just a version string.
-#[derive(Debug, Clone, PartialEq, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, JsonSchema, Serialize, Deserialize, Merge)]
 #[serde(rename_all = "kebab-case")]
+#[merge(strategy = overwrite_if_some)]
 pub struct DependencyDetail {
   /// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -249,13 +307,6 @@ pub struct DependencyDetail {
   #[serde(skip_serializing_if = "Option::is_none")]
   pub path: Option<String>,
 
-  /// If true, the dependency has been defined at the workspace level, so the `path` is joined with workspace's base path.
-  ///
-  /// This is a field added by this crate, does not exist in TOML.
-  /// Note that `Dependency::Simple` won't have this flag, even if it was inherited.
-  #[serde(skip)]
-  pub inherited: bool,
-
   /// Read dependency from git repo URL, not allowed on crates-io.
   #[serde(skip_serializing_if = "Option::is_none")]
   pub git: Option<String>,
@@ -273,6 +324,7 @@ pub struct DependencyDetail {
   ///
   /// Note that Cargo interprets `default` in a special way.
   #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+  #[merge(strategy = merge_btree_sets)]
   pub features: BTreeSet<String>,
 
   /// NB: Not allowed at workspace level
@@ -288,6 +340,7 @@ pub struct DependencyDetail {
 
   /// Contains the remaining unstable keys and values for the dependency.
   #[serde(flatten)]
+  #[merge(strategy = merge_btree_maps)]
   pub unstable: BTreeMap<String, Value>,
 }
 
