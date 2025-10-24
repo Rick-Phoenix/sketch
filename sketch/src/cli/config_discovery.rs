@@ -20,16 +20,16 @@ pub(crate) async fn get_config_from_cli(
 
   let mut config = Config::default();
 
-  if !ignore_config {
-    let config_path = if let Some(config_file) = get_config_file_path(config_path) {
-      Some(config_file)
-    } else {
-      get_config_from_xdg()
-    };
+  let config_path = if let Some(path) = config_path {
+    Some(path)
+  } else if !ignore_config {
+    get_config_path_from_defaults()
+  } else {
+    get_config_from_xdg()
+  };
 
-    if let Some(config_path) = config_path {
-      config.merge(Config::from_file(&config_path)?);
-    }
+  if let Some(config_path) = config_path {
+    config.merge(Config::from_file(&config_path)?);
   }
 
   if let Some(templates_dir) = templates_dir {
@@ -57,18 +57,14 @@ pub(crate) async fn get_config_from_cli(
 
 const DEFAULT_CONFIG_NAMES: [&str; 3] = ["sketch.yaml", "sketch.toml", "sketch.json"];
 
-fn get_config_file_path(cli_arg: Option<PathBuf>) -> Option<PathBuf> {
-  if let Some(cli_arg) = cli_arg {
-    Some(cli_arg)
-  } else {
-    for name in DEFAULT_CONFIG_NAMES {
-      if exists(name).is_ok_and(|exists| exists) {
-        return Some(PathBuf::from(name));
-      }
+fn get_config_path_from_defaults() -> Option<PathBuf> {
+  for name in DEFAULT_CONFIG_NAMES {
+    if exists(name).is_ok_and(|exists| exists) {
+      return Some(PathBuf::from(name));
     }
-
-    None
   }
+
+  None
 }
 
 fn get_config_from_xdg() -> Option<PathBuf> {
