@@ -24,6 +24,7 @@ use crate::{
 #[serde(rename_all = "kebab-case")]
 pub struct Package {
   /// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.
+  #[serde(default, skip_serializing_if = "Option::is_none")]
   pub name: Option<String>,
 
   /// Must parse as semver, e.g. "1.9.0"
