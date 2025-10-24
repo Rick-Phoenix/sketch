@@ -196,7 +196,7 @@ pub struct Target {
 #[serde(untagged)]
 pub enum Dependency {
   /// Version requirement (e.g. `^1.5`)
-  Simple(StringOrNum),
+  Simple(String),
   /// Incomplete data
   Inherited(InheritedDependencyDetail), // order is important for serde
   /// `{ version = "^1.5", features = ["a", "b"] }` etc.
@@ -224,7 +224,7 @@ pub struct InheritedDependencyDetail {
 pub struct DependencyDetail {
   /// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub version: Option<StringOrNum>,
+  pub version: Option<String>,
 
   /// If `Some`, use this as the crate name instead of `[dependencies]`'s table key.
   ///
