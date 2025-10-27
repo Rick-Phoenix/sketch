@@ -19,6 +19,7 @@
     - [Templating Presets](./presets/templating-presets.md)
     - [Git Repo Presets](./presets/git.md)
     - [Github Workflow Presets](./presets/gh-workflow.md)
+    - [Cargo.toml Presets](./presets/cargo-toml.md)
     - [Docker Compose Presets](./presets/docker_compose.md)
     - [Typescript Presets](./presets/typescript.md)
         - [Smart Features](./ts/smart_features.md)
