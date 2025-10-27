@@ -81,7 +81,7 @@ Tree output:
 {{#include ../../../sketch/tests/output/custom_templates/remote/tree_output.txt:2:}}
 ```
 
-File output:
+File output for `some_file`:
 
 ```
 {{#include ../../../sketch/tests/output/custom_templates/remote/some_file}}

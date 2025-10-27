@@ -18,7 +18,7 @@ use crate::{
   git_workflow::{
     ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool, Workflow,
   },
-  rust::Manifest,
+  rust::{Edition, Inheritable, Manifest},
   serde_utils::StringOrNum,
   ts::package_json::PackageJson,
   Config,
@@ -95,7 +95,11 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let compose_file = Cli::try_parse_from(compose_file_cmd)?;
 
-  get_clean_example_cmd(&compose_file_cmd, &[1, 2, 3], &commands_dir.join("compose"))?;
+  get_clean_example_cmd(
+    &compose_file_cmd,
+    &[1, 2, 3, 8],
+    &commands_dir.join("compose"),
+  )?;
 
   execute_cli(compose_file).await?;
 
@@ -170,7 +174,14 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(cargo_toml_gen).await?;
 
+  get_clean_example_cmd(&cargo_cmd, &[1, 2, 3, 6], &commands_dir.join("cargo"))?;
+
   let output: Manifest = deserialize_toml(&output_file)?;
+
+  let package = output.package.unwrap();
+
+  assert_eq!(package.name.unwrap(), "cli-custom");
+  assert_eq!(package.edition.unwrap(), Inheritable::Set(Edition::E2024));
 
   let serde_features = output
     .dependencies
@@ -223,7 +234,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   get_clean_example_cmd(
     &gh_workflow_cmd,
-    &[1, 2, 3, 5],
+    &[1, 2, 3, 6],
     &commands_dir.join("workflow"),
   )?;
 

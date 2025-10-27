@@ -134,7 +134,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(from_remote_preset).await?;
 
-  write_command!(from_remote_preset_cmd, [1, 2, 3, 7], "remote");
+  write_command!(from_remote_preset_cmd, [1, 2, 3, 8], "remote");
   get_tree_output("tests/output/custom_templates/remote", None)?;
 
   let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
@@ -159,7 +159,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/lotr",
   ];
 
-  write_command!(collection_preset, [1, 2, 3, 5], "collection_preset");
+  write_command!(collection_preset, [1, 2, 3, 6], "collection_preset");
 
   let from_collection_preset = Cli::try_parse_from(collection_preset)?;
 
@@ -182,7 +182,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/structured",
   ];
 
-  write_command!(structured_preset, [1, 2, 3, 5], "structured_preset");
+  write_command!(structured_preset, [1, 2, 3, 6], "structured_preset");
 
   let from_structured_preset = Cli::try_parse_from(structured_preset)?;
 

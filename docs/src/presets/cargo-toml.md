@@ -12,6 +12,10 @@ Config:
 {{#include ../../../examples/presets.yaml:cargo}}
 ```
 
+Command:
+
+>`{{#include ../../../sketch/tests/output/generated_configs/commands/cargo}}`
+
 Output:
 
 ```yaml

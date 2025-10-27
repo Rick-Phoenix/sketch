@@ -95,10 +95,18 @@ templating_presets:
 # `Cargo.toml` presets
 # ANCHOR: cargo
 cargo_toml_presets:
+  base:
+    package:
+      version: "0.1.0"
+      edition: "2024"
+
   cli-custom:
     extends_presets:
+      - base
       - cli-tools
       - serde-ordered
+    package:
+      name: cli-custom
     dependencies:
       clap:
         features:

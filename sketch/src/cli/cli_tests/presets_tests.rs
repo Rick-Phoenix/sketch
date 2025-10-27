@@ -47,7 +47,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&out_dir, None)?;
 
-  get_clean_example_cmd(&git_preset_args, &[1, 2, 3, 6], &out_dir.join("cmd"))?;
+  get_clean_example_cmd(&git_preset_args, &[1, 2, 3, 7], &out_dir.join("cmd"))?;
 
   verify_generated_workflow(&out_dir.join(".github/workflows/my_workflow.yaml"))?;
 

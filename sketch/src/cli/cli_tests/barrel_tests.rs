@@ -89,7 +89,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "tests/ts_barrel",
   ];
 
-  write_command!(basic_cmd, [1, 3, 4, 5], "barrel");
+  write_command!(basic_cmd, [1, 4, 5, 6], "barrel");
 
   let basic = Cli::try_parse_from(basic_cmd)?;
 
