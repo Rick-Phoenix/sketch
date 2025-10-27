@@ -28,6 +28,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let with_exclude_and_ext_cmd = [
     "sketch",
+    "--ignore-config",
     "ts",
     "barrel",
     "--exclude",
@@ -53,6 +54,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let with_allowed_ext_cmd = [
     "sketch",
+    "--ignore-config",
     "ts",
     "barrel",
     "--exclude",
@@ -79,6 +81,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let basic_cmd = [
     "sketch",
+    "--ignore-config",
     "ts",
     "barrel",
     "-o",
@@ -86,7 +89,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "tests/ts_barrel",
   ];
 
-  write_command!(basic_cmd, [3, 4, 5], "barrel");
+  write_command!(basic_cmd, [1, 3, 4, 5], "barrel");
 
   let basic = Cli::try_parse_from(basic_cmd)?;
 

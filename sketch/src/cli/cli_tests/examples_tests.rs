@@ -26,6 +26,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let monorepo_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     path_to_str!(examples_dir.join("root_package.yaml")),
     "ts",
@@ -37,7 +38,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples",
   ];
 
-  write_command!(monorepo_cmd, [1, 2, 9], "monorepo_cmd");
+  write_command!(monorepo_cmd, [1, 2, 3, 9], "monorepo_cmd");
 
   let monorepo_setup = Cli::try_parse_from(monorepo_cmd)?;
 
@@ -47,6 +48,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let people_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     path_to_str!(examples_dir.join("people.yaml")),
     "ts",
@@ -56,7 +58,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples/packages/people-example",
   ];
 
-  write_command!(people_cmd, [1, 2, 7], "people_cmd");
+  write_command!(people_cmd, [1, 2, 3, 7], "people_cmd");
 
   let people_example = Cli::try_parse_from(people_cmd)?;
 
@@ -64,6 +66,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let catalog_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     path_to_str!(examples_dir.join("catalog.yaml")),
     "ts",
@@ -73,7 +76,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples/packages/with-catalog",
   ];
 
-  write_command!(catalog_cmd, [1, 2, 7], "catalog_cmd");
+  write_command!(catalog_cmd, [1, 2, 3, 7], "catalog_cmd");
 
   let catalog_example = Cli::try_parse_from(catalog_cmd)?;
 
@@ -103,6 +106,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 
   let package_gen_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     path_to_str!(examples_dir.join("new_package.yaml")),
     "ts",
@@ -112,7 +116,7 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/ts_examples/packages/frontend",
   ];
 
-  write_command!(package_gen_cmd, [1, 2, 7], "package_gen_cmd");
+  write_command!(package_gen_cmd, [1, 2, 3, 7], "package_gen_cmd");
 
   let package_gen = Cli::try_parse_from(package_gen_cmd)?;
 
@@ -133,10 +137,11 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
   let mut bin = get_bin!();
 
   let args = [
+    "--ignore-config",
     "--templates-dir",
     path_to_str!(examples_dir.join("templating/templates")),
     "render",
-    "--id",
+    "--template",
     "example.j2",
     "--stdout",
   ];

@@ -33,6 +33,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   let git_preset_args = [
     "sketch",
+    "--ignore-config",
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "repo",
@@ -46,7 +47,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   get_tree_output(&out_dir, None)?;
 
-  get_clean_example_cmd(&git_preset_args, &[1, 2, 6], &out_dir.join("cmd"))?;
+  get_clean_example_cmd(&git_preset_args, &[1, 2, 3, 6], &out_dir.join("cmd"))?;
 
   verify_generated_workflow(&out_dir.join(".github/workflows/my_workflow.yaml"))?;
 
@@ -107,6 +108,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
   let oxlint_test = Cli::try_parse_from([
     "sketch",
+    "--ignore-config",
     "-c",
     path_to_str!(examples_dir.join("presets.yaml")),
     "ts",

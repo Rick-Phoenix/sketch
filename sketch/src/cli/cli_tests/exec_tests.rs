@@ -23,6 +23,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let literal_template_cmd = [
     "sketch",
+        "--ignore-config",
     "--set",
     "condition=\"slower\"",
     "exec",
@@ -31,7 +32,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "echo \"engine feels good... much {{ condition }} than before... amazing\" > command_output.txt",
   ];
 
-  write_command!(literal_template_cmd, [4, 5], "exec_literal_cmd");
+  write_command!(literal_template_cmd, [1, 4, 5], "exec_literal_cmd");
 
   let literal = Cli::try_parse_from(literal_template_cmd)?;
 
@@ -46,6 +47,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_file_cmd = [
     "sketch",
+    "--ignore-config",
     "--set",
     "something=\"space\"",
     "exec",
@@ -55,7 +57,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "tests/commands_tests/cmd_from_file.j2",
   ];
 
-  write_command!(from_file_cmd, [4, 5], "cmd_from_file");
+  write_command!(from_file_cmd, [1, 4, 5], "cmd_from_file");
 
   let from_file = Cli::try_parse_from(from_file_cmd)?;
 
@@ -70,6 +72,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_template_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "--set",
@@ -81,7 +84,7 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
     "cmd_template.j2",
   ];
 
-  write_command!(from_template_cmd, [1, 2, 6, 7], "exec_from_template_cmd");
+  write_command!(from_template_cmd, [1, 2, 3, 6, 7], "exec_from_template_cmd");
 
   let from_file_in_templates_dir = Cli::try_parse_from(from_template_cmd)?;
 

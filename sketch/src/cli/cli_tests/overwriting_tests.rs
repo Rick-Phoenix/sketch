@@ -15,6 +15,7 @@ async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
 
   let first_write = Cli::try_parse_from([
     "sketch",
+    "--ignore-config",
     "render",
     "--content",
     "they're taking the hobbits to Isengard!",
@@ -28,6 +29,7 @@ async fn overwrite_test() -> Result<(), Box<dyn std::error::Error>> {
   // Ensuring the second write fails
   cmd
     .args([
+      "--ignore-config",
       "--no-overwrite",
       "render",
       "--content",

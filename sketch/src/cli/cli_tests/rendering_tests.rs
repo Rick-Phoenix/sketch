@@ -35,6 +35,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_template_id_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "render",
@@ -43,7 +44,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/from_template_id.txt",
   ];
 
-  write_command!(from_template_id_cmd, [1, 2], "from_id");
+  write_command!(from_template_id_cmd, [1, 2, 3], "from_id");
 
   let from_template_id = Cli::try_parse_from(from_template_id_cmd)?;
 
@@ -55,15 +56,16 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_template_file_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "render",
-    "--id",
+    "--template",
     "subdir/nested_file.j2",
     "tests/output/custom_templates/from_template_file.txt",
   ];
 
-  write_command!(from_template_file_cmd, [1, 2], "from_template_file");
+  write_command!(from_template_file_cmd, [1, 2, 3], "from_template_file");
 
   let from_template_file = Cli::try_parse_from(from_template_file_cmd)?;
 
@@ -73,6 +75,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let literal_template_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "render",
@@ -81,7 +84,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/from_literal.txt",
   ];
 
-  write_command!(literal_template_cmd, [1, 2], "literal_template_cmd");
+  write_command!(literal_template_cmd, [1, 2, 3], "literal_template_cmd");
 
   let from_literal = Cli::try_parse_from(literal_template_cmd)?;
 
@@ -98,6 +101,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   cmd
     .args([
+      "--ignore-config",
       "--set",
       "location=\"Isengard\"",
       "render",
@@ -116,6 +120,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let from_remote_preset_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "--set",
@@ -129,7 +134,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(from_remote_preset).await?;
 
-  write_command!(from_remote_preset_cmd, [1, 2, 7], "remote");
+  write_command!(from_remote_preset_cmd, [1, 2, 3, 7], "remote");
   get_tree_output("tests/output/custom_templates/remote", None)?;
 
   let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
@@ -146,6 +151,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let collection_preset = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "render-preset",
@@ -153,7 +159,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/lotr",
   ];
 
-  write_command!(collection_preset, [1, 2, 5], "collection_preset");
+  write_command!(collection_preset, [1, 2, 3, 5], "collection_preset");
 
   let from_collection_preset = Cli::try_parse_from(collection_preset)?;
 
@@ -168,6 +174,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let structured_preset = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "render-preset",
@@ -175,7 +182,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
     "tests/output/custom_templates/structured",
   ];
 
-  write_command!(structured_preset, [1, 2, 5], "structured_preset");
+  write_command!(structured_preset, [1, 2, 3, 5], "structured_preset");
 
   let from_structured_preset = Cli::try_parse_from(structured_preset)?;
 
@@ -190,6 +197,7 @@ async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
 
   let extended_preset = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "render-preset",

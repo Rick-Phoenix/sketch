@@ -26,6 +26,7 @@ async fn js_catalog() -> Result<(), Box<dyn std::error::Error>> {
 
   let cmd = Cli::try_parse_from([
     "sketch",
+    "--ignore-config",
     "-c",
     &config_path.to_string_lossy(),
     "ts",
@@ -75,6 +76,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let compose_file_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "docker-compose",
@@ -84,7 +86,11 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let compose_file = Cli::try_parse_from(compose_file_cmd)?;
 
-  get_clean_example_cmd(&compose_file_cmd, &[1, 2, 5], &commands_dir.join("compose"))?;
+  get_clean_example_cmd(
+    &compose_file_cmd,
+    &[1, 2, 3, 5],
+    &commands_dir.join("compose"),
+  )?;
 
   execute_cli(compose_file).await?;
 
@@ -129,6 +135,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let cargo_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "cargo-toml",
@@ -150,6 +157,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let gh_workflow_cmd = [
     "sketch",
+    "--ignore-config",
     "-c",
     &config_file.to_string_lossy(),
     "gh-workflow",
@@ -161,7 +169,11 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   execute_cli(gh_workflow).await?;
 
-  get_clean_example_cmd(&gh_workflow_cmd, &[1, 2, 5], &commands_dir.join("workflow"))?;
+  get_clean_example_cmd(
+    &gh_workflow_cmd,
+    &[1, 2, 3, 5],
+    &commands_dir.join("workflow"),
+  )?;
 
   verify_generated_workflow(&output_file)?;
 
