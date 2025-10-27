@@ -25,6 +25,7 @@ use crate::{
     PresetElement, TemplateData, TemplateOutput, TemplateOutputKind, TemplatingPreset,
     TemplatingPresetReference,
   },
+  docker::compose::service::{ServiceData, ServiceFromCli},
   exec::Hook,
   fs::{
     create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json, serialize_toml,
@@ -194,28 +195,44 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
       serialize_toml(&content, &output, overwrite)?;
     }
 
-    Commands::DockerCompose { output, preset } => {
+    Commands::DockerCompose {
+      output,
+      preset,
+      services,
+    } => {
       let docker_config = config.docker.unwrap_or_default();
       let compose_presets = docker_config.compose_presets;
 
-      let content = compose_presets
+      let mut file_preset = compose_presets
         .get(&preset)
         .ok_or(GenError::PresetNotFound {
           kind: Preset::DockerCompose,
           name: preset.clone(),
         })?
-        .clone()
+        .clone();
+
+      for service in services {
+        let service_name = service.name.unwrap_or_else(|| service.preset_id.clone());
+
+        file_preset
+          .config
+          .services
+          .insert(service_name, ServiceData::Id(service.preset_id));
+      }
+
+      let file_data = file_preset
         .process_data(
           preset.as_str(),
           &compose_presets,
           &docker_config.service_presets,
-        )?;
+        )
+        .map_err(|e| generic_error!("{e}"))?;
 
       let output = output.unwrap_or_else(|| "compose.yaml".into());
 
       create_parent_dirs(&output)?;
 
-      serialize_yaml(&content, &output, overwrite)?;
+      serialize_yaml(&file_data, &output, overwrite)?;
     }
     Commands::PreCommit { output, preset } => {
       let content = config
@@ -643,6 +660,10 @@ pub enum Commands {
 
     /// The output path of the new file [default: `compose.yaml`]
     output: Option<PathBuf>,
+
+    /// Adds one or many service presets to the generated file. Can specify the preset ID and the name of the service in the output file, or just the preset ID to also use it for the service name.
+    #[arg(short = 'S', long = "service", value_parser = ServiceFromCli::from_cli, help = "id=PRESET,name=NAME|ID")]
+    services: Vec<ServiceFromCli>,
   },
 
   /// Generates a `pre-commit` config file from a preset.

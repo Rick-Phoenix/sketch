@@ -6,7 +6,10 @@ use pretty_assertions::assert_eq;
 use super::reset_testing_dir;
 use crate::{
   cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli},
-  docker::compose::{service::ServiceVolume, ComposeFile},
+  docker::compose::{
+    service::{Port, ServiceVolume},
+    ComposeFile,
+  },
   fs::{deserialize_json, deserialize_toml, deserialize_yaml},
   git_workflow::{
     ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool, Workflow,
@@ -80,23 +83,39 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
     "-c",
     &config_file.to_string_lossy(),
     "docker-compose",
+    "--service",
+    "caddy",
     "extended",
     &output_file.to_string_lossy(),
   ];
 
   let compose_file = Cli::try_parse_from(compose_file_cmd)?;
 
-  get_clean_example_cmd(
-    &compose_file_cmd,
-    &[1, 2, 3, 5],
-    &commands_dir.join("compose"),
-  )?;
+  get_clean_example_cmd(&compose_file_cmd, &[1, 2, 3], &commands_dir.join("compose"))?;
 
   execute_cli(compose_file).await?;
 
   let output: ComposeFile = deserialize_yaml(&output_file)?;
 
   let mut services = output.services;
+
+  let caddy_service = services.remove("caddy").unwrap().as_config()?;
+
+  assert!(caddy_service
+    .networks
+    .as_ref()
+    .unwrap()
+    .contains("my_network"));
+  assert!(caddy_service
+    .ports
+    .as_ref()
+    .unwrap()
+    .contains(&Port::String("80:80".to_string())));
+  assert!(caddy_service
+    .ports
+    .as_ref()
+    .unwrap()
+    .contains(&Port::String("443:443".to_string())));
 
   let service = services.remove("my_service").unwrap().as_config()?;
 

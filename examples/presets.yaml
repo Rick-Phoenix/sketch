@@ -112,6 +112,16 @@ docker:
         - base_service
       image: postgres
 
+    caddy:
+      extends_presets:
+        - base_service
+      image: lucaslorentz/caddy-docker-proxy:ci-alpine
+      networks:
+        - my_network
+      ports:
+        - 80:80
+        - 443:443
+
   compose_presets:
     # Base preset for a compose file
     base:

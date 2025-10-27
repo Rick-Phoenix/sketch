@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
+  cli::parsers::parse_single_key_value_pair,
   docker::compose::{merge_extra_hosts, Deploy, ExtraHosts, ServiceConfigOrSecret, Ulimit},
   merge_index_sets, merge_nested, merge_optional_btree_maps, merge_optional_btree_sets,
   merge_optional_vecs, merge_presets, overwrite_if_some,
@@ -19,6 +20,43 @@ use crate::{
   },
   Extensible, GenError, Preset,
 };
+
+#[derive(Clone, Debug)]
+pub struct ServiceFromCli {
+  pub preset_id: String,
+  pub name: Option<String>,
+}
+
+impl ServiceFromCli {
+  pub fn from_cli(s: &str) -> Result<Self, String> {
+    let s = s.trim();
+
+    let mut service_name: Option<String> = None;
+    let mut preset_name: Option<String> = None;
+
+    let parts: Vec<&str> = s.split(',').collect();
+
+    if parts.len() == 1 {
+      preset_name = Some(parts[0].to_string());
+    } else {
+      for part in parts {
+        let (key, val) = parse_single_key_value_pair("--service", part)?;
+        if key == "id" {
+          preset_name = Some(val.to_string());
+        } else if key == "name" {
+          service_name = Some(val.to_string());
+        } else {
+          return Err(format!("Unknown parameter `{key}` in --service"));
+        }
+      }
+    }
+
+    Ok(Self {
+      name: service_name,
+      preset_id: preset_name.ok_or("No preset id for docker service has been provided")?,
+    })
+  }
+}
 
 /// Ways of representing a service in a Docker preset.
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
