@@ -465,11 +465,11 @@ pub struct ConfigOverrides {
   pub no_overwrite: bool,
 
   /// Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
-  #[arg(short, long, value_name = "FILE", group = "config-file")]
+  #[arg(short, long, value_name = "FILE")]
   pub config: Option<PathBuf>,
 
-  /// Ignores any automatically detected config files, uses cli instructions only
-  #[arg(long, group = "config-file")]
+  /// Ignores any automatically detected config files, uses cli instructions and config file defined with --config.
+  #[arg(long)]
   pub ignore_config: bool,
 }
 
