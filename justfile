@@ -12,3 +12,7 @@ release-test version="patch":
 [working-directory('sketch')]
 release-exec version="patch":
     EXEC_RELEASE=true cargo release {{ version }} --execute
+
+[working-directory('docs')]
+open-docs:
+    mdbook serve --open
