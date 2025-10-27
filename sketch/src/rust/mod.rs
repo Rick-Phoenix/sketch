@@ -203,6 +203,16 @@ pub enum Dependency {
   Detailed(Box<DependencyDetail>),
 }
 
+impl Dependency {
+  pub fn features(&self) -> Option<&BTreeSet<String>> {
+    match self {
+      Dependency::Simple(_) => None,
+      Dependency::Inherited(dep) => Some(&dep.features),
+      Dependency::Detailed(dep) => Some(&dep.features),
+    }
+  }
+}
+
 pub(crate) fn merge_dependencies(
   left: &mut BTreeMap<String, Dependency>,
   right: BTreeMap<String, Dependency>,

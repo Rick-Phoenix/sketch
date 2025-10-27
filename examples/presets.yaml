@@ -83,17 +83,38 @@ templating_presets:
 # ANCHOR: all
 
 # `Cargo.toml` presets
+# ANCHOR: cargo
 cargo_toml_presets:
-  base:
-    dependencies:
-      regex: "1"
-      serde: "1"
-
-  extended:
+  cli-custom:
     extends_presets:
-      - base
+      - cli-tools
+      - serde-ordered
     dependencies:
-      tokio: "1"
+      clap:
+        features:
+          - derive
+      owo-colors:
+        features:
+          - supports-colors
+
+  cli-tools:
+    dependencies:
+      ratatui: "0.29"
+      clap: "4.5"
+      serde: "1"
+      owo-colors: "4"
+
+  serde-ordered:
+    dependencies:
+      serde:
+        version: "1"
+        features:
+          - preserve_order
+      indexmap:
+        version: "2.11"
+        features:
+          - serde
+# ANCHOR_END: cargo
 
 # Docker Compose presets
 # ANCHOR: docker_compose

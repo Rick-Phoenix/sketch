@@ -158,7 +158,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
     "-c",
     &config_file.to_string_lossy(),
     "cargo-toml",
-    "extended",
+    "cli-custom",
     &output_file.to_string_lossy(),
   ];
 
@@ -168,9 +168,38 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
   let output: Manifest = deserialize_toml(&output_file)?;
 
-  assert!(output.dependencies.contains_key("serde"));
-  assert!(output.dependencies.contains_key("regex"));
-  assert!(output.dependencies.contains_key("tokio"));
+  let serde_features = output
+    .dependencies
+    .get("serde")
+    .unwrap()
+    .features()
+    .unwrap();
+
+  assert!(serde_features.contains("preserve_order"));
+
+  let indexmap_features = output
+    .dependencies
+    .get("indexmap")
+    .unwrap()
+    .features()
+    .unwrap();
+
+  assert!(indexmap_features.contains("serde"));
+
+  let clap_features = output.dependencies.get("clap").unwrap().features().unwrap();
+
+  assert!(clap_features.contains("derive"));
+
+  let owo_colors_features = output
+    .dependencies
+    .get("owo-colors")
+    .unwrap()
+    .features()
+    .unwrap();
+
+  assert!(owo_colors_features.contains("supports-colors"));
+
+  assert!(output.dependencies.contains_key("ratatui"));
 
   let output_file = output_dir.join("workflow.yaml");
 
