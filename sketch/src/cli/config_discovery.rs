@@ -25,7 +25,7 @@ pub(crate) async fn get_config_from_cli(
   } else if !ignore_config {
     get_config_path_from_defaults()
   } else {
-    get_config_from_xdg()
+    None
   };
 
   if let Some(config_path) = config_path {
@@ -64,7 +64,8 @@ fn get_config_path_from_defaults() -> Option<PathBuf> {
     }
   }
 
-  None
+  // Try xdg path if nothing else was found
+  get_config_from_xdg()
 }
 
 fn get_config_from_xdg() -> Option<PathBuf> {
