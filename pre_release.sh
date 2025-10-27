@@ -14,7 +14,7 @@ echo "EXEC_RELEASE status: $EXEC_RELEASE"
 
 echo "Running tests..."
 
-cargo test --all-features -p sketch -- -q --nocapture
+cargo test -p sketch-it --all-features -- -q --nocapture
 
 if [[ "$EXEC_RELEASE" == "true" ]]; then
   MINOR_VERSION=$(echo "$VERSION" | cut -d'.' -f1-2)
