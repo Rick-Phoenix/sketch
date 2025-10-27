@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Executing A Template - Sketch</title>
+        <title>Generating A Package - Sketch</title>
 
 
         <!-- Custom HTML head -->
@@ -178,47 +178,10 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="executing-templates"><a class="header" href="#executing-templates">Executing Templates</a></h1>
-<p>With the <code>sketch exec</code> command, you can render a template and then execute it as a shell command.</p>
-<p>To do this, you can use a regular file, a template with an id (either defined in the config file or inside the <code>templates_dir</code>), or even one defined within the command itself.</p>
-<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
-<h3 id="from-template"><a class="header" href="#from-template">From Template</a></h3>
-<p>Let's say that we have a file named <code>cmd_template.j2</code> inside our <code>templates_dir</code>, and it looks like this:</p>
-<pre><code class="language-txt">echo "{{ category }} engine... {{ category }}... argh!" &gt; output_from_templates_dir.txt
-</code></pre>
-<blockquote>
-<p>ℹ️ You do not have to use <code>.j2</code> as an extension for the template files. Any extension can be used.</p>
-</blockquote>
-<p>We can refer to it by its id:</p>
-<blockquote>
-<p><code>sketch --set category="gp2" tests/output/commands_tests -t cmd_template.j2</code></p>
-</blockquote>
-<p>This will trigger the command and create a file containing</p>
-<pre><code class="language-txt">gp2 engine... gp2... argh!
-</code></pre>
-<h3 id="from-file"><a class="header" href="#from-file">From File</a></h3>
-<p>We can also use a file that is not inside <code>templates_dir</code> by using the <code>-f</code> flag and providing the path to said file.  Relative paths will be resolved starting from the cwd.</p>
-<p>So let's say that we have this template file:</p>
-<pre><code class="language-txt">echo "all the time you have to leave the {{ something }}!" &gt; output_from_file.txt
-</code></pre>
-<p>Command:</p>
-<blockquote>
-<p><code>sketch --set something="space" tests/output/commands_tests -f tests/commands_tests/cmd_from_file.j2</code></p>
-</blockquote>
-<p>Output:</p>
-<pre><code class="language-txt">all the time you have to leave the space!
-</code></pre>
-<h3 id="from-literal-template"><a class="header" href="#from-literal-template">From Literal Template</a></h3>
-<p>Templates can also be defined directly as part of the command.</p>
-<p>Command:</p>
-<blockquote>
-<p><code>sketch --set condition="slower" tests/output/commands_tests 'echo "engine feels good... much {{ condition }} than before... amazing" &gt; command_output.txt'</code></p>
-</blockquote>
-<p>Output:</p>
-<pre><code class="language-txt">engine feels good... much slower than before... amazing
-</code></pre>
+                        <h1 id="generating-a-package"><a class="header" href="#generating-a-package">Generating A Package</a></h1>
+<p>You can use the command <code>sketch ts package</code> to generate a new Typescript package.</p>
 <h2 id="hooks"><a class="header" href="#hooks">Hooks</a></h2>
-<p>Templates can be executed as commands as <code>pre</code> or <code>post</code> hooks in a git <code>repo</code>, typecript <code>monorepo</code> or typescript <code>package</code> presets:</p>
+<p>We can define some commands (which can also be templates) to execute before and/or after generating the new package:</p>
 <pre><code class="language-yaml">    # Commands to run before generation, from the root of the new project
     hooks_pre:
       - command:
@@ -237,16 +200,97 @@
         context:
           greeting: hi
 </code></pre>
+<h2 id="adding-templates"><a class="header" href="#adding-templates">Adding Templates</a></h2>
+<p>You can also use the <code>with_templates</code> field (or the <code>--with-template</code> cli flag) to specify a list of templates or templating presets that should be generated whenever a package preset is being used.</p>
+<p>Let's say for example that in a type of package, you always need a <code>schemas</code> directory, where you import some common schemas from a shared package and define new ones.</p>
+<p>You can use this feature to generate a file inside <code>src/schemas/index.ts</code> automatically like this:</p>
+<pre><code class="language-yaml">      # Inside the package preset configuration
+      with_templates:
+        # We can refer to a preset by id or create a new one locally
+        - templates:
+            - output: src/schemas/index.ts
+              # This can be a template defined in the config file
+              # or file path inside templates_dir
+              template: schemas
+
+templates:
+  schemas: |
+    import z from "zod";
+    import { sharedSchemas } from "{{ schemas_package }}";
+
+vars:
+  schemas_package: "@myproject/schemas"
+</code></pre>
+<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<p>We start from this configuration:</p>
+<pre><code class="language-yaml">typescript:
+  # By default, typescript and oxlint are added to
+  # the dependencies
+  no_default_deps: true
+
+  package_presets:
+    frontend:
+      # The name of the package. If this is unset,
+      # the name of the output directory will be used.
+      name: "@myproject/frontend"
+
+      # The `package.json` config for this package. Can be a preset id
+      # or a literal configuration.
+      package_json:
+        devDependencies:
+          tailwindcss: "^4.0.0"
+
+      # Generates an oxlint config file in the root.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
+      oxlint: false
+
+      # Create a vitest setup.
+      # Can be a boolean, a preset id, or
+      # a literal configuration.
+      vitest:
+        # Where the config file should be generated, starting from
+        # the root of the package.
+        # It defaults to the value of `tests_dir`
+        out_dir: null
+
+        # The directory to use for tests
+        tests_dir: tests
+
+        # The directory containing the setup files for tests.
+        # (starting from tests_dir)
+        setup_dir: setup
+
+</code></pre>
+<p>And then run</p>
+<blockquote>
+<p><code>sketch ts package --preset frontend </code></p>
+</blockquote>
+<p>To obtain this output in the designated directory:</p>
+<pre><code>├── package.json
+├── src
+│   ├── index.ts
+│   └── schemas
+│       └── index.ts
+├── tests
+│   ├── setup
+│   │   └── tests_setup.ts
+│   └── vitest.config.ts
+└── tsconfig.json
+</code></pre>
+<blockquote>
+<p>ℹ️ You can also use the <code>-i</code> flag to automatically install the dependencies with your selected package manager whenever a new package is created.</p>
+</blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../templating/render-single.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../ts/monorepo.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../presets/summary.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../ts/barrel.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -256,11 +300,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../templating/render-single.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../ts/monorepo.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../presets/summary.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../ts/barrel.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
