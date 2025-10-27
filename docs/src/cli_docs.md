@@ -10,6 +10,7 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch render`↴](#sketch-render)
 * [`sketch render-preset`↴](#sketch-render-preset)
 * [`sketch exec`↴](#sketch-exec)
+* [`sketch gitignore`↴](#sketch-gitignore)
 * [`sketch gh-workflow`↴](#sketch-gh-workflow)
 * [`sketch docker-compose`↴](#sketch-docker-compose)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
@@ -37,6 +38,7 @@ This document contains the help content for the `sketch` command-line program.
 * `render` — Renders a single template to a file or to stdout
 * `render-preset` — Renders a templating preset
 * `exec` — Renders a template and executes it as a shell command
+* `gitignore` — Generates a `.gitignore` file from a preset
 * `gh-workflow` — Generates a Github workflow
 * `docker-compose` — Generates a Docker Compose file from a preset
 * `pre-commit` — Generates a `pre-commit` config file from a preset
@@ -156,6 +158,19 @@ Renders a template and executes it as a shell command
 * `--cwd <CWD>` — The cwd for the command to execute [default: `.`]
 * `-f`, `--file <FILE>` — The path to the command's template file, as an absolute path or relative to the cwd
 * `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
+
+
+
+## `sketch gitignore`
+
+Generates a `.gitignore` file from a preset
+
+**Usage:** `sketch gitignore <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the new file [default: `.gitignore`]
 
 
 

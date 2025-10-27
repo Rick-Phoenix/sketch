@@ -68,6 +68,23 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
   }
 
   match command {
+    Commands::Gitignore { preset, output } => {
+      let data = config
+        .gitignore_presets
+        .get(&preset)
+        .ok_or(GenError::PresetNotFound {
+          kind: Preset::Gitignore,
+          name: preset.clone(),
+        })?
+        .clone()
+        .process_data(&preset, &config.gitignore_presets)?;
+
+      write_file(
+        &output.unwrap_or_else(|| PathBuf::from(".gitignore")),
+        &data.to_string(),
+        overwrite,
+      )?;
+    }
     Commands::GhWorkflow { preset, output } => {
       let data = config
         .github
@@ -642,6 +659,15 @@ pub enum Commands {
     /// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
     #[arg(short, long, group = "input")]
     template: Option<String>,
+  },
+
+  /// Generates a `.gitignore` file from a preset.
+  Gitignore {
+    /// The preset id
+    preset: String,
+
+    /// The output path of the new file [default: `.gitignore`]
+    output: Option<PathBuf>,
   },
 
   /// Generates a Github workflow.

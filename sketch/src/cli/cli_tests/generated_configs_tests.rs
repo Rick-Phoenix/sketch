@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+  fs::read_to_string,
+  path::{Path, PathBuf},
+};
 
 use clap::Parser;
 use pretty_assertions::assert_eq;
@@ -224,6 +227,30 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
   )?;
 
   verify_generated_workflow(&output_file)?;
+
+  let gitignore_path = output_dir.join(".gitignore");
+
+  let gitignore_cmd = [
+    "sketch",
+    "--ignore-config",
+    "-c",
+    &config_file.to_string_lossy(),
+    "gitignore",
+    "ts",
+    &gitignore_path.to_string_lossy(),
+  ];
+
+  let gitignore_gen = Cli::try_parse_from(gitignore_cmd)?;
+
+  execute_cli(gitignore_gen).await?;
+
+  let gitignore_output = read_to_string(&gitignore_path)?;
+
+  let gitignore_entries: Vec<&str> = gitignore_output.split('\n').collect();
+
+  for entry in ["*.env", "dist", "*.tsBuildInfo", "node_modules"] {
+    assert!(gitignore_entries.contains(&entry));
+  }
 
   Ok(())
 }
