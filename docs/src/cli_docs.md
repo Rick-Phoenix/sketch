@@ -54,7 +54,7 @@ This document contains the help content for the `sketch` command-line program.
 * `--templates-dir <DIR>` — The path to the templates directory
 * `--no-overwrite` — Do not overwrite existing files
 * `-c`, `--config <FILE>` — Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
-* `--ignore-config` — Ignores any automatically detected config files, uses cli instructions only
+* `--ignore-config` — Ignores any automatically detected config files, uses cli instructions and config file defined with --config
 * `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
 * `--vars-file <VARS_FILES>` — One or more paths to json, yaml or toml files to extract template variables from, in the given order
 
@@ -120,7 +120,8 @@ Renders a single template to a file or to stdout
 
 * `--stdout` — Prints the result to stdout
 * `-f`, `--file <FILE>` — The path to the template file
-* `-i`, `--id <ID>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
+* `-i`, `--id <ID>` — The id of the template to use
+* `-t`, `--template <TEMPLATE>` — The path to a template file, starting from `templates_dir`
 * `-c`, `--content <CONTENT>` — The literal definition for the template
 
 
@@ -201,12 +202,16 @@ Generates a `pre-commit` config file from a preset
 
 Generates a `Cargo.toml` file from a preset
 
-**Usage:** `sketch cargo-toml <PRESET> [OUTPUT]`
+**Usage:** `sketch cargo-toml [OPTIONS] <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
 * `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the new file [default: `Cargo.toml`]
+
+###### **Options:**
+
+* `-n`, `--name <NAME>` — Sets the name of the package in the new file. Overrides the value in the preset
 
 
 
