@@ -17,3 +17,6 @@ release-exec version="patch":
 [working-directory('docs')]
 docs:
     mdbook serve --open
+
+install:
+    cargo install --path ./sketch
