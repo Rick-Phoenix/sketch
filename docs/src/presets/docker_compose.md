@@ -14,6 +14,8 @@ Command:
 
 >`{{#include ../../../sketch/tests/output/generated_configs/commands/compose}}`
 
+>ℹ️ With the `--service` flag, extra service presets can be added to the output file.
+
 Output:
 
 ```yaml

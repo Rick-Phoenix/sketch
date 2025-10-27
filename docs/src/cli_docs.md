@@ -176,12 +176,16 @@ Generates a Github workflow
 
 Generates a Docker Compose file from a preset
 
-**Usage:** `sketch docker-compose <PRESET> [OUTPUT]`
+**Usage:** `sketch docker-compose [OPTIONS] <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
 * `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the new file [default: `compose.yaml`]
+
+###### **Options:**
+
+* `-S`, `--service <SERVICES>` — id=PRESET,name=NAME|ID
 
 
 
