@@ -1,3 +1,39 @@
+## [0.5.0] - 2025-10-27
+
+### ⛰️  Features
+
+- *(cargo)* Merging features and other fields when lists of dependencies are merged
+- *(cargo)* Name for cargo.toml preset can be overridden via flag
+- *(cli)* Added --template flag as an alias to --id for render command
+- *(docker-compose)* Adding services to a file via cli flags
+- Add command to generate gitignore from preset
+- Github workflow step presets
+
+### 🐛 Bug Fixes
+
+- Name field not being overridden in cargo toml presets
+- *(cargo)* Skipping serialization of required-features if empty
+- Docker services presets not being processed correctly
+- Fixed various minor lints that were deactivated mistakenly
+- *(cargo)* Name field should be serialized only if not empty
+- *(cargo)* Versions must always be strings
+- *(cli)* Manually set config path should not be ignored even with --ignore-config
+- Only using xdg config if --ignore-config is missing
+
+### 🚜 Refactor
+
+- More reasonable defaults for private and version in package.json
+- Allow using ignore-config and --config to discard automatically detected configs only
+
+### 📚 Documentation
+
+- Added documentation for version ranges to avoid confusion
+- Add Cargo.toml example
+
+### 🧪 Testing
+
+- Ignore automatically detected configs during tests
+- Check features merging in Cargo.toml generation
 ## [0.4.0] - 2025-10-13
 
 ### ⛰️  Features
