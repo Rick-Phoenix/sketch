@@ -114,7 +114,8 @@
       "$ref": "#/$defs/GithubConfig",
       "default": {
         "workflow_presets": {},
-        "workflow_job_presets": {}
+        "workflow_job_presets": {},
+        "steps_presets": {}
       }
     },
     "vars": {
@@ -162,7 +163,7 @@
           "default": null
         },
         "catalog": {
-          "description": "Uses the pnpm catalog for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.",
+          "description": "Uses the default catalog (supported by pnpm and bun) for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing.",
           "type": [
             "boolean",
             "null"
@@ -250,8 +251,8 @@
       "description": "The kinds of version ranges for a dependency with semantic versioning.",
       "type": "string",
       "enum": [
-        "patch",
         "minor",
+        "patch",
         "exact"
       ]
     },
@@ -302,19 +303,13 @@
         },
         "private": {
           "description": "If set to true, then npm will refuse to publish it.",
-          "type": [
-            "boolean",
-            "null"
-          ],
-          "default": null
+          "type": "boolean",
+          "default": true
         },
         "version": {
           "description": "Version must be parsable by node-semver, which is bundled with npm as a dependency.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
+          "type": "string",
+          "default": "0.1.0"
         },
         "type": {
           "description": "When set to `module`, the type field allows a package to specify all .js files within are ES modules. If the `type` field is omitted or set to `commonjs`, all .js files are treated as CommonJS.",
@@ -453,6 +448,23 @@
             "null"
           ],
           "additionalProperties": true
+        },
+        "catalog": {
+          "description": "Catalog of dependencies to use with `bun`\n\nSee more: https://bun.com/docs/install/catalogs#1-define-catalogs-in-root-package-json",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "catalogs": {
+          "description": "Named catalogs to use with `bun`\n\nSee more: https://bun.com/docs/install/catalogs#catalog-vs-catalogs",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
         },
         "dependencies": {
           "description": "Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.",
@@ -5889,8 +5901,7 @@
           ],
           "additionalProperties": {
             "$ref": "#/$defs/TopLevelNetwork"
-          },
-          "default": null
+          }
         },
         "secrets": {
           "description": "The named secrets for the Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/secrets/",
@@ -10482,7 +10493,7 @@
       ]
     },
     "WorkflowReference": {
-      "description": "The definition for a new Github workflow, or a preset ID.",
+      "description": "The definition for a new Github workflow, or a reference to a preset.",
       "anyOf": [
         {
           "description": "A reference to a workflow preset",
@@ -10510,14 +10521,14 @@
               "description": "The name of the output file (inside the .github/workflows directory)",
               "type": "string"
             },
-            "config": {
+            "workflow": {
               "description": "The definition for the new workflow",
               "$ref": "#/$defs/GithubWorkflowPreset"
             }
           },
           "required": [
             "file_name",
-            "config"
+            "workflow"
           ]
         }
       ]
@@ -10573,14 +10584,10 @@
         },
         "env": {
           "description": "A map of variables that are available to the steps of all jobs in the workflow. You can also set variables that are only available to the steps of a single job or to a single step.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#env",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Env"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StringNumOrBool"
+          }
         },
         "defaults": {
           "description": "Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaults",
@@ -12096,7 +12103,7 @@
       ]
     },
     "Permissions": {
-      "description": "You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.\n\nSee more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions",
+      "description": "You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.\n\nPermissions can be defined globally, with `write-all` `or read-all`, or by event.\n\nSee more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions",
       "anyOf": [
         {
           "$ref": "#/$defs/PermissionsGlobal"
@@ -12298,20 +12305,6 @@
         "read"
       ]
     },
-    "Env": {
-      "description": "To set custom environment variables, you need to specify the variables in the workflow file. You can define environment variables for a step, job, or entire workflow using the jobs.<job_id>.steps[*].env, jobs.<job_id>.env, and env keywords.\n\nFor more information, see https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsenv",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/StringNumOrBool"
-          }
-        }
-      ]
-    },
     "Defaults": {
       "description": "Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaults",
       "type": "object",
@@ -12370,16 +12363,6 @@
     },
     "Concurrency": {
       "description": "Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time. A concurrency group can be any string or expression. The expression can use any context except for the secrets context.\n\nYou can also specify concurrency at the workflow level.\n\nWhen a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled. To also cancel any currently running job or workflow in the same concurrency group, specify cancel-in-progress: true.\n\nSee more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "$ref": "#/$defs/ConcurrencyObject"
-        }
-      ]
-    },
-    "ConcurrencyObject": {
       "type": "object",
       "properties": {
         "group": {
@@ -12455,7 +12438,7 @@
       "type": "object",
       "properties": {
         "runs-on": {
-          "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
+          "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
           "anyOf": [
             {
               "$ref": "#/$defs/RunsOn"
@@ -12473,7 +12456,7 @@
           ]
         },
         "needs": {
-          "description": "Identifies any jobs that must complete successfully before this job will run. It can be a string or array of strings. If a job fails, all jobs that need it are skipped unless the jobs use a conditional statement that causes the job to continue.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds",
+          "description": "Identifies any jobs that must complete successfully before this job will run. It can be a string or array of strings. If a job fails, all jobs that need it are skipped unless the jobs use a conditional statement that causes the job to continue.\n\nCan be a string or a list of strings.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds",
           "anyOf": [
             {
               "$ref": "#/$defs/StringOrSortedList"
@@ -12485,13 +12468,9 @@
         },
         "if": {
           "description": "You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.\n\nExpressions in an if conditional do not require the ${{ }} syntax. For more information, see https://help.github.com/en/articles/contexts-and-expression-syntax-for-github-actions.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idif",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringNumOrBool"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "null"
           ]
         },
         "outputs": {
@@ -12516,7 +12495,7 @@
           ]
         },
         "permissions": {
-          "description": "For a specific job, you can use jobs.<job_id>.permissions to modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions",
+          "description": "For a specific job, you can use jobs.<job_id>.permissions to modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.\n\nPermissions can be defined globally, with `write-all` `or read-all`, or by event.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions",
           "anyOf": [
             {
               "$ref": "#/$defs/Permissions"
@@ -12538,7 +12517,7 @@
           ]
         },
         "environment": {
-          "description": "The environment that the job references.\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment",
+          "description": "The environment that the job references. You can provide the environment as only the environment name, or as an environment object with the `name` and `url`.\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment",
           "anyOf": [
             {
               "$ref": "#/$defs/Environment2"
@@ -12550,14 +12529,10 @@
         },
         "env": {
           "description": "A map of environment variables that are available to all steps in the job.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idenv",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Env"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StringNumOrBool"
+          }
         },
         "timeout-minutes": {
           "description": "The maximum number of minutes to let a workflow run before GitHub automatically cancels it. Default: 360\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes",
@@ -12617,13 +12592,13 @@
           "description": "A job contains a sequence of tasks called steps. Steps can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps",
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Step"
+            "$ref": "#/$defs/GHStepData"
           }
         }
       }
     },
     "RunsOn": {
-      "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
+      "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
       "anyOf": [
         {
           "$ref": "#/$defs/ActionRunner"
@@ -12636,6 +12611,7 @@
           }
         },
         {
+          "description": "You can use `runs-on` to target runner groups, so that the job will execute on any runner that is a member of that group. For more granular control, you can also combine runner groups with labels.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#choosing-runners-in-a-group",
           "type": "object",
           "properties": {
             "group": {
@@ -12664,12 +12640,9 @@
       "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
       "anyOf": [
         {
+          "description": "A runner with the latest LTS version of Ubuntu.\n\nSee more: https://github.com/actions/runner-images/blob/main/images/ubuntu",
           "type": "string",
-          "enum": [
-            "ubuntu-latest",
-            "windows-latest",
-            "macos-latest"
-          ]
+          "const": "ubuntu-latest"
         },
         {
           "description": "See more: https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md",
@@ -12692,6 +12665,11 @@
           "const": "ubuntu-22.04-arm"
         },
         {
+          "description": "A runner with the latest version of Windows.\n\nSee more: https://github.com/actions/runner-images/blob/main/images/windows",
+          "type": "string",
+          "const": "windows-latest"
+        },
+        {
           "description": "See more: https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-Readme.md",
           "type": "string",
           "const": "windows2025"
@@ -12705,6 +12683,11 @@
           "description": "See more: https://github.com/actions/partner-runner-images/blob/main/images/arm-windows-11-image.md",
           "type": "string",
           "const": "windows-11-arm"
+        },
+        {
+          "description": "A runner with the latest version of MacOS.\n\nSee more: https://github.com/actions/runner-images/blob/main/images/macos",
+          "type": "string",
+          "const": "macos-latest"
         },
         {
           "description": "See more: https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md",
@@ -12737,12 +12720,14 @@
       ]
     },
     "Environment2": {
-      "description": "The environment that the job references\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment",
+      "description": "The environment that the job references. You can provide the environment as only the environment name, or as an environment object with the `name` and `url`.\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment",
       "anyOf": [
         {
+          "description": "The environment name.",
           "type": "string"
         },
         {
+          "description": "An environment object with the `name` and `url`.",
           "type": "object",
           "properties": {
             "name": {
@@ -12784,14 +12769,10 @@
         },
         "env": {
           "description": "Sets an array of environment variables in the container.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainerenv",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Env"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StringNumOrBool"
+          }
         },
         "ports": {
           "description": "Sets an array of ports to expose on the container.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainerports",
@@ -12876,6 +12857,18 @@
         }
       }
     },
+    "GHStepData": {
+      "description": "Configuration for a Github workflow `step` or a preset id that points to one.",
+      "anyOf": [
+        {
+          "description": "A preset ID",
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/Step"
+        }
+      ]
+    },
     "Step": {
       "description": "A job contains a sequence of tasks called `steps`. Steps can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps",
       "type": "object",
@@ -12896,13 +12889,9 @@
         },
         "if": {
           "description": "You can use the if conditional to prevent a step from running unless a condition is met. You can use any supported context and expression to create a conditional.\n\nExpressions in an if conditional do not require the ${{ }} syntax. For more information, see https://help.github.com/en/articles/contexts-and-expression-syntax-for-github-actions.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsif",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringNumOrBool"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "null"
           ]
         },
         "uses": {
@@ -12946,14 +12935,10 @@
         },
         "env": {
           "description": "Sets environment variables for steps to use in the virtual environment. You can also set environment variables for the entire workflow or a job.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepsenv",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Env"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StringNumOrBool"
+          }
         },
         "shell": {
           "description": "Use `shell` to define the shell for a step.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_iddefaultsrunshell",
@@ -13010,13 +12995,9 @@
         },
         "if": {
           "description": "You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.\n\nExpressions in an if conditional do not require the ${{ }} syntax. For more information, see https://help.github.com/en/articles/contexts-and-expression-syntax-for-github-actions.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idif",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringNumOrBool"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "string",
+            "null"
           ]
         },
         "concurrency": {
@@ -13041,16 +13022,12 @@
             }
           ]
         },
-        "with": {
+        "env": {
           "description": "A map of inputs that are passed to the called workflow. Any inputs that you pass must match the input specifications defined in the called workflow. Unlike 'jobs.<job_id>.steps[*].with', the inputs you pass with 'jobs.<job_id>.with' are not be available as environment variables in the called workflow. Instead, you can reference the inputs by using the inputs context.\n\nSee more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idwith",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Env"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StringNumOrBool"
+          }
         },
         "secrets": {
           "description": "When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow. Any secrets that you pass must match the names defined in the called workflow.\n\nSee more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets",
@@ -13088,7 +13065,11 @@
           "const": "inherit"
         },
         {
-          "$ref": "#/$defs/Env"
+          "description": "A map of secrets that are passed to the called workflow.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StringNumOrBool"
+          }
         }
       ]
     },
@@ -13105,17 +13086,6 @@
           },
           "default": []
         },
-        "package": {
-          "description": "Package definition (a cargo crate)",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Package"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "workspace": {
           "description": "Workspace-wide settings",
           "anyOf": [
@@ -13127,71 +13097,22 @@
             }
           ]
         },
-        "dependencies": {
-          "description": "Normal dependencies",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "dev-dependencies": {
-          "description": "Dev/test-only deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "build-dependencies": {
-          "description": "Build-time deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "target": {
-          "description": "`[target.cfg.dependencies]`",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Target2"
-          }
-        },
-        "features": {
-          "description": "The `[features]` section. This set may be incomplete!\n\nOptional dependencies may create implied Cargo features.\nThis features section also supports microsyntax with `dep:`, `/`, and `?`\nfor managing dependencies and their features.io\n\nThis crate has an optional [`features`] module for dealing with this\ncomplexity and getting the real list of features.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "array",
-            "uniqueItems": true,
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "patch": {
-          "description": "`[patch.crates-io]` section",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Dependency"
-            }
-          }
-        },
-        "lib": {
-          "description": "Note that due to autolibs feature this is not the complete list\nunless you run [`Manifest::complete_from_path`]",
+        "package": {
+          "description": "Package definition (a cargo crate)",
           "anyOf": [
             {
-              "$ref": "#/$defs/Product"
+              "$ref": "#/$defs/Package"
             },
             {
               "type": "null"
             }
           ]
         },
-        "profile": {
-          "description": "Compilation/optimization settings",
+        "lib": {
+          "description": "Note that due to autolibs feature this is not the complete list\nunless you run [`Manifest::complete_from_path`]",
           "anyOf": [
             {
-              "$ref": "#/$defs/Profiles"
+              "$ref": "#/$defs/Product"
             },
             {
               "type": "null"
@@ -13205,6 +13126,34 @@
           "items": {
             "$ref": "#/$defs/Product"
           }
+        },
+        "target": {
+          "description": "`[target.cfg.dependencies]`",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Target2"
+          }
+        },
+        "patch": {
+          "description": "`[patch.crates-io]` section",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/Dependency"
+            }
+          }
+        },
+        "profile": {
+          "description": "Compilation/optimization settings",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profiles"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "bench": {
           "description": "Benchmarks",
@@ -13240,8 +13189,502 @@
               "type": "null"
             }
           ]
+        },
+        "features": {
+          "description": "The `[features]` section. This set may be incomplete!\n\nOptional dependencies may create implied Cargo features.\nThis features section also supports microsyntax with `dep:`, `/`, and `?`\nfor managing dependencies and their features.io\n\nThis crate has an optional [`features`] module for dealing with this\ncomplexity and getting the real list of features.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "dependencies": {
+          "description": "Normal dependencies",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "dev-dependencies": {
+          "description": "Dev/test-only deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "build-dependencies": {
+          "description": "Build-time deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
         }
       }
+    },
+    "Workspace": {
+      "description": "A manifest can contain both a package and workspace-wide properties",
+      "type": "object",
+      "properties": {
+        "members": {
+          "description": "Relative paths of crates in here",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "default-members": {
+          "description": "Members to operate on when in the workspace root.\n\nWhen specified, `default-members` must expand to a subset of `members`.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "package": {
+          "description": "Template for inheritance",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PackageTemplate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exclude": {
+          "description": "Ignore these dirs",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "metadata": {
+          "description": "Shared info",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "resolver": {
+          "description": "Compatibility setting",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Resolver"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dependencies": {
+          "description": "Template for `needs_workspace_inheritance`",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          }
+        },
+        "lints": {
+          "description": "Workspace-level lint groups",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/$defs/Lint"
+            }
+          }
+        }
+      }
+    },
+    "PackageTemplate": {
+      "description": "Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.",
+      "type": "object",
+      "properties": {
+        "categories": {
+          "description": "See <https://crates.io/category_slugs>",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "description": "Multi-line text, some people use Markdown here",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "documentation": {
+          "description": "URL",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "edition": {
+          "description": "Opt-in to new Rust behaviors",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Edition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exclude": {
+          "description": "Don't publish these files, relative to workspace",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "homepage": {
+          "description": "Homepage URL",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "include": {
+          "description": "Publish these files, relative to workspace",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "keywords": {
+          "description": "For search",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "license": {
+          "description": "SPDX",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "license-file": {
+          "description": "If not SPDX",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publish": {
+          "description": "Block publishing or choose custom registries",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Publish"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "readme": {
+          "description": "Opt-out or custom path, relative to workspace",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OptionalFile"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repository": {
+          "description": "(HTTPS) repository URL",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rust-version": {
+          "description": "Minimum required rustc version in format `1.99`",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "Package version semver",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Edition": {
+      "description": "Edition setting, which opts in to new Rust/Cargo behaviors.",
+      "oneOf": [
+        {
+          "description": "2015",
+          "type": "string",
+          "const": "2015"
+        },
+        {
+          "description": "2018",
+          "type": "string",
+          "const": "2018"
+        },
+        {
+          "description": "2021",
+          "type": "string",
+          "const": "2021"
+        },
+        {
+          "description": "2024",
+          "type": "string",
+          "const": "2024"
+        }
+      ]
+    },
+    "Publish": {
+      "description": "Forbids or selects custom registry",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "OptionalFile": {
+      "description": "A way specify or disable README or `build.rs`.",
+      "anyOf": [
+        {
+          "description": "Opt-in to default, or explicit opt-out",
+          "type": "boolean"
+        },
+        {
+          "description": "Explicit path",
+          "type": "string"
+        }
+      ]
+    },
+    "Resolver": {
+      "description": "The feature resolver version.\n\nNeeded in [`Workspace`], but implied by [`Edition`] in packages.",
+      "oneOf": [
+        {
+          "description": "The default for editions prior to 2021.",
+          "type": "string",
+          "const": "1"
+        },
+        {
+          "description": "The default for the 2021 edition.",
+          "type": "string",
+          "const": "2"
+        },
+        {
+          "description": "The default for the 2024 edition.",
+          "type": "string",
+          "const": "3"
+        }
+      ]
+    },
+    "Dependency": {
+      "description": "Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.\n\nIt can be simple version number, or detailed settings, or inherited.",
+      "anyOf": [
+        {
+          "description": "Version requirement (e.g. `^1.5`)",
+          "type": "string"
+        },
+        {
+          "description": "Incomplete data",
+          "$ref": "#/$defs/InheritedDependencyDetail"
+        },
+        {
+          "description": "`{ version = \"^1.5\", features = [\"a\", \"b\"] }` etc.",
+          "$ref": "#/$defs/DependencyDetail"
+        }
+      ]
+    },
+    "InheritedDependencyDetail": {
+      "description": "When a dependency is defined as `{ workspace = true }`,\nand workspace data hasn't been applied yet.",
+      "type": "object",
+      "properties": {
+        "features": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "workspace": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "DependencyDetail": {
+      "description": "When definition of a dependency is more than just a version string.",
+      "type": "object",
+      "properties": {
+        "version": {
+          "description": "Semver requirement. Note that a plain version number implies this version *or newer* compatible one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "package": {
+          "description": "If `Some`, use this as the crate name instead of `[dependencies]`'s table key.\n\nBy using this, a crate can have multiple versions of the same dependency.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry": {
+          "description": "Fetch this dependency from a custom 3rd party registry (alias defined in Cargo config), not crates-io.\n\nThis depends on local cargo configuration. It becomes `registry_index` after the crate is uploaded to a registry.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "registry-index": {
+          "description": "Directly define custom 3rd party registry URL (may be `sparse+https:`) instead of a config nickname.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "This path is usually relative to the crate's manifest, but when using workspace inheritance, it may be relative to the workspace!\n\nWhen calling [`Manifest::complete_from_path_and_workspace`] use absolute path for the workspace manifest, and then this will be corrected to be an absolute\npath when inherited from the workspace.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "git": {
+          "description": "Read dependency from git repo URL, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "branch": {
+          "description": "Read dependency from git branch, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tag": {
+          "description": "Read dependency from git tag, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rev": {
+          "description": "Read dependency from git commit, not allowed on crates-io.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "features": {
+          "description": "Enable these features of the dependency.\n\nNote that Cargo interprets `default` in a special way.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "optional": {
+          "description": "NB: Not allowed at workspace level\n\nIf not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.\nSee the [`features`] module for more info.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "default-features": {
+          "description": "Enable the `default` set of features of the dependency (enabled by default).",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "Lint": {
+      "description": "Lint definition.",
+      "type": "object",
+      "properties": {
+        "level": {
+          "description": "allow/warn/deny",
+          "$ref": "#/$defs/LintLevel"
+        },
+        "priority": {
+          "description": "Controls which lints or lint groups override other lint groups.",
+          "type": "integer",
+          "format": "int8",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "config": {
+          "description": "Unstable",
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "level",
+        "priority",
+        "config"
+      ]
+    },
+    "LintLevel": {
+      "description": "Lint level.",
+      "type": "string",
+      "enum": [
+        "allow",
+        "warn",
+        "force-warn",
+        "deny",
+        "forbid"
+      ]
     },
     "Package": {
       "description": "The `[package]` section of the [`Manifest`]. This is where crate properties are.\n\nNote that most of these properties can be inherited from a workspace, and therefore not available just from reading a single `Cargo.toml`. See [`Manifest::inherit_workspace`].\n\nYou can replace `Metadata` generic type with your own\nto parse into something more useful than a generic toml `Value`",
@@ -13255,7 +13698,7 @@
           ]
         },
         "version": {
-          "description": "See [the `version()` getter for more info](`Package::version()`).\n\nMust parse as semver, e.g. \"1.9.0\"\n\nThis field may have unknown value when using workspace inheritance,\nand when the `Manifest` has been loaded without its workspace.",
+          "description": "Must parse as semver, e.g. \"1.9.0\"\n\nThis field may have unknown value when using workspace inheritance,\nand when the `Manifest` has been loaded without its workspace.",
           "anyOf": [
             {
               "$ref": "#/$defs/Inheritable"
@@ -13547,44 +13990,6 @@
         }
       ]
     },
-    "Edition": {
-      "description": "Edition setting, which opts in to new Rust/Cargo behaviors.",
-      "oneOf": [
-        {
-          "description": "2015",
-          "type": "string",
-          "const": "2015"
-        },
-        {
-          "description": "2018",
-          "type": "string",
-          "const": "2018"
-        },
-        {
-          "description": "2021",
-          "type": "string",
-          "const": "2021"
-        },
-        {
-          "description": "2024",
-          "type": "string",
-          "const": "2024"
-        }
-      ]
-    },
-    "OptionalFile": {
-      "description": "A way specify or disable README or `build.rs`.",
-      "anyOf": [
-        {
-          "description": "Opt-in to default, or explicit opt-out",
-          "type": "boolean"
-        },
-        {
-          "description": "Explicit path",
-          "type": "string"
-        }
-      ]
-    },
     "Inheritable3": {
       "description": "A value that can be set to `workspace`",
       "anyOf": [
@@ -13648,464 +14053,6 @@
           "$ref": "#/$defs/Publish"
         }
       ]
-    },
-    "Publish": {
-      "description": "Forbids or selects custom registry",
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      ]
-    },
-    "Resolver": {
-      "description": "The feature resolver version.\n\nNeeded in [`Workspace`], but implied by [`Edition`] in packages.",
-      "oneOf": [
-        {
-          "description": "The default for editions prior to 2021.",
-          "type": "string",
-          "const": "1"
-        },
-        {
-          "description": "The default for the 2021 edition.",
-          "type": "string",
-          "const": "2"
-        },
-        {
-          "description": "The default for the 2024 edition.",
-          "type": "string",
-          "const": "3"
-        }
-      ]
-    },
-    "Workspace": {
-      "description": "A manifest can contain both a package and workspace-wide properties",
-      "type": "object",
-      "properties": {
-        "members": {
-          "description": "Relative paths of crates in here",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          },
-          "default": []
-        },
-        "default-members": {
-          "description": "Members to operate on when in the workspace root.\n\nWhen specified, `default-members` must expand to a subset of `members`.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "package": {
-          "description": "Template for inheritance",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageTemplate"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "exclude": {
-          "description": "Ignore these dirs",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "metadata": {
-          "description": "Shared info",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
-        },
-        "resolver": {
-          "description": "Compatibility setting",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Resolver"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "dependencies": {
-          "description": "Template for `needs_workspace_inheritance`",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          }
-        },
-        "lints": {
-          "description": "Workspace-level lint groups",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Lint"
-            }
-          }
-        }
-      }
-    },
-    "PackageTemplate": {
-      "description": "Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.",
-      "type": "object",
-      "properties": {
-        "categories": {
-          "description": "See <https://crates.io/category_slugs>",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "description": {
-          "description": "Multi-line text, some people use Markdown here",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "documentation": {
-          "description": "URL",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "edition": {
-          "description": "Opt-in to new Rust behaviors",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Edition"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "exclude": {
-          "description": "Don't publish these files, relative to workspace",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "homepage": {
-          "description": "Homepage URL",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "include": {
-          "description": "Publish these files, relative to workspace",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "keywords": {
-          "description": "For search",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "license": {
-          "description": "SPDX",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "license-file": {
-          "description": "If not SPDX",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "publish": {
-          "description": "Block publishing or choose custom registries",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Publish"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "readme": {
-          "description": "Opt-out or custom path, relative to workspace",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/OptionalFile"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "repository": {
-          "description": "(HTTPS) repository URL",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "rust-version": {
-          "description": "Minimum required rustc version in format `1.99`",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "version": {
-          "description": "Package version semver",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "Dependency": {
-      "description": "Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.\n\nIt can be simple version number, or detailed settings, or inherited.",
-      "anyOf": [
-        {
-          "description": "Version requirement (e.g. `^1.5`)",
-          "$ref": "#/$defs/StringOrNum"
-        },
-        {
-          "description": "Incomplete data",
-          "$ref": "#/$defs/InheritedDependencyDetail"
-        },
-        {
-          "description": "`{ version = \"^1.5\", features = [\"a\", \"b\"] }` etc.",
-          "$ref": "#/$defs/DependencyDetail"
-        }
-      ]
-    },
-    "InheritedDependencyDetail": {
-      "description": "When a dependency is defined as `{ workspace = true }`,\nand workspace data hasn't been applied yet.",
-      "type": "object",
-      "properties": {
-        "features": {
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "optional": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "workspace": {
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      }
-    },
-    "DependencyDetail": {
-      "description": "When definition of a dependency is more than just a version string.",
-      "type": "object",
-      "properties": {
-        "version": {
-          "description": "Semver requirement. Note that a plain version number implies this version *or newer* compatible one.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringOrNum"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "package": {
-          "description": "If `Some`, use this as the crate name instead of `[dependencies]`'s table key.\n\nBy using this, a crate can have multiple versions of the same dependency.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "registry": {
-          "description": "Fetch this dependency from a custom 3rd party registry (alias defined in Cargo config), not crates-io.\n\nThis depends on local cargo configuration. It becomes `registry_index` after the crate is uploaded to a registry.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "registry-index": {
-          "description": "Directly define custom 3rd party registry URL (may be `sparse+https:`) instead of a config nickname.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "path": {
-          "description": "This path is usually relative to the crate's manifest, but when using workspace inheritance, it may be relative to the workspace!\n\nWhen calling [`Manifest::complete_from_path_and_workspace`] use absolute path for the workspace manifest, and then this will be corrected to be an absolute\npath when inherited from the workspace.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "git": {
-          "description": "Read dependency from git repo URL, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "branch": {
-          "description": "Read dependency from git branch, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "tag": {
-          "description": "Read dependency from git tag, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "rev": {
-          "description": "Read dependency from git commit, not allowed on crates-io.",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "features": {
-          "description": "Enable these features of the dependency.\n\nNote that Cargo interprets `default` in a special way.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "optional": {
-          "description": "NB: Not allowed at workspace level\n\nIf not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.\nSee the [`features`] module for more info.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "default-features": {
-          "description": "Enable the `default` set of features of the dependency (enabled by default).",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": true
-    },
-    "Lint": {
-      "description": "Lint definition.",
-      "type": "object",
-      "properties": {
-        "level": {
-          "description": "allow/warn/deny",
-          "$ref": "#/$defs/LintLevel"
-        },
-        "priority": {
-          "description": "Controls which lints or lint groups override other lint groups.",
-          "type": "integer",
-          "format": "int8",
-          "minimum": -128,
-          "maximum": 127
-        },
-        "config": {
-          "description": "Unstable",
-          "type": "object",
-          "additionalProperties": true
-        }
-      },
-      "required": [
-        "level",
-        "priority",
-        "config"
-      ]
-    },
-    "LintLevel": {
-      "description": "Lint level.",
-      "type": "string",
-      "enum": [
-        "allow",
-        "warn",
-        "force-warn",
-        "deny",
-        "forbid"
-      ]
-    },
-    "Target2": {
-      "description": "Dependencies that are platform-specific or enabled through custom `cfg()`.",
-      "type": "object",
-      "properties": {
-        "dependencies": {
-          "description": "platform-specific normal deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          },
-          "default": {}
-        },
-        "dev-dependencies": {
-          "description": "platform-specific dev-only/test-only deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          },
-          "default": {}
-        },
-        "build-dependencies": {
-          "description": "platform-specific build-time deps",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Dependency"
-          },
-          "default": {}
-        }
-      }
     },
     "Product": {
       "description": "Cargo uses the term \"target\" for both \"target platform\" and \"build target\" (the thing to build),\nwhich makes it ambigous.\nHere Cargo's bin/lib **target** is renamed to **product**.",
@@ -14199,8 +14146,37 @@
           "uniqueItems": true,
           "items": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "Target2": {
+      "description": "Dependencies that are platform-specific or enabled through custom `cfg()`.",
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "description": "platform-specific normal deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
           },
-          "default": []
+          "default": {}
+        },
+        "dev-dependencies": {
+          "description": "platform-specific dev-only/test-only deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          },
+          "default": {}
+        },
+        "build-dependencies": {
+          "description": "platform-specific build-time deps",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Dependency"
+          },
+          "default": {}
         }
       }
     },
@@ -14475,6 +14451,14 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/JobPreset"
+          },
+          "default": {}
+        },
+        "steps_presets": {
+          "description": "A map of presets for steps used in a Github workflow job.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Step"
           },
           "default": {}
         }

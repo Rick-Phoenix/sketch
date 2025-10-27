@@ -17,9 +17,10 @@ As of now, these presets are available:
     - `.pre-commit-config.yaml` (extensible)
     - [Github workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) (extensible)
     - [Github workflow job](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs) (extensible)
+    - [Github workflow step](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps)
 
 - Rust
-    - `Cargo.toml` (extensible)
+    - `Cargo.toml` (extensible, with merging of features for dependencies)
 
 - Typescript
     - Typescript package

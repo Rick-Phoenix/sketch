@@ -4,6 +4,7 @@ use std::{
 };
 
 use clap::Parser;
+use indoc::indoc;
 use pretty_assertions::assert_eq;
 
 use super::reset_testing_dir;
@@ -280,28 +281,17 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 
   assert_eq!(output.defaults.unwrap().run.shell.unwrap(), Shell::Bash);
 
-  let mut jobs = output.jobs;
+  let jobs = output.jobs;
 
   assert_eq!(jobs.len(), 2);
 
-  let say_hello_job = unwrap_variant!(
-    Job,
-    Normal,
-    unwrap_variant!(JobReference, Data, jobs.shift_remove("say_hello").unwrap()).job
-  );
+  for (name, job) in jobs {
+    let mut job = if let JobReference::Data(data) = job && let Job::Normal(content) = data.job {
+      content
+    } else {
+      panic!()
+    };
 
-  let say_goodbye_job = unwrap_variant!(
-    Job,
-    Normal,
-    unwrap_variant!(
-      JobReference,
-      Data,
-      jobs.shift_remove("say_goodbye").unwrap()
-    )
-    .job
-  );
-
-  for (i, job) in [say_hello_job, say_goodbye_job].into_iter().enumerate() {
     assert_eq!(
       job.runs_on.unwrap(),
       RunsOn::Single(ActionRunner::UbuntuLatest)
@@ -319,31 +309,60 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
       &StringNumOrBool::String("anothervalue".to_string())
     );
 
-    if i == 0 {
-      assert_eq!(
-        env.get("another_other_value").unwrap(),
-        &StringNumOrBool::String("yetanothervalue".to_string())
-      );
-    }
-
     assert_eq!(job.timeout_minutes.unwrap(), StringOrNum::Num(25));
 
     let continue_on_error = unwrap_variant!(StringOrBool, Bool, job.continue_on_error.unwrap());
     assert!(!continue_on_error);
 
-    let steps = job.steps;
+    if name == "check_main_branch" {
+      assert_eq!(
+        env.get("another_other_value").unwrap(),
+        &StringNumOrBool::String("yetanothervalue".to_string())
+      );
 
-    assert_eq!(steps.len(), 2);
+      assert_eq!(
+        job.outputs.unwrap().get("is_on_main").unwrap(),
+        "${{ steps.branch_check.outputs.is_on_main }}"
+      );
 
-    assert_eq!(steps[0].name.as_ref().unwrap(), "Initial checkup");
+      let first_step = job.steps.remove(0).as_config().unwrap();
 
-    assert_eq!(steps[0].run.as_ref().unwrap(), "./setup_script.sh");
-
-    if i == 0 {
-      assert_eq!(steps[1].name.as_ref().unwrap(), "say_hello");
-      assert_eq!(steps[1].run.as_ref().unwrap(), "echo \"hello!\"");
+      assert_eq!(
+        first_step.name.as_ref().unwrap(),
+        "Check if a tag is on the main branch"
+      );
+      assert_eq!(first_step.id.as_ref().unwrap(), "branch_check");
+      assert_eq!(
+        first_step.run.unwrap().trim(),
+        indoc! {
+          r#"
+            if git branch -r --contains ${{ github.ref }} | grep -q 'origin/main'; then
+            echo "On main branch. Proceeding with the workflow..."
+            echo "is_on_main=true" >> "$GITHUB_OUTPUT"
+            else
+            echo "Not on main branch. Skipping workflow..."
+            fi
+          "#
+        }
+        .trim()
+      );
     } else {
-      assert_eq!(steps[1].run.as_ref().unwrap(), "echo \"goodbye!\"");
+      assert_eq!(
+        job.name.as_ref().unwrap(),
+        "Do something while on main branch"
+      );
+
+      assert_eq!(
+        job.if_.unwrap(),
+        "needs.check_branch.outputs.is_on_main == 'true'"
+      );
+
+      let first_step = job.steps.remove(0).as_config().unwrap();
+
+      assert_eq!(
+        first_step.run.as_ref().unwrap(),
+        "echo \"Done something from main branch!\""
+      );
     }
   }
 

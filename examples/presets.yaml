@@ -3,7 +3,7 @@
 # ANCHOR: workflow_presets
 github:
   workflow_presets:
-    # Common settings to extend
+    # Common settings for all workflows
     base:
       defaults:
         run:
@@ -13,7 +13,6 @@ github:
         another_env: anothervalue
 
     extended:
-      # Extending another workflow preset
       extends_presets:
         - base
       on:
@@ -22,16 +21,17 @@ github:
             - main
       jobs:
         # Adding a job by using its preset ID
-        say_hello: say_hello
-        say_goodbye:
+        check_main_branch: check_main_branch
+        do_something:
           extends_presets:
             - base
-          name: say_goodbye
+          if: needs.check_branch.outputs.is_on_main == 'true'
+          name: Do something while on main branch
           steps:
-            - run: echo "goodbye!"
+            - run: echo "Done something from main branch!"
 
   workflow_job_presets:
-    # Common settings to extend
+    # Common settings for all jobs
     base:
       runs-on: ubuntu-latest
       timeout-minutes: 25
@@ -39,21 +39,31 @@ github:
       env:
         my_env: somevalue
         another_env: anothervalue
-      steps:
-        - name: Initial checkup
-          run: ./setup_script.sh
 
-    say_hello:
-      # Extending another workflow job preset
+    check_main_branch:
       extends_presets:
         - base
       env:
         another_other_value: yetanothervalue
+      outputs:
+        is_on_main: ${{ steps.branch_check.outputs.is_on_main }}
       steps:
-        - name: say_hello
-          run: echo "hello!"
-# ANCHOR_END: workflow_presets
+        # Using a step preset
+        - check_main
 
+  steps_presets:
+    # Reusable step preset
+    check_main:
+      name: Check if a tag is on the main branch
+      id: branch_check
+      run: |
+        if git branch -r --contains ${{ github.ref }} | grep -q 'origin/main'; then
+        echo "On main branch. Proceeding with the workflow..."
+        echo "is_on_main=true" >> "$GITHUB_OUTPUT"
+        else
+        echo "Not on main branch. Skipping workflow..."
+        fi
+# ANCHOR_END: workflow_presets
 # ANCHOR: templates
 templates:
   dockerfile: |

@@ -59,4 +59,5 @@ pub enum Preset {
   CargoToml,
   GithubWorkflow,
   GithubWorkflowJob,
+  GithubWorkflowStep,
 }

@@ -1,5 +1,6 @@
 use std::{
   collections::{BTreeMap, BTreeSet},
+  mem,
   path::PathBuf,
 };
 
@@ -86,6 +87,9 @@ pub struct GithubConfig {
 
   /// A map of presets for Github workflow jobs
   pub workflow_job_presets: IndexMap<String, JobPreset>,
+
+  /// A map of presets for steps used in a Github workflow job.
+  pub steps_presets: IndexMap<String, Step>,
 }
 
 /// A preset for a gihub workflow.
@@ -125,39 +129,41 @@ impl GithubWorkflowPreset {
 
     let mut config = merged_preset.config;
 
-    let mut jobs: IndexMap<String, JobReference> = IndexMap::new();
-
-    for (key, job) in config.jobs.into_iter() {
-      let (id, job_data) = match job {
+    for (_, job) in config.jobs.iter_mut() {
+      match job {
         JobReference::Preset(id) => {
           let data = github_config
             .workflow_job_presets
-            .get(id.as_str())
+            .get(id)
             .ok_or(GenError::PresetNotFound {
               kind: Preset::GithubWorkflowJob,
               name: id.clone(),
             })?
             .clone();
 
-          (id, data)
+          *job = JobReference::Data(data.process_data(
+            id,
+            &github_config.workflow_job_presets,
+            &github_config.steps_presets,
+          )?);
         }
-        JobReference::Data(data) => ("__inlined".to_string(), data),
+        JobReference::Data(data) => {
+          let data = mem::take(data);
+          *job = JobReference::Data(data.process_data(
+            "__inlined",
+            &github_config.workflow_job_presets,
+            &github_config.steps_presets,
+          )?);
+        }
       };
-
-      jobs.insert(
-        key,
-        JobReference::Data(job_data.process_data(&id, &github_config.workflow_job_presets)?),
-      );
     }
-
-    config.jobs = jobs;
 
     Ok(config)
   }
 }
 
 /// A preset for a gihub workflow job.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
 pub struct JobPreset {
   /// The list of extended presets.
   #[merge(strategy = merge_index_sets)]
@@ -176,20 +182,37 @@ impl Extensible for JobPreset {
 }
 
 impl JobPreset {
-  pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
-    if self.extends_presets.is_empty() {
-      return Ok(self);
-    }
-
+  pub fn process_data(
+    self,
+    id: &str,
+    store: &IndexMap<String, Self>,
+    steps_store: &IndexMap<String, Step>,
+  ) -> Result<Self, GenError> {
     let mut processed_ids: IndexSet<String> = IndexSet::new();
 
-    let merged_preset = merge_presets(
+    let mut merged_preset = merge_presets(
       Preset::GithubWorkflowJob,
       id,
       self,
       store,
       &mut processed_ids,
     )?;
+
+    if let Job::Normal(job) = &mut merged_preset.job {
+      for step in job.steps.iter_mut() {
+        if let GHStepData::Preset(id) = step {
+          let data = steps_store
+            .get(id)
+            .ok_or(GenError::PresetNotFound {
+              kind: Preset::GithubWorkflowStep,
+              name: id.clone(),
+            })?
+            .clone();
+
+          *step = GHStepData::Config(data);
+        }
+      }
+    }
 
     Ok(merged_preset)
   }
@@ -286,6 +309,12 @@ pub enum Job {
   Reusable(ReusableWorkflowCallJob),
 }
 
+impl Default for Job {
+  fn default() -> Self {
+    Self::Normal(NormalJob::default())
+  }
+}
+
 impl Merge for Job {
   fn merge(&mut self, other: Self) {
     match self {
@@ -320,7 +349,7 @@ impl Merge for Job {
 /// A workflow run is made up of one or more jobs, which run in parallel by default.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge, Default)]
 #[merge(strategy = overwrite_if_some)]
 pub struct NormalJob {
   /// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
@@ -438,11 +467,11 @@ pub struct NormalJob {
   /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps
   #[serde(default, skip_serializing_if = "Vec::is_empty")]
   #[merge(strategy = merge_vecs)]
-  pub steps: Vec<Step>,
+  pub steps: Vec<GHStepData>,
 }
 
 /// A reusable job, imported from a file or repo.
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Merge, Default)]
 #[merge(strategy = overwrite_if_some)]
 pub struct ReusableWorkflowCallJob {
   /// The location and version of a reusable workflow file to run as a job, of the form './{path/to}/{localfile}.yml' or '{owner}/{repo}/{path}/{filename}@{ref}'. {ref} can be a SHA, a release tag, or a branch name. Using the commit SHA is the safest for stability and security.
@@ -608,6 +637,26 @@ pub struct Strategy {
   /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstrategymatrix
   #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
   pub matrix: JsonValueBTreeMap,
+}
+
+/// Configuration for a Github workflow `step` or a preset id that points to one.
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema)]
+#[serde(untagged)]
+pub enum GHStepData {
+  /// A preset ID
+  #[serde(skip_serializing)]
+  Preset(String),
+  Config(Step),
+}
+
+impl GHStepData {
+  pub fn as_config(self) -> Option<Step> {
+    if let Self::Config(data) = self {
+      Some(data)
+    } else {
+      None
+    }
+  }
 }
 
 /// A job contains a sequence of tasks called `steps`. Steps can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.

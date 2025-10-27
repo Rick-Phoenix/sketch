@@ -1,6 +1,6 @@
 # Github Workflow Presets
 
-Sketch supports presets for [Github workflows](https://docs.github.com/en/actions/reference/workflows-and-actions) and for jobs within a github workflow.
+Sketch supports presets for [Github workflows](https://docs.github.com/en/actions/reference/workflows-and-actions), as well as individual components in a workflow, such as a job or a step.
 
 ## Example
 
