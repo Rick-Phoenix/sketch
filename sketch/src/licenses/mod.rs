@@ -24,6 +24,9 @@ pub enum License {
   ///
   /// See more: https://choosealicense.com/licenses/mit/
   MIT,
+
+  #[serde(rename = "MPL-2.0")]
+  Mpl2,
 }
 
 impl License {
@@ -33,6 +36,7 @@ impl License {
       License::Gpl3 => GPL_3_LICENSE,
       License::Agpl3 => AGPL_3_LICENSE,
       License::MIT => MIT_LICENSE,
+      License::Mpl2 => MPL_2_LICENSE,
     }
   }
 }
@@ -41,3 +45,4 @@ const APACHE_2_LICENSE: &str = include_str!("./templates/apache-2.0");
 const MIT_LICENSE: &str = include_str!("./templates/mit");
 const GPL_3_LICENSE: &str = include_str!("./templates/gpl-3.0");
 const AGPL_3_LICENSE: &str = include_str!("./templates/agpl-3.0");
+const MPL_2_LICENSE: &str = include_str!("./templates/mpl-2.0");
