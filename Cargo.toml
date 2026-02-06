@@ -2,6 +2,13 @@
 members = ["json-schema", "sketch"]
 resolver = "3"
 
+[profile.dev]
+debug = 1
+
+[profile.dev.package."*"]
+opt-level = 1
+debug = false
+
 [workspace.package]
 edition = "2024"
 license = "Apache-2.0"

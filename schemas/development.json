@@ -4427,6 +4427,12 @@
       "description": "Generates a new license file",
       "oneOf": [
         {
+          "type": "string",
+          "enum": [
+            "MPL-2.0"
+          ]
+        },
+        {
           "description": "Apache 2.0 license.\n\nSee more: https://choosealicense.com/licenses/apache-2.0/",
           "type": "string",
           "const": "Apache-2.0"
@@ -12930,7 +12936,7 @@
             "null"
           ],
           "additionalProperties": {
-            "type": "string"
+            "$ref": "#/$defs/StringNumOrBool"
           }
         },
         "env": {
@@ -13294,10 +13300,7 @@
           "description": "Workspace-level lint groups",
           "type": "object",
           "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Lint"
-            }
+            "$ref": "#/$defs/LintKind"
           }
         }
       }
@@ -13648,6 +13651,30 @@
       },
       "additionalProperties": true
     },
+    "LintKind": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LintLevel"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Lint"
+          }
+        }
+      ]
+    },
+    "LintLevel": {
+      "description": "Lint level.",
+      "type": "string",
+      "enum": [
+        "allow",
+        "warn",
+        "force-warn",
+        "deny",
+        "forbid"
+      ]
+    },
     "Lint": {
       "description": "Lint definition.",
       "type": "object",
@@ -13673,17 +13700,6 @@
         "level",
         "priority",
         "config"
-      ]
-    },
-    "LintLevel": {
-      "description": "Lint level.",
-      "type": "string",
-      "enum": [
-        "allow",
-        "warn",
-        "force-warn",
-        "deny",
-        "forbid"
       ]
     },
     "Package": {
@@ -14328,7 +14344,9 @@
         "package": {
           "description": "Profile overrides for dependencies, `*` is special.",
           "type": "object",
-          "additionalProperties": true
+          "additionalProperties": {
+            "$ref": "#/$defs/Profile"
+          }
         },
         "build-override": {
           "description": "Profile overrides for build dependencies, `*` is special."
@@ -14344,22 +14362,11 @@
     },
     "DebugSetting": {
       "description": "Verbosity of debug info in a [`Profile`]",
-      "oneOf": [
-        {
-          "description": "0 or false",
-          "type": "string",
-          "const": "none"
-        },
-        {
-          "description": "1 = line tables only",
-          "type": "string",
-          "const": "lines"
-        },
-        {
-          "description": "2 or true",
-          "type": "string",
-          "const": "full"
-        }
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2
       ]
     },
     "LtoSetting": {
