@@ -5,6 +5,7 @@ pub mod workspace;
 
 use std::{
 	collections::{BTreeMap, BTreeSet},
+	fs::read_to_string,
 	mem,
 	path::PathBuf,
 };
@@ -15,10 +16,11 @@ use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use toml_edit::{Array, Decor, DocumentMut, Item, Table};
 
 use crate::{
 	custom_templating::TemplatingPresetReference,
-	fs::{create_all_dirs, deserialize_toml, serialize_toml, write_file},
+	fs::{create_all_dirs, serialize_toml, write_file},
 	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
 	licenses::License,
 	rust::{package::Package, profile_settings::Profiles, workspace::Workspace},
@@ -93,17 +95,58 @@ impl Crate {
 		let workspace_manifest_path = PathBuf::from("Cargo.toml");
 
 		let workspace_manifest = if workspace_manifest_path.exists() {
-			let mut workspace_manifest2: Manifest = deserialize_toml(&workspace_manifest_path)?;
+			let workspace_manifest_raw = read_to_string(&workspace_manifest_path).map_err(|e| {
+				GenError::DeserializationError {
+					file: workspace_manifest_path.clone(),
+					error: e.to_string(),
+				}
+			})?;
 
-			if let Some(workspace_config) = &mut workspace_manifest2.workspace {
-				workspace_config
-					.members
-					.insert(dir.to_string_lossy().to_string());
+			let mut workspace_manifest_content = workspace_manifest_raw
+				.parse::<DocumentMut>()
+				.map_err(|e| GenError::DeserializationError {
+					file: workspace_manifest_path.clone(),
+					error: e.to_string(),
+				})?;
 
-				serialize_toml(&workspace_manifest2, &workspace_manifest_path, true)?;
-			}
+			let workspace_entry = workspace_manifest_content
+				.entry("workspace")
+				.or_insert_with(|| Item::Table(Table::new()));
 
-			Some(workspace_manifest2)
+			let members = workspace_entry
+				.as_table_mut()
+				.unwrap()
+				.entry("members")
+				.or_insert_with(|| Item::Value(toml_edit::Value::Array(Array::new())))
+				.as_array_mut()
+				.unwrap();
+
+			members.set_trailing_comma(true);
+
+			let decor = members
+				.get(0)
+				.map(|i| i.decor().clone())
+				.unwrap_or_else(|| Decor::new("\n  ", ""));
+
+			let mut new_member: toml_edit::Value = dir.to_string_lossy().to_string().into();
+
+			*new_member.decor_mut() = decor;
+
+			members.push(new_member);
+
+			write_file(
+				&workspace_manifest_path,
+				&workspace_manifest_content.to_string(),
+				true,
+			)?;
+
+			let workspace_manifest_full: Manifest = toml::from_str(&workspace_manifest_raw)
+				.map_err(|e| GenError::DeserializationError {
+					file: workspace_manifest_path.clone(),
+					error: e.to_string(),
+				})?;
+
+			workspace_manifest_full.workspace
 		} else {
 			None
 		};

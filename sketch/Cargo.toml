@@ -33,6 +33,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+toml_edit = "0.24.0"
 globset = "0.4.16"
 walkdir = "2.5.0"
 semver = { version = "1.0.27" }
