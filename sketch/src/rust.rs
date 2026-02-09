@@ -60,28 +60,24 @@ pub struct Crate {
 }
 
 impl Crate {
-	pub fn generate(self, dir: &PathBuf, config: &Config) -> Result<(), GenError> {
+	pub fn generate(
+		self,
+		dir: &PathBuf,
+		name: Option<String>,
+		config: &Config,
+	) -> Result<(), GenError> {
 		if dir.exists() {
 			panic!("Dir exists");
 		}
 
-		let workspace_manifest_path = PathBuf::from("Cargo.toml");
-
-		if workspace_manifest_path.exists() {
-			let mut workspace_manifest: Manifest = deserialize_toml(&workspace_manifest_path)?;
-
-			if let Some(workspace_config) = &mut workspace_manifest.workspace {
-				workspace_config
-					.members
-					.insert(dir.to_string_lossy().to_string());
-
-				serialize_toml(&workspace_manifest, &workspace_manifest_path, true)?;
-			}
-		}
-
 		create_all_dirs(dir)?;
 
-		let name = dir.file_name().expect("Empty path");
+		let name = name.unwrap_or_else(|| {
+			dir.file_name()
+				.expect("Empty path")
+				.to_string_lossy()
+				.to_string()
+		});
 
 		let CargoTomlPresetRef::Config(CargoTomlPreset {
 			config: mut manifest,
@@ -91,7 +87,51 @@ impl Crate {
 			panic!("Unresolved manifest");
 		};
 
-		manifest.package.get_or_insert_default().name = Some(name.to_string_lossy().to_string());
+		manifest.package.get_or_insert_default().name = Some(name);
+
+		let workspace_manifest_path = PathBuf::from("Cargo.toml");
+
+		let workspace_manifest = if workspace_manifest_path.exists() {
+			let mut workspace_manifest2: Manifest = deserialize_toml(&workspace_manifest_path)?;
+
+			if let Some(workspace_config) = &mut workspace_manifest2.workspace {
+				workspace_config
+					.members
+					.insert(dir.to_string_lossy().to_string());
+
+				serialize_toml(&workspace_manifest2, &workspace_manifest_path, true)?;
+			}
+
+			Some(workspace_manifest2)
+		} else {
+			None
+		};
+
+		if let Some(workspace_manifest) = workspace_manifest {
+			if workspace_manifest.lints.is_some() && manifest.lints.is_none() {
+				manifest.lints = Some(Inheritable::Workspace {
+					workspace: Some(true),
+				});
+			}
+
+			if let Some(workspace_package_config) = &workspace_manifest.package {
+				let package_config = manifest.package.get_or_insert_default();
+
+				macro_rules! inherit_opt {
+					($($name:ident),*) => {
+						$(
+							if workspace_package_config.$name.is_some() && package_config.$name.is_none() {
+								package_config.$name = Some(Inheritable::Workspace {
+									workspace: Some(true),
+								});
+							}
+						)*
+					};
+				}
+
+				inherit_opt!(edition, license, keywords, repository);
+			}
+		}
 
 		serialize_toml(&manifest, &dir.join("Cargo.toml"), true)?;
 

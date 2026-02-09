@@ -89,6 +89,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 				}
 				RustCommands::Crate {
 					dir,
+					name,
 					preset: preset_id,
 					config: overrides,
 				} => {
@@ -106,6 +107,8 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 					if let Some(overrides) = overrides {
 						preset.merge(overrides);
 					}
+
+					preset.generate(&dir, name, &config)?;
 				}
 			};
 		}
@@ -701,10 +704,13 @@ pub enum Commands {
 #[derive(Subcommand, Debug, Clone)]
 pub enum RustCommands {
 	Crate {
-		dir: String,
+		dir: PathBuf,
 
 		#[arg(short, long)]
 		preset: String,
+
+		#[arg(short, long)]
+		name: Option<String>,
 
 		#[command(flatten)]
 		config: Option<Crate>,

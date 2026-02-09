@@ -241,6 +241,7 @@ Generates a `pre-commit` config file from a preset
 ###### **Options:**
 
 * `-p`, `--preset <PRESET>`
+* `-n`, `--name <NAME>`
 * `-m`, `--manifest <MANIFEST>`
 * `--gitignore <GITIGNORE>` — Settings for the gitignore file
 * `--license <LICENSE>` — A license file to generate for the new repo
