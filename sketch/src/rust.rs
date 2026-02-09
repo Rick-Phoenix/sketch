@@ -1,4 +1,85 @@
 //! Some of the code for this module comes from the [`cargo_toml`](https://docs.rs/cargo_toml/0.22.3/cargo_toml/index.html) crate.
+
+macro_rules! prop_name {
+	($name:ident) => {
+		&stringify!($name).replace("_", "-")
+	};
+}
+
+macro_rules! add_if_false {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if $target.$names.is_some_and(|v| !v) {
+				$table[stringify!($names)] = false.into();
+			}
+		)*
+	};
+}
+
+macro_rules! add_string {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if let Some(str) = &$target.$names {
+				$table[prop_name!($names)] =  str.into();
+			}
+		)*
+	};
+}
+
+macro_rules! add_bool {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if $target.$names {
+				$table[prop_name!($names)] =  true.into();
+			}
+		)*
+	};
+}
+
+macro_rules! add_optional_bool {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if let Some(bool) = $target.$names {
+				$table[prop_name!($names)] =  bool.into();
+			}
+		)*
+	};
+}
+
+macro_rules! add_value {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if let Some(val) = &$target.$names {
+				$table[prop_name!($names)] =  val.as_toml_value().into();
+			}
+		)*
+	};
+}
+
+macro_rules! add_map {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if !$target.$names.is_empty() {
+				$table[prop_name!($names)] =  Table::from_iter(
+					$target.$names.iter().map(
+						|(k, v)| (toml_edit::Key::from(k), Item::from(v.as_toml_value()))
+					)
+				).into();
+			}
+		)*
+	};
+}
+
+macro_rules! add_string_list {
+	($target:ident, $table:ident => $($names:ident),*) => {
+		$(
+			if !$target.$names.is_empty() {
+				$table[prop_name!($names)] = Array::from_iter(&$target.$names).into();
+			}
+		)*
+	};
+}
+
 pub mod package;
 pub mod profile_settings;
 pub mod workspace;
@@ -16,16 +97,29 @@ use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use toml_edit::{Array, Decor, DocumentMut, Item, Table};
+use toml_edit::{Array, Decor, DocumentMut, InlineTable, Item, Table, Value as TomlValue};
 
 use crate::{
 	custom_templating::TemplatingPresetReference,
 	fs::{create_all_dirs, serialize_toml, write_file},
 	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
 	licenses::License,
-	rust::{package::Package, profile_settings::Profiles, workspace::Workspace},
+	rust::{
+		package::Package,
+		profile_settings::Profiles,
+		workspace::{Lints, Workspace},
+	},
 	*,
 };
+
+pub fn toml_string_list<'a>(strings: impl IntoIterator<Item = &'a String>) -> Item {
+	Array::from_iter(strings.into_iter().map(|s| {
+		let mut val: TomlValue = s.into();
+		*val.decor_mut() = Decor::new("\n  ", "");
+		val
+	}))
+	.into()
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
 #[serde(default)]
@@ -153,27 +247,25 @@ impl Crate {
 
 		if let Some(workspace_manifest) = workspace_manifest {
 			if workspace_manifest.lints.is_some() && manifest.lints.is_none() {
-				manifest.lints = Some(Inheritable::Workspace {
-					workspace: Some(true),
-				});
+				manifest.lints = Some(Inheritable::Workspace { workspace: true });
 			}
 
-			if let Some(workspace_package_config) = &workspace_manifest.package {
+			if let Some(_) = &workspace_manifest.package {
 				let package_config = manifest.package.get_or_insert_default();
 
 				macro_rules! inherit_opt {
 					($($name:ident),*) => {
 						$(
-							if workspace_package_config.$name.is_some() && package_config.$name.is_none() {
-								package_config.$name = Some(Inheritable::Workspace {
-									workspace: Some(true),
-								});
-							}
+							package_config.$name = Some(Inheritable::Workspace {
+								workspace: true,
+							});
 						)*
 					};
 				}
 
-				inherit_opt!(edition, license, keywords, repository);
+				inherit_opt!(edition, license, repository);
+
+				package_config.keywords = Inheritable::Workspace { workspace: true };
 			}
 		}
 
@@ -378,8 +470,8 @@ pub struct Manifest {
 
 	/// Lints
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_inheritable_map)]
-	pub lints: Option<Inheritable<BTreeMap<String, BTreeMap<String, Lint>>>>,
+	#[merge(strategy = overwrite_if_some)]
+	pub lints: Option<Inheritable<Lints>>,
 
 	/// The `[features]` section. This set may be incomplete!
 	///
@@ -409,6 +501,106 @@ pub struct Manifest {
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
+impl Manifest {
+	pub fn as_document(&self) -> DocumentMut {
+		let mut document = DocumentMut::new();
+
+		if let Some(workspace) = &self.workspace {
+			document.insert("workspace", workspace.as_toml_value());
+		}
+
+		add_value!(self, document => package, lib, profile);
+		add_map!(self, document => target);
+
+		if !self.bin.is_empty() {
+			let array = Array::from_iter(self.bin.iter().map(|i| match i.as_toml_value() {
+				Item::None => todo!(),
+				Item::Value(value) => value,
+				Item::Table(table) => table.into_inline_table().into(),
+				Item::ArrayOfTables(_) => todo!(),
+			}));
+
+			document["bin"] = array.into();
+		}
+
+		if !self.bench.is_empty() {
+			let array = Array::from_iter(
+				self.bench
+					.iter()
+					.map(|i| match i.as_toml_value() {
+						Item::None => todo!(),
+						Item::Value(value) => value,
+						Item::Table(table) => table.into_inline_table().into(),
+						Item::ArrayOfTables(_) => todo!(),
+					}),
+			);
+
+			document["bench"] = array.into();
+		}
+
+		if !self.test.is_empty() {
+			let array = Array::from_iter(self.test.iter().map(|i| match i.as_toml_value() {
+				Item::None => todo!(),
+				Item::Value(value) => value,
+				Item::Table(table) => table.into_inline_table().into(),
+				Item::ArrayOfTables(_) => todo!(),
+			}));
+
+			document["test"] = array.into();
+		}
+
+		if !self.example.is_empty() {
+			let array = Array::from_iter(
+				self.example
+					.iter()
+					.map(|i| match i.as_toml_value() {
+						Item::None => todo!(),
+						Item::Value(value) => value,
+						Item::Table(table) => table.into_inline_table().into(),
+						Item::ArrayOfTables(_) => todo!(),
+					}),
+			);
+
+			document["example"] = array.into();
+		}
+
+		if !self.patch.is_empty() {
+			let patch_table = Table::from_iter(self.patch.iter().map(|(k, v)| {
+				(
+					k,
+					Table::from_iter(v.iter().map(|(k, v)| (k, v.as_toml_value()))),
+				)
+			}));
+
+			document["patch"] = patch_table.into();
+		}
+
+		if let Some(lints) = &self.lints {
+			document["lints"] = match lints {
+				Inheritable::Workspace { workspace } => {
+					InlineTable::from_iter([("workspace", *workspace)]).into()
+				}
+				Inheritable::Set(lints) => lints.as_toml_value(),
+			};
+		}
+
+		add_map!(self, document => dev_dependencies, build_dependencies, dependencies);
+
+		if !self.features.is_empty() {
+			document["features"] =
+				Table::from_iter(self.features.iter().map(|(name, features)| {
+					(
+						toml_edit::Key::from(name.as_str()),
+						Array::from_iter(features),
+					)
+				}))
+				.into();
+		}
+
+		document
+	}
+}
+
 /// Lint level.
 #[derive(Debug, PartialEq, Eq, Copy, Clone, JsonSchema, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -420,6 +612,20 @@ pub enum LintLevel {
 	Forbid,
 }
 
+impl AsTomlValue for LintLevel {
+	fn as_toml_value(&self) -> Item {
+		let str = match self {
+			Self::Allow => "allow",
+			Self::Warn => "warn",
+			Self::ForceWarn => "force-warn",
+			Self::Deny => "deny",
+			Self::Forbid => "forbid",
+		};
+
+		str.into()
+	}
+}
+
 /// Lint definition.
 #[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
 pub struct Lint {
@@ -427,10 +633,24 @@ pub struct Lint {
 	pub level: LintLevel,
 
 	/// Controls which lints or lint groups override other lint groups.
-	pub priority: i8,
+	pub priority: Option<i8>,
 
 	/// Unstable
 	pub config: BTreeMap<String, Value>,
+}
+
+impl AsTomlValue for Lint {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		table["level"] = self.level.as_toml_value().into();
+
+		if let Some(priority) = self.priority {
+			table["priority"] = i64::from(priority).into();
+		}
+
+		table.into()
+	}
 }
 
 /// Dependencies that are platform-specific or enabled through custom `cfg()`.
@@ -448,6 +668,16 @@ pub struct Target {
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
+impl AsTomlValue for Target {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		add_map!(self, table => dependencies, dev_dependencies, build_dependencies);
+
+		table.into()
+	}
+}
+
 /// Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.
 ///
 /// It can be simple version number, or detailed settings, or inherited.
@@ -462,7 +692,25 @@ pub enum Dependency {
 	Detailed(Box<DependencyDetail>),
 }
 
+impl AsTomlValue for Dependency {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::Simple(ver) => ver.into(),
+			Self::Inherited(dep) => dep.as_toml_value(),
+			Self::Detailed(dep) => dep.as_toml_value(),
+		}
+	}
+}
+
 impl Dependency {
+	pub fn optional(&self) -> bool {
+		match self {
+			Self::Simple(_) => false,
+			Self::Inherited(dep) => dep.optional,
+			Self::Detailed(dep) => dep.optional,
+		}
+	}
+
 	pub fn features(&self) -> Option<&BTreeSet<String>> {
 		match self {
 			Self::Simple(_) => None,
@@ -495,10 +743,8 @@ impl Merge for Dependency {
 				Self::Simple(_) => *self = other,
 				Self::Inherited(right) => left_options.merge(right),
 				Self::Detailed(mut right) => {
-					if let Some(optional) = left_options.optional
-						&& right.optional.is_none()
-					{
-						right.optional = Some(optional);
+					if left_options.optional {
+						right.optional = true;
 					}
 
 					let left_features = mem::take(&mut left_options.features);
@@ -511,10 +757,8 @@ impl Merge for Dependency {
 			Self::Detailed(left) => match other {
 				Self::Simple(_) => *self = other,
 				Self::Inherited(mut right) => {
-					if let Some(optional) = left.optional
-						&& right.optional.is_none()
-					{
-						right.optional = Some(optional);
+					if left.optional {
+						right.optional = true;
 					}
 
 					let left_features = mem::take(&mut left.features);
@@ -534,18 +778,30 @@ impl Merge for Dependency {
 /// When a dependency is defined as `{ workspace = true }`,
 /// and workspace data hasn't been applied yet.
 #[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize, Merge)]
-#[serde(rename_all = "kebab-case")]
-#[merge(strategy = overwrite_if_some)]
+#[serde(default, rename_all = "kebab-case")]
 pub struct InheritedDependencyDetail {
 	#[merge(strategy = merge_btree_sets)]
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
 
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub optional: Option<bool>,
+	#[serde(skip_serializing_if = "crate::is_false")]
+	#[merge(strategy = merge::bool::overwrite_true)]
+	pub optional: bool,
 
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub workspace: Option<bool>,
+	#[serde(skip_serializing_if = "crate::is_false")]
+	#[merge(strategy = merge::bool::overwrite_true)]
+	pub workspace: bool,
+}
+
+impl AsTomlValue for InheritedDependencyDetail {
+	fn as_toml_value(&self) -> Item {
+		let mut table = InlineTable::new();
+
+		add_bool!(self, table => workspace, optional);
+		add_string_list!(self, table => features);
+
+		table.into()
+	}
 }
 
 /// When definition of a dependency is more than just a version string.
@@ -604,8 +860,9 @@ pub struct DependencyDetail {
 	///
 	/// If not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.
 	/// See the [`features`] module for more info.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub optional: Option<bool>,
+	#[serde(skip_serializing_if = "crate::is_false")]
+	#[merge(strategy = merge::bool::overwrite_true)]
+	pub optional: bool,
 
 	/// Enable the `default` set of features of the dependency (enabled by default).
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -617,6 +874,22 @@ pub struct DependencyDetail {
 	pub unstable: BTreeMap<String, Value>,
 }
 
+impl AsTomlValue for DependencyDetail {
+	fn as_toml_value(&self) -> Item {
+		let mut table = InlineTable::new();
+
+		add_string!(self, table => version, package, registry, registry_index, path, git, branch, tag, rev);
+
+		add_string_list!(self, table => features);
+
+		add_bool!(self, table => optional);
+
+		add_if_false!(self, table => default_features);
+
+		table.into()
+	}
+}
+
 /// A value that can be set to `workspace`
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(untagged)]
@@ -624,32 +897,57 @@ pub enum Inheritable<T> {
 	/// Inherit this setting from the `workspace`
 	#[serde(rename = "workspace")]
 	Workspace {
-		workspace: Option<bool>,
+		workspace: bool,
 	},
 	Set(T),
 }
 
+impl<T> Inheritable<T> {
+	pub fn is_workspace(&self) -> bool {
+		matches!(self, Self::Workspace { workspace: true })
+	}
+}
+
+impl<T: AsTomlValue> AsTomlValue for Inheritable<T> {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::Workspace { workspace } => Table::from_iter([("workspace", *workspace)]).into(),
+			Self::Set(set) => set.as_toml_value(),
+		}
+	}
+}
+
+pub trait AsTomlValue {
+	fn as_toml_value(&self) -> Item;
+}
+
+impl<T: ?Sized + Into<Item> + Clone> AsTomlValue for T {
+	fn as_toml_value(&self) -> Item {
+		self.clone().into()
+	}
+}
+
+impl<T: Default> Default for Inheritable<T> {
+	fn default() -> Self {
+		Self::Set(T::default())
+	}
+}
+
 pub(crate) fn merge_inheritable_set<T: Ord>(
-	left: &mut Option<Inheritable<BTreeSet<T>>>,
-	right: Option<Inheritable<BTreeSet<T>>>,
+	left: &mut Inheritable<BTreeSet<T>>,
+	right: Inheritable<BTreeSet<T>>,
 ) {
-	if let Some(right) = right {
-		if let Some(left) = left {
-			match left {
-				Inheritable::Workspace { .. } => {
-					*left = right;
+	match left {
+		Inheritable::Workspace { .. } => {
+			*left = right;
+		}
+		Inheritable::Set(left_list) => {
+			match right {
+				Inheritable::Workspace { workspace } => {
+					*left = Inheritable::Workspace { workspace }
 				}
-				Inheritable::Set(left_list) => {
-					match right {
-						Inheritable::Workspace { workspace } => {
-							*left = Inheritable::Workspace { workspace }
-						}
-						Inheritable::Set(right_list) => left_list.extend(right_list),
-					};
-				}
-			}
-		} else {
-			*left = Some(right);
+				Inheritable::Set(right_list) => left_list.extend(right_list),
+			};
 		}
 	}
 }
@@ -712,6 +1010,19 @@ pub enum Edition {
 	E2024 = 2024,
 }
 
+impl AsTomlValue for Edition {
+	fn as_toml_value(&self) -> Item {
+		let str = match self {
+			Self::E2015 => "2015",
+			Self::E2018 => "2018",
+			Self::E2021 => "2021",
+			Self::E2024 => "2024",
+		};
+
+		str.into()
+	}
+}
+
 /// A way specify or disable README or `build.rs`.
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(
@@ -725,6 +1036,15 @@ pub enum OptionalFile {
 	Path(PathBuf),
 }
 
+impl AsTomlValue for OptionalFile {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::Flag(bool) => (*bool).into(),
+			Self::Path(path) => path.to_string_lossy().as_ref().into(),
+		}
+	}
+}
+
 /// Forbids or selects custom registry
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(
@@ -736,6 +1056,15 @@ pub enum Publish {
 	Registry(BTreeSet<String>),
 }
 
+impl AsTomlValue for Publish {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::Flag(bool) => (*bool).into(),
+			Self::Registry(list) => toml_string_list(list),
+		}
+	}
+}
+
 /// The feature resolver version.
 ///
 /// Needed in [`Workspace`], but implied by [`Edition`] in packages.
@@ -745,9 +1074,9 @@ pub enum Publish {
 #[serde(
 	expecting = "if there's a newer resolver, then this parser (cargo_toml crate) has to be updated"
 )]
+#[repr(u8)]
 pub enum Resolver {
 	#[serde(rename = "1")]
-	#[default]
 	/// The default for editions prior to 2021.
 	V1 = 1,
 	/// The default for the 2021 edition.
@@ -755,7 +1084,14 @@ pub enum Resolver {
 	V2 = 2,
 	/// The default for the 2024 edition.
 	#[serde(rename = "3")]
+	#[default]
 	V3 = 3,
+}
+
+impl AsTomlValue for Resolver {
+	fn as_toml_value(&self) -> Item {
+		((*self) as u8 as i64).into()
+	}
 }
 
 #[derive(
@@ -794,20 +1130,16 @@ pub struct Product {
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub doc: Option<bool>,
 
-	/// If the product is meant to be a compiler plugin, this field must be set to true
-	/// for Cargo to correctly compile it and make it available for all dependencies.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub plugin: Option<bool>,
-
 	/// If the product is meant to be a "macros 1.1" procedural macro, this field must
 	/// be set to true.
 	#[serde(
 		default,
 		alias = "proc_macro",
 		alias = "proc-macro",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "crate::is_false"
 	)]
-	pub proc_macro: Option<bool>,
+	#[merge(strategy = merge::bool::overwrite_true)]
+	pub proc_macro: bool,
 
 	/// If set to false, `cargo test` will omit the `--test` flag to rustc, which
 	/// stops it from generating a test harness. This is useful when the binary being
@@ -836,4 +1168,19 @@ pub struct Product {
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	#[merge(strategy = merge_btree_sets)]
 	pub required_features: BTreeSet<String>,
+}
+
+impl AsTomlValue for Product {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		add_value!(self, table => edition);
+		add_string!(self, table => path, name);
+		add_bool!(self, table => proc_macro);
+		add_string_list!(self, table => crate_type, required_features);
+
+		add_if_false!(self, table => test, doctest, bench, doc, harness);
+
+		table.into()
+	}
 }

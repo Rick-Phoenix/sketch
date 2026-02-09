@@ -18,6 +18,8 @@ pub(crate) mod merging_strategies;
 pub(crate) mod serde_utils;
 pub(crate) mod templating;
 
+use serde_utils::is_false;
+
 pub mod cli;
 pub mod config;
 pub mod docker;

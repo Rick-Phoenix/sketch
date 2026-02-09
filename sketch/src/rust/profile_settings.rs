@@ -1,3 +1,4 @@
+use super::*;
 use crate::*;
 
 /// Handling of LTO in a build profile
@@ -11,6 +12,17 @@ pub enum LtoSetting {
 	Thin,
 	/// True
 	Fat,
+}
+
+impl AsTomlValue for LtoSetting {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::None => "off".into(),
+			Self::ThinLocal => false.into(),
+			Self::Thin => "thin".into(),
+			Self::Fat => true.into(),
+		}
+	}
 }
 
 /// Verbosity of debug info in a [`Profile`]
@@ -36,6 +48,12 @@ pub enum DebugSetting {
 	Full = 2,
 }
 
+impl AsTomlValue for DebugSetting {
+	fn as_toml_value(&self) -> Item {
+		(*self as u8 as i64).into()
+	}
+}
+
 /// Handling of debug symbols in a build profile
 #[derive(
 	Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, JsonSchema, Serialize,
@@ -48,6 +66,18 @@ pub enum StripSetting {
 	Debuginfo,
 	/// Stronger than the `Debuginfo` setting, same as `strip = true`
 	Symbols,
+}
+
+impl AsTomlValue for StripSetting {
+	fn as_toml_value(&self) -> Item {
+		let str = match self {
+			StripSetting::None => "none",
+			StripSetting::Debuginfo => "debuginfo",
+			StripSetting::Symbols => "symbols",
+		};
+
+		str.into()
+	}
 }
 
 /// Compilation/optimization settings for a workspace
@@ -102,7 +132,7 @@ pub struct Profile {
 	/// Profile overrides for dependencies, `*` is special.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	#[merge(strategy = merge_btree_maps)]
-	pub package: BTreeMap<String, Profile>,
+	pub package: BTreeMap<String, Self>,
 
 	/// Profile overrides for build dependencies, `*` is special.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
@@ -111,6 +141,24 @@ pub struct Profile {
 	/// Only relevant for non-standard profiles
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub inherits: Option<String>,
+}
+
+impl AsTomlValue for Profile {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		add_value!(self, table => debug, lto, strip);
+		add_string!(self, table => split_debuginfo, panic, inherits);
+		add_map!(self, table => package);
+
+		add_optional_bool!(self, table => rpath, debug_assertions, incremental, overflow_checks);
+
+		if let Some(codegen_units) = self.codegen_units {
+			table["codegen-units"] = i64::from(codegen_units).into();
+		}
+
+		table.into()
+	}
 }
 
 /// Build-in an custom build/optimization settings
@@ -137,4 +185,15 @@ pub struct Profiles {
 	#[serde(flatten)]
 	#[merge(strategy = merge_btree_maps)]
 	pub custom: BTreeMap<String, Profile>,
+}
+
+impl AsTomlValue for Profiles {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		add_value!(self, table => release, dev, test, bench);
+		add_map!(self, table => custom);
+
+		table.into()
+	}
 }

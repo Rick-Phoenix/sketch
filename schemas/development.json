@@ -101,13 +101,12 @@
       },
       "default": {}
     },
-    "cargo_toml_presets": {
-      "description": "A map that contains presets for `Cargo.toml` files.",
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/$defs/CargoTomlPreset"
-      },
-      "default": {}
+    "rust_presets": {
+      "$ref": "#/$defs/RustPresets",
+      "default": {
+        "manifest": {},
+        "crate": {}
+      }
     },
     "github": {
       "description": "Configurations and presets relating to Github",
@@ -4320,14 +4319,11 @@
         },
         "with_templates": {
           "description": "One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/TemplatingPresetReference"
           },
-          "default": null
+          "default": []
         },
         "hooks_pre": {
           "description": "One or many rendered commands to execute before the repo's creation",
@@ -4596,13 +4592,11 @@
         },
         "exclude": {
           "description": "A list of glob patterns for the templates to exclude",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         }
       },
       "required": [
@@ -4619,13 +4613,11 @@
         },
         "exclude": {
           "description": "A list of glob patterns for the templates to exclude",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "default": []
         }
       },
       "required": [
@@ -10411,7 +10403,7 @@
           "description": "Settings for the gitignore file.",
           "anyOf": [
             {
-              "$ref": "#/$defs/GitIgnoreSetting"
+              "$ref": "#/$defs/GitIgnoreRef"
             },
             {
               "type": "null"
@@ -10421,19 +10413,23 @@
         },
         "pre_commit": {
           "description": "Configuration settings for [`pre-commit`](https://pre-commit.com/).",
-          "$ref": "#/$defs/PreCommitSetting",
-          "default": true
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PreCommitSetting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "with_templates": {
           "description": "A set of templates to generate when this preset is used.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/TemplatingPresetReference"
           },
-          "default": null
+          "default": []
         },
         "license": {
           "description": "A license file to generate for the new repo.",
@@ -10473,14 +10469,14 @@
         }
       }
     },
-    "GitIgnoreSetting": {
+    "GitIgnoreRef": {
       "description": "Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)",
       "anyOf": [
         {
           "type": "string"
         },
         {
-          "$ref": "#/$defs/GitIgnore"
+          "$ref": "#/$defs/GitignorePreset"
         }
       ]
     },
@@ -13079,6 +13075,26 @@
         }
       ]
     },
+    "RustPresets": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "description": "A map that contains presets for `Cargo.toml` files.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CargoTomlPreset"
+          },
+          "default": {}
+        },
+        "crate": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Crate"
+          },
+          "default": {}
+        }
+      }
+    },
     "CargoTomlPreset": {
       "description": "A preset for a `Cargo.toml` file.",
       "type": "object",
@@ -14438,6 +14454,69 @@
               "$ref": "#/$defs/Lint"
             }
           }
+        }
+      ]
+    },
+    "Crate": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "$ref": "#/$defs/CargoTomlPresetRef",
+          "default": {
+            "extends_presets": [],
+            "workspace": null,
+            "package": null
+          }
+        },
+        "gitignore": {
+          "description": "Settings for the gitignore file.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GitIgnoreRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "license": {
+          "description": "A license file to generate for the new repo.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/License"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "with_templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TemplatingPresetReference"
+          },
+          "default": []
+        }
+      }
+    },
+    "CargoTomlPresetRef": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "Id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "Id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "#/$defs/CargoTomlPreset"
         }
       ]
     },

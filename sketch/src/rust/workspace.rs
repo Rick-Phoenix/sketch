@@ -1,3 +1,4 @@
+use super::*;
 use std::{
 	collections::{BTreeMap, BTreeSet},
 	path::PathBuf,
@@ -6,7 +7,6 @@ use std::{
 use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{
 	merge_btree_maps, merge_btree_sets, merge_optional_btree_maps, merge_optional_btree_sets,
@@ -44,9 +44,9 @@ pub struct Workspace {
 	pub exclude: BTreeSet<String>,
 
 	/// Shared info
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub metadata: Option<BTreeMap<String, Value>>,
+	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = merge_btree_maps)]
+	pub metadata: BTreeMap<String, Value>,
 
 	/// Compatibility setting
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -63,6 +63,18 @@ pub struct Workspace {
 	pub lints: Option<Lints>,
 }
 
+impl AsTomlValue for Workspace {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		add_string_list!(self, table => members, default_members, exclude);
+
+		add_value!(self, table => package, resolver, lints);
+
+		table.into()
+	}
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge)]
 pub struct Lints {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
@@ -74,11 +86,36 @@ pub struct Lints {
 	pub clippy: BTreeMap<String, LintKind>,
 }
 
+impl AsTomlValue for Lints {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		add_map!(self, table => rust, clippy);
+
+		table.into()
+	}
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(untagged)]
 pub enum LintKind {
 	Single(LintLevel),
 	Map(BTreeMap<String, Lint>),
+}
+
+impl AsTomlValue for LintKind {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::Single(lev) => lev.as_toml_value().into(),
+			Self::Map(map) => Table::from_iter(map.iter().map(|(k, v)| {
+				(
+					<&String as Into<toml_edit::Key>>::into(k),
+					Item::from(v.as_toml_value()),
+				)
+			}))
+			.into(),
+		}
+	}
 }
 
 /// Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.
@@ -88,9 +125,9 @@ pub enum LintKind {
 #[non_exhaustive]
 pub struct PackageTemplate {
 	/// See <https://crates.io/category_slugs>
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub categories: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = merge_btree_sets)]
+	pub categories: BTreeSet<String>,
 
 	/// Multi-line text, some people use Markdown here
 	#[serde(default, skip_serializing_if = "Option::is_none")]
@@ -105,31 +142,26 @@ pub struct PackageTemplate {
 	pub edition: Option<Edition>,
 
 	/// Don't publish these files, relative to workspace
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub exclude: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = merge_btree_sets)]
+	pub exclude: BTreeSet<String>,
 
 	/// Homepage URL
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub homepage: Option<String>,
 
 	/// Publish these files, relative to workspace
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub include: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = merge_btree_sets)]
+	pub include: BTreeSet<String>,
 
 	/// For search
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub keywords: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = merge_btree_sets)]
+	pub keywords: BTreeSet<String>,
 
-	/// SPDX
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub license: Option<String>,
-
-	/// If not SPDX
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub license_file: Option<PathBuf>,
 
 	/// Block publishing or choose custom registries
 	#[serde(default, skip_serializing_if = "Option::is_none")]
@@ -150,4 +182,39 @@ pub struct PackageTemplate {
 	/// Package version semver
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub version: Option<String>,
+}
+
+impl AsTomlValue for PackageTemplate {
+	fn as_toml_value(&self) -> Item {
+		let mut table = Table::new();
+
+		macro_rules! add_string_local {
+			($($name:ident),*) => {
+				add_string!(self, table => $($name),*);
+			};
+		}
+
+		macro_rules! add_string_list_local {
+			($($name:ident),*) => {
+				add_string_list!(self, table => $($name),*);
+			};
+		}
+
+		add_value!(self, table => publish);
+		add_value!(self, table => readme);
+
+		add_string_list_local!(categories, exclude, include, keywords);
+
+		add_string_local!(
+			description,
+			documentation,
+			homepage,
+			license,
+			repository,
+			rust_version,
+			version
+		);
+
+		table.into()
+	}
 }
