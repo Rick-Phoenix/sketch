@@ -31,7 +31,7 @@ use crate::{
 		create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json,
 		serialize_toml, serialize_yaml, write_file,
 	},
-	init_repo::{RepoPreset, pre_commit::PreCommitSetting},
+	init_repo::RepoPreset,
 	licenses::License,
 	rust::Crate,
 	serde_utils::deserialize_map,
@@ -88,6 +88,7 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 					serialize_toml(&content, &output, config.can_overwrite())?;
 				}
 				RustCommands::Crate {
+					dir,
 					preset: preset_id,
 					config: overrides,
 				} => {
@@ -287,7 +288,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 			remote,
 			preset,
 			dir,
-			no_pre_commit,
 			overrides,
 		} => {
 			let mut preset = if let Some(id) = preset {
@@ -306,10 +306,6 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 			if let Some(overrides) = overrides {
 				preset.merge(overrides);
 			}
-
-			if no_pre_commit {
-				preset.pre_commit = PreCommitSetting::Bool(false)
-			};
 
 			let out_dir = dir.unwrap_or_else(get_cwd);
 
@@ -535,10 +531,6 @@ pub enum Commands {
 		#[arg(short, long)]
 		preset: Option<String>,
 
-		/// Do not generate a pre-commit config
-		#[arg(long, group = "pre-commit")]
-		no_pre_commit: bool,
-
 		#[command(flatten)]
 		overrides: Option<RepoPreset>,
 
@@ -709,14 +701,13 @@ pub enum Commands {
 #[derive(Subcommand, Debug, Clone)]
 pub enum RustCommands {
 	Crate {
+		dir: String,
+
 		#[arg(short, long)]
 		preset: String,
 
 		#[command(flatten)]
 		config: Option<Crate>,
-		// / One or many templates or templating presets to generate in the new crate's root
-		// #[arg(short = 't', long = "template", value_name = "PRESET_ID")]
-		// with_templates: Vec<String>,
 	},
 
 	Manifest {

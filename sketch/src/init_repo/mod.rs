@@ -21,7 +21,7 @@ use crate::{
 		pre_commit::{PreCommitPreset, PreCommitSetting},
 	},
 	licenses::License,
-	merge_vecs, overwrite_always, overwrite_if_some,
+	merge_vecs, overwrite_if_some,
 };
 
 /// A preset for a git repository.
@@ -33,10 +33,10 @@ pub struct RepoPreset {
 	/// Settings for the gitignore file.
 	pub gitignore: Option<GitIgnoreRef>,
 
-	#[arg(short, long)]
-	#[merge(strategy = overwrite_always)]
+	#[arg(long)]
+	#[merge(strategy = overwrite_if_some)]
 	/// Configuration settings for [`pre-commit`](https://pre-commit.com/).
-	pub pre_commit: PreCommitSetting,
+	pub pre_commit: Option<PreCommitSetting>,
 
 	#[arg(short = 't', long = "template")]
 	#[merge(strategy = merge_vecs)]
@@ -148,8 +148,10 @@ impl Config {
 			Some("Failed to initialize a new git repo"),
 		)?;
 
-		if preset.pre_commit.is_enabled() {
-			let (pre_commit_id, pre_commit_preset) = match preset.pre_commit {
+		if let Some(pre_commit) = preset.pre_commit
+			&& pre_commit.is_enabled()
+		{
+			let (pre_commit_id, pre_commit_preset) = match pre_commit {
 				PreCommitSetting::Id(id) => (
 					id.clone(),
 					self.pre_commit_presets
@@ -162,7 +164,7 @@ impl Config {
 				),
 				PreCommitSetting::Bool(_) => ("__default".to_string(), PreCommitPreset::default()),
 				PreCommitSetting::Config(pre_commit_config) => {
-					("__inlined_definition".to_string(), pre_commit_config)
+					("__inlined".to_string(), pre_commit_config)
 				}
 			};
 
