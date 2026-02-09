@@ -212,11 +212,7 @@ impl Extensible for CargoTomlPreset {
 }
 
 impl CargoTomlPreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, CargoTomlPreset>,
-	) -> Result<Self, GenError> {
+	pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
 		if self.extends_presets.is_empty() {
 			return Ok(self);
 		}
@@ -362,7 +358,7 @@ pub struct Target {
 /// Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.
 ///
 /// It can be simple version number, or detailed settings, or inherited.
-#[derive(Debug, Clone, PartialEq, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Dependency {
 	/// Version requirement (e.g. `^1.5`)
@@ -376,9 +372,9 @@ pub enum Dependency {
 impl Dependency {
 	pub fn features(&self) -> Option<&BTreeSet<String>> {
 		match self {
-			Dependency::Simple(_) => None,
-			Dependency::Inherited(dep) => Some(&dep.features),
-			Dependency::Detailed(dep) => Some(&dep.features),
+			Self::Simple(_) => None,
+			Self::Inherited(dep) => Some(&dep.features),
+			Self::Detailed(dep) => Some(&dep.features),
 		}
 	}
 }
@@ -399,13 +395,13 @@ pub(crate) fn merge_dependencies(
 impl Merge for Dependency {
 	fn merge(&mut self, other: Self) {
 		match self {
-			Dependency::Simple(_) => {
+			Self::Simple(_) => {
 				*self = other;
 			}
-			Dependency::Inherited(left_options) => match other {
-				Dependency::Simple(_) => *self = other,
-				Dependency::Inherited(right) => left_options.merge(right),
-				Dependency::Detailed(mut right) => {
+			Self::Inherited(left_options) => match other {
+				Self::Simple(_) => *self = other,
+				Self::Inherited(right) => left_options.merge(right),
+				Self::Detailed(mut right) => {
 					if let Some(optional) = left_options.optional
 						&& right.optional.is_none()
 					{
@@ -416,12 +412,12 @@ impl Merge for Dependency {
 
 					right.features.extend(left_features);
 
-					*self = Dependency::Detailed(right);
+					*self = Self::Detailed(right);
 				}
 			},
-			Dependency::Detailed(left) => match other {
-				Dependency::Simple(_) => *self = other,
-				Dependency::Inherited(mut right) => {
+			Self::Detailed(left) => match other {
+				Self::Simple(_) => *self = other,
+				Self::Inherited(mut right) => {
 					if let Some(optional) = left.optional
 						&& right.optional.is_none()
 					{
@@ -432,9 +428,9 @@ impl Merge for Dependency {
 
 					right.features.extend(left_features);
 
-					*self = Dependency::Inherited(right);
+					*self = Self::Inherited(right);
 				}
-				Dependency::Detailed(right) => {
+				Self::Detailed(right) => {
 					left.merge(*right);
 				}
 			},
@@ -460,7 +456,7 @@ pub struct InheritedDependencyDetail {
 }
 
 /// When definition of a dependency is more than just a version string.
-#[derive(Debug, Clone, PartialEq, JsonSchema, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize, Merge)]
 #[serde(rename_all = "kebab-case")]
 #[merge(strategy = overwrite_if_some)]
 pub struct DependencyDetail {
@@ -529,7 +525,7 @@ pub struct DependencyDetail {
 }
 
 /// A value that can be set to `workspace`
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum Inheritable<T> {
 	/// Inherit this setting from the `workspace`
@@ -597,8 +593,8 @@ pub(crate) fn merge_inheritable_map<T>(
 impl<T: Default + PartialEq> Inheritable<T> {
 	pub fn is_default(&self) -> bool {
 		match self {
-			Inheritable::Workspace { .. } => false,
-			Inheritable::Set(v) => T::default() == *v,
+			Self::Workspace { .. } => false,
+			Self::Set(v) => T::default() == *v,
 		}
 	}
 }

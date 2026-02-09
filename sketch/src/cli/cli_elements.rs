@@ -20,8 +20,7 @@ impl FromStr for ConfigFormat {
 			"toml" => Ok(Self::Toml),
 			"json" => Ok(Self::Json),
 			_ => Err(GenError::Custom(format!(
-				"Invalid configuration format '{}'. Allowed formats are: yaml, toml, json",
-				s
+				"Invalid configuration format '{s}'. Allowed formats are: yaml, toml, json"
 			))),
 		}
 	}
@@ -30,9 +29,9 @@ impl FromStr for ConfigFormat {
 impl Display for ConfigFormat {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			ConfigFormat::Yaml => write!(f, "yaml"),
-			ConfigFormat::Toml => write!(f, "toml"),
-			ConfigFormat::Json => write!(f, "json"),
+			Self::Yaml => write!(f, "yaml"),
+			Self::Toml => write!(f, "toml"),
+			Self::Json => write!(f, "json"),
 		}
 	}
 }

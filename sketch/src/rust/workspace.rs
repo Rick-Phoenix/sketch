@@ -17,7 +17,7 @@ use crate::{
 };
 
 /// A manifest can contain both a package and workspace-wide properties
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, JsonSchema, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, Merge)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "kebab-case")]
 pub struct Workspace {

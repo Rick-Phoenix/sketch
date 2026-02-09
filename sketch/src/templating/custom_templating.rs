@@ -25,7 +25,7 @@ use crate::{
 };
 
 /// A reference to a templating preset, or a new preset definition.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum TemplatingPresetReference {
 	/// A reference to a templating preset, with some optional context
@@ -81,7 +81,7 @@ impl TemplatingPresetReference {
 }
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Merge)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema, Default, Merge)]
 #[serde(default)]
 pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
@@ -103,11 +103,7 @@ impl Extensible for TemplatingPreset {
 }
 
 impl TemplatingPreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, TemplatingPreset>,
-	) -> Result<TemplatingPreset, GenError> {
+	pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
 		if self.extends_presets.is_empty() {
 			return Ok(self);
 		}
@@ -120,7 +116,7 @@ impl TemplatingPreset {
 	}
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum PresetElement {
 	/// The data for a single template.
@@ -134,26 +130,28 @@ pub enum PresetElement {
 }
 
 /// A preset defined in a git repository.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 pub struct RemotePreset {
 	/// The link of the repo where the preset is defined
 	repo: String,
 	/// A list of glob patterns for the templates to exclude
-	exclude: Option<Vec<String>>,
+	#[serde(default)]
+	exclude: Vec<String>,
 }
 
 /// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 pub struct StructuredPreset {
 	/// A relative path to a directory starting from `templates_dir`
 	dir: PathBuf,
 	/// A list of glob patterns for the templates to exclude
-	exclude: Option<Vec<String>>,
+	#[serde(default)]
+	exclude: Vec<String>,
 }
 
 /// The types of configuration values for a template's data.
 /// It can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum TemplateData {
 	/// A literal definition for a template.
@@ -170,13 +168,12 @@ pub enum TemplateData {
 impl TemplateData {
 	pub fn name(&self) -> &str {
 		match self {
-			TemplateData::Content { name, .. } => name,
-			TemplateData::Id(name) => name,
+			Self::Content { name, .. } | Self::Id(name) => name,
 		}
 	}
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 pub enum TemplateOutputKind {
 	/// Render the output to stdout
 	#[serde(skip)]
@@ -188,7 +185,7 @@ pub enum TemplateOutputKind {
 
 /// The data for outputting a new template.
 /// The context specified here will override the global context (but not the variables set via cli).
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
 pub struct TemplateOutput {
 	/// The definition or id for the template to use.
 	pub template: TemplateData,
@@ -282,15 +279,13 @@ impl Config {
 						let new_tera =
 							Tera::new(&format!("{}/**/*", tmp_dir.display())).map_err(|e| {
 								GenError::Custom(format!(
-									"Failed to load the templates from remote template `{}`: {}",
-									repo, e
+									"Failed to load the templates from remote template `{repo}`: {e}"
 								))
 							})?;
 
 						tera.extend(&new_tera).map_err(|e| {
 							GenError::Custom(format!(
-								"Failed to load the templates from remote template `{}`: {}",
-								repo, e
+								"Failed to load the templates from remote template `{repo}`: {e}"
 							))
 						})?;
 
@@ -301,7 +296,7 @@ impl Config {
 							output_root,
 							&tmp_dir,
 							&tmp_dir,
-							exclude,
+							&exclude,
 						)?;
 					}
 					PresetElement::Template(template) => {
@@ -319,7 +314,7 @@ impl Config {
 							local_context.as_ref(),
 							output_root,
 							template.output,
-							template.template,
+							&template.template,
 						)?;
 					}
 
@@ -335,7 +330,7 @@ impl Config {
 							self.templates_dir
 								.as_ref()
 								.ok_or(GenError::Custom("templates_dir not set".to_string()))?,
-							exclude,
+							&exclude,
 						)?;
 					}
 				};
@@ -352,14 +347,14 @@ fn render_template_with_output(
 	context: &Context,
 	output_root: &Path,
 	output: TemplateOutputKind,
-	template: TemplateData,
+	template: &TemplateData,
 ) -> Result<(), GenError> {
 	let template_name = template.name();
 
 	if let TemplateData::Content { name, content } = &template {
 		tera.add_raw_template(name, content)
 			.map_err(|e| GenError::TemplateParsing {
-				template: name.to_string(),
+				template: name.clone(),
 				source: e,
 			})?;
 	}
@@ -373,7 +368,7 @@ fn render_template_with_output(
 						source: e,
 					})?;
 
-			println!("{}", output);
+			println!("{output}");
 		}
 		TemplateOutputKind::Path(path) => {
 			render_template(
@@ -396,7 +391,7 @@ fn render_structured_preset(
 	output_root: &Path,
 	dir: &Path,
 	templates_dir: &Path,
-	exclude: Option<Vec<String>>,
+	exclude: &[String],
 ) -> Result<(), GenError> {
 	let templates_dir = get_abs_path(templates_dir)?;
 	let root_dir = templates_dir.join(dir);
@@ -408,10 +403,12 @@ fn render_structured_preset(
 		)));
 	}
 
-	let globset = if let Some(ref patterns) = exclude {
+	let globset = if exclude.is_empty() {
+		None
+	} else {
 		let mut glob_builder = GlobSetBuilder::new();
 
-		for pattern in patterns {
+		for pattern in exclude {
 			glob_builder.add(Glob::new(pattern).map_err(|e| {
 				generic_error!("Could not parse glob pattern `{}`: {}", pattern, e)
 			})?);
@@ -422,8 +419,6 @@ fn render_structured_preset(
 				.build()
 				.map_err(|e| generic_error!("Could not build globset: {}", e))?,
 		)
-	} else {
-		None
 	};
 
 	let _: () = for entry in WalkDir::new(&root_dir)
@@ -501,7 +496,9 @@ pub(crate) fn get_local_context(
 	initial_context: ContextRef,
 	overrides: &IndexMap<String, Value>,
 ) -> ContextRef {
-	if !overrides.is_empty() {
+	if overrides.is_empty() {
+		initial_context
+	} else {
 		let mut context = match initial_context {
 			ContextRef::Original(context) => (*context).clone(),
 			ContextRef::New(context) => context,
@@ -512,8 +509,6 @@ pub(crate) fn get_local_context(
 		}
 
 		ContextRef::New(context)
-	} else {
-		initial_context
 	}
 }
 
@@ -526,8 +521,8 @@ pub(crate) enum ContextRef {
 impl AsRef<Context> for ContextRef {
 	fn as_ref(&self) -> &Context {
 		match self {
-			ContextRef::Original(ctx) => ctx.as_ref(),
-			ContextRef::New(ctx) => ctx,
+			Self::Original(ctx) => ctx.as_ref(),
+			Self::New(ctx) => ctx,
 		}
 	}
 }
