@@ -28,8 +28,7 @@ pub mod rust;
 pub mod ts;
 pub mod versions;
 
-use std::convert::Infallible;
-use std::{collections::BTreeMap, collections::HashMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug};
 use std::{fmt::Display, str::FromStr};
 
 use clap::ValueEnum;
@@ -71,6 +70,7 @@ pub enum Preset {
 	GithubWorkflow,
 	GithubWorkflowJob,
 	GithubWorkflowStep,
+	RustCrate,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Serialize, Deserialize, JsonSchema)]

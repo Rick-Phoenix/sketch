@@ -94,44 +94,45 @@ templating_presets:
 
 # `Cargo.toml` presets
 # ANCHOR: cargo
-cargo_toml_presets:
-  base:
-    package:
-      version: "0.1.0"
-      edition: "2024"
+rust_presets:
+  manifest:
+    base:
+      package:
+        version: "0.1.0"
+        edition: "2024"
 
-  cli-custom:
-    extends_presets:
-      - base
-      - cli-tools
-      - serde-ordered
-    package:
-      name: cli-custom
-    dependencies:
-      clap:
-        features:
-          - derive
-      owo-colors:
-        features:
-          - supports-colors
+    cli-custom:
+      extends_presets:
+        - base
+        - cli-tools
+        - serde-ordered
+      package:
+        name: cli-custom
+      dependencies:
+        clap:
+          features:
+            - derive
+        owo-colors:
+          features:
+            - supports-colors
 
-  cli-tools:
-    dependencies:
-      ratatui: "0.29"
-      clap: "4.5"
-      serde: "1"
-      owo-colors: "4"
+    cli-tools:
+      dependencies:
+        ratatui: "0.29"
+        clap: "4.5"
+        serde: "1"
+        owo-colors: "4"
 
-  serde-ordered:
-    dependencies:
-      serde:
-        version: "1"
-        features:
-          - preserve_order
-      indexmap:
-        version: "2.11"
-        features:
-          - serde
+    serde-ordered:
+      dependencies:
+        serde:
+          version: "1"
+          features:
+            - preserve_order
+        indexmap:
+          version: "2.11"
+          features:
+            - serde
 # ANCHOR_END: cargo
 
 # Docker Compose presets

@@ -3,6 +3,7 @@ use std::{
 	fs::remove_dir_all,
 	path::{Path, PathBuf},
 	process::Command,
+	str::FromStr,
 	sync::Arc,
 };
 
@@ -37,6 +38,46 @@ pub enum TemplatingPresetReference {
 	},
 	/// The definition for a new templating preset.
 	Definition(TemplatingPreset),
+}
+
+impl FromStr for TemplatingPresetReference {
+	type Err = std::convert::Infallible;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(Self::Preset {
+			id: s.to_string(),
+			context: Default::default(),
+		})
+	}
+}
+
+impl TemplatingPresetReference {
+	pub fn resolve(self, store: &IndexMap<String, TemplatingPreset>) -> Result<Self, GenError> {
+		let mut preset_id: Option<String> = None;
+
+		let mut content = match self {
+			Self::Preset { id, context } => {
+				preset_id = Some(id.clone());
+
+				let mut data = store
+					.get(&id)
+					.ok_or_else(|| GenError::PresetNotFound {
+						kind: Preset::Templates,
+						name: id,
+					})?
+					.clone();
+
+				data.context.extend(context);
+
+				data
+			}
+			Self::Definition(data) => data,
+		};
+
+		content = content.process_data(preset_id.as_deref().unwrap_or("__inlined"), store)?;
+
+		Ok(Self::Definition(content))
+	}
 }
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.

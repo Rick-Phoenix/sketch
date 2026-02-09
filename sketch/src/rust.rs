@@ -9,6 +9,7 @@ use std::{
 	path::PathBuf,
 };
 
+use clap::Args;
 use indexmap::{IndexMap, IndexSet};
 use merge::Merge;
 use schemars::JsonSchema;
@@ -16,12 +17,120 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
+	custom_templating::TemplatingPresetReference,
+	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
+	licenses::License,
 	rust::{package::Package, profile_settings::Profiles, workspace::Workspace},
 	*,
 };
 
-pub struct RustPreset {
-	pub cargo_toml: Option<CargoTomlPreset>,
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
+pub struct RustPresets {
+	/// A map that contains presets for `Cargo.toml` files.
+	#[merge(strategy = merge_index_maps)]
+	pub manifest: IndexMap<String, CargoTomlPreset>,
+
+	#[merge(strategy = merge_index_maps)]
+	#[serde(rename = "crate")]
+	pub crate_: IndexMap<String, Crate>,
+}
+
+#[derive(Args, Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
+pub struct Crate {
+	#[arg(short, long, value_parser = CargoTomlPresetRef::from_cli)]
+	#[merge(strategy = overwrite_always)]
+	pub manifest: CargoTomlPresetRef,
+
+	#[arg(long, value_parser = GitIgnoreRef::from_cli)]
+	#[merge(strategy = overwrite_if_some)]
+	/// Settings for the gitignore file.
+	pub gitignore: Option<GitIgnoreRef>,
+
+	#[arg(long)]
+	#[merge(strategy = overwrite_if_some)]
+	/// A license file to generate for the new repo.
+	pub license: Option<License>,
+
+	#[arg(value_name = "PRESET_ID")]
+	#[merge(strategy = merge_vecs)]
+	pub with_templates: Vec<TemplatingPresetReference>,
+}
+
+impl Crate {
+	pub fn process_data(
+		mut self,
+		manifests_store: &IndexMap<String, CargoTomlPreset>,
+		gitignore_store: &IndexMap<String, GitignorePreset>,
+	) -> Result<Self, GenError> {
+		let mut manifest_id: Option<String> = None;
+
+		if let CargoTomlPresetRef::Id(id) = self.manifest {
+			manifest_id = Some(id.clone());
+
+			let data = manifests_store
+				.get(&id)
+				.ok_or_else(|| GenError::PresetNotFound {
+					kind: Preset::CargoToml,
+					name: id,
+				})?
+				.clone();
+
+			self.manifest = CargoTomlPresetRef::Config(data);
+		}
+
+		if let CargoTomlPresetRef::Config(data) = self.manifest {
+			self.manifest = CargoTomlPresetRef::Config(data.process_data(
+				manifest_id.as_deref().unwrap_or("__inlined"),
+				manifests_store,
+			)?);
+		}
+
+		let mut gitignore_id: Option<String> = None;
+
+		if let Some(GitIgnoreRef::Id(id)) = self.gitignore {
+			gitignore_id = Some(id.clone());
+
+			let data = gitignore_store
+				.get(&id)
+				.ok_or_else(|| GenError::PresetNotFound {
+					kind: Preset::Gitignore,
+					name: id,
+				})?
+				.clone();
+
+			self.gitignore = Some(GitIgnoreRef::Config(data));
+		}
+
+		if let Some(GitIgnoreRef::Config(data)) = self.gitignore {
+			let resolved = data.process_data(
+				gitignore_id.as_deref().unwrap_or("__inlined"),
+				gitignore_store,
+			)?;
+
+			self.gitignore = Some(GitIgnoreRef::Config(resolved));
+		}
+
+		Ok(self)
+	}
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+pub enum CargoTomlPresetRef {
+	Id(String),
+	#[serde(untagged)]
+	Config(CargoTomlPreset),
+}
+
+impl Default for CargoTomlPresetRef {
+	fn default() -> Self {
+		Self::Config(CargoTomlPreset::default())
+	}
+}
+
+impl CargoTomlPresetRef {
+	pub fn from_cli(str: &str) -> Result<Self, String> {
+		Ok(Self::Id(str.to_string()))
+	}
 }
 
 /// A preset for a `Cargo.toml` file.
@@ -48,16 +157,16 @@ impl CargoTomlPreset {
 		self,
 		id: &str,
 		store: &IndexMap<String, CargoTomlPreset>,
-	) -> Result<Manifest, GenError> {
+	) -> Result<Self, GenError> {
 		if self.extends_presets.is_empty() {
-			return Ok(self.config);
+			return Ok(self);
 		}
 
 		let mut processed_ids: IndexSet<String> = IndexSet::new();
 
 		let merged_preset = merge_presets(Preset::CargoToml, id, self, store, &mut processed_ids)?;
 
-		Ok(merged_preset.config)
+		Ok(merged_preset)
 	}
 }
 

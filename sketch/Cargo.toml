@@ -13,6 +13,9 @@ authors.workspace = true
 
 readme = true
 
+[lints]
+workspace = true
+
 [[bin]]
 name = "sketch"
 path = "src/main.rs"

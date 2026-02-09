@@ -14,7 +14,9 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch gh-workflow`↴](#sketch-gh-workflow)
 * [`sketch docker-compose`↴](#sketch-docker-compose)
 * [`sketch pre-commit`↴](#sketch-pre-commit)
-* [`sketch cargo-toml`↴](#sketch-cargo-toml)
+* [`sketch rust`↴](#sketch-rust)
+* [`sketch rust crate`↴](#sketch-rust-crate)
+* [`sketch rust manifest`↴](#sketch-rust-manifest)
 * [`sketch ts`↴](#sketch-ts)
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
@@ -42,7 +44,7 @@ This document contains the help content for the `sketch` command-line program.
 * `gh-workflow` — Generates a Github workflow
 * `docker-compose` — Generates a Docker Compose file from a preset
 * `pre-commit` — Generates a `pre-commit` config file from a preset
-* `cargo-toml` — Generates a `Cargo.toml` file from a preset
+* `rust` — 
 * `ts` — Executes typescript-specific commands
 * `package-json` — Generates a `package.json` file from a preset
 * `ts-config` — Generates a `tsconfig.json` file from a preset
@@ -101,6 +103,7 @@ Creates a new git repo from a preset
     GNU AGPL 3.0 license
   - `mit`:
     MIT license
+  - `mpl2`
 
 * `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
 * `--workflow <id=PRESET_ID,file=PATH>` — One or many workflow presets to use for the new repo. The file path will be joined to `.github/workflows`
@@ -217,20 +220,50 @@ Generates a `pre-commit` config file from a preset
 
 
 
-## `sketch cargo-toml`
+## `sketch rust`
 
-Generates a `Cargo.toml` file from a preset
+**Usage:** `sketch rust <COMMAND>`
 
-**Usage:** `sketch cargo-toml [OPTIONS] <PRESET> [OUTPUT]`
+###### **Subcommands:**
 
-###### **Arguments:**
+* `crate` — 
+* `manifest` — 
 
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the new file [default: `Cargo.toml`]
+
+
+## `sketch rust crate`
+
+**Usage:** `sketch rust crate [OPTIONS] --manifest <MANIFEST>`
 
 ###### **Options:**
 
-* `-n`, `--name <NAME>` — Sets the name of the package in the new file. Overrides the value in the preset
+* `-p`, `--preset <PRESET>`
+* `-m`, `--manifest <MANIFEST>`
+* `--gitignore <GITIGNORE>` — Settings for the gitignore file
+* `--license <LICENSE>` — A license file to generate for the new repo
+
+  Possible values:
+  - `apache2`:
+    Apache 2.0 license
+  - `gpl3`:
+    GNU GPL 3.0 license
+  - `agpl3`:
+    GNU AGPL 3.0 license
+  - `mit`:
+    MIT license
+  - `mpl2`
+
+
+
+
+## `sketch rust manifest`
+
+**Usage:** `sketch rust manifest <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>`
+* `<OUTPUT>`
 
 
 
@@ -299,6 +332,7 @@ Generates a new typescript monorepo
     GNU AGPL 3.0 license
   - `mit`:
     MIT license
+  - `mpl2`
 
 * `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
 * `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
@@ -340,6 +374,7 @@ Generates a new typescript package
     GNU AGPL 3.0 license
   - `mit`:
     MIT license
+  - `mpl2`
 
 * `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
 * `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
@@ -436,6 +471,7 @@ Generates a license file
     GNU AGPL 3.0 license
   - `mit`:
     MIT license
+  - `mpl2`
 
 
 ###### **Options:**
