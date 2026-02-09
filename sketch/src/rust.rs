@@ -18,6 +18,7 @@ use serde_json::Value;
 
 use crate::{
 	custom_templating::TemplatingPresetReference,
+	fs::{create_all_dirs, deserialize_toml, serialize_toml, write_file},
 	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
 	licenses::License,
 	rust::{package::Package, profile_settings::Profiles, workspace::Workspace},
@@ -25,6 +26,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
+#[serde(default)]
 pub struct RustPresets {
 	/// A map that contains presets for `Cargo.toml` files.
 	#[merge(strategy = merge_index_maps)]
@@ -36,12 +38,13 @@ pub struct RustPresets {
 }
 
 #[derive(Args, Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
+#[group(id = "crate_config")]
 pub struct Crate {
 	#[arg(short, long, value_parser = CargoTomlPresetRef::from_cli)]
 	#[merge(strategy = overwrite_always)]
 	pub manifest: CargoTomlPresetRef,
 
-	#[arg(long, value_parser = GitIgnoreRef::from_cli)]
+	#[arg(long)]
 	#[merge(strategy = overwrite_if_some)]
 	/// Settings for the gitignore file.
 	pub gitignore: Option<GitIgnoreRef>,
@@ -51,9 +54,65 @@ pub struct Crate {
 	/// A license file to generate for the new repo.
 	pub license: Option<License>,
 
-	#[arg(value_name = "PRESET_ID")]
+	#[arg(short = 't', long = "template", value_name = "PRESET_ID")]
 	#[merge(strategy = merge_vecs)]
 	pub with_templates: Vec<TemplatingPresetReference>,
+}
+
+impl Crate {
+	pub fn generate(self, dir: &PathBuf, config: &Config) -> Result<(), GenError> {
+		if dir.exists() {
+			panic!("Dir exists");
+		}
+
+		let workspace_manifest_path = PathBuf::from("Cargo.toml");
+
+		if workspace_manifest_path.exists() {
+			let mut workspace_manifest: Manifest = deserialize_toml(&workspace_manifest_path)?;
+
+			if let Some(workspace_config) = &mut workspace_manifest.workspace {
+				workspace_config
+					.members
+					.insert(dir.to_string_lossy().to_string());
+
+				serialize_toml(&workspace_manifest, &workspace_manifest_path, true)?;
+			}
+		}
+
+		create_all_dirs(dir)?;
+
+		let name = dir.file_name().expect("Empty path");
+
+		let CargoTomlPresetRef::Config(CargoTomlPreset {
+			config: mut manifest,
+			..
+		}) = self.manifest
+		else {
+			panic!("Unresolved manifest");
+		};
+
+		manifest.package.get_or_insert_default().name = Some(name.to_string_lossy().to_string());
+
+		serialize_toml(&manifest, &dir.join("Cargo.toml"), true)?;
+
+		if let Some(GitIgnoreRef::Config(gitignore)) = self.gitignore {
+			write_file(
+				&dir.join(".gitignore"),
+				&gitignore.content.to_string(),
+				true,
+			)?;
+		}
+
+		if let Some(license) = self.license {
+			write_file(&dir.join("LICENSE"), license.get_content(), true)?;
+		}
+
+		if !self.with_templates.is_empty() {
+			config.generate_templates(dir, self.with_templates, &Default::default())?;
+		}
+
+		Ok(())
+	}
 }
 
 impl Crate {
@@ -286,7 +345,7 @@ pub struct Lint {
 }
 
 /// Dependencies that are platform-specific or enabled through custom `cfg()`.
-#[derive(Debug, Clone, PartialEq, Default, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Target {
 	/// platform-specific normal deps

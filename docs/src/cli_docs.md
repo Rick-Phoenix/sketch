@@ -89,9 +89,9 @@ Creates a new git repo from a preset
 ###### **Options:**
 
 * `-p`, `--preset <PRESET>` — Selects a git preset from a configuration file
-* `--no-pre-commit` — Do not generate a pre-commit config
-* `--pre-commit <PRE_COMMIT>` — Selects a pre-commit preset
-* `-g`, `--gitignore <GITIGNORE>` — Selects a gitignore preset
+* `-g`, `--gitignore <GITIGNORE>` — Settings for the gitignore file
+* `--pre-commit <PRE_COMMIT>` — Configuration settings for [`pre-commit`](https://pre-commit.com/)
+* `-t`, `--template <WITH_TEMPLATES>` — A set of templates to generate when this preset is used
 * `-l`, `--license <LICENSE>` — A license file to generate for the new repo
 
   Possible values:
@@ -105,8 +105,7 @@ Creates a new git repo from a preset
     MIT license
   - `mpl2`
 
-* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many individual templates or templating presets to render in the new repo
-* `--workflow <id=PRESET_ID,file=PATH>` — One or many workflow presets to use for the new repo. The file path will be joined to `.github/workflows`
+* `--workflow <id=PRESET_ID,file=PATH>` — One or many workflows to generate in the new repo
 * `-r`, `--remote <REMOTE>` — The link of the git remote to use for the new repo
 
 
@@ -233,7 +232,11 @@ Generates a `pre-commit` config file from a preset
 
 ## `sketch rust crate`
 
-**Usage:** `sketch rust crate [OPTIONS] --manifest <MANIFEST>`
+**Usage:** `sketch rust crate [OPTIONS] --preset <PRESET> --manifest <MANIFEST> <DIR>`
+
+###### **Arguments:**
+
+* `<DIR>`
 
 ###### **Options:**
 
@@ -253,6 +256,7 @@ Generates a `pre-commit` config file from a preset
     MIT license
   - `mpl2`
 
+* `-t`, `--template <PRESET_ID>`
 
 
 
@@ -334,11 +338,11 @@ Generates a new typescript monorepo
     MIT license
   - `mpl2`
 
+* `-t`, `--template <PRESET_ID>` — One or many templates to generate along with this package. Relative output paths will resolve from the root of the package
 * `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
 * `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
-* `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
+* `--oxlint <ID>` — The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
-* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many templates or templating presets to generate in the new package's root
 
 
 
@@ -356,9 +360,7 @@ Generates a new typescript package
 
 * `-p`, `--preset <ID>` — The package preset to use. If unset, the default preset is used, along with the values set via cli flags
 * `-u`, `--update-tsconfig <UPDATE_TSCONFIG>` — An optional list of tsconfig files where the new tsconfig file will be added as a reference
-* `--oxlint <ID>` — The oxlint preset to use. It can be set to `default` to use the default preset
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
-* `-w`, `--with-template <PRESET_ID|id=TEMPLATE_ID,output=PATH>` — One or many templates or templating presets to generate in the new package's root
 * `--vitest <ID>` — The vitest preset to use. It can be set to `default` to use the default preset
 * `-n`, `--name <NAME>` — The name of the new package. It defaults to the name of its directory
 * `--ts-config <id=ID,output=PATH>` — One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)
@@ -376,8 +378,10 @@ Generates a new typescript package
     MIT license
   - `mpl2`
 
+* `-t`, `--template <PRESET_ID>` — One or many templates to generate along with this package. Relative output paths will resolve from the root of the package
 * `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
 * `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
+* `--oxlint <ID>` — The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration
 
 
 

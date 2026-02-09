@@ -5,7 +5,6 @@ mod config_discovery;
 mod ts_cmds;
 
 mod cli_elements;
-pub(crate) use cli_elements::TemplateRef;
 pub(crate) mod parsers;
 
 use std::{fmt::Debug, fs::read_to_string, path::PathBuf};
@@ -32,8 +31,7 @@ use crate::{
 		create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json,
 		serialize_toml, serialize_yaml, write_file,
 	},
-	git_workflow::WorkflowReference,
-	init_repo::{RepoPreset, gitignore::GitIgnoreRef, pre_commit::PreCommitSetting},
+	init_repo::{RepoPreset, pre_commit::PreCommitSetting},
 	licenses::License,
 	rust::Crate,
 	serde_utils::deserialize_map,
@@ -287,17 +285,10 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 		}
 		Repo {
 			remote,
-			input:
-				RepoConfigInput {
-					no_pre_commit,
-					pre_commit,
-					gitignore,
-					license,
-					with_templates,
-					workflows,
-				},
 			preset,
 			dir,
+			no_pre_commit,
+			overrides,
 		} => {
 			let mut preset = if let Some(id) = preset {
 				config
@@ -312,50 +303,13 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 				RepoPreset::default()
 			};
 
+			if let Some(overrides) = overrides {
+				preset.merge(overrides);
+			}
+
 			if no_pre_commit {
 				preset.pre_commit = PreCommitSetting::Bool(false)
-			} else if let Some(preset_id) = pre_commit {
-				preset.pre_commit = PreCommitSetting::Id(preset_id);
 			};
-
-			if let Some(gitignore) = gitignore {
-				preset.gitignore = Some(GitIgnoreRef::Id(gitignore));
-			}
-
-			if let Some(template_refs) = with_templates {
-				let templates_list = preset.with_templates.get_or_insert_default();
-
-				let mut single_templates: Vec<PresetElement> = Vec::new();
-
-				for template in template_refs {
-					match template {
-						TemplateRef::PresetId(id) => {
-							templates_list.push(TemplatingPresetReference::Preset {
-								id,
-								context: Default::default(),
-							})
-						}
-						TemplateRef::Template(def) => {
-							single_templates.push(PresetElement::Template(def))
-						}
-					};
-				}
-
-				if !single_templates.is_empty() {
-					templates_list.push(TemplatingPresetReference::Definition(TemplatingPreset {
-						templates: single_templates,
-						..Default::default()
-					}));
-				}
-			}
-
-			if let Some(license) = license {
-				preset.license = Some(license);
-			}
-
-			if let Some(workflows) = workflows {
-				preset.workflows.extend(workflows);
-			}
 
 			let out_dir = dir.unwrap_or_else(get_cwd);
 
@@ -563,41 +517,6 @@ pub struct RenderingOutput {
 	stdout: bool,
 }
 
-#[derive(Args, Debug, Clone)]
-pub struct RepoConfigInput {
-	/// Do not generate a pre-commit config
-	#[arg(long, group = "pre-commit")]
-	no_pre_commit: bool,
-
-	/// Selects a pre-commit preset
-	#[arg(long, group = "pre-commit")]
-	pre_commit: Option<String>,
-
-	/// Selects a gitignore preset
-	#[arg(short, long)]
-	gitignore: Option<String>,
-
-	/// A license file to generate for the new repo.
-	#[arg(short, long)]
-	license: Option<License>,
-
-	/// One or many individual templates or templating presets to render in the new repo
-	#[arg(
-		short,
-		long = "with-template",
-		value_name = "PRESET_ID|id=TEMPLATE_ID,output=PATH"
-	)]
-	with_templates: Option<Vec<TemplateRef>>,
-
-	/// One or many workflow presets to use for the new repo. The file path will be joined to `.github/workflows`
-	#[arg(
-    long = "workflow",
-    value_name = "id=PRESET_ID,file=PATH",
-    value_parser = WorkflowReference::from_cli
-  )]
-	workflows: Option<Vec<WorkflowReference>>,
-}
-
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
@@ -616,8 +535,12 @@ pub enum Commands {
 		#[arg(short, long)]
 		preset: Option<String>,
 
+		/// Do not generate a pre-commit config
+		#[arg(long, group = "pre-commit")]
+		no_pre_commit: bool,
+
 		#[command(flatten)]
-		input: RepoConfigInput,
+		overrides: Option<RepoPreset>,
 
 		/// The link of the git remote to use for the new repo.
 		#[arg(short, long)]

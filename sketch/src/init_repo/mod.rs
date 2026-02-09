@@ -1,6 +1,8 @@
 use std::path::Path;
 
+use clap::Args;
 use indexmap::IndexMap;
+use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -19,32 +21,59 @@ use crate::{
 		pre_commit::{PreCommitPreset, PreCommitSetting},
 	},
 	licenses::License,
+	merge_vecs, overwrite_always, overwrite_if_some,
 };
 
 /// A preset for a git repository.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default)]
+#[derive(Args, Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Merge)]
 #[serde(default)]
 pub struct RepoPreset {
+	#[arg(short, long)]
+	#[merge(strategy = overwrite_if_some)]
 	/// Settings for the gitignore file.
 	pub gitignore: Option<GitIgnoreRef>,
 
+	#[arg(short, long)]
+	#[merge(strategy = overwrite_always)]
 	/// Configuration settings for [`pre-commit`](https://pre-commit.com/).
 	pub pre_commit: PreCommitSetting,
 
+	#[arg(short = 't', long = "template")]
+	#[merge(strategy = merge_vecs)]
 	/// A set of templates to generate when this preset is used.
-	pub with_templates: Option<Vec<TemplatingPresetReference>>,
+	pub with_templates: Vec<TemplatingPresetReference>,
 
+	#[arg(short, long)]
+	#[merge(strategy = overwrite_if_some)]
 	/// A license file to generate for the new repo.
 	pub license: Option<License>,
 
+	#[arg(skip)]
+	#[merge(strategy = merge_vecs)]
 	/// One or many rendered commands to execute before the repo's creation
 	pub hooks_pre: Vec<Hook>,
 
+	#[arg(skip)]
+	#[merge(strategy = merge_vecs)]
 	/// One or many rendered commands to execute after the repo's creation
 	pub hooks_post: Vec<Hook>,
 
+	#[arg(
+    long = "workflow",
+    value_name = "id=PRESET_ID,file=PATH",
+    value_parser = WorkflowReference::from_cli
+  )]
+	#[merge(strategy = merge_vecs)]
 	/// One or many workflows to generate in the new repo.
 	pub workflows: Vec<WorkflowReference>,
+}
+
+impl std::str::FromStr for PreCommitSetting {
+	type Err = std::convert::Infallible;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(Self::Id(s.to_string()))
+	}
 }
 
 impl Config {
@@ -199,8 +228,8 @@ impl Config {
 			}
 		}
 
-		if let Some(templates) = preset.with_templates {
-			self.generate_templates(out_dir, templates, cli_vars)?;
+		if !preset.with_templates.is_empty() {
+			self.generate_templates(out_dir, preset.with_templates, cli_vars)?;
 		}
 
 		if !preset.hooks_post.is_empty() {

@@ -91,9 +91,11 @@ pub enum GitIgnoreRef {
 	Config(GitignorePreset),
 }
 
-impl GitIgnoreRef {
-	pub fn from_cli(str: &str) -> Result<Self, String> {
-		Ok(Self::Id(str.to_string()))
+impl std::str::FromStr for GitIgnoreRef {
+	type Err = std::convert::Infallible;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		Ok(Self::Id(s.to_string()))
 	}
 }
 
