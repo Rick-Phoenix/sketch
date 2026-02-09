@@ -58,9 +58,20 @@ pub struct Workspace {
 	pub dependencies: BTreeMap<String, Dependency>,
 
 	/// Workspace-level lint groups
+	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[merge(strategy = overwrite_if_some)]
+	pub lints: Option<Lints>,
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge)]
+pub struct Lints {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	#[merge(strategy = merge_btree_maps)]
-	pub lints: BTreeMap<String, LintKind>,
+	pub rust: BTreeMap<String, LintKind>,
+
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = merge_btree_maps)]
+	pub clippy: BTreeMap<String, LintKind>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]

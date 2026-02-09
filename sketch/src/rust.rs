@@ -39,8 +39,9 @@ pub struct RustPresets {
 
 #[derive(Args, Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
 #[group(id = "crate_config")]
+#[serde(default)]
 pub struct Crate {
-	#[arg(short, long, value_parser = CargoTomlPresetRef::from_cli)]
+	#[arg(short, long, value_parser = CargoTomlPresetRef::from_cli, default_value_t = CargoTomlPresetRef::default())]
 	#[merge(strategy = overwrite_always)]
 	pub manifest: CargoTomlPresetRef,
 
@@ -218,6 +219,15 @@ pub enum CargoTomlPresetRef {
 	Id(String),
 	#[serde(untagged)]
 	Config(CargoTomlPreset),
+}
+
+impl std::fmt::Display for CargoTomlPresetRef {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Id(id) => write!(f, "{id}"),
+			Self::Config(_) => write!(f, "default config"),
+		}
+	}
 }
 
 impl Default for CargoTomlPresetRef {

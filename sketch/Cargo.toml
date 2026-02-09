@@ -41,7 +41,7 @@ askama = { workspace = true }
 toml = { version = "0.9.5", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-clap = { version = "4.5.46", features = ["derive"] }
+clap = { version = "4.5.46", features = ["derive", "string"] }
 thiserror = { workspace = true }
 reqwest = { version = "0.12.23", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
