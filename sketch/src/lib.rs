@@ -28,8 +28,11 @@ pub mod rust;
 pub mod ts;
 pub mod versions;
 
-use hashbrown::hash_map::HashMap;
-use std::{collections::BTreeMap, fmt::Debug};
+use std::convert::Infallible;
+use std::{collections::BTreeMap, collections::HashMap, fmt::Debug};
+use std::{fmt::Display, str::FromStr};
+
+use clap::ValueEnum;
 
 #[doc(inline)]
 pub use config::*;
