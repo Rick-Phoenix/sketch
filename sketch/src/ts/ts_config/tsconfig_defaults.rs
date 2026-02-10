@@ -3,7 +3,7 @@ use super::*;
 pub(crate) fn get_default_root_tsconfig() -> TsConfig {
 	TsConfig {
 		compiler_options: Some(CompilerOptions {
-			lib: Some(btreeset![Lib::EsNext, Lib::Dom]),
+			lib: btreeset![Lib::EsNext, Lib::Dom],
 			module_resolution: Some(ModuleResolution::NodeNext),
 			module: Some(Module::NodeNext),
 			target: Some(Target::EsNext),
@@ -36,13 +36,13 @@ pub(crate) fn get_default_package_tsconfig() -> TsConfig {
 
 	base.merge(TsConfig {
 		extends: None,
-		references: Some(btreeset![]),
-		include: Some(btreeset![
+		references: btreeset![],
+		include: btreeset![
 			"src".to_string(),
 			"*.ts".to_string(),
 			"tests".to_string(),
 			"scripts".to_string(),
-		]),
+		],
 		compiler_options: Some(CompilerOptions {
 			out_dir: Some(".out".to_string()),
 			ts_build_info_file: Some(".out/.tsBuildInfoSrc".to_string()),

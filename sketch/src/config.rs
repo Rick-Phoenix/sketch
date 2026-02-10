@@ -50,27 +50,27 @@ pub struct Config {
 	pub no_overwrite: Option<bool>,
 
 	/// The paths (absolute, or relative to the originating config file) to the config files to extend.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	pub extends: IndexSet<PathBuf>,
 
 	/// A map that contains template definitions.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub templates: IndexMap<String, String>,
 
 	/// A map that contains templating presets.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub templating_presets: IndexMap<String, TemplatingPreset>,
 
 	/// A map that contains pre-commit presets.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
 
 	/// A map that contains gitignore presets.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub gitignore_presets: IndexMap<String, GitignorePreset>,
 
 	/// A map that contains presets for git repos.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub git_presets: IndexMap<String, RepoPreset>,
 
 	#[merge(strategy = RustPresets::merge)]
@@ -82,7 +82,7 @@ pub struct Config {
 
 	/// The global variables that will be available for every template being generated.
 	/// They are overridden by vars set in a template's local context or via the cli.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub vars: IndexMap<String, Value>,
 }
 

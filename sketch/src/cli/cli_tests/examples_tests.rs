@@ -74,7 +74,6 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 	assert!(
 		pnpm_file
 			.only_built_dependencies
-			.unwrap()
 			.contains("esbuild")
 	);
 	assert!(pnpm_file.packages.contains("packages/*"));

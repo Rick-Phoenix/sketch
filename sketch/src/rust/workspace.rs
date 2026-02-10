@@ -6,14 +6,14 @@ use super::*;
 #[serde(default, rename_all = "kebab-case")]
 pub struct Workspace {
 	/// Relative paths of crates in here
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub members: BTreeSet<String>,
 
 	/// Members to operate on when in the workspace root.
 	///
 	/// When specified, `default-members` must expand to a subset of `members`.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub default_members: BTreeSet<String>,
 
 	/// Template for inheritance
@@ -23,12 +23,12 @@ pub struct Workspace {
 
 	/// Ignore these dirs
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub exclude: BTreeSet<String>,
 
 	/// Shared info
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub metadata: BTreeMap<String, Value>,
 
 	/// Compatibility setting
@@ -82,11 +82,11 @@ impl AsTomlValue for Workspace {
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge)]
 pub struct Lints {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub rust: BTreeMap<String, LintKind>,
 
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub clippy: BTreeMap<String, LintKind>,
 }
 
@@ -126,7 +126,7 @@ impl AsTomlValue for LintKind {
 pub struct PackageTemplate {
 	/// See <https://crates.io/category_slugs>
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub categories: BTreeSet<String>,
 
 	/// Multi-line text, some people use Markdown here
@@ -143,7 +143,7 @@ pub struct PackageTemplate {
 
 	/// Don't publish these files, relative to workspace
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub exclude: BTreeSet<String>,
 
 	/// Homepage URL
@@ -152,12 +152,12 @@ pub struct PackageTemplate {
 
 	/// Publish these files, relative to workspace
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub include: BTreeSet<String>,
 
 	/// For search
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub keywords: BTreeSet<String>,
 
 	#[serde(default, skip_serializing_if = "Option::is_none")]

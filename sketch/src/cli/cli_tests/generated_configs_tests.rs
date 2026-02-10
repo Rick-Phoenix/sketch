@@ -107,15 +107,11 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 	assert!(
 		caddy_service
 			.ports
-			.as_ref()
-			.unwrap()
 			.contains(&Port::String("80:80".to_string()))
 	);
 	assert!(
 		caddy_service
 			.ports
-			.as_ref()
-			.unwrap()
 			.contains(&Port::String("443:443".to_string()))
 	);
 
@@ -134,8 +130,6 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 	assert!(
 		service
 			.volumes
-			.as_ref()
-			.unwrap()
 			.contains(&ServiceVolume::Simple("my_volume:/target".to_string()))
 	);
 
@@ -160,12 +154,12 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 		"Europe/Berlin"
 	);
 
-	let networks = output.networks.unwrap();
+	let networks = output.networks;
 	let my_network = networks.get("my_network").unwrap();
 
 	assert!(my_network.external.unwrap());
 
-	let volumes = output.volumes.unwrap();
+	let volumes = output.volumes;
 	let my_volume = volumes.get("my_volume").unwrap();
 
 	assert!(my_volume.external.unwrap());
@@ -230,13 +224,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 		unreachable!();
 	};
 
-	assert!(
-		on.push
-			.unwrap()
-			.branches
-			.unwrap()
-			.contains("main")
-	);
+	assert!(on.push.unwrap().branches.contains("main"));
 
 	let env = output.env;
 
@@ -294,7 +282,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 			);
 
 			assert_eq!(
-				job.outputs.unwrap().get("is_on_main").unwrap(),
+				job.outputs.get("is_on_main").unwrap(),
 				"${{ steps.branch_check.outputs.is_on_main }}"
 			);
 

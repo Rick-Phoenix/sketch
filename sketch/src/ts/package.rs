@@ -27,8 +27,8 @@ pub struct PackageConfig {
 		help = "One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)",
 		value_name = "id=ID,output=PATH"
 	)]
-	#[merge(strategy = merge_optional_vecs)]
-	pub ts_config: Option<Vec<TsConfigDirective>>,
+	#[merge(strategy = Vec::extend)]
+	pub ts_config: Vec<TsConfigDirective>,
 
 	/// The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
 	#[arg(long, value_parser = PackageJsonData::from_cli)]
@@ -44,26 +44,26 @@ pub struct PackageConfig {
 
 	/// One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.
 	#[arg(long = "template", short = 't', value_name = "PRESET_ID")]
-	#[merge(strategy = merge_vecs)]
+	#[merge(strategy = Vec::extend)]
 	pub with_templates: Vec<TemplatingPresetReference>,
 
 	/// One or many rendered commands to execute before the repo's creation
-	#[merge(strategy = merge_optional_vecs)]
+	#[merge(strategy = Vec::extend)]
 	#[arg(
 		long = "hook-pre",
 		help = "One or many IDs of templates to render and execute as commands before the package's creation",
 		value_name = "ID"
 	)]
-	pub hooks_pre: Option<Vec<Hook>>,
+	pub hooks_pre: Vec<Hook>,
 
 	/// One or many rendered commands to execute after the repo's creation
-	#[merge(strategy = merge_optional_vecs)]
+	#[merge(strategy = Vec::extend)]
 	#[arg(
 		long = "hook-post",
 		help = "One or many IDs of templates to render and execute as commands after the package's creation",
 		value_name = "ID"
 	)]
-	pub hooks_post: Option<Vec<Hook>>,
+	pub hooks_post: Vec<Hook>,
 
 	/// The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
 	#[arg(skip)]
@@ -119,10 +119,14 @@ impl Config {
 
 		let pkg_root = get_abs_path(&pkg_root)?;
 
-		if let Some(hooks_pre) = config.hooks_pre
-			&& !hooks_pre.is_empty()
-		{
-			self.execute_command(self.shell.as_deref(), &pkg_root, hooks_pre, cli_vars, false)?;
+		if !config.hooks_pre.is_empty() {
+			self.execute_command(
+				self.shell.as_deref(),
+				&pkg_root,
+				config.hooks_pre,
+				cli_vars,
+				false,
+			)?;
 		}
 
 		let package_manager = typescript.package_manager.unwrap_or_default();
@@ -230,8 +234,8 @@ impl Config {
 
 		let tsconfig_presets = &typescript.ts_config_presets;
 
-		if let Some(tsconfig_directives) = config.ts_config {
-			for directive in tsconfig_directives {
+		if !config.ts_config.is_empty() {
+			for directive in config.ts_config {
 				let (id, tsconfig) = match directive.config.unwrap_or_default() {
 					TsConfigKind::Id(id) => {
 						let tsconfig = tsconfig_presets
@@ -273,11 +277,11 @@ impl Config {
 				let path_to_new_tsconfig =
 					get_relative_path(&path, &pkg_root.join("tsconfig.json"))?;
 
-				let root_tsconfig_references = tsconfig.references.get_or_insert_default();
-
-				root_tsconfig_references.insert(ts_config::TsConfigReference {
-					path: path_to_new_tsconfig.to_string_lossy().to_string(),
-				});
+				tsconfig
+					.references
+					.insert(ts_config::TsConfigReference {
+						path: path_to_new_tsconfig.to_string_lossy().to_string(),
+					});
 
 				serialize_json(&tsconfig, &path, true)?;
 			}
@@ -365,13 +369,11 @@ impl Config {
 			self.generate_templates(&pkg_root, config.with_templates, cli_vars)?;
 		}
 
-		if let Some(hooks_post) = config.hooks_post
-			&& !hooks_post.is_empty()
-		{
+		if !config.hooks_post.is_empty() {
 			self.execute_command(
 				self.shell.as_deref(),
 				&pkg_root,
-				hooks_post,
+				config.hooks_post,
 				cli_vars,
 				false,
 			)?;

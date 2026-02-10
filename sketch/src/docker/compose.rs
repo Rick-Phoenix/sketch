@@ -8,7 +8,7 @@ use service::{DockerServicePreset, ServiceData};
 #[serde(default)]
 pub struct ComposePreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -85,55 +85,55 @@ pub struct ComposeFile {
 	/// The include top-level section is used to define the dependency on another Compose application, or sub-domain. Each path listed in the include section is loaded as an individual Compose application model, with its own project directory, in order to resolve relative paths.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/include/
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub include: Option<BTreeSet<Include>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub include: BTreeSet<Include>,
 
 	/// Defines the services for the Compose application.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub services: BTreeMap<String, ServiceData>,
 
 	/// Defines or references configuration data that is granted to services in your Compose application.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/configs/
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub configs: Option<BTreeMap<String, TopLevelConfig>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub configs: BTreeMap<String, TopLevelConfig>,
 
 	/// The top-level models section declares AI models that are used by your Compose application. These models are typically pulled as OCI artifacts, run by a model runner, and exposed as an API that your service containers can consume.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/models/
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub models: Option<BTreeMap<String, TopLevelModel>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub models: BTreeMap<String, TopLevelModel>,
 
 	/// The named networks for the Compose application.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/networks/
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub networks: Option<BTreeMap<String, TopLevelNetwork>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub networks: BTreeMap<String, TopLevelNetwork>,
 
 	/// The named secrets for the Compose application.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/secrets/
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub secrets: Option<BTreeMap<String, TopLevelSecret>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub secrets: BTreeMap<String, TopLevelSecret>,
 
 	/// The named volumes for the Compose application.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/volumes/
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub volumes: Option<BTreeMap<String, TopLevelVolume>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub volumes: BTreeMap<String, TopLevelVolume>,
 
-	#[serde(flatten, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub extensions: Option<BTreeMap<String, Value>>,
+	#[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub extensions: BTreeMap<String, Value>,
 }
 
 impl ComposeFile {

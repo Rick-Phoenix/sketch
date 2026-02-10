@@ -91,13 +91,11 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 			jsx: Some(Jsx::React),
 			module_detection: Some(ModuleDetection::Force),
 			module_resolution: Some(ModuleResolution::NodeNext),
-			root_dirs: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-			types: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-			type_roots: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-			lib: Some(btreeset![Lib::Dom, Lib::EsNext]),
-			paths: Some(
-				btreemap! { "@".to_string() => btreeset!["src/".to_string()], "@components".to_string() => btreeset!["src/components".to_string()] },
-			),
+			root_dirs: btreeset!["abc".to_string(), "abc".to_string()],
+			types: btreeset!["abc".to_string(), "abc".to_string()],
+			type_roots: btreeset!["abc".to_string(), "abc".to_string()],
+			lib: btreeset![Lib::Dom, Lib::EsNext],
+			paths: btreemap! { "@".to_string() => btreeset!["src/".to_string()], "@components".to_string() => btreeset!["src/components".to_string()] },
 			verbatim_module_syntax: Some(true),
 			new_line: Some(NewLine::Lf),
 			rewrite_relative_imports_extensions: Some(true),
@@ -116,29 +114,29 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 			exact_optional_property_types: Some(true),
 			lib_replacement: Some(true),
 			strict_builtin_iterator_return: Some(true),
-			module_suffixes: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-			custom_conditions: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-			plugins: Some(btreeset! {
+			module_suffixes: btreeset!["abc".to_string(), "abc".to_string()],
+			custom_conditions: btreeset!["abc".to_string(), "abc".to_string()],
+			plugins: btreeset! {
 			  TsPlugin {
 				name: "typescript-svelte-plugin".to_string(),
 				extras: btreemap! {
 				  "enabled".to_string() => Value::Bool(true), "assumeIsSvelteProject".to_string() => Value::Bool(true)
 				}
 			  }
-			}),
+			},
 		}),
 		extends: Some("tsconfig.options.json".to_string()),
-		files: Some(btreeset!["*.ts".to_string(), "*.js".to_string()]),
-		include: Some(btreeset!["*.ts".to_string(), "*.js".to_string()]),
-		exclude: Some(btreeset!["*.ts".to_string(), "*.js".to_string()]),
-		references: Some(btreeset![
+		files: btreeset!["*.ts".to_string(), "*.js".to_string()],
+		include: btreeset!["*.ts".to_string(), "*.js".to_string()],
+		exclude: btreeset!["*.ts".to_string(), "*.js".to_string()],
+		references: btreeset![
 			TsConfigReference {
 				path: "abc.json".to_string(),
 			},
 			TsConfigReference {
 				path: "abc.json".to_string(),
 			},
-		]),
+		],
 		type_acquisition: Some(TypeAcquisition::Object {
 			enable: true,
 			include: Some(btreeset!["*.ts".to_string(), "*.js".to_string()]),
@@ -150,8 +148,8 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 			watch_directory: Some(WatchDirectory::UseFsEvents),
 			fallback_polling: Some(FallbackPolling::DynamicPriorityPolling),
 			synchronous_watch_directory: Some(true),
-			exclude_directories: Some(btreeset!["abc".to_string(), "abc".to_string()]),
-			exclude_files: Some(btreeset!["abc".to_string(), "abc".to_string()]),
+			exclude_directories: btreeset!["abc".to_string(), "abc".to_string()],
+			exclude_files: btreeset!["abc".to_string(), "abc".to_string()],
 		}),
 	};
 

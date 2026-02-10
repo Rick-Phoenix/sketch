@@ -134,7 +134,7 @@ pub struct Package {
 
 	/// Arbitrary metadata of any type, an extension point for 3rd party tools.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy= merge_btree_maps)]
+	#[merge(strategy= BTreeMap::extend)]
 	pub metadata: BTreeMap<String, Value>,
 }
 

@@ -8,7 +8,7 @@ use super::*;
 #[serde(default)]
 pub struct PreCommitPreset {
 	/// The ids of the extended configurations.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -45,9 +45,9 @@ impl Default for PreCommitConfig {
 		Self {
 			repos: btreeset! { GITLEAKS_REPO.clone() },
 			ci: None,
-			default_install_hook_types: None,
-			default_language_version: None,
-			default_stages: None,
+			default_install_hook_types: Default::default(),
+			default_language_version: Default::default(),
+			default_stages: Default::default(),
 			files: None,
 			exclude: None,
 			fail_fast: None,
@@ -66,19 +66,19 @@ pub struct PreCommitConfig {
 	pub minimum_pre_commit_version: Option<String>,
 
 	/// A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub default_install_hook_types: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub default_install_hook_types: BTreeSet<String>,
 
 	/// Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
-	#[merge(strategy = merge_optional_btree_maps)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub default_language_version: Option<StringBTreeMap>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub default_language_version: StringBTreeMap,
 
 	/// The default stages of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub default_stages: Option<BTreeSet<Stage>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub default_stages: BTreeSet<Stage>,
 
 	/// A file include pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -97,7 +97,7 @@ pub struct PreCommitConfig {
 	pub ci: Option<CiSettings>,
 
 	/// Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub repos: BTreeSet<Repo>,
 }

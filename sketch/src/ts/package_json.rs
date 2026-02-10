@@ -79,7 +79,7 @@ impl PackageJsonPreset {
 #[serde(default)]
 pub struct PackageJsonPreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 	#[serde(flatten)]
 	#[merge(strategy = merge_nested)]
@@ -133,7 +133,7 @@ pub struct PackageJson {
 	pub workspaces: Option<BTreeSet<String>>,
 
 	/// A map of shell scripts to launch from the root of the package.
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub scripts: StringBTreeMap,
 
 	/// The author of this package.
@@ -159,7 +159,7 @@ pub struct PackageJson {
 
 	/// This helps people discover your package, as it's listed in 'npm search'.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub keywords: BTreeSet<String>,
 
 	/// The url to the project homepage.
@@ -173,12 +173,12 @@ pub struct PackageJson {
 
 	/// The 'files' field is an array of files to include in your project. If you name a folder in the array, then it will also include the files inside that folder.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub files: BTreeSet<String>,
 
 	/// The `exports` field is used to restrict external access to non-exported module files, also enables a module to import itself using `name`.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub exports: BTreeMap<String, Exports>,
 
 	/// Defines which package manager is expected to be used when working on the current project. This field is currently experimental and needs to be opted-in; see https://nodejs.org/api/corepack.html
@@ -191,15 +191,15 @@ pub struct PackageJson {
 	pub pnpm: Option<Box<PnpmWorkspace>>,
 
 	/// Overrides is used to support selective version overrides using npm, which lets you define custom package versions or ranges inside your dependencies. For yarn, use resolutions instead. See: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub overrides: Option<JsonValueBTreeMap>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub overrides: JsonValueBTreeMap,
 
 	/// Catalog of dependencies to use with `bun`
 	///
 	/// See more: https://bun.com/docs/install/catalogs#1-define-catalogs-in-root-package-json
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub catalog: StringBTreeMap,
 
 	/// Named catalogs to use with `bun`
@@ -210,38 +210,38 @@ pub struct PackageJson {
 	pub catalogs: BTreeMap<String, StringBTreeMap>,
 
 	/// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub dependencies: StringBTreeMap,
 
 	/// Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.
 	// Necessary to have both camelCase and snake_case
 	#[serde(alias = "dev_dependencies")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub dev_dependencies: StringBTreeMap,
 
 	/// Specifies dependencies that are required by the package but are expected to be provided by the consumer of the package.
 	#[serde(alias = "peer_dependencies")]
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub peer_dependencies: StringBTreeMap,
 
 	/// When a user installs your package, warnings are emitted if packages specified in "peerDependencies" are not already installed. The "peerDependenciesMeta" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.
 	#[serde(alias = "peer_dependencies_meta")]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub peer_dependencies_meta: Option<BTreeMap<String, PeerDependencyMeta>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub peer_dependencies_meta: BTreeMap<String, PeerDependencyMeta>,
 
 	/// Specifies dependencies that are optional for your project. These dependencies are attempted to be installed during the npm install process, but if they fail to install, the installation process will not fail.
 	#[serde(alias = "optional_dependencies")]
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub optional_dependencies: StringBTreeMap,
 
 	/// Array of package names that will be bundled when publishing the package.
 	#[serde(alias = "bundle_dependencies")]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub bundle_dependencies: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub bundle_dependencies: BTreeSet<String>,
 
 	/// The main field is a module ID that is the primary entry point to your program.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -261,12 +261,12 @@ pub struct PackageJson {
 
 	/// A list of people who contributed to this package.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub contributors: BTreeSet<Person>,
 
 	/// A list of people who maintains this package.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub maintainers: BTreeSet<Person>,
 
 	/// Specify either a single file or an array of filenames to put in place for the man program to find.
@@ -274,9 +274,9 @@ pub struct PackageJson {
 	pub man: Option<Man>,
 
 	/// An object that can be used to set configuration parameters used in package scripts that persist across upgrades.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub config: Option<JsonValueBTreeMap>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub config: JsonValueBTreeMap,
 
 	/// A set of config values that will be used at publish-time. It's especially handy if you want to set the tag, registry or access, so that you can ensure that a given package is not tagged with "latest", published to the global public registry or that a scoped module is private by default.
 	#[serde(alias = "publish_config")]
@@ -285,22 +285,22 @@ pub struct PackageJson {
 
 	/// Defines which tools and versions are expected to be used.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub engines: StringBTreeMap,
 
 	/// Specify which operating systems your module will run on.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub os: BTreeSet<String>,
 
 	/// Specify that your code only runs on certain cpu architectures.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub cpu: BTreeSet<String>,
 
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	#[serde(flatten)]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub metadata: JsonValueBTreeMap,
 }
 
@@ -312,13 +312,13 @@ impl Default for PackageJson {
 			name: None,
 			private: true,
 			pnpm: None,
-			overrides: None,
+			overrides: Default::default(),
 			bin: None,
 			funding: None,
 			type_: JsPackageType::Module,
 			version: "0.1.0".to_string(),
 			dependencies: Default::default(),
-			peer_dependencies_meta: None,
+			peer_dependencies_meta: Default::default(),
 			dev_dependencies: Default::default(),
 			scripts: Default::default(),
 			metadata: Default::default(),
@@ -485,7 +485,7 @@ mod test {
 			catalog: Default::default(),
 			catalogs: Default::default(),
 			pnpm: None,
-			peer_dependencies_meta: Some(btreemap! {
+			peer_dependencies_meta: btreemap! {
 			  "abc".to_string() => PeerDependencyMeta { optional: Some(true), extras: btreemap! {
 				"setting".to_string() => convert_btreemap_to_json(btreemap! {
 					"inner".to_string() => "setting".to_string()
@@ -498,7 +498,7 @@ mod test {
 				})
 			  }
 			  }
-			}),
+			},
 			private: true,
 			type_: JsPackageType::Module,
 			bin: Some(Bin::Map(btreemap! {
@@ -516,11 +516,11 @@ mod test {
 					type_: Some("individual".to_string()),
 				}),
 			])),
-			overrides: Some(btreemap! {
+			overrides: btreemap! {
 			  "key".to_string() => convert_btreemap_to_json(btreemap! {
 				"override".to_string() => "setting".to_string()
 			  })
-			}),
+			},
 			version: "0.1.0".to_string(),
 			exports: btreemap! {
 			  ".".to_string() => Exports::Path("src/index.js".to_string()),
@@ -556,7 +556,7 @@ mod test {
 			name: Some("my_package".to_string()),
 			dev_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
 			dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
-			bundle_dependencies: Some(btreeset! { "typescript".to_string(), "vite".to_string() }),
+			bundle_dependencies: btreeset! { "typescript".to_string(), "vite".to_string() },
 			optional_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
 			peer_dependencies: btreemap! { "typescript".to_string() => "7.0.0".to_string(), "vite".to_string() => "8.0.0".to_string() },
 			description: Some("my_test".to_string()),
@@ -583,7 +583,7 @@ mod test {
 				other: btreemap! { "something".to_string() => "a thing".to_string(), "somethingElse".to_string() => "another thing".to_string() },
 			}),
 			man: Some(Man::List(vec!["man1".to_string(), "man2".to_string()])),
-			config: Some(btreemap! {
+			config: btreemap! {
 			  "myConfig".to_string() => convert_btreemap_to_json(btreemap! {
 				"prop1".to_string() => vec! [ "hello there".to_string(), "general kenobi".to_string() ],
 				"prop2".to_string() => vec! [ "hello there".to_string(), "general kenobi".to_string() ],
@@ -592,7 +592,7 @@ mod test {
 				"prop1".to_string() => vec! [ "hello there".to_string(), "general kenobi".to_string() ],
 				"prop2".to_string() => vec! [ "hello there".to_string(), "general kenobi".to_string() ],
 			  }),
-			}),
+			},
 			contributors: btreeset! {
 			  Person::Data(PersonData {
 				name: "legolas".to_string(),

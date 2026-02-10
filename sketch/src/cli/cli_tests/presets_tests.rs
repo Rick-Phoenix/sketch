@@ -115,7 +115,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 	let oxlint_result: OxlintConfig = deserialize_json(&package_out_dir.join(".oxlintrc.json"))?;
 
 	assert_eq!(
-		oxlint_result.ignore_patterns.unwrap(),
+		oxlint_result.ignore_patterns,
 		btreeset! { "**/node_modules/**".to_string(), ".cache".to_string(), ".output".to_string() }
 	);
 
@@ -146,7 +146,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 	let tsconfig_result: TsConfig = deserialize_json(&package_out_dir.join("tsconfig.json"))?;
 
 	assert_eq!(
-		tsconfig_result.references.unwrap(),
+		tsconfig_result.references,
 		btreeset! {
 		  TsConfigReference { path: "/some/path".to_string() },
 		  TsConfigReference { path: "/other/path".to_string() },
@@ -154,7 +154,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 	);
 
 	assert_eq!(
-		tsconfig_result.include.unwrap(),
+		tsconfig_result.include,
 		btreeset! {
 		  "src".to_string(), "tests".to_string(), "scripts".to_string()
 		}

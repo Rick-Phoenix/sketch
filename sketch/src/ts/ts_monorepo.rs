@@ -30,10 +30,14 @@ impl Config {
 
 		create_all_dirs(out_dir)?;
 
-		if let Some(hooks_pre) = root_package.hooks_pre
-			&& !hooks_pre.is_empty()
-		{
-			self.execute_command(self.shell.as_deref(), out_dir, hooks_pre, cli_vars, false)?;
+		if !root_package.hooks_pre.is_empty() {
+			self.execute_command(
+				self.shell.as_deref(),
+				out_dir,
+				root_package.hooks_pre,
+				cli_vars,
+				false,
+			)?;
 		}
 
 		let (package_json_id, package_json_preset) =
@@ -108,8 +112,8 @@ impl Config {
 		let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
 		let tsconfig_presets = &typescript.ts_config_presets;
 
-		if let Some(root_tsconfigs) = root_package.ts_config {
-			for directive in root_tsconfigs {
+		if !root_package.ts_config.is_empty() {
+			for directive in root_package.ts_config {
 				let (id, tsconfig_data) = match directive.config.unwrap_or_default() {
 					TsConfigKind::Id(id) => {
 						let tsconfig = tsconfig_presets
@@ -141,8 +145,8 @@ impl Config {
 
 			let root_tsconfig = TsConfig {
 				extends: Some(root_tsconfig_name.clone()),
-				files: Some(btreeset![]),
-				references: Some(btreeset![]),
+				files: btreeset![],
+				references: btreeset![],
 				..Default::default()
 			};
 
@@ -183,10 +187,14 @@ impl Config {
 			self.generate_templates(out_dir, root_package.with_templates, cli_vars)?;
 		}
 
-		if let Some(hooks_post) = root_package.hooks_post
-			&& !hooks_post.is_empty()
-		{
-			self.execute_command(self.shell.as_deref(), out_dir, hooks_post, cli_vars, false)?;
+		if !root_package.hooks_post.is_empty() {
+			self.execute_command(
+				self.shell.as_deref(),
+				out_dir,
+				root_package.hooks_post,
+				cli_vars,
+				false,
+			)?;
 		}
 
 		Ok(())

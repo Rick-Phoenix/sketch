@@ -9,10 +9,10 @@ use compose::{ComposePreset, service::DockerServicePreset};
 #[serde(default)]
 pub struct DockerConfig {
 	/// A map that contains presets for Docker Compose files.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub compose_presets: IndexMap<String, ComposePreset>,
 
 	/// A map that contains presets for Docker services.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub service_presets: IndexMap<String, DockerServicePreset>,
 }

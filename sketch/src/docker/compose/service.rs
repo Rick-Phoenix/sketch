@@ -62,7 +62,7 @@ impl ServiceData {
 #[serde(default)]
 pub struct DockerServicePreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	#[serde(skip_serializing)]
 	pub extends_presets: IndexSet<String>,
 
@@ -154,9 +154,9 @@ pub struct Service {
 	/// Defines the (incoming) port or a range of ports that Compose exposes from the container. These ports must be accessible to linked services and should not be published to the host machine. Only the internal container ports can be specified.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#expose
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub expose: Option<BTreeSet<StringOrNum>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub expose: BTreeSet<StringOrNum>,
 
 	/// One or more files that contain environment variables to be passed to the containers.
 	///
@@ -190,14 +190,14 @@ pub struct Service {
 	pub blkio_config: Option<BlkioSettings>,
 
 	/// Specifies additional container [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html) as strings.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub cap_add: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub cap_add: BTreeSet<String>,
 
 	/// Specifies container [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html) to drop as strings.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub cap_drop: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub cap_drop: BTreeSet<String>,
 
 	/// Requires: Docker Compose 2.15.0 and later
 	///
@@ -215,9 +215,9 @@ pub struct Service {
 	/// Lets services adapt their behaviour without the need to rebuild a Docker image.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#configs
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub configs: Option<BTreeSet<ServiceConfigOrSecret>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub configs: BTreeSet<ServiceConfigOrSecret>,
 
 	/// The number of usable CPUs for service container.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -275,16 +275,16 @@ pub struct Service {
 	pub develop: Option<DevelopmentSettings>,
 
 	/// A list of device cgroup rules for this container. The format is the same format the Linux kernel specifies in the Control [Groups Device Whitelist Controller]().
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub device_cgroup_rules: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub device_cgroup_rules: BTreeSet<String>,
 
 	/// Defines a list of device mappings for created containers.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#devices
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub devices: Option<BTreeSet<DeviceMapping>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub devices: BTreeSet<DeviceMapping>,
 
 	/// Custom DNS servers to set on the container network interface configuration. It can be a single value or a list.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -292,9 +292,9 @@ pub struct Service {
 	pub dns: Option<StringOrSortedList>,
 
 	/// Custom DNS options to be passed to the container’s DNS resolver (/etc/resolv.conf file on Linux).
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub dns_opt: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub dns_opt: BTreeSet<String>,
 
 	/// Custom DNS search domains to set on container network interface configuration. It can be a single value or a list.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -309,14 +309,14 @@ pub struct Service {
 	///
 	/// Specifies a list of options as key-value pairs to pass to the driver. These options are driver-dependent.
 	/// Consult the [network drivers documentation](https://docs.docker.com/engine/network/) for more information.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub driver_opts: Option<BTreeMap<String, StringOrNum>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub driver_opts: BTreeMap<String, StringOrNum>,
 
 	/// `external_links` link service containers to services managed outside of your Compose application. `external_links` define the name of an existing service to retrieve using the platform lookup mechanism.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub external_links: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub external_links: BTreeSet<String>,
 
 	/// Adds hostname mappings to the container network interface configuration (/etc/hosts for Linux).
 	///
@@ -335,9 +335,9 @@ pub struct Service {
 	/// Additional groups, by name or number, which the user inside the container must be a member of.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#group_add
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub group_add: Option<BTreeSet<StringOrNum>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub group_add: BTreeSet<StringOrNum>,
 
 	/// Runs an init process (PID 1) inside the container that forwards signals and reaps processes. Set this option to true to enable this feature for the service.
 	///
@@ -377,9 +377,9 @@ pub struct Service {
 	/// Defines a network link to containers in another service. Either specify both the service name and a link alias (SERVICE:ALIAS), or just the service name.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#links
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub links: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub links: BTreeSet<String>,
 
 	/// Defines the logging configuration for the service.
 	///
@@ -476,23 +476,23 @@ pub struct Service {
 	/// Used to define the port mappings between the host machine and the containers.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#ports
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub ports: Option<BTreeSet<Port>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub ports: BTreeSet<Port>,
 
 	/// Requires: Docker Compose 2.30.0 and later
 	///
 	///Defines a sequence of lifecycle hooks to run after a container has started. The exact timing of when the command is run is not guaranteed.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#post_start
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub post_start: Option<Vec<ServiceHook>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub post_start: Vec<ServiceHook>,
 
 	/// Defines a sequence of lifecycle hooks to run before the container is stopped. These hooks won't run if the container stops by itself or is terminated suddenly.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub pre_stop: Option<Vec<ServiceHook>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub pre_stop: Vec<ServiceHook>,
 
 	/// Configures the service container to run with elevated privileges. Support and actual impacts are platform specific.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -501,9 +501,9 @@ pub struct Service {
 	/// Defines a list of named profiles for the service to be enabled under. If unassigned, the service is always started but if assigned, it is only started if the profile is activated.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#profiles
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub profiles: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub profiles: BTreeSet<String>,
 
 	/// Defines a service that Compose won't manage directly. Compose delegated the service lifecycle to a dedicated or third-party component.
 	///
@@ -544,16 +544,16 @@ pub struct Service {
 	/// The secrets attribute grants access to sensitive data defined by the secrets top-level element on a per-service basis. Services can be granted access to multiple secrets.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#secrets
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub secrets: Option<BTreeSet<ServiceConfigOrSecret>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub secrets: BTreeSet<ServiceConfigOrSecret>,
 
 	/// Overrides the default labeling scheme for each container.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#security_opt
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub security_opt: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub security_opt: BTreeSet<String>,
 
 	/// Size of /dev/shm. A string value can use suffix like '2g' for 2 gigabytes.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -574,9 +574,9 @@ pub struct Service {
 	pub stop_signal: Option<String>,
 
 	/// Defines storage driver options for a service.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub storage_opt: Option<BTreeMap<String, Value>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub storage_opt: BTreeMap<String, Value>,
 
 	/// Defines kernel parameters to set in the container. sysctls can use either an array or a map.
 	///
@@ -598,9 +598,9 @@ pub struct Service {
 	/// Overrides the default ulimits for a container. It's specified either as an integer for a single limit or as mapping for soft/hard limits.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#ulimits
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub ulimits: Option<BTreeMap<String, Ulimit>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub ulimits: BTreeMap<String, Ulimit>,
 
 	/// When `use_api_socket` is set, the container is able to interact with the underlying container engine through the API socket. Your credentials are mounted inside the container so the container acts as a pure delegate for your commands relating to the container engine. Typically, commands ran by container can pull and push to your registry.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -621,16 +621,16 @@ pub struct Service {
 	/// The volumes attribute define mount host paths or named volumes that are accessible by service containers.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#volumes
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub volumes: Option<Vec<ServiceVolume>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub volumes: Vec<ServiceVolume>,
 
 	/// Mounts all of the volumes from another service or container. You can optionally specify read-only access ro or read-write rw. If no access level is specified, then read-write access is used.
 	///
 	/// You can also mount volumes from a container that is not managed by Compose by using the container: prefix.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub volumes_from: Option<Vec<String>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub volumes_from: Vec<String>,
 
 	/// Overrides the container's working directory which is specified by the image, for example Dockerfile's WORKDIR.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -978,25 +978,25 @@ pub struct AdvancedBuildStep {
 	/// Defines a list of sources the image builder should use for cache resolution.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/build/#cache_from
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub cache_from: Option<Vec<String>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub cache_from: Vec<String>,
 
 	/// Defines a list of export locations to be used to share build cache with future builds.
 	///
 	/// Cache location syntax follows the global format [NAME|type=TYPE[,KEY=VALUE]]. Simple NAME is actually a shortcut notation for type=registry,ref=NAME.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/build/#cache_to
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub cache_to: Option<Vec<String>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub cache_to: Vec<String>,
 
 	/// Requires: Docker Compose 2.27.1 and later
 	///
 	/// Defines extra privileged entitlements to be allowed during the build.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub entitlements: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub entitlements: BTreeSet<String>,
 
 	/// Adds hostname mappings at build-time. Use the same syntax as [extra_hosts](https://docs.docker.com/reference/compose-file/services/#extra_hosts).
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1027,9 +1027,9 @@ pub struct AdvancedBuildStep {
 	/// Defines a list of target [platforms](https://docs.docker.com/reference/compose-file/services/#platform).
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/build/#platforms
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub platforms: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub platforms: BTreeSet<String>,
 
 	/// Requires: Docker Compose 2.15.0 and later
 	///
@@ -1060,9 +1060,9 @@ pub struct AdvancedBuildStep {
 	/// Grants access to sensitive data defined by secrets on a per-service build basis.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/build/#secrets
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub secrets: Option<BTreeSet<ServiceConfigOrSecret>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub secrets: BTreeSet<ServiceConfigOrSecret>,
 
 	/// SSH agent socket or keys to expose to the build. Format is either a string or a list of 'default|<id>[=<socket>|<key>[,<key>]]'.
 	///
@@ -1078,9 +1078,9 @@ pub struct AdvancedBuildStep {
 	pub shm_size: Option<StringOrNum>,
 
 	/// Defines a list of tag mappings that must be associated to the build image. This list comes in addition to the image property defined in the service section.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub tags: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub tags: BTreeSet<String>,
 
 	/// Defines the stage to build as defined inside a multi-stage Dockerfile.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1091,9 +1091,9 @@ pub struct AdvancedBuildStep {
 	/// ulimits overrides the default ulimits for a container. It's specified either as an integer for a single limit or as mapping for soft/hard limits.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/build/#ulimits
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub ulimits: Option<BTreeMap<String, Ulimit>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub ulimits: BTreeMap<String, Ulimit>,
 }
 
 /// Configures the UTS namespace mode set for the service container. When unspecified it is the runtime's decision to assign a UTS namespace, if supported.

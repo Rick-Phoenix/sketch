@@ -14,7 +14,7 @@ pub use tsconfig_elements::*;
 #[serde(default)]
 pub struct TsConfigPreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -130,16 +130,16 @@ pub struct WatchOptions {
 	/// Remove a list of files from the watch mode's processing.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#excludeFiles
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub exclude_files: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub exclude_files: BTreeSet<String>,
 
 	/// Remove a list of directories from the watch process.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#excludeDirectories
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub exclude_directories: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub exclude_directories: BTreeSet<String>,
 
 	/// Specify what approach the watcher should use if the system runs out of native file watchers.
 	///
@@ -165,24 +165,24 @@ pub struct TsConfig {
 	pub extends: Option<String>,
 
 	/// If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. When a 'files' property is specified, only those files and those specified by 'include' are included.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub files: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub files: BTreeSet<String>,
 
 	/// Specifies a list of files to be excluded from compilation. The 'exclude' property only affects the files included via the 'include' property and not the 'files' property. Glob patterns require TypeScript version 2.0 or later.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub exclude: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub exclude: BTreeSet<String>,
 
 	/// Specifies a list of glob patterns that match files to be included in compilation. If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. Requires TypeScript version 2.0 or later.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub include: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub include: BTreeSet<String>,
 
 	/// Referenced projects. Requires TypeScript version 3.0 or later.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_sets)]
-	pub references: Option<BTreeSet<TsConfigReference>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub references: BTreeSet<TsConfigReference>,
 
 	/// Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -301,9 +301,9 @@ pub struct CompilerOptions {
 	/// Conditions to set in addition to the resolver-specific defaults when resolving imports.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#customConditions
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub custom_conditions: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub custom_conditions: BTreeSet<String>,
 
 	/// Generate .d.ts files from TypeScript and JavaScript files in your project.
 	///
@@ -447,9 +447,9 @@ pub struct CompilerOptions {
 	/// Specify a set of bundled library declaration files that describe the target runtime environment.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#lib
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub lib: Option<BTreeSet<Lib>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub lib: BTreeSet<Lib>,
 
 	/// Enable lib replacement.
 	///
@@ -496,9 +496,9 @@ pub struct CompilerOptions {
 	/// Provides a way to override the default list of file name suffixes to search when resolving a module.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig/#moduleSuffixes
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub module_suffixes: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub module_suffixes: BTreeSet<String>,
 
 	/// Log paths used during the `moduleResolution` process.
 	///
@@ -677,16 +677,16 @@ pub struct CompilerOptions {
 	/// Specify a set of entries that re-map imports to additional lookup locations.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig/#paths
-	#[merge(strategy = merge_optional_btree_maps)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub paths: Option<BTreeMap<String, BTreeSet<String>>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub paths: BTreeMap<String, BTreeSet<String>>,
 
 	/// Specify a list of language service plugins to include.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#plugins
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub plugins: Option<BTreeSet<TsPlugin>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub plugins: BTreeSet<TsPlugin>,
 
 	/// Disable erasing `const enum` declarations in generated code.
 	///
@@ -739,9 +739,9 @@ pub struct CompilerOptions {
 	/// Specify the root folder within your source files.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#rootDir
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub root_dirs: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub root_dirs: BTreeSet<String>,
 
 	/// Skip type checking .d.ts files that are included with TypeScript.
 	///
@@ -842,16 +842,16 @@ pub struct CompilerOptions {
 	/// Specify type package names to be included without being referenced in a source file.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#types
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub types: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub types: BTreeSet<String>,
 
 	/// Specify multiple folders that act like `./node_modules/@types`.
 	///
 	/// See more: https://www.typescriptlang.org/tsconfig#typeRoots
-	#[merge(strategy = merge_optional_btree_sets)]
-	#[serde(skip_serializing_if = "Option::is_none")]
-	pub type_roots: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[merge(strategy = BTreeSet::extend)]
+	pub type_roots: BTreeSet<String>,
 
 	/// Use the package.json 'exports' field when resolving package imports.
 	///

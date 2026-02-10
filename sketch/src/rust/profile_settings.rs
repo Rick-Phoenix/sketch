@@ -199,7 +199,7 @@ pub struct Profile {
 
 	/// Profile overrides for dependencies, `*` is special.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub package: BTreeMap<String, Self>,
 
 	/// Profile overrides for build dependencies, `*` is special.
@@ -264,7 +264,7 @@ pub struct Profiles {
 
 	/// User-suppiled for `cargo --profile=name`
 	#[serde(flatten)]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub custom: BTreeMap<String, Profile>,
 }
 

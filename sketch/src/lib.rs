@@ -30,7 +30,6 @@ use std::{
 	ffi::OsStr,
 	fmt::{self, Debug, Display},
 	fs::{File, create_dir_all, exists, read_to_string, remove_dir_all},
-	hash::Hash,
 	io::Write,
 	mem,
 	path::{Component, Path, PathBuf},

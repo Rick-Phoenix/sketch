@@ -61,7 +61,7 @@ pub enum WorkflowReference {
 
 /// Configurations and presets relating to Github
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Default, Merge)]
-#[merge(strategy = merge_index_maps)]
+#[merge(strategy = IndexMap::extend)]
 #[serde(default)]
 pub struct GithubConfig {
 	/// A map of presets for Github workflows
@@ -78,7 +78,7 @@ pub struct GithubConfig {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
 pub struct GithubWorkflowPreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	#[serde(default)]
 	pub extends_presets: IndexSet<String>,
 
@@ -152,7 +152,7 @@ impl GithubWorkflowPreset {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
 pub struct JobPreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	#[serde(skip_serializing, default)]
 	pub extends_presets: IndexSet<String>,
 
@@ -240,7 +240,7 @@ pub struct Workflow {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#env
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
@@ -263,7 +263,7 @@ pub struct Workflow {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
 	#[serde(default)]
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub jobs: IndexMap<String, JobReference>,
 }
 
@@ -371,9 +371,9 @@ pub struct NormalJob {
 	/// A map of outputs for a job. Job outputs are available to all downstream jobs that depend on this job.
 	///
 	/// See more: https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub outputs: Option<StringBTreeMap>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub outputs: StringBTreeMap,
 
 	/// A map of default settings that will apply to all steps in the job.
 	///
@@ -406,7 +406,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idenv
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// The maximum number of minutes to let a workflow run before GitHub automatically cancels it. Default: 360
@@ -438,9 +438,9 @@ pub struct NormalJob {
 	/// Additional containers to host services for a job in a workflow. These are useful for creating databases or cache services like redis. The runner on the virtual machine will automatically create a network and manage the life cycle of the service containers.
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idservices
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub services: Option<BTreeMap<String, Container>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub services: BTreeMap<String, Container>,
 
 	/// A strategy creates a build matrix for your jobs. You can define different variations of an environment to run each job in.
 	///
@@ -452,7 +452,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	#[merge(strategy = merge_vecs)]
+	#[merge(strategy = Vec::extend)]
 	pub steps: Vec<GHStepData>,
 }
 
@@ -504,7 +504,7 @@ pub struct ReusableWorkflowCallJob {
 	///
 	/// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idwith
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow. Any secrets that you pass must match the names defined in the called workflow.
@@ -1381,9 +1381,9 @@ macro_rules! events {
       #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
       pub struct $name {
         /// The types of events that should trigger this workflow.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[merge(strategy = merge_optional_btree_sets)]
-        pub types: Option<BTreeSet<[< $name Events >]>>
+        #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+        #[merge(strategy = BTreeSet::extend)]
+        pub types: BTreeSet<[< $name Events >]>
       }
 
       #[doc = "The kind of events that can trigger a " $name:snake " event"]
@@ -1523,17 +1523,17 @@ events!(
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = merge_optional_btree_sets)]
+#[merge(strategy = BTreeSet::extend)]
 pub struct PullRequest {
 	/// The types of events that should trigger this workflow.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub types: Option<BTreeSet<PullRequestEvents>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub types: BTreeSet<PullRequestEvents>,
 
 	/// Runs on pull requests that target specific branches.
 	///
 	/// Cannot be used with `branches-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub branches: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub branches: BTreeSet<String>,
 
 	/// Runs on pull requests that target specific branches, except those listed here.
 	///
@@ -1541,27 +1541,27 @@ pub struct PullRequest {
 	#[serde(
 		default,
 		rename = "branches-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub branches_ignore: Option<BTreeSet<String>>,
+	pub branches_ignore: BTreeSet<String>,
 
 	/// Cannot be used with `tags-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub tags: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub tags: BTreeSet<String>,
 
 	/// Cannot be used with `tags`
 	#[serde(
 		default,
 		rename = "tags-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub tags_ignore: Option<BTreeSet<String>>,
+	pub tags_ignore: BTreeSet<String>,
 
 	/// Runs when a pull request changes specific files.
 	///
 	/// Cannot be used with `paths-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub paths: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub paths: BTreeSet<String>,
 
 	/// Runs when a pull request changes specific files, except those listed here.
 	///
@@ -1569,9 +1569,9 @@ pub struct PullRequest {
 	#[serde(
 		default,
 		rename = "paths-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub paths_ignore: Option<BTreeSet<String>>,
+	pub paths_ignore: BTreeSet<String>,
 }
 
 /// The kinds of events that can trigger a pull_request event.
@@ -1621,13 +1621,13 @@ events!(
 ///
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#push-event-push
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = merge_optional_btree_sets)]
+#[merge(strategy = BTreeSet::extend)]
 pub struct Push {
 	/// Runs only when specific branches are pushed.
 	///
 	/// Cannot be used with `branches-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub branches: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub branches: BTreeSet<String>,
 
 	/// Runs only when specific branches are pushed, except those listed here.
 	///
@@ -1635,15 +1635,15 @@ pub struct Push {
 	#[serde(
 		default,
 		rename = "branches-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub branches_ignore: Option<BTreeSet<String>>,
+	pub branches_ignore: BTreeSet<String>,
 
 	/// Runs only when specific tags are pushed.
 	///
 	/// Cannot be used with `tags-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub tags: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub tags: BTreeSet<String>,
 
 	/// Runs only when specific tags are pushed, except for the ones listed here.
 	///
@@ -1651,15 +1651,15 @@ pub struct Push {
 	#[serde(
 		default,
 		rename = "tags-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub tags_ignore: Option<BTreeSet<String>>,
+	pub tags_ignore: BTreeSet<String>,
 
 	/// Runs only when a push changes specific files.
 	///
 	/// Cannot be used with `paths-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub paths: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub paths: BTreeSet<String>,
 
 	/// Runs only when a push changes specific files, except those listed here.
 	///
@@ -1667,9 +1667,9 @@ pub struct Push {
 	#[serde(
 		default,
 		rename = "paths-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub paths_ignore: Option<BTreeSet<String>>,
+	pub paths_ignore: BTreeSet<String>,
 }
 
 events!(
@@ -1698,19 +1698,21 @@ events!(
 ///
 /// See more: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_run
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = merge_optional_btree_sets)]
+#[merge(strategy = BTreeSet::extend)]
 pub struct WorkflowRun {
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	/// The types of events that should trigger this workflow.
-	pub types: Option<BTreeSet<WorkflowRunEvents>>,
+	pub types: BTreeSet<WorkflowRunEvents>,
 
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	/// The workflows that should trigger this workflow.
-	pub workflows: Option<BTreeSet<String>>,
+	pub workflows: BTreeSet<String>,
 
 	/// Runs only when specific branches are involved.
 	///
 	/// Cannot be used with `branches-ignore`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub branches: Option<BTreeSet<String>>,
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	pub branches: BTreeSet<String>,
 
 	/// Runs only when specific branches are involved, except those listed here.
 	///
@@ -1718,9 +1720,9 @@ pub struct WorkflowRun {
 	#[serde(
 		default,
 		rename = "branches-ignore",
-		skip_serializing_if = "Option::is_none"
+		skip_serializing_if = "BTreeSet::is_empty"
 	)]
-	pub branches_ignore: Option<BTreeSet<String>>,
+	pub branches_ignore: BTreeSet<String>,
 }
 
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -1936,9 +1938,9 @@ pub struct EventObject {
 	/// You can schedule a workflow to run at specific UTC times using POSIX cron syntax (https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07). Scheduled workflows run on the latest commit on the default or base branch. The shortest interval you can run scheduled workflows is once every 5 minutes.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_vecs)]
-	pub schedule: Option<Vec<Schedule>>,
+	#[serde(default, skip_serializing_if = "Vec::is_empty")]
+	#[merge(strategy = Vec::extend)]
+	pub schedule: Vec<Schedule>,
 
 	/// Runs your workflow anytime the status of a Git commit changes, which triggers the status event.
 	///
@@ -2048,25 +2050,25 @@ pub struct Secret {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_call
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = merge_optional_btree_maps)]
+#[merge(strategy = BTreeMap::extend)]
 pub struct WorkflowCall {
 	/// When using the `workflow_call` keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callinputs
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub inputs: Option<BTreeMap<String, WorkflowCallInput>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	pub inputs: BTreeMap<String, WorkflowCallInput>,
 
 	/// A map of outputs for a called workflow. Called workflow outputs are available to all downstream jobs in the caller workflow. Each output has an identifier, an optional `description`, and a `value`. The `value` must be set to the value of an output from a job within the called workflow.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_calloutputs
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub outputs: Option<BTreeMap<String, WorkflowCallOutput>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	pub outputs: BTreeMap<String, WorkflowCallOutput>,
 
 	/// A map of the secrets that can be used in the called workflow.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callsecrets
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub secrets: Option<BTreeMap<String, Secret>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	pub secrets: BTreeMap<String, Secret>,
 }
 
 /// The triggered workflow receives the inputs in the `inputs` context.
@@ -2129,7 +2131,7 @@ pub struct WorkflowDispatch {
 	/// The triggered workflow receives the inputs in the `inputs` context.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_btree_maps)]
-	pub inputs: Option<BTreeMap<String, WorkflowDispatchInput>>,
+	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[merge(strategy = BTreeMap::extend)]
+	pub inputs: BTreeMap<String, WorkflowDispatchInput>,
 }

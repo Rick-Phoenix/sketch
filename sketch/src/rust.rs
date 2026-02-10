@@ -229,10 +229,10 @@ pub fn toml_string_list<'a>(strings: impl IntoIterator<Item = &'a String>) -> It
 #[serde(default)]
 pub struct RustPresets {
 	/// A map that contains presets for `Cargo.toml` files.
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	pub manifest: IndexMap<String, CargoTomlPreset>,
 
-	#[merge(strategy = merge_index_maps)]
+	#[merge(strategy = IndexMap::extend)]
 	#[serde(rename = "crate")]
 	pub crate_: IndexMap<String, Crate>,
 }
@@ -256,7 +256,7 @@ pub struct Crate {
 	pub license: Option<License>,
 
 	#[arg(short = 't', long = "template", value_name = "PRESET_ID")]
-	#[merge(strategy = merge_vecs)]
+	#[merge(strategy = Vec::extend)]
 	pub with_templates: Vec<TemplatingPresetReference>,
 }
 
@@ -533,7 +533,7 @@ impl CargoTomlPresetRef {
 #[serde(default)]
 pub struct CargoTomlPreset {
 	/// The list of extended presets.
-	#[merge(strategy = merge_index_sets)]
+	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -586,17 +586,17 @@ pub struct Manifest {
 	/// Note that due to autobins feature this is not the complete list
 	/// unless you run [`Manifest::complete_from_path`]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub bin: BTreeSet<Product>,
 
 	/// `[target.cfg.dependencies]`
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub target: BTreeMap<String, Target>,
 
 	/// `[patch.crates-io]` section
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub patch: BTreeMap<String, BTreeMap<String, Dependency>>,
 
 	/// Compilation/optimization settings
@@ -606,17 +606,17 @@ pub struct Manifest {
 
 	/// Benchmarks
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub bench: BTreeSet<Product>,
 
 	/// Integration tests
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub test: BTreeSet<Product>,
 
 	/// Examples
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub example: BTreeSet<Product>,
 
 	/// Lints
@@ -633,7 +633,7 @@ pub struct Manifest {
 	/// This crate has an optional [`features`] module for dealing with this
 	/// complexity and getting the real list of features.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_btree_maps)]
+	#[merge(strategy = BTreeMap::extend)]
 	pub features: BTreeMap<String, BTreeSet<String>>,
 
 	/// Normal dependencies
@@ -948,7 +948,7 @@ impl Merge for Dependency {
 #[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize, Merge)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct InheritedDependencyDetail {
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
 
@@ -1022,7 +1022,7 @@ pub struct DependencyDetail {
 	///
 	/// Note that Cargo interprets `default` in a special way.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub features: BTreeSet<String>,
 
 	/// NB: Not allowed at workspace level
@@ -1299,7 +1299,7 @@ pub struct Product {
 
 	/// The available options are "dylib", "rlib", "staticlib", "cdylib", and "proc-macro".
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub crate_type: BTreeSet<String>,
 
 	/// The `required-features` field specifies which features the product needs in order to be built.
@@ -1307,7 +1307,7 @@ pub struct Product {
 	/// This is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,
 	/// it has no effect on `[lib]`.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = merge_btree_sets)]
+	#[merge(strategy = BTreeSet::extend)]
 	pub required_features: BTreeSet<String>,
 }
 

@@ -107,45 +107,6 @@ pub(crate) fn merge_optional_nested<T: Merge>(left: &mut Option<T>, right: Optio
 	}
 }
 
-pub(crate) fn merge_btree_maps<T>(left: &mut BTreeMap<String, T>, right: BTreeMap<String, T>) {
-	left.extend(right)
-}
-
-pub(crate) fn merge_btree_sets<T>(left: &mut BTreeSet<T>, right: BTreeSet<T>)
-where
-	T: Ord,
-{
-	left.extend(right)
-}
-
-pub(crate) fn merge_index_maps<T>(left: &mut IndexMap<String, T>, right: IndexMap<String, T>) {
-	left.extend(right)
-}
-
-pub(crate) fn merge_index_sets<T>(left: &mut IndexSet<T>, right: IndexSet<T>)
-where
-	T: Eq + Hash,
-{
-	left.extend(right)
-}
-
-pub(crate) fn merge_optional_index_sets<T>(
-	left: &mut Option<IndexSet<T>>,
-	right: Option<IndexSet<T>>,
-) where
-	T: Eq + Hash,
-{
-	if let Some(right_data) = right {
-		if let Some(left_data) = left {
-			for item in right_data {
-				left_data.insert(item);
-			}
-		} else {
-			*left = Some(right_data)
-		}
-	}
-}
-
 pub(crate) fn overwrite_if_some<T>(left: &mut Option<T>, right: Option<T>) {
 	if let Some(new) = right {
 		*left = Some(new)
@@ -154,48 +115,4 @@ pub(crate) fn overwrite_if_some<T>(left: &mut Option<T>, right: Option<T>) {
 
 pub(crate) fn overwrite_always<T>(left: &mut T, right: T) {
 	*left = right;
-}
-
-pub(crate) fn merge_optional_btree_sets<T>(
-	left: &mut Option<BTreeSet<T>>,
-	right: Option<BTreeSet<T>>,
-) where
-	T: Ord,
-{
-	if let Some(right_data) = right {
-		if let Some(left_data) = left {
-			left_data.extend(right_data);
-		} else {
-			*left = Some(right_data)
-		}
-	}
-}
-
-pub(crate) fn merge_optional_btree_maps<T>(
-	left: &mut Option<BTreeMap<String, T>>,
-	right: Option<BTreeMap<String, T>>,
-) {
-	if let Some(right_data) = right {
-		if let Some(left_data) = left {
-			for (key, val) in right_data {
-				left_data.insert(key, val);
-			}
-		} else {
-			*left = Some(right_data)
-		}
-	}
-}
-
-pub(crate) fn merge_optional_vecs<T>(left: &mut Option<Vec<T>>, right: Option<Vec<T>>) {
-	if let Some(right_data) = right {
-		if let Some(left_data) = left {
-			left_data.extend(right_data);
-		} else {
-			*left = Some(right_data)
-		}
-	}
-}
-
-pub(crate) fn merge_vecs<T>(left: &mut Vec<T>, right: Vec<T>) {
-	left.extend(right);
 }
