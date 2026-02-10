@@ -40,430 +40,437 @@ use crate::{
 };
 
 pub async fn main_entrypoint() -> Result<(), GenError> {
-	execute_cli(Cli::parse()).await
+	Cli::parse().execute().await
 }
 
-async fn execute_cli(cli: Cli) -> Result<(), GenError> {
-	let mut config = get_config_from_cli(cli.overrides.unwrap_or_default(), &cli.command).await?;
+impl Cli {
+	async fn execute(self) -> Result<(), GenError> {
+		let mut config =
+			get_config_from_cli(self.overrides.unwrap_or_default(), &self.command).await?;
 
-	let command = cli.command;
-	let mut cli_vars: IndexMap<String, Value> = IndexMap::new();
+		let command = self.command;
+		let mut cli_vars: IndexMap<String, Value> = IndexMap::new();
 
-	if let Some(cli_overrides) = cli.vars_overrides {
-		for (name, value) in cli_overrides {
-			cli_vars.insert(name, value);
-		}
-	}
-
-	for file in cli.vars_files {
-		let vars = deserialize_map(&file)?;
-		config.vars.extend(vars);
-	}
-
-	let overwrite = config.can_overwrite();
-
-	if cli.print_config {
-		println!("Full parsed config:");
-		println!("{config:?}");
-	}
-
-	match command {
-		Commands::Rust { command } => {
-			match command {
-				RustCommands::Manifest { output, preset } => {
-					let content = config
-						.rust_presets
-						.manifest
-						.get(&preset)
-						.ok_or_else(|| GenError::PresetNotFound {
-							kind: Preset::RustCrate,
-							name: preset.clone(),
-						})?
-						.clone()
-						.process_data(&preset, &config.rust_presets.manifest)?
-						.config;
-
-					let output = output.unwrap_or_else(|| "Cargo.toml".into());
-
-					write_file(
-						&output,
-						&content.as_document().to_string(),
-						config.can_overwrite(),
-					)?;
-				}
-				RustCommands::Crate {
-					dir,
-					name,
-					preset: preset_id,
-					config: overrides,
-				} => {
-					let mut preset = config
-						.rust_presets
-						.crate_
-						.get(&preset_id)
-						.ok_or_else(|| GenError::PresetNotFound {
-							kind: Preset::RustCrate,
-							name: preset_id,
-						})?
-						.clone()
-						.process_data(&config.rust_presets.manifest, &config.gitignore_presets)?;
-
-					if let Some(overrides) = overrides {
-						preset.merge(overrides);
-					}
-
-					preset.generate(&dir, name, &config)?;
-				}
-			};
-		}
-		Commands::Gitignore { preset, output } => {
-			let data = config
-				.gitignore_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::Gitignore,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(&preset, &config.gitignore_presets)?;
-
-			write_file(
-				&output.unwrap_or_else(|| PathBuf::from(".gitignore")),
-				&data.content.to_string(),
-				overwrite,
-			)?;
-		}
-		Commands::GhWorkflow { preset, output } => {
-			let data = config
-				.github
-				.workflow_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::GithubWorkflow,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(&preset, &config.github)?;
-
-			create_parent_dirs(&output)?;
-
-			serialize_yaml(&data, &output, overwrite)?;
-		}
-		Commands::License { license, output } => {
-			let output = output.unwrap_or_else(|| "LICENSE".into());
-
-			write_file(&output, license.get_content(), overwrite)?;
-		}
-		Commands::PnpmWorkspace { output, preset } => {
-			let typescript = config.typescript.unwrap_or_default();
-
-			let content = typescript
-				.pnpm_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::PnpmWorkspace,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(preset.as_str(), &typescript.pnpm_presets)?;
-
-			let output = output.unwrap_or_else(|| "pnpm-workspace.yaml".into());
-
-			create_parent_dirs(&output)?;
-
-			serialize_yaml(&content, &output, overwrite)?;
-		}
-		Commands::TsConfig { output, preset } => {
-			let typescript = config.typescript.unwrap_or_default();
-
-			let content = typescript
-				.ts_config_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::TsConfig,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(preset.as_str(), &typescript.ts_config_presets)?;
-
-			let output = output.unwrap_or_else(|| "tsconfig.json".into());
-
-			create_parent_dirs(&output)?;
-
-			serialize_json(&content, &output, overwrite)?;
-		}
-		Commands::Oxlint { output, preset } => {
-			let typescript = config.typescript.unwrap_or_default();
-
-			let content = typescript
-				.oxlint_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::Oxlint,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(preset.as_str(), &typescript.oxlint_presets)?;
-
-			let output = output.unwrap_or_else(|| ".oxlintrc.json".into());
-			create_parent_dirs(&output)?;
-
-			serialize_json(&content, &output, overwrite)?;
-		}
-		Commands::PackageJson { output, preset } => {
-			let typescript = config.typescript.unwrap_or_default();
-
-			let content = typescript
-				.package_json_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::PackageJson,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(
-					preset.as_str(),
-					&typescript.package_json_presets,
-					&typescript.people,
-				)?;
-
-			let output = output.unwrap_or_else(|| "package.json".into());
-			create_parent_dirs(&output)?;
-
-			serialize_json(&content, &output, overwrite)?;
-		}
-
-		Commands::DockerCompose {
-			output,
-			preset,
-			services,
-		} => {
-			let docker_config = config.docker.unwrap_or_default();
-			let compose_presets = docker_config.compose_presets;
-
-			let mut file_preset = compose_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::DockerCompose,
-					name: preset.clone(),
-				})?
-				.clone();
-
-			for service in services {
-				let service_name = service
-					.name
-					.unwrap_or_else(|| service.preset_id.clone());
-
-				file_preset
-					.config
-					.services
-					.insert(service_name, ServiceData::Id(service.preset_id));
+		if let Some(cli_overrides) = self.vars_overrides {
+			for (name, value) in cli_overrides {
+				cli_vars.insert(name, value);
 			}
-
-			let file_data = file_preset
-				.process_data(
-					preset.as_str(),
-					&compose_presets,
-					&docker_config.service_presets,
-				)
-				.map_err(|e| generic_error!("{e}"))?;
-
-			let output = output.unwrap_or_else(|| "compose.yaml".into());
-
-			create_parent_dirs(&output)?;
-
-			serialize_yaml(&file_data, &output, overwrite)?;
 		}
-		Commands::PreCommit { output, preset } => {
-			let content = config
-				.pre_commit_presets
-				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
-					kind: Preset::PreCommit,
-					name: preset.clone(),
-				})?
-				.clone()
-				.process_data(preset.as_str(), &config.pre_commit_presets)?;
 
-			let output = output.unwrap_or_else(|| ".pre-commit-config.yaml".into());
-
-			create_parent_dirs(&output)?;
-
-			serialize_yaml(&content, &output, overwrite)?;
+		for file in self.vars_files {
+			let vars = deserialize_map(&file)?;
+			config.vars.extend(vars);
 		}
-		Repo {
-			remote,
-			preset,
-			dir,
-			overrides,
-		} => {
-			let mut preset = if let Some(id) = preset {
-				config
-					.git_presets
-					.get(&id)
+
+		let overwrite = config.can_overwrite();
+
+		if self.print_config {
+			println!("Full parsed config:");
+			println!("{config:?}");
+		}
+
+		match command {
+			Commands::Rust { command } => {
+				match command {
+					RustCommands::Manifest { output, preset } => {
+						let content = config
+							.rust_presets
+							.manifest
+							.get(&preset)
+							.ok_or_else(|| GenError::PresetNotFound {
+								kind: Preset::RustCrate,
+								name: preset.clone(),
+							})?
+							.clone()
+							.process_data(&preset, &config.rust_presets.manifest)?
+							.config;
+
+						let output = output.unwrap_or_else(|| "Cargo.toml".into());
+
+						write_file(
+							&output,
+							&content.as_document().to_string(),
+							config.can_overwrite(),
+						)?;
+					}
+					RustCommands::Crate {
+						dir,
+						name,
+						preset: preset_id,
+						config: overrides,
+					} => {
+						let mut preset = config
+							.rust_presets
+							.crate_
+							.get(&preset_id)
+							.ok_or_else(|| GenError::PresetNotFound {
+								kind: Preset::RustCrate,
+								name: preset_id,
+							})?
+							.clone()
+							.process_data(
+								&config.rust_presets.manifest,
+								&config.gitignore_presets,
+							)?;
+
+						if let Some(overrides) = overrides {
+							preset.merge(overrides);
+						}
+
+						preset.generate(&dir, name, &config)?;
+					}
+				};
+			}
+			Commands::Gitignore { preset, output } => {
+				let data = config
+					.gitignore_presets
+					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::Repo,
-						name: id.clone(),
+						kind: Preset::Gitignore,
+						name: preset.clone(),
 					})?
 					.clone()
-			} else {
-				RepoPreset::default()
-			};
+					.process_data(&preset, &config.gitignore_presets)?;
 
-			if let Some(overrides) = overrides {
-				preset.merge(overrides);
+				write_file(
+					&output.unwrap_or_else(|| PathBuf::from(".gitignore")),
+					&data.content.to_string(),
+					overwrite,
+				)?;
+			}
+			Commands::GhWorkflow { preset, output } => {
+				let data = config
+					.github
+					.workflow_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::GithubWorkflow,
+						name: preset.clone(),
+					})?
+					.clone()
+					.process_data(&preset, &config.github)?;
+
+				create_parent_dirs(&output)?;
+
+				serialize_yaml(&data, &output, overwrite)?;
+			}
+			Commands::License { license, output } => {
+				let output = output.unwrap_or_else(|| "LICENSE".into());
+
+				write_file(&output, license.get_content(), overwrite)?;
+			}
+			Commands::PnpmWorkspace { output, preset } => {
+				let typescript = config.typescript.unwrap_or_default();
+
+				let content = typescript
+					.pnpm_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::PnpmWorkspace,
+						name: preset.clone(),
+					})?
+					.clone()
+					.process_data(preset.as_str(), &typescript.pnpm_presets)?;
+
+				let output = output.unwrap_or_else(|| "pnpm-workspace.yaml".into());
+
+				create_parent_dirs(&output)?;
+
+				serialize_yaml(&content, &output, overwrite)?;
+			}
+			Commands::TsConfig { output, preset } => {
+				let typescript = config.typescript.unwrap_or_default();
+
+				let content = typescript
+					.ts_config_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::TsConfig,
+						name: preset.clone(),
+					})?
+					.clone()
+					.process_data(preset.as_str(), &typescript.ts_config_presets)?;
+
+				let output = output.unwrap_or_else(|| "tsconfig.json".into());
+
+				create_parent_dirs(&output)?;
+
+				serialize_json(&content, &output, overwrite)?;
+			}
+			Commands::Oxlint { output, preset } => {
+				let typescript = config.typescript.unwrap_or_default();
+
+				let content = typescript
+					.oxlint_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::Oxlint,
+						name: preset.clone(),
+					})?
+					.clone()
+					.process_data(preset.as_str(), &typescript.oxlint_presets)?;
+
+				let output = output.unwrap_or_else(|| ".oxlintrc.json".into());
+				create_parent_dirs(&output)?;
+
+				serialize_json(&content, &output, overwrite)?;
+			}
+			Commands::PackageJson { output, preset } => {
+				let typescript = config.typescript.unwrap_or_default();
+
+				let content = typescript
+					.package_json_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::PackageJson,
+						name: preset.clone(),
+					})?
+					.clone()
+					.process_data(
+						preset.as_str(),
+						&typescript.package_json_presets,
+						&typescript.people,
+					)?;
+
+				let output = output.unwrap_or_else(|| "package.json".into());
+				create_parent_dirs(&output)?;
+
+				serialize_json(&content, &output, overwrite)?;
 			}
 
-			let out_dir = dir.unwrap_or_else(get_cwd);
-
-			create_all_dirs(&out_dir)?;
-
-			config.init_repo(preset, remote.as_deref(), &out_dir, &cli_vars)?;
-		}
-
-		RenderPreset { id, out_dir } => {
-			let out_dir = out_dir.unwrap_or(get_cwd());
-
-			config.generate_templates(
-				&out_dir,
-				vec![TemplatingPresetReference::Preset {
-					id,
-					context: Default::default(),
-				}],
-				&cli_vars,
-			)?;
-		}
-
-		Render {
-			template,
-			content,
-			output,
-			id,
-			file,
-		} => {
-			let template_data = if let Some(id) = id {
-				TemplateData::Id(id)
-			} else if let Some(template) = template {
-				TemplateData::Id(template)
-			} else if let Some(content) = content {
-				TemplateData::Content {
-					name: "__from_cli".to_string(),
-					content,
-				}
-			} else if let Some(file) = file {
-				let file_content = read_to_string(&file).map_err(|e| GenError::ReadError {
-					path: file.clone(),
-					source: e,
-				})?;
-
-				TemplateData::Content {
-					name: format!("__custom_file_{}", file.display()),
-					content: file_content,
-				}
-			} else {
-				panic!("Missing id or content for template generation");
-			};
-
-			let output = if output.stdout {
-				TemplateOutputKind::Stdout
-			} else {
-				TemplateOutputKind::Path(
-					output
-						.output_path
-						.expect("At least one must be set between output_path and --stdout"),
-				)
-			};
-
-			let template = TemplateOutput {
+			Commands::DockerCompose {
 				output,
-				template: template_data,
-				context: Default::default(),
-			};
+				preset,
+				services,
+			} => {
+				let docker_config = config.docker.unwrap_or_default();
+				let compose_presets = docker_config.compose_presets;
 
-			config.generate_templates(
-				get_cwd(),
-				vec![TemplatingPresetReference::Definition(TemplatingPreset {
-					templates: vec![PresetElement::Template(template)],
-					..Default::default()
-				})],
-				&cli_vars,
-			)?;
-		}
-		New { output } => {
-			let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
+				let mut file_preset = compose_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::DockerCompose,
+						name: preset.clone(),
+					})?
+					.clone();
 
-			create_parent_dirs(&output_path)?;
+				for service in services {
+					let service_name = service
+						.name
+						.unwrap_or_else(|| service.preset_id.clone());
 
-			let format = get_extension(&output_path).to_string_lossy();
-
-			let new_config = Config::default();
-
-			match format.as_ref() {
-				"yaml" => serialize_yaml(&new_config, &output_path, overwrite)?,
-				"toml" => {
-					serialize_toml(&new_config, &output_path, overwrite)?;
+					file_preset
+						.config
+						.services
+						.insert(service_name, ServiceData::Id(service.preset_id));
 				}
-				"json" => serialize_json(&new_config, &output_path, overwrite)?,
-				_ => {
-					return Err(GenError::Custom(
-						"Invalid config format. Allowed formats are: yaml, toml, json".to_string(),
-					));
+
+				let file_data = file_preset
+					.process_data(
+						preset.as_str(),
+						&compose_presets,
+						&docker_config.service_presets,
+					)
+					.map_err(|e| generic_error!("{e}"))?;
+
+				let output = output.unwrap_or_else(|| "compose.yaml".into());
+
+				create_parent_dirs(&output)?;
+
+				serialize_yaml(&file_data, &output, overwrite)?;
+			}
+			Commands::PreCommit { output, preset } => {
+				let content = config
+					.pre_commit_presets
+					.get(&preset)
+					.ok_or(GenError::PresetNotFound {
+						kind: Preset::PreCommit,
+						name: preset.clone(),
+					})?
+					.clone()
+					.process_data(preset.as_str(), &config.pre_commit_presets)?;
+
+				let output = output.unwrap_or_else(|| ".pre-commit-config.yaml".into());
+
+				create_parent_dirs(&output)?;
+
+				serialize_yaml(&content, &output, overwrite)?;
+			}
+			Repo {
+				remote,
+				preset,
+				dir,
+				overrides,
+			} => {
+				let mut preset = if let Some(id) = preset {
+					config
+						.git_presets
+						.get(&id)
+						.ok_or(GenError::PresetNotFound {
+							kind: Preset::Repo,
+							name: id.clone(),
+						})?
+						.clone()
+				} else {
+					RepoPreset::default()
+				};
+
+				if let Some(overrides) = overrides {
+					preset.merge(overrides);
 				}
-			};
-		}
-		Exec {
-			cmd: command,
-			file,
-			template,
-			cwd,
-			shell,
-			print_cmd,
-		} => {
-			let command = if let Some(literal) = command {
-				TemplateData::Content {
-					name: "__from_cli".to_string(),
-					content: literal,
-				}
-			} else if let Some(id) = template {
-				TemplateData::Id(id)
-			} else if let Some(file_path) = file {
-				let content = read_to_string(&file_path).map_err(|e| GenError::ReadError {
-					path: file_path.clone(),
-					source: e,
-				})?;
 
-				TemplateData::Content {
-					name: format!("__custom_file_{}", file_path.display()),
-					content,
-				}
-			} else {
-				panic!("At least one between command and file must be set.")
-			};
+				let out_dir = dir.unwrap_or_else(get_cwd);
 
-			let cwd = cwd.unwrap_or_else(get_cwd);
+				create_all_dirs(&out_dir)?;
 
-			let shell = if let Some(cli_flag) = shell {
-				Some(cli_flag)
-			} else {
-				config.shell.clone()
-			};
+				config.init_repo(preset, remote.as_deref(), &out_dir, &cli_vars)?;
+			}
 
-			config.execute_command(
-				shell.as_deref(),
-				&cwd,
-				vec![Hook {
-					command,
+			RenderPreset { id, out_dir } => {
+				let out_dir = out_dir.unwrap_or(get_cwd());
+
+				config.generate_templates(
+					&out_dir,
+					vec![TemplatingPresetReference::Preset {
+						id,
+						context: Default::default(),
+					}],
+					&cli_vars,
+				)?;
+			}
+
+			Render {
+				template,
+				content,
+				output,
+				id,
+				file,
+			} => {
+				let template_data = if let Some(id) = id {
+					TemplateData::Id(id)
+				} else if let Some(template) = template {
+					TemplateData::Id(template)
+				} else if let Some(content) = content {
+					TemplateData::Content {
+						name: "__from_cli".to_string(),
+						content,
+					}
+				} else if let Some(file) = file {
+					let file_content = read_to_string(&file).map_err(|e| GenError::ReadError {
+						path: file.clone(),
+						source: e,
+					})?;
+
+					TemplateData::Content {
+						name: format!("__custom_file_{}", file.display()),
+						content: file_content,
+					}
+				} else {
+					panic!("Missing id or content for template generation");
+				};
+
+				let output = if output.stdout {
+					TemplateOutputKind::Stdout
+				} else {
+					TemplateOutputKind::Path(
+						output
+							.output_path
+							.expect("At least one must be set between output_path and --stdout"),
+					)
+				};
+
+				let template = TemplateOutput {
+					output,
+					template: template_data,
 					context: Default::default(),
-				}],
-				&cli_vars,
+				};
+
+				config.generate_templates(
+					get_cwd(),
+					vec![TemplatingPresetReference::Definition(TemplatingPreset {
+						templates: vec![PresetElement::Template(template)],
+						..Default::default()
+					})],
+					&cli_vars,
+				)?;
+			}
+			New { output } => {
+				let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
+
+				create_parent_dirs(&output_path)?;
+
+				let format = get_extension(&output_path).to_string_lossy();
+
+				let new_config = Config::default();
+
+				match format.as_ref() {
+					"yaml" => serialize_yaml(&new_config, &output_path, overwrite)?,
+					"toml" => {
+						serialize_toml(&new_config, &output_path, overwrite)?;
+					}
+					"json" => serialize_json(&new_config, &output_path, overwrite)?,
+					_ => {
+						return Err(GenError::Custom(
+							"Invalid config format. Allowed formats are: yaml, toml, json"
+								.to_string(),
+						));
+					}
+				};
+			}
+			Exec {
+				cmd: command,
+				file,
+				template,
+				cwd,
+				shell,
 				print_cmd,
-			)?;
+			} => {
+				let command = if let Some(literal) = command {
+					TemplateData::Content {
+						name: "__from_cli".to_string(),
+						content: literal,
+					}
+				} else if let Some(id) = template {
+					TemplateData::Id(id)
+				} else if let Some(file_path) = file {
+					let content = read_to_string(&file_path).map_err(|e| GenError::ReadError {
+						path: file_path.clone(),
+						source: e,
+					})?;
+
+					TemplateData::Content {
+						name: format!("__custom_file_{}", file_path.display()),
+						content,
+					}
+				} else {
+					panic!("At least one between command and file must be set.")
+				};
+
+				let cwd = cwd.unwrap_or_else(get_cwd);
+
+				let shell = if let Some(cli_flag) = shell {
+					Some(cli_flag)
+				} else {
+					config.shell.clone()
+				};
+
+				config.execute_command(
+					shell.as_deref(),
+					&cwd,
+					vec![Hook {
+						command,
+						context: Default::default(),
+					}],
+					&cli_vars,
+					print_cmd,
+				)?;
+			}
+			Ts { command, .. } => {
+				handle_ts_commands(config, command, &cli_vars).await?;
+			}
 		}
-		Ts { command, .. } => {
-			handle_ts_commands(config, command, &cli_vars).await?;
-		}
+		Ok(())
 	}
-	Ok(())
 }
 
 #[derive(Args, Debug, Clone, Default)]

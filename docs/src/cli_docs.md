@@ -232,7 +232,7 @@ Generates a `pre-commit` config file from a preset
 
 ## `sketch rust crate`
 
-**Usage:** `sketch rust crate [OPTIONS] --preset <PRESET> --manifest <MANIFEST> <DIR>`
+**Usage:** `sketch rust crate [OPTIONS] --preset <PRESET> <DIR>`
 
 ###### **Arguments:**
 
@@ -243,6 +243,8 @@ Generates a `pre-commit` config file from a preset
 * `-p`, `--preset <PRESET>`
 * `-n`, `--name <NAME>`
 * `-m`, `--manifest <MANIFEST>`
+
+  Default value: `default config`
 * `--gitignore <GITIGNORE>` — Settings for the gitignore file
 * `--license <LICENSE>` — A license file to generate for the new repo
 
