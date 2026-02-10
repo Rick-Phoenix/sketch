@@ -33,31 +33,31 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
-toml_edit = "0.24.0"
-globset = "0.4.16"
-walkdir = "2.5.0"
-semver = { version = "1.0.27" }
-schemars = { version = "1.0.4", features = ["indexmap2"] }
+toml_edit = { version = "0.24.0", features = ["serde"] }
+globset = "0.4"
+walkdir = "2.5"
+semver = { version = "1" }
+schemars = { version = "1", features = ["indexmap2"] }
 askama = { workspace = true }
-toml = { version = "0.9.5", features = ["serde"] }
+toml = { version = "0.9.11", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
-clap = { version = "4.5.46", features = ["derive", "string"] }
+clap = { version = "4.5", features = ["derive", "string"] }
 thiserror = { workspace = true }
-reqwest = { version = "0.12.23", features = ["json"] }
+reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
-url = "2.5.7"
-futures = "0.3.31"
-serde_yaml_ng = "0.10.0"
+url = "2.5"
+futures = "0.3"
+serde_yaml_ng = "0.10"
 convert_case = { workspace = true }
 regex = { workspace = true }
 maplit = { workspace = true }
 paste = { workspace = true }
-merge = "0.2.0"
-tera = "1.20.0"
-indexmap = { version = "2.11.0", features = ["serde"] }
-uuid = { version = "1.18.1", features = ["v4"] }
-serde_repr = "0.1.20"
+merge = "0.2"
+tera = "1.20"
+indexmap = { version = "2.11", features = ["serde"] }
+uuid = { version = "1.18", features = ["v4"] }
+serde_repr = "0.1"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -13288,10 +13288,7 @@
         },
         "metadata": {
           "description": "Shared info",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": true
         },
         "resolver": {
@@ -13314,10 +13311,14 @@
         },
         "lints": {
           "description": "Workspace-level lint groups",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/LintKind"
-          }
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Lints"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -13327,10 +13328,7 @@
       "properties": {
         "categories": {
           "description": "See <https://crates.io/category_slugs>",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -13363,10 +13361,7 @@
         },
         "exclude": {
           "description": "Don't publish these files, relative to workspace",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -13381,10 +13376,7 @@
         },
         "include": {
           "description": "Publish these files, relative to workspace",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -13392,24 +13384,13 @@
         },
         "keywords": {
           "description": "For search",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
           }
         },
         "license": {
-          "description": "SPDX",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "license-file": {
-          "description": "If not SPDX",
           "type": [
             "string",
             "null"
@@ -13562,16 +13543,10 @@
           }
         },
         "optional": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": "boolean"
         },
         "workspace": {
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": "boolean"
         }
       }
     },
@@ -13652,10 +13627,7 @@
         },
         "optional": {
           "description": "NB: Not allowed at workspace level\n\nIf not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.\nSee the [`features`] module for more info.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": "boolean"
         },
         "default-features": {
           "description": "Enable the `default` set of features of the dependency (enabled by default).",
@@ -13665,7 +13637,26 @@
           ]
         }
       },
-      "additionalProperties": true
+      "required": [
+        "optional"
+      ]
+    },
+    "Lints": {
+      "type": "object",
+      "properties": {
+        "rust": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/LintKind"
+          }
+        },
+        "clippy": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/LintKind"
+          }
+        }
+      }
     },
     "LintKind": {
       "anyOf": [
@@ -13673,10 +13664,7 @@
           "$ref": "#/$defs/LintLevel"
         },
         {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/Lint"
-          }
+          "$ref": "#/$defs/Lint"
         }
       ]
     },
@@ -13701,21 +13689,17 @@
         },
         "priority": {
           "description": "Controls which lints or lint groups override other lint groups.",
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "format": "int8",
           "minimum": -128,
           "maximum": 127
-        },
-        "config": {
-          "description": "Unstable",
-          "type": "object",
-          "additionalProperties": true
         }
       },
       "required": [
-        "level",
-        "priority",
-        "config"
+        "level"
       ]
     },
     "Package": {
@@ -13833,47 +13817,19 @@
         },
         "keywords": {
           "description": "Up to 5, for search",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Inheritable4"
         },
         "categories": {
           "description": "This is a list of up to five categories where this crate would fit.\ne.g. `[\"command-line-utilities\", \"development-tools::cargo-plugins\"]`",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Inheritable4"
         },
         "exclude": {
           "description": "Don't publish these files",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Inheritable4"
         },
         "include": {
           "description": "Publish these files",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Inheritable4"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Inheritable4"
         },
         "license": {
           "description": "e.g. \"MIT\"",
@@ -13974,10 +13930,7 @@
         },
         "metadata": {
           "description": "Arbitrary metadata of any type, an extension point for 3rd party tools.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": true
         }
       }
@@ -13990,12 +13943,12 @@
           "type": "object",
           "properties": {
             "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             }
-          }
+          },
+          "required": [
+            "workspace"
+          ]
         },
         {
           "type": "string"
@@ -14010,12 +13963,12 @@
           "type": "object",
           "properties": {
             "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             }
-          }
+          },
+          "required": [
+            "workspace"
+          ]
         },
         {
           "$ref": "#/$defs/Edition"
@@ -14030,12 +13983,12 @@
           "type": "object",
           "properties": {
             "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             }
-          }
+          },
+          "required": [
+            "workspace"
+          ]
         },
         {
           "$ref": "#/$defs/OptionalFile"
@@ -14050,12 +14003,12 @@
           "type": "object",
           "properties": {
             "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             }
-          }
+          },
+          "required": [
+            "workspace"
+          ]
         },
         {
           "type": "array",
@@ -14074,12 +14027,12 @@
           "type": "object",
           "properties": {
             "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             }
-          }
+          },
+          "required": [
+            "workspace"
+          ]
         },
         {
           "$ref": "#/$defs/Publish"
@@ -14132,19 +14085,9 @@
             "null"
           ]
         },
-        "plugin": {
-          "description": "If the product is meant to be a compiler plugin, this field must be set to true\nfor Cargo to correctly compile it and make it available for all dependencies.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
         "proc-macro": {
           "description": "If the product is meant to be a \"macros 1.1\" procedural macro, this field must\nbe set to true.",
-          "type": [
-            "boolean",
-            "null"
-          ]
+          "type": "boolean"
         },
         "harness": {
           "description": "If set to false, `cargo test` will omit the `--test` flag to rustc, which\nstops it from generating a test harness. This is useful when the binary being\nbuilt manages the test runner itself.",
@@ -14270,7 +14213,15 @@
       "type": "object",
       "properties": {
         "opt-level": {
-          "description": "num or z, s"
+          "description": "num or z, s",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OptLevel"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "debug": {
           "description": "0,1,2 or bool",
@@ -14365,7 +14316,15 @@
           }
         },
         "build-override": {
-          "description": "Profile overrides for build dependencies, `*` is special."
+          "description": "Profile overrides for build dependencies, `*` is special.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Profile"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "inherits": {
           "description": "Only relevant for non-standard profiles",
@@ -14375,6 +14334,19 @@
           ]
         }
       }
+    },
+    "OptLevel": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "format": "uint8",
+          "minimum": 0,
+          "maximum": 255
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "DebugSetting": {
       "description": "Verbosity of debug info in a [`Profile`]",
@@ -14439,21 +14411,15 @@
           "type": "object",
           "properties": {
             "workspace": {
-              "type": [
-                "boolean",
-                "null"
-              ]
+              "type": "boolean"
             }
-          }
+          },
+          "required": [
+            "workspace"
+          ]
         },
         {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/$defs/Lint"
-            }
-          }
+          "$ref": "#/$defs/Lints"
         }
       ]
     },
@@ -14504,16 +14470,7 @@
     "CargoTomlPresetRef": {
       "anyOf": [
         {
-          "type": "object",
-          "properties": {
-            "Id": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "Id"
-          ],
-          "additionalProperties": false
+          "type": "string"
         },
         {
           "$ref": "#/$defs/CargoTomlPreset"

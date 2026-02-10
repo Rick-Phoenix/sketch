@@ -10,7 +10,7 @@ macro_rules! add_if_false {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if $target.$names.is_some_and(|v| !v) {
-				$table[stringify!($names)] = false.into();
+				$table.insert(prop_name!($names), false.into());
 			}
 		)*
 	};
@@ -20,7 +20,7 @@ macro_rules! add_string {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if let Some(str) = &$target.$names {
-				$table[prop_name!($names)] =  str.into();
+				$table.insert(prop_name!($names), str.into());
 			}
 		)*
 	};
@@ -30,7 +30,7 @@ macro_rules! add_bool {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if $target.$names {
-				$table[prop_name!($names)] =  true.into();
+				$table.insert(prop_name!($names), true.into());
 			}
 		)*
 	};
@@ -40,7 +40,7 @@ macro_rules! add_optional_bool {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if let Some(bool) = $target.$names {
-				$table[prop_name!($names)] =  bool.into();
+				$table.insert(prop_name!($names), bool.into());
 			}
 		)*
 	};
@@ -50,21 +50,24 @@ macro_rules! add_value {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if let Some(val) = &$target.$names {
-				$table[prop_name!($names)] =  val.as_toml_value().into();
+				$table.insert(prop_name!($names), val.as_toml_value().into());
 			}
 		)*
 	};
 }
 
-macro_rules! add_map {
+macro_rules! add_table {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if !$target.$names.is_empty() {
-				$table[prop_name!($names)] =  Table::from_iter(
+				let mut table = Table::from_iter(
 					$target.$names.iter().map(
 						|(k, v)| (toml_edit::Key::from(k), Item::from(v.as_toml_value()))
 					)
-				).into();
+				);
+
+				table.set_implicit(true);
+				$table.insert(prop_name!($names), table.into());
 			}
 		)*
 	};
@@ -74,10 +77,124 @@ macro_rules! add_string_list {
 	($target:ident, $table:ident => $($names:ident),*) => {
 		$(
 			if !$target.$names.is_empty() {
-				$table[prop_name!($names)] = Array::from_iter(&$target.$names).into();
+				let mut array = Array::from_iter(&$target.$names);
+
+				format_array(&mut array);
+
+				$table.insert(prop_name!($names), array.into());
 			}
 		)*
 	};
+}
+
+pub fn json_to_toml(json: &Value) -> Option<Item> {
+	match json {
+		Value::Null => None,
+
+		Value::Bool(b) => Some(Item::Value(TomlValue::from(*b))),
+
+		Value::Number(n) => {
+			if let Some(i) = n.as_i64() {
+				Some(Item::Value(TomlValue::from(i)))
+			} else if let Some(f) = n.as_f64() {
+				Some(Item::Value(TomlValue::from(f)))
+			} else {
+				Some(Item::Value(TomlValue::from(n.to_string())))
+			}
+		}
+
+		Value::String(s) => Some(Item::Value(TomlValue::from(s))),
+
+		Value::Array(vec) => {
+			if vec.is_empty() {
+				return Some(Item::Value(TomlValue::Array(Array::new())));
+			}
+
+			let all_objects = vec.iter().all(|v| v.is_object());
+
+			if all_objects {
+				// CASE A: [[bin]] style (Array of Tables)
+				let mut array_of_tables = ArrayOfTables::new();
+
+				for val in vec {
+					// We know it's an object, so we force conversion to a standard Table
+					if let Some(table) = json_to_standard_table(val) {
+						array_of_tables.push(table);
+					}
+				}
+				Some(Item::ArrayOfTables(array_of_tables))
+			} else {
+				// CASE B: features = ["a", "b"] style (Inline Array)
+				let mut arr = Array::new();
+				for val in vec {
+					if let Some(item) = json_to_toml(val) {
+						match item {
+							Item::Value(v) => arr.push(v),
+							Item::Table(t) => {
+								// Inline arrays can't hold standard tables, convert to inline
+								let mut inline = t.into_inline_table();
+								InlineTable::fmt(&mut inline);
+								arr.push(TomlValue::InlineTable(inline));
+							}
+							_ => {} // formatting error or invalid structure
+						}
+					}
+				}
+
+				format_array(&mut arr);
+				Some(Item::Value(TomlValue::Array(arr)))
+			}
+		}
+
+		Value::Object(_) => json_to_item_table(json),
+	}
+}
+
+/// Used specifically for populating ArrayOfTables
+fn json_to_standard_table(json: &Value) -> Option<Table> {
+	if let Value::Object(map) = json {
+		let mut table = Table::new();
+		table.set_implicit(true);
+		for (k, v) in map {
+			if let Some(item) = json_to_toml(v) {
+				table.insert(k, item);
+			}
+		}
+		Some(table)
+	} else {
+		None
+	}
+}
+
+/// Helper to decide between InlineTable vs Standard Table (for single objects)
+fn json_to_item_table(json: &Value) -> Option<Item> {
+	if let Value::Object(map) = json {
+		// 1. Dependency Heuristic
+		let is_dependency =
+			map.contains_key("version") || map.contains_key("git") || map.contains_key("path");
+
+		// 2. Complexity Heuristic
+		let has_nested_objects = map.values().any(|v| v.is_object());
+		let is_small = map.len() <= 3;
+
+		if is_dependency || (is_small && !has_nested_objects) {
+			// Inline Table: { version = "1.0" }
+			let mut inline = InlineTable::new();
+			for (k, v) in map {
+				// We need values, not Items, for InlineTable
+				if let Some(Item::Value(val)) = json_to_toml(v) {
+					inline.insert(k, val);
+				}
+			}
+			InlineTable::fmt(&mut inline);
+			Some(Item::Value(TomlValue::InlineTable(inline)))
+		} else {
+			// Standard Table: [section]
+			json_to_standard_table(json).map(Item::Table)
+		}
+	} else {
+		None
+	}
 }
 
 pub mod package;
@@ -97,11 +214,13 @@ use merge::Merge;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use toml_edit::{Array, Decor, DocumentMut, InlineTable, Item, Table, Value as TomlValue};
+use toml_edit::{
+	Array, ArrayOfTables, Decor, DocumentMut, InlineTable, Item, Table, Value as TomlValue,
+};
 
 use crate::{
 	custom_templating::TemplatingPresetReference,
-	fs::{create_all_dirs, serialize_toml, write_file},
+	fs::{create_all_dirs, write_file},
 	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
 	licenses::License,
 	rust::{
@@ -113,12 +232,11 @@ use crate::{
 };
 
 pub fn toml_string_list<'a>(strings: impl IntoIterator<Item = &'a String>) -> Item {
-	Array::from_iter(strings.into_iter().map(|s| {
-		let mut val: TomlValue = s.into();
-		*val.decor_mut() = Decor::new("\n  ", "");
-		val
-	}))
-	.into()
+	let mut arr = Array::from_iter(strings);
+
+	format_array(&mut arr);
+
+	arr.into()
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
@@ -156,6 +274,34 @@ pub struct Crate {
 	pub with_templates: Vec<TemplatingPresetReference>,
 }
 
+pub fn format_array(arr: &mut Array) {
+	const MAX_INLINE_ITEMS: usize = 4;
+	const MAX_INLINE_CHARS: usize = 50;
+
+	let count = arr.len();
+
+	let total_chars: usize = arr
+		.iter()
+		.map(|item| item.to_string().len())
+		.sum();
+
+	let has_tables = arr.iter().any(|item| item.is_inline_table());
+
+	let should_expand = count > MAX_INLINE_ITEMS || total_chars > MAX_INLINE_CHARS || has_tables;
+
+	if should_expand {
+		for item in arr.iter_mut() {
+			item.decor_mut().set_prefix("\n\t");
+		}
+
+		arr.set_trailing_comma(true);
+
+		arr.set_trailing("\n");
+	} else {
+		arr.fmt();
+	}
+}
+
 impl Crate {
 	pub fn generate(
 		self,
@@ -186,9 +332,11 @@ impl Crate {
 
 		manifest.package.get_or_insert_default().name = Some(name);
 
+		let manifest_is_virtual = manifest.workspace.is_some();
+
 		let workspace_manifest_path = PathBuf::from("Cargo.toml");
 
-		let workspace_manifest = if workspace_manifest_path.exists() {
+		let workspace_manifest = if !manifest_is_virtual && workspace_manifest_path.exists() {
 			let workspace_manifest_raw = read_to_string(&workspace_manifest_path).map_err(|e| {
 				GenError::DeserializationError {
 					file: workspace_manifest_path.clone(),
@@ -220,7 +368,14 @@ impl Crate {
 			let decor = members
 				.get(0)
 				.map(|i| i.decor().clone())
-				.unwrap_or_else(|| Decor::new("\n  ", ""));
+				.unwrap_or_else(|| Decor::new("\n\t", ""));
+
+			if decor
+				.prefix()
+				.is_some_and(|p| p.as_str().unwrap().contains("\n"))
+			{
+				members.set_trailing("\n");
+			}
 
 			let mut new_member: toml_edit::Value = dir.to_string_lossy().to_string().into();
 
@@ -250,26 +405,36 @@ impl Crate {
 				manifest.lints = Some(Inheritable::Workspace { workspace: true });
 			}
 
-			if let Some(_) = &workspace_manifest.package {
+			if let Some(workspace_package_config) = &workspace_manifest.package {
 				let package_config = manifest.package.get_or_insert_default();
 
 				macro_rules! inherit_opt {
 					($($name:ident),*) => {
 						$(
-							package_config.$name = Some(Inheritable::Workspace {
-								workspace: true,
-							});
+							if workspace_package_config.$name.is_some() && package_config.$name.is_none() {
+								package_config.$name = Some(Inheritable::Workspace {
+									workspace: true,
+								});
+							}
 						)*
 					};
 				}
 
 				inherit_opt!(edition, license, repository);
 
-				package_config.keywords = Inheritable::Workspace { workspace: true };
+				if !workspace_package_config.keywords.is_empty()
+					&& package_config.keywords.is_default()
+				{
+					package_config.keywords = Inheritable::Workspace { workspace: true };
+				}
 			}
 		}
 
-		serialize_toml(&manifest, &dir.join("Cargo.toml"), true)?;
+		write_file(
+			&dir.join("Cargo.toml"),
+			&manifest.as_document().to_string(),
+			true,
+		)?;
 
 		if let Some(GitIgnoreRef::Config(gitignore)) = self.gitignore {
 			write_file(
@@ -350,9 +515,9 @@ impl Crate {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(untagged)]
 pub enum CargoTomlPresetRef {
 	Id(String),
-	#[serde(untagged)]
 	Config(CargoTomlPreset),
 }
 
@@ -510,89 +675,97 @@ impl Manifest {
 		}
 
 		add_value!(self, document => package, lib, profile);
-		add_map!(self, document => target);
+
+		if !self.target.is_empty() {
+			let mut table = Table::from_iter(
+				self.target
+					.iter()
+					.map(|(name, target)| (toml_edit::Key::from(name), target.as_toml_value())),
+			);
+
+			table.set_implicit(true);
+
+			document["target"] = table.into();
+		}
+		add_table!(self, document => target);
 
 		if !self.bin.is_empty() {
-			let array = Array::from_iter(self.bin.iter().map(|i| match i.as_toml_value() {
-				Item::None => todo!(),
-				Item::Value(value) => value,
-				Item::Table(table) => table.into_inline_table().into(),
-				Item::ArrayOfTables(_) => todo!(),
-			}));
+			let array =
+				ArrayOfTables::from_iter(self.bin.iter().map(|i| match i.as_toml_value() {
+					Item::Table(table) => table,
+					_ => panic!("Found non-tables for cargo toml bin"),
+				}));
 
 			document["bin"] = array.into();
 		}
 
 		if !self.bench.is_empty() {
-			let array = Array::from_iter(
-				self.bench
-					.iter()
-					.map(|i| match i.as_toml_value() {
-						Item::None => todo!(),
-						Item::Value(value) => value,
-						Item::Table(table) => table.into_inline_table().into(),
-						Item::ArrayOfTables(_) => todo!(),
-					}),
-			);
+			let array = ArrayOfTables::from_iter(self.bench.iter().map(
+				|i| match i.as_toml_value() {
+					Item::Table(table) => table,
+					_ => panic!("Found non-tables for cargo toml bench"),
+				},
+			));
 
 			document["bench"] = array.into();
 		}
 
 		if !self.test.is_empty() {
-			let array = Array::from_iter(self.test.iter().map(|i| match i.as_toml_value() {
-				Item::None => todo!(),
-				Item::Value(value) => value,
-				Item::Table(table) => table.into_inline_table().into(),
-				Item::ArrayOfTables(_) => todo!(),
-			}));
+			let array =
+				ArrayOfTables::from_iter(self.test.iter().map(|i| match i.as_toml_value() {
+					Item::Table(table) => table,
+					_ => panic!("Found non-tables for cargo toml test"),
+				}));
 
 			document["test"] = array.into();
 		}
 
 		if !self.example.is_empty() {
-			let array = Array::from_iter(
-				self.example
-					.iter()
-					.map(|i| match i.as_toml_value() {
-						Item::None => todo!(),
-						Item::Value(value) => value,
-						Item::Table(table) => table.into_inline_table().into(),
-						Item::ArrayOfTables(_) => todo!(),
-					}),
-			);
+			let array = ArrayOfTables::from_iter(self.example.iter().map(
+				|i| match i.as_toml_value() {
+					Item::Table(table) => table,
+					_ => panic!("Found non-tables for cargo toml examples"),
+				},
+			));
 
 			document["example"] = array.into();
-		}
-
-		if !self.patch.is_empty() {
-			let patch_table = Table::from_iter(self.patch.iter().map(|(k, v)| {
-				(
-					k,
-					Table::from_iter(v.iter().map(|(k, v)| (k, v.as_toml_value()))),
-				)
-			}));
-
-			document["patch"] = patch_table.into();
 		}
 
 		if let Some(lints) = &self.lints {
 			document["lints"] = match lints {
 				Inheritable::Workspace { workspace } => {
-					InlineTable::from_iter([("workspace", *workspace)]).into()
+					Table::from_iter([("workspace", *workspace)]).into()
 				}
 				Inheritable::Set(lints) => lints.as_toml_value(),
 			};
 		}
 
-		add_map!(self, document => dev_dependencies, build_dependencies, dependencies);
+		add_table!(self, document => dev_dependencies, build_dependencies, dependencies);
+
+		if !self.patch.is_empty() {
+			let mut table = Table::from_iter(self.patch.iter().map(|(name, deps)| {
+				let mut deps_table =
+					Table::from_iter(deps.iter().map(|(dep_name, dep)| {
+						(toml_edit::Key::from(dep_name), dep.as_toml_value())
+					}));
+
+				deps_table.set_implicit(true);
+
+				(toml_edit::Key::from(name), deps_table)
+			}));
+
+			table.set_implicit(true);
+
+			document["patch"] = table.into();
+		}
 
 		if !self.features.is_empty() {
 			document["features"] =
 				Table::from_iter(self.features.iter().map(|(name, features)| {
-					(
-						toml_edit::Key::from(name.as_str()),
-						Array::from_iter(features),
-					)
+					let mut array = Array::from_iter(features);
+					format_array(&mut array);
+
+					(toml_edit::Key::from(name.as_str()), array)
 				}))
 				.into();
 		}
@@ -626,6 +799,16 @@ impl AsTomlValue for LintLevel {
 	}
 }
 
+#[track_caller]
+fn item_to_toml_value(item: Item) -> TomlValue {
+	match item {
+		Item::Value(value) => value,
+		Item::Table(table) => table.into_inline_table().into(),
+		Item::ArrayOfTables(arr) => arr.into_array().into(),
+		_ => panic!("Failed to convert item to value"),
+	}
+}
+
 /// Lint definition.
 #[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
 pub struct Lint {
@@ -634,19 +817,16 @@ pub struct Lint {
 
 	/// Controls which lints or lint groups override other lint groups.
 	pub priority: Option<i8>,
-
-	/// Unstable
-	pub config: BTreeMap<String, Value>,
 }
 
 impl AsTomlValue for Lint {
 	fn as_toml_value(&self) -> Item {
-		let mut table = Table::new();
+		let mut table = InlineTable::new();
 
-		table["level"] = self.level.as_toml_value().into();
+		table.insert("level", item_to_toml_value(self.level.as_toml_value()));
 
 		if let Some(priority) = self.priority {
-			table["priority"] = i64::from(priority).into();
+			table.insert("priority", i64::from(priority).into());
 		}
 
 		table.into()
@@ -672,7 +852,9 @@ impl AsTomlValue for Target {
 	fn as_toml_value(&self) -> Item {
 		let mut table = Table::new();
 
-		add_map!(self, table => dependencies, dev_dependencies, build_dependencies);
+		table.set_implicit(true);
+
+		add_table!(self, table => dependencies, dev_dependencies, build_dependencies);
 
 		table.into()
 	}
@@ -798,6 +980,7 @@ impl AsTomlValue for InheritedDependencyDetail {
 		let mut table = InlineTable::new();
 
 		add_bool!(self, table => workspace, optional);
+
 		add_string_list!(self, table => features);
 
 		table.into()
@@ -867,11 +1050,6 @@ pub struct DependencyDetail {
 	/// Enable the `default` set of features of the dependency (enabled by default).
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub default_features: Option<bool>,
-
-	/// Contains the remaining unstable keys and values for the dependency.
-	#[serde(flatten)]
-	#[merge(strategy = merge_btree_maps)]
-	pub unstable: BTreeMap<String, Value>,
 }
 
 impl AsTomlValue for DependencyDetail {
@@ -903,7 +1081,7 @@ pub enum Inheritable<T> {
 }
 
 impl<T> Inheritable<T> {
-	pub fn is_workspace(&self) -> bool {
+	pub const fn is_workspace(&self) -> bool {
 		matches!(self, Self::Workspace { workspace: true })
 	}
 }
@@ -911,7 +1089,9 @@ impl<T> Inheritable<T> {
 impl<T: AsTomlValue> AsTomlValue for Inheritable<T> {
 	fn as_toml_value(&self) -> Item {
 		match self {
-			Self::Workspace { workspace } => Table::from_iter([("workspace", *workspace)]).into(),
+			Self::Workspace { workspace } => {
+				InlineTable::from_iter([("workspace", *workspace)]).into()
+			}
 			Self::Set(set) => set.as_toml_value(),
 		}
 	}
@@ -921,7 +1101,7 @@ pub trait AsTomlValue {
 	fn as_toml_value(&self) -> Item;
 }
 
-impl<T: ?Sized + Into<Item> + Clone> AsTomlValue for T {
+impl<T: Into<Item> + Clone> AsTomlValue for T {
 	fn as_toml_value(&self) -> Item {
 		self.clone().into()
 	}
@@ -948,35 +1128,6 @@ pub(crate) fn merge_inheritable_set<T: Ord>(
 				}
 				Inheritable::Set(right_list) => left_list.extend(right_list),
 			};
-		}
-	}
-}
-
-pub(crate) fn merge_inheritable_map<T>(
-	left: &mut Option<Inheritable<BTreeMap<String, T>>>,
-	right: Option<Inheritable<BTreeMap<String, T>>>,
-) {
-	if let Some(right) = right {
-		if let Some(left) = left {
-			match left {
-				Inheritable::Workspace { .. } => {
-					*left = right;
-				}
-				Inheritable::Set(left_list) => {
-					match right {
-						Inheritable::Workspace { workspace } => {
-							*left = Inheritable::Workspace { workspace }
-						}
-						Inheritable::Set(right_list) => {
-							for (key, val) in right_list {
-								left_list.insert(key, val);
-							}
-						}
-					};
-				}
-			}
-		} else {
-			*left = Some(right);
 		}
 	}
 }
@@ -1090,7 +1241,11 @@ pub enum Resolver {
 
 impl AsTomlValue for Resolver {
 	fn as_toml_value(&self) -> Item {
-		((*self) as u8 as i64).into()
+		match self {
+			Self::V1 => "1".into(),
+			Self::V2 => "2".into(),
+			Self::V3 => "3".into(),
+		}
 	}
 }
 

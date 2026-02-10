@@ -50,7 +50,7 @@ pub enum DebugSetting {
 
 impl AsTomlValue for DebugSetting {
 	fn as_toml_value(&self) -> Item {
-		(*self as u8 as i64).into()
+		i64::from(*self as u8).into()
 	}
 }
 
@@ -71,12 +71,81 @@ pub enum StripSetting {
 impl AsTomlValue for StripSetting {
 	fn as_toml_value(&self) -> Item {
 		let str = match self {
-			StripSetting::None => "none",
-			StripSetting::Debuginfo => "debuginfo",
-			StripSetting::Symbols => "symbols",
+			Self::None => "none",
+			Self::Debuginfo => "debuginfo",
+			Self::Symbols => "symbols",
 		};
 
 		str.into()
+	}
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
+#[serde(try_from = "RawOptLevel", into = "RawOptLevel")]
+pub enum OptLevel {
+	Zero,
+	One,
+	Two,
+	Three,
+	S,
+	Z,
+}
+
+impl AsTomlValue for OptLevel {
+	fn as_toml_value(&self) -> Item {
+		match self {
+			Self::Zero => Item::from(0),
+			Self::One => Item::from(1),
+			Self::Two => Item::from(2),
+			Self::Three => Item::from(3),
+			Self::S => Item::from("s"),
+			Self::Z => Item::from("z"),
+		}
+	}
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(untagged)]
+enum RawOptLevel {
+	Integer(u8),
+	String(String),
+}
+
+impl TryFrom<RawOptLevel> for OptLevel {
+	type Error = String;
+
+	fn try_from(value: RawOptLevel) -> Result<Self, Self::Error> {
+		match value {
+			RawOptLevel::Integer(0) => Ok(Self::Zero),
+			RawOptLevel::Integer(1) => Ok(Self::One),
+			RawOptLevel::Integer(2) => Ok(Self::Two),
+			RawOptLevel::Integer(3) => Ok(Self::Three),
+
+			RawOptLevel::String(s) => match s.as_str() {
+				"0" => Ok(Self::Zero),
+				"1" => Ok(Self::One),
+				"2" => Ok(Self::Two),
+				"3" => Ok(Self::Three),
+				"s" => Ok(Self::S),
+				"z" => Ok(Self::Z),
+				_ => Err(format!("Invalid opt-level: {s}")),
+			},
+
+			_ => Err("opt-level must be 0-3, 's', or 'z'".to_string()),
+		}
+	}
+}
+
+impl From<OptLevel> for RawOptLevel {
+	fn from(val: OptLevel) -> Self {
+		match val {
+			OptLevel::Zero => Self::Integer(0),
+			OptLevel::One => Self::Integer(1),
+			OptLevel::Two => Self::Integer(2),
+			OptLevel::Three => Self::Integer(3),
+			OptLevel::S => Self::String("s".to_string()),
+			OptLevel::Z => Self::String("z".to_string()),
+		}
 	}
 }
 
@@ -87,7 +156,7 @@ impl AsTomlValue for StripSetting {
 pub struct Profile {
 	/// num or z, s
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub opt_level: Option<Value>,
+	pub opt_level: Option<OptLevel>,
 
 	/// 0,1,2 or bool
 	#[serde(default, skip_serializing_if = "Option::is_none")]
@@ -136,7 +205,7 @@ pub struct Profile {
 
 	/// Profile overrides for build dependencies, `*` is special.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub build_override: Option<Value>,
+	pub build_override: Option<Box<Self>>,
 
 	/// Only relevant for non-standard profiles
 	#[serde(default, skip_serializing_if = "Option::is_none")]
@@ -147,9 +216,22 @@ impl AsTomlValue for Profile {
 	fn as_toml_value(&self) -> Item {
 		let mut table = Table::new();
 
-		add_value!(self, table => debug, lto, strip);
+		table.set_implicit(true);
+
+		add_value!(self, table => debug, lto, strip, opt_level, build_override);
 		add_string!(self, table => split_debuginfo, panic, inherits);
-		add_map!(self, table => package);
+
+		if !self.package.is_empty() {
+			let mut pkg_table = Table::from_iter(
+				self.package
+					.iter()
+					.map(|(k, v)| (toml_edit::Key::from(k), v.as_toml_value())),
+			);
+
+			pkg_table.set_implicit(true);
+
+			table.insert("package", pkg_table.into());
+		};
 
 		add_optional_bool!(self, table => rpath, debug_assertions, incremental, overflow_checks);
 
@@ -191,8 +273,10 @@ impl AsTomlValue for Profiles {
 	fn as_toml_value(&self) -> Item {
 		let mut table = Table::new();
 
+		table.set_implicit(true);
+
 		add_value!(self, table => release, dev, test, bench);
-		add_map!(self, table => custom);
+		add_table!(self, table => custom);
 
 		table.into()
 	}

@@ -16,15 +16,15 @@ authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
 
 [workspace.dependencies]
 paste = "1"
-askama = { version = "0.14.0", default-features = false, features = [
+askama = { version = "0.14", default-features = false, features = [
   "config",
   "derive",
   "std",
 ] }
-maplit = "1.0.2"
-regex = "1.11.1"
-thiserror = "2.0.16"
-convert_case = "0.8.0"
+maplit = "1"
+regex = "1"
+thiserror = "2"
+convert_case = "0.8"
 
 [workspace.lints.clippy]
 redundant_closure = "allow"

@@ -20,3 +20,6 @@ docs:
 
 install:
     cargo install --path ./sketch
+
+install-dev:
+    cargo install --path ./sketch --profile dev

@@ -85,7 +85,11 @@ async fn execute_cli(cli: Cli) -> Result<(), GenError> {
 
 					let output = output.unwrap_or_else(|| "Cargo.toml".into());
 
-					serialize_toml(&content, &output, config.can_overwrite())?;
+					write_file(
+						&output,
+						&content.as_document().to_string(),
+						config.can_overwrite(),
+					)?;
 				}
 				RustCommands::Crate {
 					dir,
