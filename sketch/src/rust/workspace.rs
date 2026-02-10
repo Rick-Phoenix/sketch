@@ -1,16 +1,4 @@
 use super::*;
-use std::collections::{BTreeMap, BTreeSet};
-
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::{
-	merge_btree_maps, merge_btree_sets, merge_optional_nested, overwrite_if_some,
-	rust::{
-		Dependency, Edition, Lint, LintLevel, OptionalFile, Publish, Resolver, merge_dependencies,
-	},
-};
 
 /// A manifest can contain both a package and workspace-wide properties
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, Merge)]

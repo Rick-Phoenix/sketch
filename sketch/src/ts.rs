@@ -6,31 +6,21 @@ pub mod ts_config;
 pub mod ts_monorepo;
 pub mod vitest;
 
-use std::{
-	fmt::Display,
-	path::{Path, PathBuf},
-	sync::LazyLock,
-};
-
-use clap::{Parser, ValueEnum};
-use indexmap::IndexMap;
-use merge::Merge;
+use askama::Template;
 use regex::Regex;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::{
-	fs::{find_file_up, get_parent_dir},
-	merge_index_maps, overwrite_if_some,
 	ts::{
-		oxlint::OxlintPreset,
+		oxlint::*,
 		package::PackageConfig,
-		package_json::{PackageJsonPreset, Person, PersonData},
-		pnpm::PnpmPreset,
-		ts_config::TsConfigPreset,
+		package_json::*,
+		pnpm::{PnpmPreset, PnpmWorkspace},
+		ts_config::*,
+		tsconfig_defaults::*,
 		vitest::VitestConfig,
 	},
-	versions::VersionRange,
+	versions::*,
+	*,
 };
 
 impl TypescriptConfig {

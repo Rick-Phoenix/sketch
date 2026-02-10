@@ -1,25 +1,14 @@
-mod config_setup;
-
-use std::path::PathBuf;
-
-use config_setup::extract_config_from_file;
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
 use crate::{
-	GenError,
-	custom_templating::TemplatingPreset,
 	docker::DockerConfig,
-	fs::get_parent_dir,
 	git_workflow::GithubConfig,
 	init_repo::{RepoPreset, gitignore::GitignorePreset, pre_commit::PreCommitPreset},
-	merge_index_maps, merge_index_sets, merge_nested, merge_optional_nested, overwrite_if_some,
 	rust::RustPresets,
 	ts::TypescriptConfig,
+	*,
 };
+
+mod config_setup;
+use config_setup::extract_config_from_file;
 
 impl Config {
 	pub fn new() -> Self {

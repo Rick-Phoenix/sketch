@@ -1,9 +1,4 @@
-use std::{collections::BTreeMap, fmt::Display};
-
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::{JsonValueBTreeMap, StringBTreeMap};
+use super::*;
 
 /// When a user installs your package, warnings are emitted if packages specified in "peerDependencies" are not already installed. The "peerDependenciesMeta" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema, Default)]

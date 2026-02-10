@@ -1,22 +1,5 @@
-use std::{
-	convert::Infallible,
-	path::Path,
-	process::{Command, Stdio},
-	str::FromStr,
-	sync::Arc,
-};
-
-use indexmap::IndexMap;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-use crate::{
-	Config, GenError,
-	custom_templating::{ContextRef, TemplateData, create_context, get_local_context},
-	fs::create_all_dirs,
-	tera_setup::get_default_context,
-};
+use crate::tera_setup::get_default_context;
+use crate::*;
 
 /// A command (rendered as a template) to execute
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]

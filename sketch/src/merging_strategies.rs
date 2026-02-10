@@ -1,12 +1,4 @@
-use std::{
-	collections::{BTreeMap, BTreeSet},
-	hash::Hash,
-};
-
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-
-use crate::{GenError, Preset};
+use crate::*;
 
 pub trait Extensible {
 	fn get_extended(&self) -> &IndexSet<String>;

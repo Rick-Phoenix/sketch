@@ -1,23 +1,9 @@
-use std::{fs::read_to_string, path::PathBuf};
+use super::*;
 
-use clap::Parser;
-use indoc::indoc;
-use maplit::{btreemap, btreeset};
-use pretty_assertions::assert_eq;
-
-use super::reset_testing_dir;
 use crate::{
-	cli::{
-		Cli,
-		cli_tests::{
-			generated_configs_tests::verify_generated_workflow, get_clean_example_cmd,
-			get_tree_output,
-		},
-		execute_cli,
-	},
-	fs::{deserialize_json, deserialize_yaml},
+	cli::cli_tests::generated_configs_tests::verify_generated_workflow,
 	init_repo::pre_commit::{
-		FileType, GITLEAKS_REPO, Hook, Language, LocalRepo, PreCommitConfig, Repo,
+		FileType, GITLEAKS_REPO, Language, LocalRepo, PreCommitConfig, PreCommitHook, Repo,
 	},
 	ts::{
 		oxlint::OxlintConfig,
@@ -43,9 +29,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 		"ts_package",
 		&out_dir.to_string_lossy(),
 	];
-	let git_presets_cmd = Cli::try_parse_from(git_preset_args)?;
-
-	execute_cli(git_presets_cmd).await?;
+	Cli::execute_with(git_preset_args).await?;
 
 	get_tree_output(&out_dir, None)?;
 
@@ -62,12 +46,12 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 			repos: btreeset! {
 			  GITLEAKS_REPO.clone(),
 			  Repo::Local { repo: LocalRepo::Local, hooks: btreeset! {
-				  Hook {
+				  PreCommitHook {
 					id: "oxlint".to_string(),
 					name: Some("oxlint".to_string()),
 					entry: Some("oxlint".to_string()),
 					language: Some(Language::System),
-					files: Some(r###"\.svelte$|\.js$|\.ts$"###.to_string()),
+					files: Some(r"\.svelte$|\.js$|\.ts$".to_string()),
 					types: Some(btreeset!{ FileType::File }),
 					..Default::default()
 				  }
@@ -96,19 +80,19 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
 	let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
 
-	let expected_dockerfile = indoc! {r###"
+	let expected_dockerfile = indoc! {r#"
     FROM node:23-alpine
 
     COPY . .
     EXPOSE 5173
     CMD ["npm", "run", "dev"]
-  "###};
+  "#};
 
 	assert_eq!(root_dockerfile_output, expected_dockerfile);
 
 	let package_out_dir = out_dir.join("packages/presets_example");
 
-	let oxlint_test = Cli::try_parse_from([
+	Cli::execute_with([
 		"sketch",
 		"--ignore-config",
 		"-c",
@@ -120,9 +104,8 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 		"--preset",
 		"example",
 		&package_out_dir.to_string_lossy(),
-	])?;
-
-	execute_cli(oxlint_test).await?;
+	])
+	.await?;
 
 	get_tree_output(&package_out_dir, None)?;
 
@@ -179,9 +162,9 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
 	let compiler_options = tsconfig_result.compiler_options.unwrap();
 
-	assert_eq!(compiler_options.no_emit.unwrap(), false);
+	assert!(!compiler_options.no_emit.unwrap());
 
-	assert_eq!(compiler_options.verbatim_module_syntax.unwrap(), true);
+	assert!(compiler_options.verbatim_module_syntax.unwrap());
 
 	Ok(())
 }

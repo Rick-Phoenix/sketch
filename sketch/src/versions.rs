@@ -1,13 +1,8 @@
-use std::sync::LazyLock;
-
-use clap::ValueEnum;
 use futures::{StreamExt, stream};
 use reqwest::Client;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 use url::Url;
 
-use crate::{GenError, ts::package_json::JsDepKind};
+use crate::{ts::package_json::JsDepKind, *};
 
 /// The kinds of version ranges for a dependency with semantic versioning.
 #[derive(

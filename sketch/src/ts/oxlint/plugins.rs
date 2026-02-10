@@ -1,7 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
-
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use super::*;
 
 /// The plugins for oxlint. See more: https://oxc.rs/docs/guide/usage/linter/plugins.html
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]

@@ -1,19 +1,7 @@
 pub mod package_json_elements;
-
-use std::collections::{BTreeMap, BTreeSet};
-
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
 pub use package_json_elements::*;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-use crate::{
-	GenError, JsonValueBTreeMap, Preset, StringBTreeMap,
-	merging_strategies::*,
-	ts::{CATALOG_REGEX, PackageManager, pnpm::PnpmWorkspace},
-	versions::{VersionRange, get_batch_latest_npm_versions},
-};
+use super::*;
 
 impl Extensible for PackageJsonPreset {
 	fn get_extended(&self) -> &IndexSet<String> {

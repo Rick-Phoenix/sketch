@@ -1,28 +1,4 @@
-use std::{
-	env,
-	fs::remove_dir_all,
-	path::{Path, PathBuf},
-	process::Command,
-	str::FromStr,
-	sync::Arc,
-};
-
-use globset::{Glob, GlobSetBuilder};
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use tera::{Context, Tera};
-use walkdir::WalkDir;
-
-use crate::{
-	Extensible, GenError, Preset,
-	config::Config,
-	fs::{create_all_dirs, get_abs_path, get_parent_dir, open_file_if_overwriting},
-	merge_index_maps, merge_index_sets, merge_presets, merge_vecs,
-	tera_setup::get_default_context,
-};
+use super::*;
 
 /// A reference to a templating preset, or a new preset definition.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]

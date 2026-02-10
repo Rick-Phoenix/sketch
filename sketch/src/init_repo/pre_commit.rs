@@ -1,19 +1,7 @@
 mod pre_commit_elements;
+pub(crate) use pre_commit_elements::*;
 
-use std::collections::BTreeSet;
-
-use indexmap::{IndexMap, IndexSet};
-use maplit::btreeset;
-use merge::Merge;
-use pre_commit_elements::*;
-pub(crate) use pre_commit_elements::{FileType, GITLEAKS_REPO, Language};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::{
-	Extensible, GenError, Preset, StringBTreeMap, merge_btree_sets, merge_index_sets, merge_nested,
-	merge_optional_btree_maps, merge_optional_btree_sets, merge_presets, overwrite_if_some,
-};
+use super::*;
 
 /// A preset for a `.pre-commit-config.yaml` configuration file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Merge, Default)]
@@ -129,7 +117,7 @@ pub enum Repo {
 		repo: LocalRepo,
 		/// A list of local hooks https://pre-commit.com/#2-add-a-pre-commit-configuration
 		#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-		hooks: BTreeSet<Hook>,
+		hooks: BTreeSet<PreCommitHook>,
 	},
 	/// A remote repo
 	Uri {
@@ -140,7 +128,7 @@ pub enum Repo {
 		rev: Option<String>,
 		/// A list of hook mappings https://pre-commit.com/#pre-commit-configyaml---hooks.
 		#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-		hooks: BTreeSet<Hook>,
+		hooks: BTreeSet<PreCommitHook>,
 	},
 }
 
@@ -172,7 +160,7 @@ pub enum LocalRepo {
 /// Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
 #[serde(default)]
-pub struct Hook {
+pub struct PreCommitHook {
 	/// An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks
 	pub id: String,
 
@@ -257,13 +245,13 @@ pub struct Hook {
 	pub verbose: Option<bool>,
 }
 
-impl PartialOrd for Hook {
+impl PartialOrd for PreCommitHook {
 	fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
 		Some(self.cmp(other))
 	}
 }
 
-impl Ord for Hook {
+impl Ord for PreCommitHook {
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
 		self.id.cmp(&other.id)
 	}

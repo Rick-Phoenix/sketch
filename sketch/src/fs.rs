@@ -1,14 +1,6 @@
-use std::{
-	env::current_dir,
-	ffi::OsStr,
-	fs::{File, create_dir_all, read_to_string},
-	io::Write,
-	path::{Component, Path, PathBuf},
-};
+use serde::de::DeserializeOwned;
 
-use serde::{Serialize, de::DeserializeOwned};
-
-use crate::GenError;
+use crate::*;
 
 pub fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), GenError> {
 	let glob_str = glob.to_string_lossy();

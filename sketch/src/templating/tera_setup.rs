@@ -1,18 +1,4 @@
-use std::env::{self};
-
-use tera::{Context, Tera};
-
-use crate::{
-	GenError,
-	config::Config,
-	fs::get_cwd,
-	tera_filters::{
-		absolute, basename, camel, capture, capture_many, glob, is_absolute, is_dir, is_file,
-		is_relative, matches_glob, matches_semver, parent_dir, pascal, read_dir, relative, semver,
-		snake, strip_prefix, strip_suffix, to_toml, to_yaml, upper_snake,
-	},
-	tera_functions::tera_uuid,
-};
+use super::*;
 
 impl Config {
 	pub(crate) fn initialize_tera(&self) -> Result<Tera, GenError> {

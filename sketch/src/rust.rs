@@ -201,26 +201,12 @@ pub mod package;
 pub mod profile_settings;
 pub mod workspace;
 
-use std::{
-	collections::{BTreeMap, BTreeSet},
-	fs::read_to_string,
-	mem,
-	path::PathBuf,
-};
-
-use clap::Args;
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use toml_edit::{
 	Array, ArrayOfTables, Decor, DocumentMut, InlineTable, Item, Table, Value as TomlValue,
 };
 
 use crate::{
 	custom_templating::TemplatingPresetReference,
-	fs::{create_all_dirs, write_file},
 	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
 	licenses::License,
 	rust::{

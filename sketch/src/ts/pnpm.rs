@@ -1,24 +1,13 @@
 use futures::StreamExt;
 mod pnpm_elements;
 
-use std::{
-	collections::{BTreeMap, BTreeSet},
-	path::PathBuf,
-};
-
 use futures::stream;
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
 pub use pnpm_elements::*;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
 use crate::{
-	Extensible, GenError, JsonValueBTreeMap, PackageJson, Preset, StringBTreeMap, merge_btree_maps,
-	merge_btree_sets, merge_index_sets, merge_nested, merge_nested_maps, merge_optional_btree_maps,
-	merge_optional_btree_sets, merge_presets, overwrite_if_some,
-	ts::CATALOG_REGEX,
-	versions::{VersionRange, get_latest_npm_version},
+	ts::{package_json::*, *},
+	versions::*,
+	*,
 };
 
 /// A preset for a `pnpm-workspace.yaml` file configuration.

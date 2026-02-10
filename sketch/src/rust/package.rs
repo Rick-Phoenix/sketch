@@ -1,18 +1,4 @@
 use super::*;
-use std::{
-	collections::{BTreeMap, BTreeSet},
-	path::PathBuf,
-};
-
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-use crate::{
-	merge_btree_maps, overwrite_if_some,
-	rust::{Edition, Inheritable, OptionalFile, Publish, Resolver, merge_inheritable_set},
-};
 
 /// The `[package]` section of the [`Manifest`]. This is where crate properties are.
 ///

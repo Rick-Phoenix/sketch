@@ -11,14 +11,28 @@ mod rendering_tests;
 mod rust_gen_tests;
 mod vars_files_tests;
 
-use std::{
-	fs::{File, create_dir_all, remove_dir_all, remove_file},
-	io::Write,
-	path::{Path, PathBuf},
-	process::Command,
-};
+use std::fmt::Write as FmtWrite;
+use std::fs::remove_file;
 
-use crate::cli::Cli;
+use crate::*;
+use indoc::indoc;
+
+use crate::cli::*;
+use maplit::btreemap;
+use pretty_assertions::assert_eq as pretty_assert_eq;
+
+impl Cli {
+	async fn execute_with<I, T>(itr: I) -> Result<(), GenError>
+	where
+		I: IntoIterator<Item = T>,
+		T: Into<std::ffi::OsString> + Clone,
+	{
+		Self::try_parse_from(itr)
+			.expect("Failed to parse options")
+			.execute()
+			.await
+	}
+}
 
 fn get_tree_output<T: Into<PathBuf>>(
 	dir: T,
@@ -64,7 +78,7 @@ fn get_clean_example_cmd(
 		if !discarded_segments.contains(&i) {
 			if segment.contains(' ') {
 				if segment.contains('\'') {
-					example.push_str(&format!("\"{}\"", segment));
+					let _ = write!(example, "\"{segment}\"");
 				} else {
 					example.push('\'');
 					example.push_str(segment);

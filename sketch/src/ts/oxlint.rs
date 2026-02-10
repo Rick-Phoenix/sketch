@@ -1,18 +1,7 @@
 pub mod plugins;
-use std::collections::{BTreeMap, BTreeSet};
-
-use indexmap::{IndexMap, IndexSet};
-use maplit::btreeset;
-use merge::Merge;
 use plugins::*;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-use crate::{
-	Extensible, GenError, JsonValueBTreeMap, Preset, merge_index_sets, merge_nested,
-	merge_optional_btree_maps, merge_optional_btree_sets, merge_optional_index_sets,
-	merge_optional_vecs, merge_presets, overwrite_if_some,
-};
+use super::*;
 
 /// A preset for `.oxlintrc.json`
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, Merge)]

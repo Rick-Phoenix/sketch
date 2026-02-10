@@ -2,39 +2,23 @@
 mod cli_tests;
 
 mod config_discovery;
+
+use config_discovery::*;
+
 mod ts_cmds;
+use ts_cmds::*;
 
 mod cli_elements;
 pub(crate) mod parsers;
 
-use std::{fmt::Debug, fs::read_to_string, path::PathBuf};
-
-use Commands::*;
-use clap::{Args, Parser, Subcommand};
-use indexmap::IndexMap;
-use parsers::parse_serializable_key_value_pair;
-use serde_json::Value;
+use clap::Subcommand;
 
 use crate::{
-	Config,
-	cli::{
-		config_discovery::get_config_from_cli,
-		ts_cmds::{TsCommands, handle_ts_commands},
-	},
-	custom_templating::{
-		PresetElement, TemplateData, TemplateOutput, TemplateOutputKind, TemplatingPreset,
-		TemplatingPresetReference,
-	},
 	docker::compose::service::{ServiceData, ServiceFromCli},
 	exec::Hook,
-	fs::{
-		create_all_dirs, create_parent_dirs, get_cwd, get_extension, serialize_json,
-		serialize_toml, serialize_yaml, write_file,
-	},
 	init_repo::RepoPreset,
 	licenses::License,
 	rust::Crate,
-	serde_utils::deserialize_map,
 	ts::TypescriptConfig,
 	*,
 };
@@ -45,8 +29,7 @@ pub async fn main_entrypoint() -> Result<(), GenError> {
 
 impl Cli {
 	async fn execute(self) -> Result<(), GenError> {
-		let mut config =
-			get_config_from_cli(self.overrides.unwrap_or_default(), &self.command).await?;
+		let mut config = get_config_from_cli(self.overrides.unwrap_or_default(), &self.command)?;
 
 		let command = self.command;
 		let mut cli_vars: IndexMap<String, Value> = IndexMap::new();
@@ -296,7 +279,7 @@ impl Cli {
 
 				serialize_yaml(&content, &output, overwrite)?;
 			}
-			Repo {
+			Commands::Repo {
 				remote,
 				preset,
 				dir,
@@ -326,7 +309,7 @@ impl Cli {
 				config.init_repo(preset, remote.as_deref(), &out_dir, &cli_vars)?;
 			}
 
-			RenderPreset { id, out_dir } => {
+			Commands::RenderPreset { id, out_dir } => {
 				let out_dir = out_dir.unwrap_or(get_cwd());
 
 				config.generate_templates(
@@ -339,7 +322,7 @@ impl Cli {
 				)?;
 			}
 
-			Render {
+			Commands::Render {
 				template,
 				content,
 				output,
@@ -394,7 +377,7 @@ impl Cli {
 					&cli_vars,
 				)?;
 			}
-			New { output } => {
+			Commands::New { output } => {
 				let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
 
 				create_parent_dirs(&output_path)?;
@@ -417,7 +400,7 @@ impl Cli {
 					}
 				};
 			}
-			Exec {
+			Commands::Exec {
 				cmd: command,
 				file,
 				template,
@@ -465,7 +448,7 @@ impl Cli {
 					print_cmd,
 				)?;
 			}
-			Ts { command, .. } => {
+			Commands::Ts { command, .. } => {
 				handle_ts_commands(config, command, &cli_vars).await?;
 			}
 		}

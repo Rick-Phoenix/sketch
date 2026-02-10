@@ -1,8 +1,4 @@
-use std::{fmt::Display, path::PathBuf};
-
-use askama::Template;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use super::*;
 
 /// The types of configuration for generating a vitest setup.
 /// Can be set to:

@@ -1,22 +1,13 @@
+use super::*;
+use crate::cli::parsers::parse_key_value_pairs;
+
 #[cfg(test)]
 mod tsconfig_tests;
 
 pub(crate) mod tsconfig_defaults;
 pub(crate) mod tsconfig_elements;
 
-use std::collections::{BTreeMap, BTreeSet};
-
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 pub use tsconfig_elements::*;
-
-use crate::{
-	Extensible, GenError, Preset, cli::parsers::parse_key_value_pairs, merge_index_sets,
-	merge_nested, merge_optional_btree_maps, merge_optional_btree_sets, merge_optional_nested,
-	merge_presets, overwrite_if_some,
-};
 
 /// A preset for a `tsconfig` file.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Default, Merge)]

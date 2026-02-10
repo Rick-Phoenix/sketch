@@ -6,7 +6,39 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 
+use indexmap::{IndexMap, IndexSet};
+use merge::Merge;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use serde_repr::{Deserialize_repr, Serialize_repr};
+
+use crate::custom_templating::*;
+use crate::fs::*;
+use clap::{Args, Parser, ValueEnum};
+use cli::parsers::*;
+use licenses::License;
+use maplit::btreeset;
 use schemars::JsonSchema_repr;
+use serde_utils::*;
+use std::{
+	cmp::Ordering,
+	collections::{BTreeMap, BTreeSet, HashMap},
+	convert::Infallible,
+	env,
+	env::current_dir,
+	ffi::OsStr,
+	fmt::{self, Debug, Display},
+	fs::{File, create_dir_all, exists, read_to_string, remove_dir_all},
+	hash::Hash,
+	io::Write,
+	mem,
+	path::{Component, Path, PathBuf},
+	process::{Command, Stdio},
+	str::FromStr,
+	sync::Arc,
+	sync::LazyLock,
+};
 
 #[macro_use]
 mod macros;
@@ -30,25 +62,12 @@ pub mod rust;
 pub mod ts;
 pub mod versions;
 
-use std::{collections::BTreeMap, fmt::Debug};
-use std::{fmt::Display, str::FromStr};
-
-use clap::ValueEnum;
-
 #[doc(inline)]
 pub use config::*;
 #[doc(inline)]
 pub use errors::*;
 pub(crate) use merging_strategies::*;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 pub(crate) use templating::*;
-
-use merge::Merge;
-use serde_repr::{Deserialize_repr, Serialize_repr};
-
-use crate::{fs::get_abs_path, ts::package_json::PackageJson};
 
 pub(crate) type StringBTreeMap = BTreeMap<String, String>;
 pub(crate) type JsonValueBTreeMap = BTreeMap<String, Value>;

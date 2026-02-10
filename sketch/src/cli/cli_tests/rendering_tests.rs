@@ -1,216 +1,195 @@
-use std::{fs::read_to_string, path::PathBuf};
-
-use clap::Parser;
-use pretty_assertions::assert_eq;
-
-use super::{get_clean_example_cmd, reset_testing_dir};
-use crate::cli::{cli_tests::get_tree_output, execute_cli, Cli};
+use super::*;
 
 #[tokio::test]
 async fn rendering() -> Result<(), Box<dyn std::error::Error>> {
-  let output_dir = PathBuf::from("tests/output/custom_templates");
-  let commands_dir = output_dir.join("commands");
+	let output_dir = PathBuf::from("tests/output/custom_templates");
+	let commands_dir = output_dir.join("commands");
 
-  let config_dir = PathBuf::from("../examples/templating");
-  let config_file = config_dir.join("templating.yaml");
+	let config_dir = PathBuf::from("../examples/templating");
+	let config_file = config_dir.join("templating.yaml");
 
-  macro_rules! write_command {
-    ($args:expr, $list:expr, $out_file:expr) => {
-      get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-    };
-  }
+	macro_rules! write_command {
+		($args:expr, $list:expr, $out_file:expr) => {
+			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
+		};
+	}
 
-  macro_rules! exists {
-    ($name:literal) => {
-      assert!(output_dir.join($name).is_file())
-    };
-  }
+	macro_rules! exists {
+		($name:literal) => {
+			assert!(output_dir.join($name).is_file())
+		};
+	}
 
-  reset_testing_dir(&output_dir);
-  reset_testing_dir(&commands_dir);
+	reset_testing_dir(&output_dir);
+	reset_testing_dir(&commands_dir);
 
-  get_tree_output(config_dir.join("templates"), Some(output_dir.join("tree")))?;
+	get_tree_output(config_dir.join("templates"), Some(output_dir.join("tree")))?;
 
-  // From known template
+	// From known template
 
-  let from_template_id_cmd = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "render",
-    "--id",
-    "hobbits",
-    "tests/output/custom_templates/from_template_id.txt",
-  ];
+	let from_template_id_cmd = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"render",
+		"--id",
+		"hobbits",
+		"tests/output/custom_templates/from_template_id.txt",
+	];
 
-  write_command!(from_template_id_cmd, [1, 2, 3], "from_id");
+	write_command!(from_template_id_cmd, [1, 2, 3], "from_id");
 
-  let from_template_id = Cli::try_parse_from(from_template_id_cmd)?;
+	Cli::execute_with(from_template_id_cmd).await?;
 
-  execute_cli(from_template_id).await?;
+	exists!("from_template_id.txt");
 
-  exists!("from_template_id.txt");
+	// From any file
 
-  // From any file
+	let from_template_file_cmd = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"render",
+		"--template",
+		"subdir/nested_file.j2",
+		"tests/output/custom_templates/from_template_file.txt",
+	];
 
-  let from_template_file_cmd = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "render",
-    "--template",
-    "subdir/nested_file.j2",
-    "tests/output/custom_templates/from_template_file.txt",
-  ];
+	write_command!(from_template_file_cmd, [1, 2, 3], "from_template_file");
 
-  write_command!(from_template_file_cmd, [1, 2, 3], "from_template_file");
+	Cli::execute_with(from_template_file_cmd).await?;
 
-  let from_template_file = Cli::try_parse_from(from_template_file_cmd)?;
+	exists!("from_template_file.txt");
 
-  execute_cli(from_template_file).await?;
+	let literal_template_cmd = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"render",
+		"--content",
+		"they're taking the hobbits to {{ location }}!",
+		"tests/output/custom_templates/from_literal.txt",
+	];
 
-  exists!("from_template_file.txt");
+	write_command!(literal_template_cmd, [1, 2, 3], "literal_template_cmd");
 
-  let literal_template_cmd = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "render",
-    "--content",
-    "they're taking the hobbits to {{ location }}!",
-    "tests/output/custom_templates/from_literal.txt",
-  ];
+	Cli::execute_with(literal_template_cmd).await?;
 
-  write_command!(literal_template_cmd, [1, 2, 3], "literal_template_cmd");
+	let from_literal_output: String = read_to_string(output_dir.join("from_literal.txt"))?;
 
-  let from_literal = Cli::try_parse_from(literal_template_cmd)?;
+	assert_eq!(
+		from_literal_output,
+		"they're taking the hobbits to Isengard!"
+	);
 
-  execute_cli(from_literal).await?;
+	let mut cmd = assert_cmd::Command::cargo_bin("sketch").expect("Failed to find the app binary");
 
-  let from_literal_output: String = read_to_string(output_dir.join("from_literal.txt"))?;
+	cmd.args([
+		"--ignore-config",
+		"--set",
+		"location=\"Isengard\"",
+		"render",
+		"--content",
+		"they're taking the hobbits to {{ location }}!",
+		"--stdout",
+	])
+	.assert()
+	.stdout("they're taking the hobbits to Isengard!\n");
 
-  assert_eq!(
-    from_literal_output,
-    "they're taking the hobbits to Isengard!"
-  );
+	// Presets tests
 
-  let mut cmd = assert_cmd::Command::cargo_bin("sketch").expect("Failed to find the app binary");
+	// Remote
 
-  cmd
-    .args([
-      "--ignore-config",
-      "--set",
-      "location=\"Isengard\"",
-      "render",
-      "--content",
-      "they're taking the hobbits to {{ location }}!",
-      "--stdout",
-    ])
-    .assert()
-    .stdout("they're taking the hobbits to Isengard!\n");
+	let out_dir = output_dir.join("remote");
 
-  // Presets tests
+	let from_remote_preset_cmd = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"--set",
+		"continuation=\"gp2 engine... gp2!\"",
+		"render-preset",
+		"remote",
+		&out_dir.to_string_lossy(),
+	];
 
-  // Remote
+	Cli::execute_with(from_remote_preset_cmd).await?;
 
-  let out_dir = output_dir.join("remote");
+	write_command!(from_remote_preset_cmd, [1, 2, 3, 8], "remote");
+	get_tree_output("tests/output/custom_templates/remote", None)?;
 
-  let from_remote_preset_cmd = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "--set",
-    "continuation=\"gp2 engine... gp2!\"",
-    "render-preset",
-    "remote",
-    &out_dir.to_string_lossy(),
-  ];
+	let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
 
-  let from_remote_preset = Cli::try_parse_from(from_remote_preset_cmd)?;
+	let top_level_file = read_to_string(out_dir.join("some_file"))?;
 
-  execute_cli(from_remote_preset).await?;
+	assert_eq!(top_level_file, expected_output);
 
-  write_command!(from_remote_preset_cmd, [1, 2, 3, 8], "remote");
-  get_tree_output("tests/output/custom_templates/remote", None)?;
+	let nested_file = read_to_string(out_dir.join("subdir/nested/nested_file"))?;
 
-  let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
+	assert_eq!(nested_file, expected_output);
 
-  let top_level_file = read_to_string(out_dir.join("some_file"))?;
+	// Granular
 
-  assert_eq!(top_level_file, expected_output);
+	let collection_preset = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"render-preset",
+		"lotr",
+		"tests/output/custom_templates/lotr",
+	];
 
-  let nested_file = read_to_string(out_dir.join("subdir/nested/nested_file"))?;
+	write_command!(collection_preset, [1, 2, 3, 6], "collection_preset");
 
-  assert_eq!(nested_file, expected_output);
+	Cli::execute_with(collection_preset).await?;
 
-  // Granular
+	exists!("lotr/hobbits.txt");
+	exists!("lotr/subdir/breakfast.txt");
 
-  let collection_preset = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "render-preset",
-    "lotr",
-    "tests/output/custom_templates/lotr",
-  ];
+	get_tree_output("tests/output/custom_templates/lotr", None)?;
 
-  write_command!(collection_preset, [1, 2, 3, 6], "collection_preset");
+	// Structured
 
-  let from_collection_preset = Cli::try_parse_from(collection_preset)?;
+	let structured_preset = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"render-preset",
+		"structured",
+		"tests/output/custom_templates/structured",
+	];
 
-  execute_cli(from_collection_preset).await?;
+	write_command!(structured_preset, [1, 2, 3, 6], "structured_preset");
 
-  exists!("lotr/hobbits.txt");
-  exists!("lotr/subdir/breakfast.txt");
+	Cli::execute_with(structured_preset).await?;
 
-  get_tree_output("tests/output/custom_templates/lotr", None)?;
+	exists!("structured/nested_file");
+	exists!("structured/nested/more_nested_file");
 
-  // Structured
+	get_tree_output("tests/output/custom_templates/structured", None)?;
 
-  let structured_preset = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "render-preset",
-    "structured",
-    "tests/output/custom_templates/structured",
-  ];
+	// Extended
 
-  write_command!(structured_preset, [1, 2, 3, 6], "structured_preset");
+	let extended_preset = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"render-preset",
+		"lotr",
+		"tests/output/custom_templates/extended",
+	];
 
-  let from_structured_preset = Cli::try_parse_from(structured_preset)?;
+	Cli::execute_with(extended_preset).await?;
 
-  execute_cli(from_structured_preset).await?;
+	exists!("extended/hobbits.txt");
+	exists!("extended/subdir/breakfast.txt");
 
-  exists!("structured/nested_file");
-  exists!("structured/nested/more_nested_file");
-
-  get_tree_output("tests/output/custom_templates/structured", None)?;
-
-  // Extended
-
-  let extended_preset = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "render-preset",
-    "lotr",
-    "tests/output/custom_templates/extended",
-  ];
-
-  let from_extended_preset = Cli::try_parse_from(extended_preset)?;
-
-  execute_cli(from_extended_preset).await?;
-
-  exists!("extended/hobbits.txt");
-  exists!("extended/subdir/breakfast.txt");
-
-  Ok(())
+	Ok(())
 }

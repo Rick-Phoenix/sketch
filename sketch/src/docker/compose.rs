@@ -1,27 +1,7 @@
-use std::{
-	cmp::Ordering,
-	collections::{BTreeMap, BTreeSet},
-};
-
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-use crate::{
-	docker::compose::service::{DockerServicePreset, ServiceData},
-	merge_btree_maps,
-	serde_utils::SingleValue,
-};
+use crate::*;
 
 pub mod service;
-
-use crate::{
-	Extensible, GenError, Preset, StringBTreeMap, merge_index_sets, merge_nested,
-	merge_optional_btree_maps, merge_optional_btree_sets, merge_presets, overwrite_if_some,
-	serde_utils::{ListOrMap, StringOrList, StringOrNum, StringOrSortedList},
-};
+use service::{DockerServicePreset, ServiceData};
 
 /// A preset for Docker Compose files.
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Merge)]

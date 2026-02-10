@@ -24,11 +24,13 @@ async fn rust_manifest() -> Result<(), Box<dyn std::error::Error>> {
 		&output_file.to_string_lossy(),
 	];
 
-	execute_cli(Cli::try_parse_from(cargo_cmd)?).await?;
+	Cli::execute_with(cargo_cmd).await?;
 
 	get_clean_example_cmd(&cargo_cmd, &[1, 2, 3, 6], &commands_dir.join("cargo"))?;
 
 	let output: Manifest = deserialize_toml(&output_file)?;
 
-	let package = output.package.unwrap();
+	let _package = output.package.unwrap();
+
+	Ok(())
 }

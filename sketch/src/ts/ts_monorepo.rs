@@ -1,22 +1,4 @@
-use std::{mem, path::Path};
-
-use indexmap::IndexMap;
-use maplit::btreeset;
-use serde_json::Value;
-
-use crate::{
-	Config, GenError, Preset,
-	fs::{
-		create_all_dirs, create_dirs_from_stripped_glob, serialize_json, serialize_yaml, write_file,
-	},
-	ts::{
-		oxlint::OxlintConfigSetting,
-		package::PackageConfig,
-		package_json::PackageJsonData,
-		pnpm::PnpmWorkspace,
-		ts_config::{TsConfig, TsConfigKind, tsconfig_defaults::get_default_root_tsconfig},
-	},
-};
+use super::*;
 
 pub struct CreateTsMonorepoSettings<'a> {
 	pub root_package: PackageConfig,

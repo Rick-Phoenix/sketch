@@ -1,27 +1,14 @@
-use std::{
-	fs::read_to_string,
-	path::{Path, PathBuf},
-};
+use super::*;
 
-use clap::Parser;
-use indoc::indoc;
-use pretty_assertions::assert_eq;
-
-use super::reset_testing_dir;
 use crate::{
-	Config,
-	cli::{Cli, cli_tests::get_clean_example_cmd, execute_cli},
 	docker::compose::{
 		ComposeFile,
 		service::{Port, ServiceVolume},
 	},
-	fs::{deserialize_json, deserialize_toml, deserialize_yaml},
 	git_workflow::{
 		ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool,
 		Workflow,
 	},
-	rust::{Edition, Inheritable, Manifest},
-	serde_utils::StringOrNum,
 	ts::package_json::PackageJson,
 };
 
@@ -32,7 +19,7 @@ async fn js_catalog() -> Result<(), Box<dyn std::error::Error>> {
 
 	reset_testing_dir(&output_dir);
 
-	let cmd = Cli::try_parse_from([
+	Cli::execute_with([
 		"sketch",
 		"--ignore-config",
 		"-c",
@@ -42,9 +29,8 @@ async fn js_catalog() -> Result<(), Box<dyn std::error::Error>> {
 		"--preset",
 		"with_catalog",
 		&output_dir.to_string_lossy(),
-	])?;
-
-	execute_cli(cmd).await?;
+	])
+	.await?;
 
 	let target_package_json: PackageJson = deserialize_json(&output_dir.join("package.json"))?;
 
@@ -68,16 +54,15 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
-	let default_config = Cli::try_parse_from([
+	Cli::execute_with([
 		"sketch",
 		"--ignore-config",
 		"new",
 		&output_dir
 			.join("default_config.yaml")
 			.to_string_lossy(),
-	])?;
-
-	execute_cli(default_config).await?;
+	])
+	.await?;
 
 	let default_config_output: Config = deserialize_yaml(&output_dir.join("default_config.yaml"))?;
 
@@ -98,15 +83,13 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 		&output_file.to_string_lossy(),
 	];
 
-	let compose_file = Cli::try_parse_from(compose_file_cmd)?;
-
 	get_clean_example_cmd(
 		&compose_file_cmd,
 		&[1, 2, 3, 8],
 		&commands_dir.join("compose"),
 	)?;
 
-	execute_cli(compose_file).await?;
+	Cli::execute_with(compose_file_cmd).await?;
 
 	let output: ComposeFile = deserialize_yaml(&output_file)?;
 
@@ -203,9 +186,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 		&output_file.to_string_lossy(),
 	];
 
-	let gh_workflow = Cli::try_parse_from(gh_workflow_cmd)?;
-
-	execute_cli(gh_workflow).await?;
+	Cli::execute_with(gh_workflow_cmd).await?;
 
 	get_clean_example_cmd(
 		&gh_workflow_cmd,
@@ -227,9 +208,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 		&gitignore_path.to_string_lossy(),
 	];
 
-	let gitignore_gen = Cli::try_parse_from(gitignore_cmd)?;
-
-	execute_cli(gitignore_gen).await?;
+	Cli::execute_with(gitignore_cmd).await?;
 
 	let gitignore_output = read_to_string(&gitignore_path)?;
 
@@ -303,7 +282,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 			&StringNumOrBool::String("anothervalue".to_string())
 		);
 
-		assert_eq!(job.timeout_minutes.unwrap(), StringOrNum::Num(25));
+		assert_eq!(job.timeout_minutes.unwrap(), StringOrNum::B(25));
 
 		let continue_on_error = unwrap_variant!(StringOrBool, Bool, job.continue_on_error.unwrap());
 		assert!(!continue_on_error);

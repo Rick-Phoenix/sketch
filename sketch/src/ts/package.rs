@@ -1,36 +1,5 @@
-use std::{mem, path::PathBuf};
-
-use askama::Template;
-use clap::Parser;
-use indexmap::IndexMap;
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-use super::{
-	package_json::PackageJsonData,
-	pnpm::PnpmWorkspace,
-	ts_config::{TsConfig, TsConfigDirective, TsConfigKind, tsconfig_defaults::*},
-	vitest::{TestsSetupFile, VitestConfig, VitestConfigKind},
-};
-use crate::{
-	Config, GenError, Preset,
-	custom_templating::TemplatingPresetReference,
-	exec::Hook,
-	fs::{
-		create_all_dirs, create_dirs_from_stripped_glob, deserialize_json, deserialize_yaml,
-		find_file_up, get_abs_path, get_relative_path, open_file_if_overwriting, serialize_json,
-		serialize_yaml, write_file,
-	},
-	licenses::License,
-	merge_optional_vecs, merge_vecs, overwrite_if_some,
-	ts::{
-		PackageManager,
-		oxlint::{OxlintConfigSetting, OxlintPreset},
-		ts_config,
-	},
-};
+use super::{vitest::*, *};
+use crate::exec::*;
 
 /// The kind of ts package. Only relevant when using defaults.
 #[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq, Eq, JsonSchema)]

@@ -1,16 +1,11 @@
-use std::{collections::BTreeSet, path::PathBuf};
+use super::*;
 
 use askama::Template;
-use clap::{Args, Subcommand};
 use globset::{Glob, GlobSetBuilder};
-use indexmap::IndexMap;
-use merge::Merge;
 use walkdir::WalkDir;
 
 use crate::{
-	Config, GenError,
 	exec::launch_command,
-	fs::{create_parent_dirs, get_cwd, open_file_if_overwriting},
 	ts::{
 		PackageManager,
 		oxlint::OxlintConfigSetting,

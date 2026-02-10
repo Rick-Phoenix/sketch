@@ -1,125 +1,114 @@
-use std::{fs::read_to_string, path::PathBuf};
+use super::*;
 
-use clap::Parser;
 use pretty_assertions::assert_eq;
-
-use super::reset_testing_dir;
-use crate::cli::{cli_tests::get_clean_example_cmd, execute_cli, Cli};
 
 #[tokio::test]
 async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
-  let output_dir = PathBuf::from("tests/output/commands_tests");
-  let config_file = PathBuf::from("tests/commands_tests/commands_tests.toml");
-  let commands_dir = output_dir.join("commands");
+	let output_dir = PathBuf::from("tests/output/commands_tests");
+	let config_file = PathBuf::from("tests/commands_tests/commands_tests.toml");
+	let commands_dir = output_dir.join("commands");
 
-  reset_testing_dir(&output_dir);
-  reset_testing_dir(&commands_dir);
+	reset_testing_dir(&output_dir);
+	reset_testing_dir(&commands_dir);
 
-  macro_rules! write_command {
-    ($cmd:expr, $list:expr, $out_file:expr) => {
-      get_clean_example_cmd(&$cmd, &$list, &commands_dir.join($out_file))?
-    };
-  }
+	macro_rules! write_command {
+		($cmd:expr, $list:expr, $out_file:expr) => {
+			get_clean_example_cmd(&$cmd, &$list, &commands_dir.join($out_file))?
+		};
+	}
 
-  let literal_template_cmd = [
-    "sketch",
-        "--ignore-config",
-    "--set",
-    "condition=\"slower\"",
-    "exec",
-    "--cwd",
-    &output_dir.to_string_lossy(),
-    "echo \"engine feels good... much {{ condition }} than before... amazing\" > command_output.txt",
-  ];
+	let literal_template_cmd = [
+		"sketch",
+		"--ignore-config",
+		"--set",
+		"condition=\"slower\"",
+		"exec",
+		"--cwd",
+		&output_dir.to_string_lossy(),
+		"echo \"engine feels good... much {{ condition }} than before... amazing\" > command_output.txt",
+	];
 
-  write_command!(literal_template_cmd, [1, 4, 5], "exec_literal_cmd");
+	write_command!(literal_template_cmd, [1, 4, 5], "exec_literal_cmd");
 
-  let literal = Cli::try_parse_from(literal_template_cmd)?;
+	Cli::execute_with(literal_template_cmd).await?;
 
-  execute_cli(literal).await?;
+	let output: String = read_to_string(output_dir.join("command_output.txt"))?;
 
-  let output: String = read_to_string(output_dir.join("command_output.txt"))?;
+	assert_eq!(
+		output,
+		"engine feels good... much slower than before... amazing\n"
+	);
 
-  assert_eq!(
-    output,
-    "engine feels good... much slower than before... amazing\n"
-  );
+	let from_file_cmd = [
+		"sketch",
+		"--ignore-config",
+		"--set",
+		"something=\"space\"",
+		"exec",
+		"--cwd",
+		&output_dir.to_string_lossy(),
+		"-f",
+		"tests/commands_tests/cmd_from_file.j2",
+	];
 
-  let from_file_cmd = [
-    "sketch",
-    "--ignore-config",
-    "--set",
-    "something=\"space\"",
-    "exec",
-    "--cwd",
-    &output_dir.to_string_lossy(),
-    "-f",
-    "tests/commands_tests/cmd_from_file.j2",
-  ];
+	write_command!(from_file_cmd, [1, 4, 5], "cmd_from_file");
 
-  write_command!(from_file_cmd, [1, 4, 5], "cmd_from_file");
+	Cli::execute_with(from_file_cmd).await?;
 
-  let from_file = Cli::try_parse_from(from_file_cmd)?;
+	let rendered_from_file: String = read_to_string(output_dir.join("output_from_file.txt"))?;
 
-  execute_cli(from_file).await?;
+	assert_eq!(
+		rendered_from_file,
+		"all the time you have to leave the space!\n"
+	);
 
-  let rendered_from_file: String = read_to_string(output_dir.join("output_from_file.txt"))?;
+	let from_template_cmd = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"--set",
+		"category=\"gp2\"",
+		"exec",
+		"--cwd",
+		&output_dir.to_string_lossy(),
+		"-t",
+		"cmd_template.j2",
+	];
 
-  assert_eq!(
-    rendered_from_file,
-    "all the time you have to leave the space!\n"
-  );
+	write_command!(from_template_cmd, [1, 2, 3, 6, 7], "exec_from_template_cmd");
 
-  let from_template_cmd = [
-    "sketch",
-    "--ignore-config",
-    "-c",
-    &config_file.to_string_lossy(),
-    "--set",
-    "category=\"gp2\"",
-    "exec",
-    "--cwd",
-    &output_dir.to_string_lossy(),
-    "-t",
-    "cmd_template.j2",
-  ];
+	Cli::execute_with(from_template_cmd).await?;
 
-  write_command!(from_template_cmd, [1, 2, 3, 6, 7], "exec_from_template_cmd");
+	let rendered_from_file_in_templates_dir: String =
+		read_to_string(output_dir.join("output_from_templates_dir.txt"))?;
 
-  let from_file_in_templates_dir = Cli::try_parse_from(from_template_cmd)?;
+	assert_eq!(
+		rendered_from_file_in_templates_dir,
+		"gp2 engine... gp2... argh!\n"
+	);
 
-  execute_cli(from_file_in_templates_dir).await?;
+	Cli::execute_with([
+		"sketch",
+		"-c",
+		&config_file.to_string_lossy(),
+		"--set",
+		"condition=\"slower\"",
+		"exec",
+		"--cwd",
+		&output_dir.to_string_lossy(),
+		"-t",
+		"cmd_template",
+	])
+	.await?;
 
-  let rendered_from_file_in_templates_dir: String =
-    read_to_string(output_dir.join("output_from_templates_dir.txt"))?;
+	let rendered_from_file_in_templates_dir: String =
+		read_to_string(output_dir.join("output_from_template_id.txt"))?;
 
-  assert_eq!(
-    rendered_from_file_in_templates_dir,
-    "gp2 engine... gp2... argh!\n"
-  );
+	assert_eq!(
+		rendered_from_file_in_templates_dir,
+		"engine feels good, much slower than before... amazing\n"
+	);
 
-  let from_template_id = Cli::try_parse_from([
-    "sketch",
-    "-c",
-    &config_file.to_string_lossy(),
-    "--set",
-    "condition=\"slower\"",
-    "exec",
-    "--cwd",
-    &output_dir.to_string_lossy(),
-    "-t",
-    "cmd_template",
-  ])?;
-
-  execute_cli(from_template_id).await?;
-
-  let rendered_from_file_in_templates_dir: String =
-    read_to_string(output_dir.join("output_from_template_id.txt"))?;
-
-  assert_eq!(
-    rendered_from_file_in_templates_dir,
-    "engine feels good, much slower than before... amazing\n"
-  );
-
-  Ok(())
+	Ok(())
 }

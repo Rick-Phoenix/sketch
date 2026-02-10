@@ -1,39 +1,8 @@
-use std::{
-	collections::{BTreeMap, BTreeSet},
-	fmt::{self, Display},
-	path::Path,
-};
-
-use indexmap::IndexMap;
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-use crate::{
-	GenError,
-	fs::{deserialize_json, deserialize_toml, deserialize_yaml},
-};
+use crate::*;
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
 pub const fn is_false(bool: &bool) -> bool {
 	!*bool
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
-#[serde(untagged)]
-pub enum StringOrNum {
-	Num(i64),
-	String(String),
-}
-
-impl Display for StringOrNum {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self {
-			Self::Num(n) => write!(f, "{n}"),
-			Self::String(s) => write!(f, "{s}"),
-		}
-	}
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]

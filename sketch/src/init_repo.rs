@@ -1,31 +1,17 @@
-use std::path::Path;
-
-use clap::Args;
-use indexmap::IndexMap;
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-pub mod gitignore;
-pub mod pre_commit;
-
 use crate::{
-	Config, GenError, Preset,
-	custom_templating::TemplatingPresetReference,
 	exec::{Hook, launch_command},
-	fs::{create_all_dirs, serialize_yaml, write_file},
 	git_workflow::WorkflowReference,
-	init_repo::{
-		gitignore::{DEFAULT_GITIGNORE, GitIgnore, GitIgnoreRef, GitignorePreset},
-		pre_commit::{PreCommitPreset, PreCommitSetting},
-	},
-	licenses::License,
-	merge_vecs, overwrite_if_some,
+	*,
 };
 
+pub mod gitignore;
+use gitignore::*;
+
+pub mod pre_commit;
+use pre_commit::*;
+
 /// A preset for a git repository.
-#[derive(Args, Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Merge)]
+#[derive(Args, Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema, Default, Merge)]
 #[serde(default)]
 pub struct RepoPreset {
 	#[arg(short, long)]

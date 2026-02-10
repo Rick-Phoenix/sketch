@@ -1,11 +1,4 @@
-use std::fmt::Display;
-
-use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::{Extensible, GenError, Preset, merge_index_sets, merge_presets};
+use super::*;
 
 fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
 	match left {

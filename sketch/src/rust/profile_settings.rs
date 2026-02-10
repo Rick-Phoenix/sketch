@@ -1,5 +1,4 @@
 use super::*;
-use crate::*;
 
 /// Handling of LTO in a build profile
 #[derive(Debug, Clone, PartialEq, Serialize, Eq, PartialOrd, Ord, Deserialize, JsonSchema)]

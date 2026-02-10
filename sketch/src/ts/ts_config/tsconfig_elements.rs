@@ -1,9 +1,4 @@
-use std::{collections::BTreeMap, fmt::Display};
-
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-use crate::JsonValueBTreeMap;
+use super::*;
 
 /// A Typescript plugin definition.
 #[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq, JsonSchema)]

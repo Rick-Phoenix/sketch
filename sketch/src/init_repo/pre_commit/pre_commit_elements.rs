@@ -4,12 +4,12 @@ use maplit::btreeset;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use super::{Hook, Repo};
+use super::{PreCommitHook, Repo};
 
 pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::Uri {
 	repo: "https://github.com/gitleaks/gitleaks".to_string(),
 	rev: Some("v8.28.0".to_string()),
-	hooks: btreeset! { Hook { id: "gitleaks".to_string(), ..Default::default() } },
+	hooks: btreeset! { PreCommitHook { id: "gitleaks".to_string(), ..Default::default() } },
 });
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
