@@ -4,7 +4,8 @@ use plugins::*;
 use super::*;
 
 /// A preset for `.oxlintrc.json`
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct OxlintPreset {
 	/// The list of extended presets.
@@ -39,7 +40,8 @@ impl OxlintPreset {
 }
 
 /// The configuration directives for `oxlint`. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct OxlintConfig {
@@ -112,7 +114,8 @@ impl Default for OxlintConfigSetting {
 
 /// Settings for generating an `oxlint` configuration file.
 /// It can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum OxlintConfigSetting {
 	Bool(bool),
@@ -135,7 +138,8 @@ impl OxlintConfigSetting {
 }
 
 /// Settings for global variables.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum GlobalValue {
 	/// Disallows overwriting a global variable.
@@ -147,7 +151,8 @@ pub enum GlobalValue {
 }
 
 /// The enforcement setting for a linting rule.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum RuleEnforcement {
 	/// Disables the rule.
@@ -161,7 +166,8 @@ pub enum RuleEnforcement {
 }
 
 /// The settings for an individual rule. Can be a single value such as `warn` or `error`, or an array with the rule enforcement value as the first value, and the rule-specific settings in an object right after that. (example: ["allow", { "setting1": true }])
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum RuleSetting {
 	Simple(RuleEnforcement),
@@ -169,7 +175,8 @@ pub enum RuleSetting {
 }
 
 /// Configure an entire category of rules all at once.Rules enabled or disabled this way will be overwritten by individual rules in the `rules` field.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct Categories {
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -195,7 +202,8 @@ pub struct Categories {
 }
 
 /// Settings to override for a group of files.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct Override {
 	/// A list of glob patterns to override.
@@ -219,7 +227,8 @@ pub struct Override {
 }
 
 /// Configure the behavior of linter plugins.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsSettings {

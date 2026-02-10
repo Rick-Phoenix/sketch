@@ -38,7 +38,8 @@ impl ServiceFromCli {
 }
 
 /// Ways of representing a service in a Docker preset.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ServiceData {
 	/// The id of a service preset.
@@ -58,7 +59,8 @@ impl ServiceData {
 }
 
 /// A preset for a Docker service
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct DockerServicePreset {
 	/// The list of extended presets.
@@ -93,7 +95,8 @@ impl DockerServicePreset {
 /// Defines a service for a Compose application.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Merge)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct Service {
 	/// `extends` lets you share common configurations among different files, or even different projects entirely.
@@ -616,7 +619,8 @@ pub struct Service {
 /// `extends` lets you share common configurations among different files, or even different projects entirely.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#extends
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Extends {
 	/// The name of the service to extend.
@@ -634,7 +638,8 @@ pub enum Extends {
 /// Requires: Docker Compose 2.30.0 and later
 ///
 /// Specifies GPU devices to be allocated for container usage.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum Gpus {
 	/// Use all available GPUs.
 	#[serde(rename = "all")]
@@ -663,7 +668,8 @@ fn merge_gpus(left: &mut Option<Gpus>, right: Option<Gpus>) {
 /// Requires: Docker Compose 2.30.0 and later
 ///
 /// Specifies GPU devices to be allocated for container usage.
-#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct GpuSettings {
 	/// List of capabilities the GPU needs to have (e.g., 'compute', 'utility').
@@ -706,7 +712,8 @@ impl Ord for GpuSettings {
 /// Defines which AI models the service should use at runtime. Each referenced model must be defined under the [`models` top-level element](https://docs.docker.com/reference/compose-file/models/).
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#models
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ServiceModels {
 	List(BTreeSet<String>),
@@ -733,7 +740,8 @@ fn merge_service_models(left: &mut Option<ServiceModels>, right: Option<ServiceM
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct ServiceModelSettings {
 	/// Environment variable set to AI model name.
@@ -761,7 +769,8 @@ impl Ord for ServiceModelSettings {
 ///
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#network_mode
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum NetworkMode {
 	Bridge,
 	/// Gives the container raw access to the host's network interface.
@@ -772,7 +781,8 @@ pub enum NetworkMode {
 	Other(String),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ServiceNetworks {
 	List(BTreeSet<String>),
@@ -811,7 +821,8 @@ fn merge_service_networks(left: &mut Option<ServiceNetworks>, right: Option<Serv
 /// The networks attribute defines the networks that service containers are attached to, referencing entries under the networks top-level element.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#networks
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct ServiceNetworkSettings {
 	/// Interface network name used to connect to network
@@ -851,7 +862,8 @@ pub struct ServiceNetworkSettings {
 	pub driver_opts: Option<BTreeMap<String, SingleValue>>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ProviderOptions {
 	Single(SingleValue),
@@ -861,7 +873,8 @@ pub enum ProviderOptions {
 /// Defines a service that Compose won't manage directly. Compose delegated the service lifecycle to a dedicated or third-party component.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#provider
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Provider {
 	/// External component used by Compose to manage setup and teardown lifecycle of the service.
 	#[serde(rename = "type")]
@@ -873,7 +886,8 @@ pub struct Provider {
 	pub options: Option<BTreeMap<String, ProviderOptions>>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Restart {
 	Always,
@@ -884,7 +898,8 @@ pub enum Restart {
 	Other(String),
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum BuildStep {
 	/// Path to the build context. Can be a relative path or a URL.
@@ -910,7 +925,8 @@ fn merge_build_step(left: &mut Option<BuildStep>, right: Option<BuildStep>) {
 }
 
 /// Specifies the build configuration for creating a container image from source, as defined in the [Compose Build Specification](https://docs.docker.com/reference/compose-file/build/).
-#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq, JsonSchema, Default, Merge)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq, PartialEq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct AdvancedBuildStep {
@@ -1065,7 +1081,8 @@ pub struct AdvancedBuildStep {
 }
 
 /// Configures the UTS namespace mode set for the service container. When unspecified it is the runtime's decision to assign a UTS namespace, if supported.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename = "kebab-case")]
 pub enum Uts {
 	/// Results in the container using the same UTS namespace as the host.
@@ -1077,7 +1094,8 @@ pub enum Uts {
 /// It is useful if services are closely coupled, and the startup sequence impacts the application's functionality.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#depends_on
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum DependsOn {
 	Simple(Vec<String>),
@@ -1120,7 +1138,8 @@ impl DependsOn {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum DependsOnCondition {
 	/// Waits until the service has completed successfully.
@@ -1136,7 +1155,8 @@ pub enum DependsOnCondition {
 /// It is useful if services are closely coupled, and the startup sequence impacts the application's functionality.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#depends_on
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct DependsOnSettings {
 	/// Condition to wait for.
 	pub condition: DependsOnCondition,
@@ -1155,7 +1175,8 @@ pub struct DependsOnSettings {
 /// Defines the logging configuration.
 ///
 /// See more: https://docs.docker.com/engine/logging/configure/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct LoggingSettings {
 	/// Logging driver to use, such as 'json-file', 'syslog', 'journald', etc.
@@ -1168,7 +1189,8 @@ pub struct LoggingSettings {
 }
 
 /// A logging driver for Docker.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum LoggingDriver {
 	/// Logs are stored in a custom format designed for minimal overhead.
@@ -1196,7 +1218,8 @@ pub enum LoggingDriver {
 /// Declares a check that's run to determine whether or not the service containers are "healthy".
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#healthcheck
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct Healthcheck {
@@ -1234,7 +1257,8 @@ pub struct Healthcheck {
 /// It defaults to .env file in the project_directory for the Compose file being parsed.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/include/#env_file
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Envfile {
 	/// Path to a file containing environment variables.
@@ -1265,7 +1289,8 @@ fn merge_envfile(left: &mut Option<Envfile>, right: Option<Envfile>) {
 /// It defaults to .env file in the project_directory for the Compose file being parsed.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/include/#env_file
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum EnvfileFormat {
 	/// Path to a file containing environment variables.
@@ -1275,7 +1300,8 @@ pub enum EnvfileFormat {
 }
 
 /// Detailed configuration for an environment file.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct EnvFileDetailed {
 	/// Path to the environment file.
 	pub path: String,
@@ -1294,7 +1320,8 @@ pub struct EnvFileDetailed {
 /// Defines a set of configuration options to set block I/O limits for a service.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#blkio_config
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct BlkioSettings {
 	/// Limit read rate (bytes per second) from a device.
@@ -1323,7 +1350,8 @@ pub struct BlkioSettings {
 }
 
 /// Block IO limit for a specific device.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct BlkioLimit {
 	/// Path to the device (e.g., '/dev/sda').
@@ -1350,7 +1378,8 @@ impl Ord for BlkioLimit {
 }
 
 /// Block IO weight for a specific device.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct BlkioWeight {
 	/// Path to the device (e.g., '/dev/sda').
@@ -1377,7 +1406,8 @@ impl Ord for BlkioWeight {
 }
 
 /// Specify the cgroup namespace to join. Use 'host' to use the host's cgroup namespace, or 'private' to use a private cgroup namespace.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Cgroup {
 	/// Use the host's cgroup namespace.
@@ -1390,7 +1420,8 @@ pub enum Cgroup {
 /// Configures the credential spec for a managed service account.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#credential_spec
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct CredentialSpec {
 	/// The name of the credential spec Config to use.
@@ -1409,7 +1440,8 @@ pub struct CredentialSpec {
 /// Specifies the development configuration for maintaining a container in sync with source.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/develop
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct DevelopmentSettings {
 	/// The watch attribute defines a list of rules that control automatic service updates based on local file changes. watch is a sequence, each individual item in the sequence defines a rule to be applied by Compose to monitor source code for changes.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1432,7 +1464,8 @@ fn merge_development_settings(
 /// An element of the watch mode configuration.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/develop/#watch
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WatchItem {
 	/// Action to take when a change is detected.
 	///
@@ -1486,7 +1519,8 @@ impl Ord for WatchItem {
 /// Action to take when a change is detected.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/develop/#action
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum WatchAction {
 	Rebuild,
@@ -1501,7 +1535,8 @@ pub enum WatchAction {
 /// Configuration for service lifecycle hooks, which are commands executed at specific points in a container's lifecycle.
 ///
 /// See more: https://docs.docker.com/compose/how-tos/lifecycle/
-#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct ServiceHook {
 	/// Whether to run the command with extended privileges.
@@ -1526,7 +1561,8 @@ pub struct ServiceHook {
 }
 
 /// A device mapping for a container.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum DeviceMapping {
 	String(String),
@@ -1534,7 +1570,8 @@ pub enum DeviceMapping {
 }
 
 /// A device mapping for a container.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct DeviceMappingSettings {
 	/// Path on the host to the device.
 	pub source: String,
@@ -1562,7 +1599,8 @@ impl Ord for DeviceMappingSettings {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ServiceVolume {
 	Simple(String),
@@ -1591,7 +1629,8 @@ impl Ord for ServiceVolume {
 }
 
 /// The mount type.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum VolumeType {
 	/// For mounting host directories.
@@ -1616,7 +1655,8 @@ pub enum VolumeType {
 /// Configuration for a service volume.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#long-syntax-6
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ServiceVolumeSettings {
 	/// The mount type.
@@ -1663,7 +1703,8 @@ pub struct ServiceVolumeSettings {
 }
 
 /// The propagation mode for the bind mount
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Propagation {
 	Private,
@@ -1675,7 +1716,8 @@ pub enum Propagation {
 }
 
 /// Recursively mount the source directory.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Recursive {
 	Disabled,
@@ -1684,7 +1726,8 @@ pub enum Recursive {
 	Writable,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum SELinux {
 	/// For shared content.
 	#[serde(rename = "z")]
@@ -1696,7 +1739,8 @@ pub enum SELinux {
 }
 
 /// Configuration specific to bind mounts.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct Bind {
@@ -1718,7 +1762,8 @@ pub struct Bind {
 }
 
 /// Configuration specific to volume mounts.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct VolumeSettings {
@@ -1735,7 +1780,8 @@ pub struct VolumeSettings {
 	pub subpath: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ImageVolumeSettings {
 	/// Path within the image to mount instead of the image root.
@@ -1744,7 +1790,8 @@ pub struct ImageVolumeSettings {
 }
 
 /// Configuration specific to tmpfs mounts.
-#[derive(Clone, Debug, Serialize, Default, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Default, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct TmpfsSettings {
@@ -1757,21 +1804,24 @@ pub struct TmpfsSettings {
 	pub size: Option<StringOrNum>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum PortMode {
 	Host,
 	Ingress,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Protocol {
 	Tcp,
 	Udp,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Port {
 	Num(u64),
@@ -1782,9 +1832,8 @@ pub enum Port {
 /// Settings for a port mapping.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#long-syntax-4
-#[derive(
-	Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord, Default,
-)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PortSettings {
 	/// A human-readable name for this port mapping.
@@ -1819,7 +1868,8 @@ pub struct PortSettings {
 /// Defines the decisions Compose makes when it starts to pull images.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#pull_policy
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum PullPolicy {
 	/// Compose always pulls the image from the registry.

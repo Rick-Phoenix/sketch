@@ -1,7 +1,8 @@
 use super::*;
 
 /// A Typescript plugin definition.
-#[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TsPlugin {
 	pub name: String,
 	#[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
@@ -21,14 +22,16 @@ impl Ord for TsPlugin {
 }
 
 /// A reference to a Typescript project. Requires TypeScript version 3.0 or later.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, JsonSchema)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TsConfigReference {
 	/// Path to referenced tsconfig or to folder containing tsconfig.
 	pub path: String,
 }
 
 /// Set the newline character for emitting files. See more: https://www.typescriptlang.org/tsconfig#newLine
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum NewLine {
 	Lf,
@@ -45,7 +48,8 @@ impl Display for NewLine {
 }
 
 /// Specify how the TypeScript watch mode works. See more: https://www.typescriptlang.org/tsconfig#watchFile
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum WatchFile {
 	#[serde(alias = "fixedpollinginterval")]
@@ -76,7 +80,8 @@ impl Display for WatchFile {
 }
 
 /// Specify how directories are watched on systems that lack recursive file-watching functionality. See more: https://www.typescriptlang.org/tsconfig#watchDirectory
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum WatchDirectory {
 	#[serde(alias = "usefsevents")]
@@ -101,7 +106,8 @@ impl Display for WatchDirectory {
 }
 
 /// Specify what approach the watcher should use if the system runs out of native file watchers. See more: https://www.typescriptlang.org/tsconfig#fallbackPolling
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub enum FallbackPolling {
 	#[serde(alias = "fixedpollinginterval")]
@@ -135,7 +141,8 @@ impl Display for FallbackPolling {
 }
 
 /// Specify what JSX code is generated. See more: https://www.typescriptlang.org/tsconfig/#jsx
-#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Jsx {
 	/// Emit .js files with JSX changed to the equivalent React.createElement calls
@@ -163,7 +170,8 @@ impl Display for Jsx {
 }
 
 /// Specify a set of bundled library declaration files that describe the target runtime environment. See more: https://www.typescriptlang.org/tsconfig#lib
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Eq, PartialOrd, Ord, JsonSchema)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum Lib {
 	/// Core definitions for all ES5 functionality
 	#[serde(alias = "ES5")]
@@ -229,7 +237,8 @@ impl Display for Lib {
 }
 
 /// Specify how TypeScript determine a file as module. See more: https://www.typescriptlang.org/tsconfig/#moduleDetection
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Copy, Clone, Default, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Copy, Clone, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum ModuleDetection {
 	/// TypeScript will not only look for import and export statements, but it will also check whether the "type" field in a package.json is set to "module" when running with module: nodenext or node16, and check whether the current file is a JSX file when running under jsx: react-jsx
@@ -251,7 +260,8 @@ impl Display for ModuleDetection {
 	}
 }
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Copy, Clone, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum ModuleResolution {
 	/// When combined with the corresponding module values, picks the right algorithm for each resolution based on whether Node.js will see an import or require in the output JavaScript code
 	#[serde(rename = "node16", alias = "Node16")]
@@ -279,7 +289,8 @@ impl Display for ModuleResolution {
 }
 
 /// Specify what module code is generated. See more: https://www.typescriptlang.org/tsconfig#module
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum Module {
 	#[serde(alias = "none")]
 	None,
@@ -336,7 +347,8 @@ impl Display for Module {
 }
 
 /// Set the JavaScript language version for emitted JavaScript and include compatible library declarations. See more: https://www.typescriptlang.org/tsconfig#target
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum Target {
 	#[serde(alias = "es3")]
 	Es3,

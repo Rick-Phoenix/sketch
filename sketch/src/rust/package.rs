@@ -6,7 +6,8 @@ use super::*;
 ///
 /// You can replace `Metadata` generic type with your own
 /// to parse into something more useful than a generic toml `Value`
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Package {
 	/// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.

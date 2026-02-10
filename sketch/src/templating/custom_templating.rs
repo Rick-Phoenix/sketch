@@ -1,7 +1,8 @@
 use super::*;
 
 /// A reference to a templating preset, or a new preset definition.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum TemplatingPresetReference {
 	/// A reference to a templating preset, with some optional context
@@ -57,7 +58,8 @@ impl TemplatingPresetReference {
 }
 
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema, Default, Merge)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
@@ -92,7 +94,8 @@ impl TemplatingPreset {
 	}
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum PresetElement {
 	/// The data for a single template.
@@ -106,7 +109,8 @@ pub enum PresetElement {
 }
 
 /// A preset defined in a git repository.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct RemotePreset {
 	/// The link of the repo where the preset is defined
 	repo: String,
@@ -116,7 +120,8 @@ pub struct RemotePreset {
 }
 
 /// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct StructuredPreset {
 	/// A relative path to a directory starting from `templates_dir`
 	dir: PathBuf,
@@ -127,7 +132,8 @@ pub struct StructuredPreset {
 
 /// The types of configuration values for a template's data.
 /// It can either be an id (which points to the key used to store a literal template in the config, or to a file path starting from the root of the templates directory specified in the config.)
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum TemplateData {
 	/// A literal definition for a template.
@@ -149,7 +155,8 @@ impl TemplateData {
 	}
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum TemplateOutputKind {
 	/// Render the output to stdout
 	#[serde(skip)]
@@ -161,7 +168,8 @@ pub enum TemplateOutputKind {
 
 /// The data for outputting a new template.
 /// The context specified here will override the global context (but not the variables set via cli).
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TemplateOutput {
 	/// The definition or id for the template to use.
 	pub template: TemplateData,

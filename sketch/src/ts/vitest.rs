@@ -5,7 +5,8 @@ use super::*;
 /// - True or false to use the default or disable generation altogether.
 /// - A string, indicating a preset stored in the global config
 /// - A object, with a literal definition
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum VitestConfigKind {
 	Bool(bool),
@@ -26,7 +27,8 @@ impl Default for VitestConfigKind {
 }
 
 /// The data used to generate a new vitest setup.
-#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[template(path = "ts/vitest.config.ts.j2")]
 #[serde(default)]
 pub struct VitestConfig {
@@ -76,7 +78,8 @@ impl Default for VitestConfig {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum Silent {
 	#[serde(rename = "passed-only")]
 	PassedOnly,
@@ -93,7 +96,8 @@ impl Display for Silent {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Environment {
 	Node,

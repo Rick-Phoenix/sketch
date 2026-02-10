@@ -75,7 +75,8 @@ impl PackageJsonPreset {
 }
 
 /// A [`PackageJson`] preset.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, JsonSchema, Merge, Default)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PackageJsonPreset {
 	/// The list of extended presets.
@@ -85,7 +86,8 @@ pub struct PackageJsonPreset {
 }
 
 /// Ways of indicating [`PackageJson`] data. It can be an id, pointing to a preset, or a literal configuration.
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum PackageJsonData {
 	Id(String),
@@ -105,7 +107,8 @@ impl PackageJsonData {
 }
 
 /// A struct representing the contents of a `package.json` file.
-#[derive(Debug, Deserialize, Serialize, Merge, Clone, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Merge, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct PackageJson {

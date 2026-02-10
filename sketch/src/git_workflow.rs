@@ -39,7 +39,8 @@ impl WorkflowReference {
 }
 
 /// The definition for a new Github workflow, or a reference to a preset.
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum WorkflowReference {
 	/// A reference to a workflow preset
@@ -60,7 +61,8 @@ pub enum WorkflowReference {
 }
 
 /// Configurations and presets relating to Github
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Default, Merge)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[merge(with = IndexMap::extend)]
 #[serde(default)]
 pub struct GithubConfig {
@@ -75,7 +77,8 @@ pub struct GithubConfig {
 }
 
 /// A preset for a gihub workflow.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct GithubWorkflowPreset {
 	/// The list of extended presets.
 	#[serde(default)]
@@ -147,7 +150,8 @@ impl GithubWorkflowPreset {
 }
 
 /// A preset for a gihub workflow job.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct JobPreset {
 	/// The list of extended presets.
 	#[serde(skip_serializing, default)]
@@ -203,7 +207,8 @@ impl JobPreset {
 /// A github workflow.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Workflow {
 	/// The name of your workflow. GitHub displays the names of your workflows on your repository's actions page. If you omit this field, GitHub sets the name to the workflow's filename.
 	///
@@ -267,7 +272,8 @@ pub struct Workflow {
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
 ///
 /// You can use a job preset (by referring to it by its ID) or define a new one.
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum JobReference {
 	/// The preset ID for this job
@@ -280,7 +286,8 @@ pub enum JobReference {
 /// A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.
 ///
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Job {
 	/// The definition for a new job.
@@ -330,7 +337,8 @@ impl Merge for Job {
 /// A workflow run is made up of one or more jobs, which run in parallel by default.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge, Default)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct NormalJob {
 	/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
 	///
@@ -448,7 +456,8 @@ pub struct NormalJob {
 }
 
 /// A reusable job, imported from a file or repo.
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge, Default)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct ReusableWorkflowCallJob {
 	/// The location and version of a reusable workflow file to run as a job, of the form './{path/to}/{localfile}.yml' or '{owner}/{repo}/{path}/{filename}@{ref}'. {ref} can be a SHA, a release tag, or a branch name. Using the commit SHA is the safest for stability and security.
 	///
@@ -515,7 +524,8 @@ pub struct ReusableWorkflowCallJob {
 /// Any secrets that you pass must match the names defined in the called workflow.
 ///
 /// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum JobSecret {
 	/// Use the `inherit` keyword to pass all the calling workflow's secrets to the called workflow. This includes all secrets the calling workflow has access to, namely organization, repository, and environment secrets. The `inherit` keyword can be used to pass secrets across repositories within the same organization, or across organizations within the same enterprise.
 	#[serde(rename = "inherit")]
@@ -545,7 +555,8 @@ impl Merge for JobSecret {
 /// If you have steps that use both script and container actions, the container actions will run as sibling containers on the same network with the same volume mounts.
 ///
 /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainer
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Container {
 	/// The Docker image to use as the container to run the action. The value can be the Docker Hub image name or a registry name.
 	///
@@ -588,7 +599,8 @@ pub struct Container {
 /// The credentials are the same values that you would provide to the `docker login` command.
 ///
 /// See more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idcontainercredentials
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Credentials {
 	pub username: String,
 	pub password: String,
@@ -597,7 +609,8 @@ pub struct Credentials {
 /// A strategy creates a build matrix for your jobs. You can define different variations of an environment to run each job in.
 ///
 /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstrategy
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Strategy {
 	/// When set to true, GitHub cancels all in-progress jobs if any matrix job fails. Default: true
 	///
@@ -623,7 +636,8 @@ pub struct Strategy {
 }
 
 /// Configuration for a Github workflow `step` or a preset id that points to one.
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum GHStepData {
 	/// A preset ID
@@ -645,7 +659,8 @@ impl GHStepData {
 /// A job contains a sequence of tasks called `steps`. Steps can run commands, run setup tasks, or run an action in your repository, a public repository, or an action published in a Docker registry.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Step {
 	/// A name for your step to display on GitHub.
 	///
@@ -731,7 +746,8 @@ pub struct Step {
 /// The environment that the job references. You can provide the environment as only the environment name, or as an environment object with the `name` and `url`.
 ///
 /// See more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Environment {
 	/// The environment name.
@@ -755,7 +771,8 @@ pub enum Environment {
 /// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum RunsOn {
 	Single(ActionRunner),
@@ -782,7 +799,8 @@ pub enum RunsOn {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
 #[allow(non_camel_case_types)]
-#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Serialize, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum ActionRunner {
 	/// A runner with the latest LTS version of Ubuntu.
@@ -904,7 +922,8 @@ impl Merge for RunsOn {
 /// Permissions can be defined globally, with `write-all` `or read-all`, or by event.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Permissions {
 	Global(PermissionsGlobal),
@@ -928,14 +947,16 @@ impl Merge for Permissions {
 	}
 }
 
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum PermissionsGlobal {
 	ReadAll,
 	WriteAll,
 }
 
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum PermissionsLevel {
 	None,
@@ -948,7 +969,8 @@ pub enum PermissionsLevel {
 /// write includes read. If you specify the access for any of these permissions, all of those that are not specified are set to none.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct PermissionsEvent {
 	/// Work with GitHub Actions. For example, `actions: write` permits an action to cancel a workflow run.
 	///
@@ -1050,7 +1072,8 @@ pub struct PermissionsEvent {
 	pub statuses: Option<PermissionsLevel>,
 }
 
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum ModelsPermissions {
 	None,
@@ -1066,7 +1089,8 @@ pub enum ModelsPermissions {
 /// When a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled. To also cancel any currently running job or workflow in the same concurrency group, specify cancel-in-progress: true.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Concurrency {
 	/// When a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled.
 	///
@@ -1084,7 +1108,8 @@ pub struct Concurrency {
 	pub cancel_in_progress: Option<StringOrBool>,
 }
 
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum StringOrBool {
 	String(String),
@@ -1094,7 +1119,8 @@ pub enum StringOrBool {
 /// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaults
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Defaults {
 	/// You can use `defaults.run` to provide default `shell` and `working-directory` options for all `run` steps in a workflow. You can also set default settings for run that are only available to a job.
 	///
@@ -1105,7 +1131,8 @@ pub struct Defaults {
 /// You can use `defaults.run` to provide default `shell` and `working-directory` options for all `run` steps in a workflow. You can also set default settings for run that are only available to a job.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaultsrun
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct RunObject {
 	/// Use `shell` to `define` the shell for a step.
 	///
@@ -1124,7 +1151,8 @@ pub struct RunObject {
 /// You can override the default shell settings in the runner's operating system using the shell keyword. You can use built-in shell keywords, or you can define a custom set of shell options.
 ///
 /// See more: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Shell {
 	Bash,
@@ -1142,7 +1170,8 @@ pub enum Shell {
 /// You can provide a single event string, array of events, array of event types, or an event configuration map that schedules a workflow or restricts the execution of a workflow to specific files, tags, or branch changes.
 ///
 /// For a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema)]
+#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Event {
 	Single(EventDefinition),
@@ -1184,9 +1213,8 @@ fn merge_event(left: &mut Option<Event>, right: Option<Event>) {
 /// Workflow triggers are events that cause a workflow to run.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#about-events-that-trigger-workflows
-#[derive(
-	Clone, Copy, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, PartialOrd, Ord,
-)]
+#[derive(Clone, Copy, Deserialize, Debug, PartialEq, Eq, Serialize, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum EventDefinition {
 	/// Runs your workflow anytime the branch_protection_rule event occurs
@@ -1366,7 +1394,8 @@ macro_rules! events {
       #[doc = $doc]
       #[doc = ""]
       #[doc = concat!("See more: ", $link)]
-      #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
+      #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+			#[cfg_attr(feature = "schemars", derive(JsonSchema))]
       pub struct $name {
         /// The types of events that should trigger this workflow.
         #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -1375,7 +1404,8 @@ macro_rules! events {
       }
 
       #[doc = "The kind of events that can trigger a " $name:snake " event"]
-      #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+      #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+			#[cfg_attr(feature = "schemars", derive(JsonSchema))]
       #[serde(rename_all = "snake_case")]
       pub enum [< $name Events >] {
         $($variants),*
@@ -1510,8 +1540,8 @@ events!(
 /// For example, if no activity types are specified, the workflow runs when a pull request is opened or reopened or when the head branch of the pull request is updated. For activity related to pull request reviews, pull request review comments, or pull request comments, use the `pull_request_review`, `pull_request_review_comment`, or `issue_comment` events instead.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(with = BTreeSet::extend)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct PullRequest {
 	/// The types of events that should trigger this workflow.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -1563,7 +1593,8 @@ pub struct PullRequest {
 }
 
 /// The kinds of events that can trigger a pull_request event.
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum PullRequestEvents {
 	Assigned,
@@ -1608,8 +1639,8 @@ events!(
 /// Runs your workflow when someone pushes to a repository branch, which triggers the push event.
 ///
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#push-event-push
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(with = BTreeSet::extend)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Push {
 	/// Runs only when specific branches are pushed.
 	///
@@ -1685,8 +1716,8 @@ events!(
 /// This event occurs when a workflow run is requested or completed, and allows you to execute a workflow based on the finished result of another workflow.
 ///
 /// See more: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_run
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(with = BTreeSet::extend)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WorkflowRun {
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	/// The types of events that should trigger this workflow.
@@ -1713,7 +1744,8 @@ pub struct WorkflowRun {
 	pub branches_ignore: BTreeSet<String>,
 }
 
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum WorkflowRunEvents {
 	Completed,
@@ -1726,7 +1758,8 @@ pub enum WorkflowRunEvents {
 /// Scheduled workflows run on the latest commit on the default or base branch. The shortest interval you can run scheduled workflows is once every 5 minutes.
 ///
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Schedule {
 	/// Use POSIX cron syntax to schedule workflows to run at specific UTC times. Scheduled workflows run on the latest commit on the default branch. The shortest interval you can run scheduled workflows is once every 5 minutes.
 	///
@@ -1737,7 +1770,8 @@ pub struct Schedule {
 /// Workflow triggers are events that cause a workflow to run.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#about-events-that-trigger-workflows
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[merge(with = merge_option)]
 pub struct EventObject {
 	/// Runs your workflow anytime the branch_protection_rule event occurs
@@ -1955,7 +1989,8 @@ pub struct EventObject {
 /// When using the workflow_call keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#onworkflow_callinputs
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WorkflowCallInput {
 	/// Required if input is defined for the on.workflow_call keyword. The value of this parameter is a string specifying the data type of the input. This must be one of: boolean, number, or string.
 	///
@@ -1982,7 +2017,8 @@ pub struct WorkflowCallInput {
 	pub default: Option<StringNumOrBool>,
 }
 
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum StringNumOrBool {
 	String(String),
@@ -1993,7 +2029,8 @@ pub enum StringNumOrBool {
 /// When using the `workflow_call` keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#onworkflow_calloutputs
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WorkflowCallOutput {
 	/// A string description of the output parameter.
 	///
@@ -2010,7 +2047,8 @@ pub struct WorkflowCallOutput {
 /// Within the called workflow, you can use the secrets context to refer to a secret.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callsecrets
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Secret {
 	/// A boolean specifying whether the secret must be supplied.
 	///
@@ -2026,8 +2064,8 @@ pub struct Secret {
 /// Use `on.workflow_call` to define the inputs and outputs for a reusable workflow. You can also map the secrets that are available to the called workflow.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_call
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(with = BTreeMap::extend)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WorkflowCall {
 	/// When using the `workflow_call` keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.
 	///
@@ -2051,7 +2089,8 @@ pub struct WorkflowCall {
 /// The triggered workflow receives the inputs in the `inputs` context.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WorkflowDispatchInput {
 	/// A string representing the type of the input.
 	///
@@ -2088,7 +2127,8 @@ pub struct WorkflowDispatchInput {
 /// A string representing the type of the input.
 ///
 /// See more: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputsinput_idtype
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum InputType {
 	Boolean,
@@ -2103,7 +2143,8 @@ pub enum InputType {
 /// This trigger only receives events when the workflow file is on the default branch.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatch
-#[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct WorkflowDispatch {
 	/// The triggered workflow receives the inputs in the `inputs` context.
 	///

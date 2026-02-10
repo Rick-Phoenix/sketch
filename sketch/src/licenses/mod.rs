@@ -1,9 +1,8 @@
-use clap::ValueEnum;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use crate::*;
 
 /// Generates a new license file
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema, ValueEnum)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ValueEnum)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum License {
 	/// Apache 2.0 license.
 	///

@@ -2,7 +2,8 @@ use crate::tera_setup::get_default_context;
 use crate::*;
 
 /// A command (rendered as a template) to execute
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Hook {
 	/// The template id or definition for the command to execute
 	pub command: TemplateData,

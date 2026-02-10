@@ -225,7 +225,8 @@ pub fn toml_string_list<'a>(strings: impl IntoIterator<Item = &'a String>) -> It
 	arr.into()
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct RustPresets {
 	/// A map that contains presets for `Cargo.toml` files.
@@ -235,7 +236,8 @@ pub struct RustPresets {
 	pub crate_: IndexMap<String, Crate>,
 }
 
-#[derive(Args, Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Merge, Default)]
+#[derive(Args, Clone, Debug, Serialize, Deserialize, PartialEq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[group(id = "crate_config")]
 #[serde(default)]
 pub struct Crate {
@@ -496,7 +498,8 @@ impl Crate {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum CargoTomlPresetRef {
 	Id(String),
@@ -525,7 +528,8 @@ impl CargoTomlPresetRef {
 }
 
 /// A preset for a `Cargo.toml` file.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct CargoTomlPreset {
 	/// The list of extended presets.
@@ -559,7 +563,8 @@ impl CargoTomlPreset {
 ///
 /// The `Metadata` is a generic type for `[package.metadata]` table. You can replace it with
 /// your own struct type if you use the metadata and don't want to use the catch-all `Value` type.
-#[derive(Debug, Clone, PartialEq, JsonSchema, Serialize, Deserialize, Merge, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct Manifest {
 	/// Workspace-wide settings
@@ -746,7 +751,8 @@ impl Manifest {
 }
 
 /// Lint level.
-#[derive(Debug, PartialEq, Eq, Copy, Clone, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum LintLevel {
 	Allow,
@@ -781,7 +787,8 @@ fn item_to_toml_value(item: Item) -> TomlValue {
 }
 
 /// Lint definition.
-#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Lint {
 	/// allow/warn/deny
 	pub level: LintLevel,
@@ -805,7 +812,8 @@ impl AsTomlValue for Lint {
 }
 
 /// Dependencies that are platform-specific or enabled through custom `cfg()`.
-#[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct Target {
 	/// platform-specific normal deps
@@ -834,7 +842,8 @@ impl AsTomlValue for Target {
 /// Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.
 ///
 /// It can be simple version number, or detailed settings, or inherited.
-#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Dependency {
 	/// Version requirement (e.g. `^1.5`)
@@ -930,7 +939,8 @@ impl Merge for Dependency {
 
 /// When a dependency is defined as `{ workspace = true }`,
 /// and workspace data hasn't been applied yet.
-#[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
 pub struct InheritedDependencyDetail {
 	#[merge(with = BTreeSet::extend)]
@@ -959,7 +969,8 @@ impl AsTomlValue for InheritedDependencyDetail {
 }
 
 /// When definition of a dependency is more than just a version string.
-#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct DependencyDetail {
 	/// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
@@ -1039,7 +1050,8 @@ impl AsTomlValue for DependencyDetail {
 }
 
 /// A value that can be set to `workspace`
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Inheritable<T> {
 	/// Inherit this setting from the `workspace`
@@ -1112,9 +1124,8 @@ impl<T: Default + PartialEq> Inheritable<T> {
 }
 
 /// Edition setting, which opts in to new Rust/Cargo behaviors.
-#[derive(
-	Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, PartialOrd, Ord,
-)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub enum Edition {
 	/// 2015
 	#[default]
@@ -1145,7 +1156,8 @@ impl AsTomlValue for Edition {
 }
 
 /// A way specify or disable README or `build.rs`.
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(
 	untagged,
 	expecting = "the value should be either a boolean or a file path"
@@ -1167,7 +1179,8 @@ impl AsTomlValue for OptionalFile {
 }
 
 /// Forbids or selects custom registry
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(
 	untagged,
 	expecting = "the value should be either a boolean, or an array of registry names"
@@ -1189,9 +1202,8 @@ impl AsTomlValue for Publish {
 /// The feature resolver version.
 ///
 /// Needed in [`Workspace`], but implied by [`Edition`] in packages.
-#[derive(
-	Debug, Default, PartialEq, Eq, Ord, PartialOrd, Copy, Clone, Serialize, Deserialize, JsonSchema,
-)]
+#[derive(Debug, Default, PartialEq, Eq, Ord, PartialOrd, Copy, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(
 	expecting = "if there's a newer resolver, then this parser (cargo_toml crate) has to be updated"
 )]
@@ -1219,9 +1231,8 @@ impl AsTomlValue for Resolver {
 	}
 }
 
-#[derive(
-	Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize, PartialOrd, Ord, Merge,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 /// Cargo uses the term "target" for both "target platform" and "build target" (the thing to build),
 /// which makes it ambigous.

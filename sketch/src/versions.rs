@@ -5,9 +5,8 @@ use url::Url;
 use crate::{ts::package_json::JsDepKind, *};
 
 /// The kinds of version ranges for a dependency with semantic versioning.
-#[derive(
-	Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, Eq, JsonSchema,
-)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, ValueEnum, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum VersionRange {
 	// Only allow updates within the same semVer `minor` range (i.e. 1.x.x)

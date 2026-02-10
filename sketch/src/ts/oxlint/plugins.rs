@@ -1,7 +1,8 @@
 use super::*;
 
 /// The plugins for oxlint. See more: https://oxc.rs/docs/guide/usage/linter/plugins.html
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum Plugins {
 	Eslint,
@@ -69,7 +70,8 @@ impl Ord for Plugin {
 }
 
 /// Ways of referring to a plugin.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Plugin {
 	Known(Plugins),
@@ -77,7 +79,8 @@ pub enum Plugin {
 }
 
 /// Specifies allows custom tags for Jsdoc annotations.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged, rename_all = "camelCase")]
 pub enum TagNamePreference {
 	String(String),
@@ -92,7 +95,8 @@ pub enum TagNamePreference {
 }
 
 /// Settings for the Jsdoc plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-jsdoc
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct JsDocPluginSettings {
@@ -130,7 +134,8 @@ pub struct JsDocPluginSettings {
 }
 
 /// Settings for the jsx-a11y plugin. See more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y#configurations
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct JsxA11yPluginSettings {
@@ -191,7 +196,8 @@ pub struct JsxA11yPluginSettings {
 }
 
 /// Settings for the nextjs plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-next
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct NextPluginSettings {
 	/// The root directory of the Next.js project.
@@ -214,7 +220,8 @@ pub struct NextPluginSettings {
 	pub root_dir: Option<OneOrManyStrings>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum OneOrManyStrings {
 	One(String),
@@ -222,7 +229,8 @@ pub enum OneOrManyStrings {
 }
 
 /// Settings for the react plugin. See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference.html#settings-react
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct ReactPluginSettings {
@@ -272,7 +280,8 @@ pub struct ReactPluginSettings {
 	pub link_components: Option<Vec<CustomComponent>>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum CustomComponent {
 	NameOnly(String),

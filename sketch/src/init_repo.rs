@@ -11,7 +11,8 @@ pub mod pre_commit;
 use pre_commit::*;
 
 /// A preset for a git repository.
-#[derive(Args, Clone, Debug, Deserialize, Serialize, PartialEq, Eq, JsonSchema, Default, Merge)]
+#[derive(Args, Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct RepoPreset {
 	#[arg(short, long)]

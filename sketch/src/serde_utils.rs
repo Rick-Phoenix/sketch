@@ -5,14 +5,16 @@ pub const fn is_false(bool: &bool) -> bool {
 	!*bool
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum StringOrList {
 	String(String),
 	List(Vec<String>),
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ListOrMap {
 	List(BTreeSet<String>),
@@ -74,7 +76,8 @@ pub(crate) fn merge_list_or_map(left: &mut Option<ListOrMap>, right: Option<List
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum StringOrSortedList {
 	String(String),
@@ -131,7 +134,8 @@ impl Default for StringOrSortedList {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum SingleValue {
 	String(String),

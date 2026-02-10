@@ -11,7 +11,8 @@ use crate::{
 };
 
 /// A preset for a `pnpm-workspace.yaml` file configuration.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PnpmPreset {
 	/// The list of extended presets.
@@ -49,7 +50,8 @@ impl PnpmPreset {
 /// A struct representing a pnpm-workspace.yaml config.
 ///
 /// See more: https://pnpm.io/settings
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
 pub struct PnpmWorkspace {

@@ -24,7 +24,8 @@ impl Config {
 
 /// The global configuration struct.
 #[allow(clippy::struct_field_names)]
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct Config {
 	#[serde(skip)]

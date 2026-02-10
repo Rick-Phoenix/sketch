@@ -4,7 +4,8 @@ pub mod service;
 use service::{DockerServicePreset, ServiceData};
 
 /// A preset for Docker Compose files.
-#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Default, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct ComposePreset {
 	/// The list of extended presets.
@@ -68,7 +69,8 @@ impl ComposePreset {
 }
 
 /// Configuration settings for a Docker Compose file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct ComposeFile {
 	/// The top-level name property is defined by the Compose Specification as the project name to be used if you don't set one explicitly.
@@ -134,7 +136,8 @@ impl ComposeFile {
 /// Compose application or sub-projects to be included.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/include/#long-syntax
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, Default, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct IncludeSettings {
 	/// Defines the location of the Compose file(s) to be parsed and included into the local Compose model.
@@ -164,7 +167,8 @@ impl Ord for IncludeSettings {
 	}
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, JsonSchema, PartialOrd, Ord, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, PartialOrd, Ord, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Include {
 	Short(String),
@@ -177,7 +181,8 @@ impl Default for Include {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Ulimit {
 	Single(StringOrNum),
@@ -190,7 +195,8 @@ pub enum Ulimit {
 /// Network configuration for the Compose application.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/networks/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TopLevelNetwork {
 	/// If set to true, it specifies that this network’s lifecycle is maintained outside of that of the application. Compose doesn't attempt to create these networks, and returns an error if one doesn't exist.
 	///
@@ -254,7 +260,8 @@ pub struct TopLevelNetwork {
 /// Specifies a custom IPAM configuration.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/networks/#ipam
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct Ipam {
@@ -274,7 +281,8 @@ pub struct Ipam {
 /// IPAM specific configurations.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/networks/#ipam
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct IpamConfig {
@@ -308,7 +316,8 @@ impl Ord for IpamConfig {
 }
 
 /// Specifies a service discovery method for external clients connecting to a service. See more: https://docs.docker.com/reference/compose-file/deploy/#endpoint_mode
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum EndpointMode {
 	/// Assigns the service a virtual IP (VIP) that acts as the front end for clients to reach the service on a network. Platform routes requests between the client and nodes running the service, without client knowledge of how many nodes are participating in the service or their IP addresses or ports.
@@ -319,7 +328,8 @@ pub enum EndpointMode {
 }
 
 /// Defines the replication model used to run a service or job. See more: https://docs.docker.com/reference/compose-file/deploy/#mode
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum DeployMode {
 	/// Ensures exactly one task continuously runs per physical node until stopped.
@@ -339,7 +349,8 @@ pub enum DeployMode {
 }
 
 /// Compose Deploy Specification https://docs.docker.com/reference/compose-file/deploy
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct Deploy {
@@ -381,7 +392,8 @@ pub struct Deploy {
 }
 
 /// Resource constraints and reservations for the service.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct Limits {
@@ -399,7 +411,8 @@ pub struct Limits {
 }
 
 /// Resource reservations for the service containers.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct Reservations {
@@ -421,9 +434,8 @@ pub struct Reservations {
 }
 
 /// User-defined resources for services, allowing services to reserve specialized hardware resources.
-#[derive(
-	Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default, PartialOrd, Ord,
-)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct GenericResource {
@@ -433,7 +445,8 @@ pub struct GenericResource {
 }
 
 /// Specification for discrete (countable) resources.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct DiscreteResourceSpec {
@@ -459,7 +472,8 @@ impl Ord for DiscreteResourceSpec {
 }
 
 /// Device reservations for containers, allowing services to access specific hardware devices.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Device {
 	/// Device driver to use (e.g., 'nvidia').
@@ -500,7 +514,8 @@ impl Ord for Device {
 }
 
 /// Specifies constraints and preferences for the platform to select a physical node to run service containers. See more: https://docs.docker.com/reference/compose-file/deploy/#placement
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct Placement {
@@ -514,7 +529,8 @@ pub struct Placement {
 }
 
 /// Defines a strategy (currently spread is the only supported strategy) to spread tasks evenly over the values of the datacenter node label.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Preferences {
 	pub spread: String,
@@ -523,7 +539,8 @@ pub struct Preferences {
 /// Configures physical resource constraints for container to run on platform.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#resources
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct Resources {
@@ -536,7 +553,8 @@ pub struct Resources {
 }
 
 /// The condition that should trigger a restart.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum RestartPolicyCondition {
 	/// Containers are not automatically restarted regardless of the exit status.
@@ -552,7 +570,8 @@ pub enum RestartPolicyCondition {
 /// Configures if and how to restart containers when they exit. If restart_policy is not set, Compose considers the restart field set by the service configuration.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#restart_policy
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct RestartPolicy {
@@ -574,7 +593,8 @@ pub struct RestartPolicy {
 }
 
 /// What to do if an update fails.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum UpdateFailureAction {
 	Continue,
@@ -583,7 +603,8 @@ pub enum UpdateFailureAction {
 }
 
 /// What to do if an update fails.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum RollbackFailureAction {
 	Continue,
@@ -591,7 +612,8 @@ pub enum RollbackFailureAction {
 }
 
 /// What to do if an update fails.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum OperationsOrder {
 	StartFirst,
@@ -601,7 +623,8 @@ pub enum OperationsOrder {
 /// Configures how the service should be rolled back in case of a failing update.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#rollback_config
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
 pub struct RollbackConfig {
@@ -629,7 +652,8 @@ pub struct RollbackConfig {
 /// Configures how the service should be updated. Useful for configuring rolling updates.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/deploy/#update_config
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct UpdateConfig {
@@ -657,7 +681,8 @@ pub struct UpdateConfig {
 /// Secret configuration for the Compose application.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/secrets/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields, rename_all = "snake_case")]
 pub enum TopLevelSecret {
 	/// Path to a file containing the secret value.
@@ -674,7 +699,8 @@ pub enum TopLevelSecret {
 }
 
 /// Configuration for service configs or secrets, defining how they are mounted in the container.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ServiceConfigOrSecret {
 	/// Name of the config or secret to grant access to.
@@ -696,7 +722,8 @@ impl Ord for ServiceConfigOrSecretSettings {
 }
 
 /// Configuration for service configs or secrets, defining how they are mounted in the container.
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct ServiceConfigOrSecretSettings {
 	/// Name of the config or secret as defined in the top-level configs or secrets section.
@@ -726,7 +753,8 @@ pub struct ServiceConfigOrSecretSettings {
 /// Defines or references configuration data that is granted to services in your Compose application.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/configs/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct TopLevelConfig {
 	/// The name of the config object in the container engine to look up. This field can be used to reference configs that contain special characters. The name is used as is and will not be scoped with the project name.
@@ -753,7 +781,8 @@ pub struct TopLevelConfig {
 /// Adds hostname mappings to the container network interface configuration (/etc/hosts for Linux).
 ///
 /// See more: https://docs.docker.com/reference/compose-file/services/#extra_hosts
-#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum ExtraHosts {
 	/// List of host:IP mappings in the format 'hostname:IP'.
@@ -786,7 +815,8 @@ pub(crate) fn merge_extra_hosts(left: &mut Option<ExtraHosts>, right: Option<Ext
 /// Language Model for the Compose application.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/models/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TopLevelModel {
 	/// Language Model to run.
 	pub model: String,
@@ -824,7 +854,8 @@ impl Ord for TopLevelModel {
 /// Volume configuration for the Compose application.
 ///
 /// See more: https://docs.docker.com/reference/compose-file/volumes/
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TopLevelVolume {
 	/// If set to true, it specifies that this volume already exists on the platform and its lifecycle is managed outside of that of the application.
 	///

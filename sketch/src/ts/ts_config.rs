@@ -10,7 +10,8 @@ pub(crate) mod tsconfig_elements;
 pub use tsconfig_elements::*;
 
 /// A preset for a `tsconfig` file.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Default, Merge)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct TsConfigPreset {
 	/// The list of extended presets.
@@ -45,7 +46,8 @@ impl TsConfigPreset {
 }
 
 /// The kind of data for a [`TsConfig`]. It can be a string indicating a preset it, or a full configuration.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum TsConfigKind {
 	Id(String),
@@ -60,7 +62,8 @@ impl Default for TsConfigKind {
 
 /// A struct representing instructions for generating a tsconfig file.
 /// If the output path is relative, it will be joined to the root path of its package.
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct TsConfigDirective {
 	/// The output path of the config file [default: `tsconfig.json`]
 	pub output: Option<String>,
@@ -109,7 +112,8 @@ impl TsConfigDirective {
 }
 
 /// Settings for the watch mode in TypeScript.
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema, Merge)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 pub struct WatchOptions {
 	/// Specify how the TypeScript watch mode works.
@@ -150,7 +154,8 @@ pub struct WatchOptions {
 }
 
 /// A struct representing the contents of a `tsconfig.json` file.
-#[derive(Deserialize, Debug, Clone, Serialize, Default, Merge, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, Default, Merge, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct TsConfig {
@@ -189,7 +194,8 @@ pub struct TsConfig {
 }
 
 /// Auto type (.d.ts) acquisition options for this project. Requires TypeScript version 2.1 or later.
-#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum TypeAcquisition {
 	Bool(bool),
@@ -211,7 +217,8 @@ pub enum TypeAcquisition {
 }
 
 /// Instructs the TypeScript compiler how to compile .ts files.
-#[derive(Deserialize, Serialize, Debug, Clone, Default, Merge, PartialEq, Eq, JsonSchema)]
+#[derive(Deserialize, Serialize, Debug, Clone, Default, Merge, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
 pub struct CompilerOptions {

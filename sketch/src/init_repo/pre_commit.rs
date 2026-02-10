@@ -4,7 +4,8 @@ pub(crate) use pre_commit_elements::*;
 use super::*;
 
 /// A preset for a `.pre-commit-config.yaml` configuration file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PreCommitPreset {
 	/// The ids of the extended configurations.
@@ -55,7 +56,8 @@ impl Default for PreCommitConfig {
 }
 
 /// Configuration settings for [`pre-commit`](https://pre-commit.com)
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PreCommitConfig {
 	/// A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level
@@ -97,7 +99,8 @@ pub struct PreCommitConfig {
 }
 
 /// A pre-commit repo.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Repo {
 	/// Hooks for checking the pre-commit configuration itself. https://pre-commit.com/#meta-hooks
@@ -126,13 +129,15 @@ pub enum Repo {
 	},
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum MetaRepo {
 	Meta,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum MetaRepoId {
 	CheckHooksApply,
@@ -140,19 +145,22 @@ pub enum MetaRepoId {
 	Identity,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct MetaRepoHook {
 	pub id: MetaRepoId,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum LocalRepo {
 	Local,
 }
 
 /// Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PreCommitHook {
 	/// An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks
@@ -252,7 +260,8 @@ impl Ord for PreCommitHook {
 }
 
 /// Settings for [`pre-commit`](https://pre-commit.com)  Can be a preset id, a newly defined configuration, or a boolean to use defaults or to disable pre-commit.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum PreCommitSetting {
 	Bool(bool),

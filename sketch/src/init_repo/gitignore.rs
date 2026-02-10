@@ -41,7 +41,8 @@ fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
 }
 
 /// A preset for a `.gitignore` file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct GitignorePreset {
 	/// The ids of the extended presets.
@@ -72,7 +73,8 @@ impl GitignorePreset {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 /// Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)
 pub enum GitIgnoreRef {
@@ -88,7 +90,8 @@ impl std::str::FromStr for GitIgnoreRef {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 /// A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).
 pub enum GitIgnore {

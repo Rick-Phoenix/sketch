@@ -1,7 +1,8 @@
 use super::*;
 
 /// Handling of LTO in a build profile
-#[derive(Debug, Clone, PartialEq, Serialize, Eq, PartialOrd, Ord, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Serialize, Eq, PartialOrd, Ord, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum LtoSetting {
 	/// off
@@ -25,18 +26,8 @@ impl AsTomlValue for LtoSetting {
 }
 
 /// Verbosity of debug info in a [`Profile`]
-#[derive(
-	Debug,
-	Copy,
-	Clone,
-	PartialEq,
-	Eq,
-	PartialOrd,
-	Ord,
-	Serialize_repr,
-	Deserialize_repr,
-	JsonSchema_repr,
-)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize_repr, Deserialize_repr)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema_repr))]
 #[repr(u8)]
 pub enum DebugSetting {
 	/// 0 or false
@@ -54,9 +45,8 @@ impl AsTomlValue for DebugSetting {
 }
 
 /// Handling of debug symbols in a build profile
-#[derive(
-	Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, JsonSchema, Serialize,
-)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum StripSetting {
 	/// Same as `strip = false`
@@ -79,7 +69,8 @@ impl AsTomlValue for StripSetting {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(try_from = "RawOptLevel", into = "RawOptLevel")]
 pub enum OptLevel {
 	Zero,
@@ -103,7 +94,8 @@ impl AsTomlValue for OptLevel {
 	}
 }
 
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 enum RawOptLevel {
 	Integer(u8),
@@ -149,7 +141,8 @@ impl From<OptLevel> for RawOptLevel {
 }
 
 /// Compilation/optimization settings for a workspace
-#[derive(Debug, Clone, PartialEq, Default, JsonSchema, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub struct Profile {
 	/// num or z, s
@@ -241,7 +234,8 @@ impl AsTomlValue for Profile {
 }
 
 /// Build-in an custom build/optimization settings
-#[derive(Debug, Clone, PartialEq, Default, JsonSchema, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[merge(with = merge_option)]
 pub struct Profiles {
 	/// Used for `--release`

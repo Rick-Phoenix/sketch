@@ -32,9 +32,8 @@ impl TypescriptConfig {
 }
 
 /// All settings related to typescript projects.
-#[derive(
-	Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, Eq, JsonSchema, Default,
-)]
+#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct TypescriptConfig {
 	/// The package manager being used. [default: pnpm].
@@ -113,9 +112,8 @@ impl PackageManager {
 }
 
 /// A js/ts package manager.
-#[derive(
-	Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default, ValueEnum, Copy, JsonSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize, Default, ValueEnum, Copy)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum PackageManager {
 	#[default]

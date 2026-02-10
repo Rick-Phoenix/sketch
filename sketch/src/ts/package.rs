@@ -2,7 +2,8 @@ use super::{vitest::*, *};
 use crate::exec::*;
 
 /// The kind of ts package. Only relevant when using defaults.
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq, Eq, JsonSchema)]
+#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum PackageKind {
 	#[default]
@@ -11,9 +12,8 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(
-	Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, Eq, JsonSchema, Default,
-)]
+#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct PackageConfig {
 	/// The name of the new package. It defaults to the name of its directory.

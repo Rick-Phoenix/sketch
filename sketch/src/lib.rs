@@ -11,6 +11,7 @@ use merge_it::{
 	Merge, merge_option, overwrite_always, overwrite_if_none, overwrite_if_not_default,
 	overwrite_if_true,
 };
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -22,6 +23,7 @@ use clap::{Args, Parser, ValueEnum};
 use cli::parsers::*;
 use licenses::License;
 use maplit::btreeset;
+#[cfg(feature = "schemars")]
 use schemars::JsonSchema_repr;
 use serde_utils::*;
 use std::{
@@ -96,7 +98,8 @@ pub enum Preset {
 	RustCrate,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Or<A, B> {
 	A(A),

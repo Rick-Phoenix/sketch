@@ -37,7 +37,7 @@ toml_edit = { version = "0.24.0", features = ["serde"] }
 globset = "0.4"
 walkdir = "2.5"
 semver = { version = "1" }
-schemars = { version = "1", features = ["indexmap2"] }
+schemars = { version = "1", features = ["indexmap2"], optional = true }
 askama = { workspace = true }
 toml = { version = "0.9.11", features = ["serde"] }
 serde = { version = "1", features = ["derive"] }
@@ -62,3 +62,7 @@ serde_repr = "0.1"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
+
+[features]
+default = []
+schemars = ["dep:schemars"]

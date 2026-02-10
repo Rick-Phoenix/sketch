@@ -1,10 +1,6 @@
-use std::{collections::BTreeSet, sync::LazyLock};
-
 use maplit::btreeset;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
 
-use super::{PreCommitHook, Repo};
+use super::*;
 
 pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::Uri {
 	repo: "https://github.com/gitleaks/gitleaks".to_string(),
@@ -12,7 +8,8 @@ pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::Uri {
 	hooks: btreeset! { PreCommitHook { id: "gitleaks".to_string(), ..Default::default() } },
 });
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "snake_case")]
 pub enum Language {
 	Conda,
@@ -37,7 +34,8 @@ pub enum Language {
 	System,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum Stage {
 	Commit,
@@ -56,7 +54,8 @@ pub enum Stage {
 	Manual,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, PartialOrd, Ord, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum FileType {
 	AdobeIllustrator,
@@ -308,7 +307,8 @@ pub enum FileType {
 	Zsh,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum AutoUpdateSchedule {
 	Weekly,
@@ -317,7 +317,8 @@ pub enum AutoUpdateSchedule {
 }
 
 /// pre-commit.ci specific settings https://pre-commit.ci/#configuration
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 pub struct CiSettings {
 	/// A commit message for pull request autofixes https://pre-commit.ci/#configuration

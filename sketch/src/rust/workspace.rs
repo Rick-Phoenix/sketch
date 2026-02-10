@@ -1,7 +1,8 @@
 use super::*;
 
 /// A manifest can contain both a package and workspace-wide properties
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Workspace {
 	/// Relative paths of crates in here
@@ -73,7 +74,8 @@ impl AsTomlValue for Workspace {
 	}
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Lints {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	pub rust: BTreeMap<String, LintKind>,
@@ -94,7 +96,8 @@ impl AsTomlValue for Lints {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum LintKind {
 	Simple(LintLevel),
@@ -111,7 +114,8 @@ impl AsTomlValue for LintKind {
 }
 
 /// Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub struct PackageTemplate {
