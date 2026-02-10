@@ -35,7 +35,6 @@ impl TypescriptConfig {
 #[derive(
 	Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, Eq, JsonSchema, Default,
 )]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct TypescriptConfig {
 	/// The package manager being used. [default: pnpm].
@@ -61,36 +60,36 @@ pub struct TypescriptConfig {
 
 	/// A map of individual [`PersonData`] that can be referenced as authors, contributors or maintainers in a [`PackageJsonPreset`].
 	#[arg(skip)]
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	pub people: IndexMap<String, PersonData>,
 
 	/// A map containing [`PackageJsonPreset`]s.
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub package_json_presets: IndexMap<String, PackageJsonPreset>,
 
 	/// A map containing [`TsConfigPreset`]s.
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub ts_config_presets: IndexMap<String, TsConfigPreset>,
 
 	/// A map containing [`OxlintPreset`]s.
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub oxlint_presets: IndexMap<String, OxlintPreset>,
 
 	/// A map of [`PackageConfig`] presets.
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub package_presets: IndexMap<String, PackageConfig>,
 
 	/// A map of presets for `pnpm-workspace.yaml` configurations.
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub pnpm_presets: IndexMap<String, PnpmPreset>,
 
 	/// A map of presets for vitest setups.
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub vitest_presets: IndexMap<String, VitestConfig>,
 }

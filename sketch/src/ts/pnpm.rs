@@ -15,11 +15,9 @@ use crate::{
 #[serde(default)]
 pub struct PnpmPreset {
 	/// The list of extended presets.
-	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	#[merge(strategy = merge_nested)]
 	pub config: PnpmWorkspace,
 }
 
@@ -52,13 +50,11 @@ impl PnpmPreset {
 ///
 /// See more: https://pnpm.io/settings
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Default, Eq, Merge)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
 pub struct PnpmWorkspace {
 	/// Glob patterns for the directories containing the packages for this workspace.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub packages: BTreeSet<String>,
 
 	/// When set to true, pnpm will remove unused catalog entries during installation.
@@ -70,12 +66,11 @@ pub struct PnpmWorkspace {
 
 	/// The dependencies to store in the unnamed (default) catalog.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub catalog: StringBTreeMap,
 
 	/// A map of named catalogs and the dependencies listed in them.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_nested_maps)]
+	#[merge(with = merge_nested_maps)]
 	pub catalogs: BTreeMap<String, StringBTreeMap>,
 
 	/// A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts.
@@ -83,7 +78,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#onlybuiltdependencies
 	#[serde(alias = "only_built_dependencies")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub only_built_dependencies: BTreeSet<String>,
 
 	/// Specifies a JSON file that lists the only packages permitted to run installation scripts during the pnpm install process.
@@ -96,7 +90,6 @@ pub struct PnpmWorkspace {
 	/// A list of dependencies to run builds for. See more: https://pnpm.io/settings#neverbuiltdependencies
 	#[serde(alias = "never_built_dependencies")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub never_built_dependencies: BTreeSet<String>,
 
 	/// A list of package names that should not be built during installation.
@@ -104,7 +97,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#ignoredbuiltdependencies
 	#[serde(alias = "ignored_built_dependencies")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub ignored_built_dependencies: BTreeSet<String>,
 
 	/// If set to true, all build scripts (e.g. preinstall, install, postinstall) from dependencies will run automatically, without requiring approval.
@@ -118,7 +110,6 @@ pub struct PnpmWorkspace {
 	///
 	/// See more: https://pnpm.io/settings#overrides
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub overrides: StringBTreeMap,
 
 	/// Configuration for package updates.
@@ -140,7 +131,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#minimumreleaseageexclude
 	#[serde(alias = "minimum_release_age_exclude")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub minimum_release_age_exclude: BTreeSet<String>,
 
 	/// The packageExtensions fields offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions.
@@ -148,7 +138,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#packageextensions
 	#[serde(alias = "package_extensions")]
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub package_extensions: BTreeMap<String, PackageExtension>,
 
 	/// Rules for peer dependencies.
@@ -163,7 +152,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#alloweddeprecatedversions
 	#[serde(alias = "allowed_deprecated_versions")]
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub allowed_deprecated_versions: StringBTreeMap,
 
 	/// A list of dependencies that are patched.
@@ -171,7 +159,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#patcheddependencies
 	#[serde(alias = "patched_dependencies")]
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub patched_dependencies: StringBTreeMap,
 
 	/// When true, installation won't fail if some of the patches from the `patchedDependencies` field were not applied. Previously named `allowNonAppliedPatches`.
@@ -193,7 +180,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/config-dependencies
 	#[serde(alias = "config_dependencies")]
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub config_dependencies: StringBTreeMap,
 
 	/// Settings for the `pnpm audit` command.
@@ -208,7 +194,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#requiredscripts
 	#[serde(alias = "required_scripts")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub required_scripts: BTreeSet<String>,
 
 	/// Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install.
@@ -223,7 +208,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#ignoredoptionaldependencies
 	#[serde(alias = "ignored_optional_dependencies")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub ignored_optional_dependencies: BTreeSet<String>,
 
 	/// Instructions for the runtime, such as the node version to use.
@@ -252,7 +236,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#hoistpattern
 	#[serde(alias = "hoist_pattern")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub hoist_pattern: BTreeSet<String>,
 
 	/// Unlike hoistPattern, which hoists dependencies to a hidden modules directory inside the virtual store, publicHoistPattern hoists dependencies matching the pattern to the root modules directory.
@@ -260,7 +243,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#publichoistpattern
 	#[serde(alias = "public_hoist_pattern")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub public_hoist_pattern: BTreeSet<String>,
 
 	/// By default, pnpm creates a semistrict node_modules, meaning dependencies have access to undeclared dependencies but modules outside of node_modules do not.
@@ -393,7 +375,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#mergegitbranchlockfilesbranchpattern
 	#[serde(alias = "merge_git_branch_lockfiles_branch_pattern")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub merge_git_branch_lockfiles_branch_pattern: BTreeSet<String>,
 
 	/// Max length of the peer IDs suffix added to dependency keys in the lockfile. If the suffix is longer, it is replaced with a hash.
@@ -439,7 +420,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#gitshallowhosts
 	#[serde(alias = "git_shallow_hosts")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub git_shallow_hosts: BTreeSet<String>,
 
 	/// A proxy to use for outgoing HTTPS requests. If the HTTPS_PROXY, https_proxy, HTTP_PROXY or http_proxy environment variables are set, their values will be used instead.
@@ -711,7 +691,6 @@ pub struct PnpmWorkspace {
 	/// See more: https://pnpm.io/settings#syncinjecteddepsafterscripts
 	#[serde(alias = "sync_injected_deps_after_scripts")]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub sync_injected_deps_after_scripts: BTreeSet<String>,
 
 	/// If this is enabled, local packages from the workspace are preferred over packages from the registry, even if there is a newer version of the package in the registry.
@@ -958,7 +937,6 @@ pub struct PnpmWorkspace {
 
 	#[serde(flatten)]
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub extra: JsonValueBTreeMap,
 }
 

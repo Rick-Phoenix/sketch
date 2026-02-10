@@ -15,32 +15,29 @@ use pre_commit::*;
 #[serde(default)]
 pub struct RepoPreset {
 	#[arg(short, long)]
-	#[merge(strategy = overwrite_if_some)]
 	/// Settings for the gitignore file.
 	pub gitignore: Option<GitIgnoreRef>,
 
 	#[arg(long)]
-	#[merge(strategy = overwrite_if_some)]
 	/// Configuration settings for [`pre-commit`](https://pre-commit.com/).
 	pub pre_commit: Option<PreCommitSetting>,
 
 	#[arg(short = 't', long = "template")]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	/// A set of templates to generate when this preset is used.
 	pub with_templates: Vec<TemplatingPresetReference>,
 
 	#[arg(short, long)]
-	#[merge(strategy = overwrite_if_some)]
 	/// A license file to generate for the new repo.
 	pub license: Option<License>,
 
 	#[arg(skip)]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	/// One or many rendered commands to execute before the repo's creation
 	pub hooks_pre: Vec<Hook>,
 
 	#[arg(skip)]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	/// One or many rendered commands to execute after the repo's creation
 	pub hooks_post: Vec<Hook>,
 
@@ -49,7 +46,7 @@ pub struct RepoPreset {
     value_name = "id=PRESET_ID,file=PATH",
     value_parser = WorkflowReference::from_cli
   )]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	/// One or many workflows to generate in the new repo.
 	pub workflows: Vec<WorkflowReference>,
 }

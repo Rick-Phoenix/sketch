@@ -14,7 +14,6 @@ pub enum PackageKind {
 #[derive(
 	Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, Eq, JsonSchema, Default,
 )]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {
 	/// The name of the new package. It defaults to the name of its directory.
@@ -27,7 +26,6 @@ pub struct PackageConfig {
 		help = "One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)",
 		value_name = "id=ID,output=PATH"
 	)]
-	#[merge(strategy = Vec::extend)]
 	pub ts_config: Vec<TsConfigDirective>,
 
 	/// The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
@@ -44,11 +42,9 @@ pub struct PackageConfig {
 
 	/// One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.
 	#[arg(long = "template", short = 't', value_name = "PRESET_ID")]
-	#[merge(strategy = Vec::extend)]
 	pub with_templates: Vec<TemplatingPresetReference>,
 
 	/// One or many rendered commands to execute before the repo's creation
-	#[merge(strategy = Vec::extend)]
 	#[arg(
 		long = "hook-pre",
 		help = "One or many IDs of templates to render and execute as commands before the package's creation",
@@ -57,7 +53,6 @@ pub struct PackageConfig {
 	pub hooks_pre: Vec<Hook>,
 
 	/// One or many rendered commands to execute after the repo's creation
-	#[merge(strategy = Vec::extend)]
 	#[arg(
 		long = "hook-post",
 		help = "One or many IDs of templates to render and execute as commands after the package's creation",

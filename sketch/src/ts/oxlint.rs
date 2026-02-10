@@ -8,11 +8,9 @@ use super::*;
 #[serde(default)]
 pub struct OxlintPreset {
 	/// The list of extended presets.
-	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	#[merge(strategy = merge_nested)]
 	pub config: OxlintConfig,
 }
 
@@ -47,27 +45,22 @@ impl OxlintPreset {
 pub struct OxlintConfig {
 	/// Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.
 	#[serde(skip_serializing_if = "IndexSet::is_empty")]
-	#[merge(strategy = IndexSet::extend)]
 	pub extends: IndexSet<String>,
 
 	/// A list of plugins to enable for this config.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub plugins: BTreeSet<Plugin>,
 
 	/// Contains the settings for various plugins.
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub settings: Option<PluginsSettings>,
 
 	/// Enables or disables specific global variables.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub globals: BTreeMap<String, GlobalValue>,
 
 	/// Environments enable and disable collections of global variables.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub env: BTreeMap<String, bool>,
 
 	/// Configure an entire category of rules all at once.
@@ -76,26 +69,21 @@ pub struct OxlintConfig {
 	///
 	/// See more: https://oxc.rs/docs/guide/usage/linter/config-file-reference#categories
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub categories: Option<Categories>,
 
 	/// Globs to ignore during linting. These are resolved from the configuration file path.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub ignore_patterns: BTreeSet<String>,
 
 	/// Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub rules: BTreeMap<String, RuleSetting>,
 
 	/// Add, remove, or otherwise reconfigure rules for specific files or groups of files.
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	#[merge(strategy = Vec::extend)]
 	pub overrides: Vec<Override>,
 
 	#[serde(flatten, default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub extras: JsonValueBTreeMap,
 }
 
@@ -234,7 +222,6 @@ pub struct Override {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
 #[serde(default)]
 #[serde(rename_all = "camelCase")]
-#[merge(strategy = overwrite_if_some)]
 pub struct PluginsSettings {
 	/// Settings for the Jsdoc plugin.
 	#[serde(skip_serializing_if = "Option::is_none")]

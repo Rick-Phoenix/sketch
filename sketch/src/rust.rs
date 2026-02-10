@@ -229,10 +229,8 @@ pub fn toml_string_list<'a>(strings: impl IntoIterator<Item = &'a String>) -> It
 #[serde(default)]
 pub struct RustPresets {
 	/// A map that contains presets for `Cargo.toml` files.
-	#[merge(strategy = IndexMap::extend)]
 	pub manifest: IndexMap<String, CargoTomlPreset>,
 
-	#[merge(strategy = IndexMap::extend)]
 	#[serde(rename = "crate")]
 	pub crate_: IndexMap<String, Crate>,
 }
@@ -242,21 +240,19 @@ pub struct RustPresets {
 #[serde(default)]
 pub struct Crate {
 	#[arg(short, long, value_parser = CargoTomlPresetRef::from_cli, default_value_t = CargoTomlPresetRef::default())]
-	#[merge(strategy = overwrite_always)]
+	#[merge(with = overwrite_always)]
 	pub manifest: CargoTomlPresetRef,
 
 	#[arg(long)]
-	#[merge(strategy = overwrite_if_some)]
 	/// Settings for the gitignore file.
 	pub gitignore: Option<GitIgnoreRef>,
 
 	#[arg(long)]
-	#[merge(strategy = overwrite_if_some)]
 	/// A license file to generate for the new repo.
 	pub license: Option<License>,
 
 	#[arg(short = 't', long = "template", value_name = "PRESET_ID")]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	pub with_templates: Vec<TemplatingPresetReference>,
 }
 
@@ -533,11 +529,9 @@ impl CargoTomlPresetRef {
 #[serde(default)]
 pub struct CargoTomlPreset {
 	/// The list of extended presets.
-	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	#[merge(strategy = merge_nested)]
 	pub config: Manifest,
 }
 
@@ -566,62 +560,54 @@ impl CargoTomlPreset {
 /// The `Metadata` is a generic type for `[package.metadata]` table. You can replace it with
 /// your own struct type if you use the metadata and don't want to use the catch-all `Value` type.
 #[derive(Debug, Clone, PartialEq, JsonSchema, Serialize, Deserialize, Merge, Default)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "kebab-case")]
 pub struct Manifest {
 	/// Workspace-wide settings
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub workspace: Option<Workspace>,
 
 	/// Package definition (a cargo crate)
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub package: Option<Package>,
 
 	/// Note that due to autolibs feature this is not the complete list
 	/// unless you run [`Manifest::complete_from_path`]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub lib: Option<Product>,
 
 	/// Note that due to autobins feature this is not the complete list
 	/// unless you run [`Manifest::complete_from_path`]
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub bin: BTreeSet<Product>,
 
 	/// `[target.cfg.dependencies]`
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub target: BTreeMap<String, Target>,
 
 	/// `[patch.crates-io]` section
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub patch: BTreeMap<String, BTreeMap<String, Dependency>>,
 
 	/// Compilation/optimization settings
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub profile: Option<Profiles>,
 
 	/// Benchmarks
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub bench: BTreeSet<Product>,
 
 	/// Integration tests
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub test: BTreeSet<Product>,
 
 	/// Examples
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub example: BTreeSet<Product>,
 
 	/// Lints
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub lints: Option<Inheritable<Lints>>,
 
 	/// The `[features]` section. This set may be incomplete!
@@ -633,22 +619,21 @@ pub struct Manifest {
 	/// This crate has an optional [`features`] module for dealing with this
 	/// complexity and getting the real list of features.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub features: BTreeMap<String, BTreeSet<String>>,
 
 	/// Normal dependencies
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_dependencies)]
+	#[merge(with = merge_dependencies)]
 	pub dependencies: BTreeMap<String, Dependency>,
 
 	/// Dev/test-only deps
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_dependencies)]
+	#[merge(with = merge_dependencies)]
 	pub dev_dependencies: BTreeMap<String, Dependency>,
 
 	/// Build-time deps
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_dependencies)]
+	#[merge(with = merge_dependencies)]
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
@@ -948,16 +933,16 @@ impl Merge for Dependency {
 #[derive(Debug, Clone, PartialEq, Eq, Default, JsonSchema, Serialize, Deserialize, Merge)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct InheritedDependencyDetail {
-	#[merge(strategy = BTreeSet::extend)]
+	#[merge(with = BTreeSet::extend)]
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
 
 	#[serde(skip_serializing_if = "crate::is_false")]
-	#[merge(strategy = merge::bool::overwrite_true)]
+	#[merge(with = overwrite_if_true)]
 	pub optional: bool,
 
 	#[serde(skip_serializing_if = "crate::is_false")]
-	#[merge(strategy = merge::bool::overwrite_true)]
+	#[merge(with = overwrite_if_true)]
 	pub workspace: bool,
 }
 
@@ -976,7 +961,6 @@ impl AsTomlValue for InheritedDependencyDetail {
 /// When definition of a dependency is more than just a version string.
 #[derive(Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize, Merge)]
 #[serde(rename_all = "kebab-case")]
-#[merge(strategy = overwrite_if_some)]
 pub struct DependencyDetail {
 	/// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1022,7 +1006,7 @@ pub struct DependencyDetail {
 	///
 	/// Note that Cargo interprets `default` in a special way.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
+	#[merge(with = BTreeSet::extend)]
 	pub features: BTreeSet<String>,
 
 	/// NB: Not allowed at workspace level
@@ -1030,7 +1014,7 @@ pub struct DependencyDetail {
 	/// If not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.
 	/// See the [`features`] module for more info.
 	#[serde(skip_serializing_if = "crate::is_false")]
-	#[merge(strategy = merge::bool::overwrite_true)]
+	#[merge(with = overwrite_if_true)]
 	pub optional: bool,
 
 	/// Enable the `default` set of features of the dependency (enabled by default).
@@ -1239,7 +1223,6 @@ impl AsTomlValue for Resolver {
 	Debug, Clone, PartialEq, Eq, JsonSchema, Serialize, Deserialize, PartialOrd, Ord, Merge,
 )]
 #[serde(rename_all = "kebab-case")]
-#[merge(strategy = overwrite_if_some)]
 /// Cargo uses the term "target" for both "target platform" and "build target" (the thing to build),
 /// which makes it ambigous.
 /// Here Cargo's bin/lib **target** is renamed to **product**.
@@ -1279,7 +1262,7 @@ pub struct Product {
 		alias = "proc-macro",
 		skip_serializing_if = "crate::is_false"
 	)]
-	#[merge(strategy = merge::bool::overwrite_true)]
+	#[merge(with = overwrite_if_true)]
 	pub proc_macro: bool,
 
 	/// If set to false, `cargo test` will omit the `--test` flag to rustc, which
@@ -1299,7 +1282,7 @@ pub struct Product {
 
 	/// The available options are "dylib", "rlib", "staticlib", "cdylib", and "proc-macro".
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
+	#[merge(with = BTreeSet::extend)]
 	pub crate_type: BTreeSet<String>,
 
 	/// The `required-features` field specifies which features the product needs in order to be built.
@@ -1307,7 +1290,7 @@ pub struct Product {
 	/// This is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,
 	/// it has no effect on `[lib]`.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
+	#[merge(with = BTreeSet::extend)]
 	pub required_features: BTreeSet<String>,
 }
 

@@ -2,33 +2,28 @@ use super::*;
 
 /// A manifest can contain both a package and workspace-wide properties
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, Merge)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Workspace {
 	/// Relative paths of crates in here
-	#[merge(strategy = BTreeSet::extend)]
 	pub members: BTreeSet<String>,
 
 	/// Members to operate on when in the workspace root.
 	///
 	/// When specified, `default-members` must expand to a subset of `members`.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub default_members: BTreeSet<String>,
 
 	/// Template for inheritance
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub package: Option<PackageTemplate>,
 
 	/// Ignore these dirs
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub exclude: BTreeSet<String>,
 
 	/// Shared info
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub metadata: BTreeMap<String, Value>,
 
 	/// Compatibility setting
@@ -37,12 +32,11 @@ pub struct Workspace {
 
 	/// Template for `needs_workspace_inheritance`
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = merge_dependencies)]
+	#[merge(with = merge_dependencies)]
 	pub dependencies: BTreeMap<String, Dependency>,
 
 	/// Workspace-level lint groups
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub lints: Option<Lints>,
 }
 
@@ -82,11 +76,9 @@ impl AsTomlValue for Workspace {
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge)]
 pub struct Lints {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub rust: BTreeMap<String, LintKind>,
 
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub clippy: BTreeMap<String, LintKind>,
 }
 
@@ -121,12 +113,10 @@ impl AsTomlValue for LintKind {
 /// Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, Merge)]
 #[serde(rename_all = "kebab-case")]
-#[merge(strategy = overwrite_if_some)]
 #[non_exhaustive]
 pub struct PackageTemplate {
 	/// See <https://crates.io/category_slugs>
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub categories: BTreeSet<String>,
 
 	/// Multi-line text, some people use Markdown here
@@ -143,7 +133,6 @@ pub struct PackageTemplate {
 
 	/// Don't publish these files, relative to workspace
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub exclude: BTreeSet<String>,
 
 	/// Homepage URL
@@ -152,12 +141,10 @@ pub struct PackageTemplate {
 
 	/// Publish these files, relative to workspace
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub include: BTreeSet<String>,
 
 	/// For search
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub keywords: BTreeSet<String>,
 
 	#[serde(default, skip_serializing_if = "Option::is_none")]

@@ -15,6 +15,7 @@ license = "Apache-2.0"
 authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
 
 [workspace.dependencies]
+merge-it = { path = "../merge-it/prelude/", features = ["indexmap"] }
 paste = "1"
 askama = { version = "0.14", default-features = false, features = [
   "config",

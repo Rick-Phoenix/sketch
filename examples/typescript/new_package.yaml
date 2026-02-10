@@ -45,7 +45,7 @@ typescript:
       # - A `tsconfig.json` file only references other files
       # - A `tsconfig.src.json` file that has `noEmit` for apps and `emitDeclarationOnly` for libraries
       # - (Only for libraries) A separate `tsconfig.dev.json` file for typechecking tests, configs and scripts
-      ts_config: null
+      ts_config: []
 
       # ANCHOR: template_example
       # Inside the package preset configuration

@@ -8,11 +8,9 @@ use super::*;
 #[serde(default)]
 pub struct PreCommitPreset {
 	/// The ids of the extended configurations.
-	#[merge(strategy = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	#[merge(strategy = merge_nested)]
 	pub config: PreCommitConfig,
 }
 
@@ -58,7 +56,6 @@ impl Default for PreCommitConfig {
 
 /// Configuration settings for [`pre-commit`](https://pre-commit.com)
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Merge)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PreCommitConfig {
 	/// A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level
@@ -67,17 +64,14 @@ pub struct PreCommitConfig {
 
 	/// A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub default_install_hook_types: BTreeSet<String>,
 
 	/// Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub default_language_version: StringBTreeMap,
 
 	/// The default stages of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(strategy = BTreeSet::extend)]
 	pub default_stages: BTreeSet<Stage>,
 
 	/// A file include pattern of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
@@ -97,7 +91,7 @@ pub struct PreCommitConfig {
 	pub ci: Option<CiSettings>,
 
 	/// Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
-	#[merge(strategy = BTreeSet::extend)]
+	#[merge(with = BTreeSet::extend)]
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub repos: BTreeSet<Repo>,
 }

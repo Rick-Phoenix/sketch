@@ -25,19 +25,18 @@ impl Config {
 /// The global configuration struct.
 #[allow(clippy::struct_field_names)]
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, JsonSchema, Default)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct Config {
 	#[serde(skip)]
-	#[merge(strategy = merge::option::overwrite_none)]
+	#[merge(with = overwrite_if_none)]
 	pub(crate) config_file: Option<PathBuf>,
 
 	/// The configuration for typescript projects.
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub typescript: Option<TypescriptConfig>,
 
 	/// Configuration and presets for Docker.
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub docker: Option<DockerConfig>,
 
 	/// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
@@ -50,39 +49,30 @@ pub struct Config {
 	pub no_overwrite: Option<bool>,
 
 	/// The paths (absolute, or relative to the originating config file) to the config files to extend.
-	#[merge(strategy = IndexSet::extend)]
 	pub extends: IndexSet<PathBuf>,
 
 	/// A map that contains template definitions.
-	#[merge(strategy = IndexMap::extend)]
 	pub templates: IndexMap<String, String>,
 
 	/// A map that contains templating presets.
-	#[merge(strategy = IndexMap::extend)]
 	pub templating_presets: IndexMap<String, TemplatingPreset>,
 
 	/// A map that contains pre-commit presets.
-	#[merge(strategy = IndexMap::extend)]
 	pub pre_commit_presets: IndexMap<String, PreCommitPreset>,
 
 	/// A map that contains gitignore presets.
-	#[merge(strategy = IndexMap::extend)]
 	pub gitignore_presets: IndexMap<String, GitignorePreset>,
 
 	/// A map that contains presets for git repos.
-	#[merge(strategy = IndexMap::extend)]
 	pub git_presets: IndexMap<String, RepoPreset>,
 
-	#[merge(strategy = RustPresets::merge)]
 	pub rust_presets: RustPresets,
 
 	/// Configurations and presets relating to Github
-	#[merge(strategy = merge_nested)]
 	pub github: GithubConfig,
 
 	/// The global variables that will be available for every template being generated.
 	/// They are overridden by vars set in a template's local context or via the cli.
-	#[merge(strategy = IndexMap::extend)]
 	pub vars: IndexMap<String, Value>,
 }
 

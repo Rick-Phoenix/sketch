@@ -7,7 +7,10 @@
 #![doc = include_str!("../README.md")]
 
 use indexmap::{IndexMap, IndexSet};
-use merge::Merge;
+use merge_it::{
+	Merge, merge_option, overwrite_always, overwrite_if_none, overwrite_if_not_default,
+	overwrite_if_true,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

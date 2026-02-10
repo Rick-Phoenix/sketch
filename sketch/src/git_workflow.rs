@@ -61,7 +61,7 @@ pub enum WorkflowReference {
 
 /// Configurations and presets relating to Github
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Default, Merge)]
-#[merge(strategy = IndexMap::extend)]
+#[merge(with = IndexMap::extend)]
 #[serde(default)]
 pub struct GithubConfig {
 	/// A map of presets for Github workflows
@@ -78,12 +78,10 @@ pub struct GithubConfig {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge)]
 pub struct GithubWorkflowPreset {
 	/// The list of extended presets.
-	#[merge(strategy = IndexSet::extend)]
 	#[serde(default)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	#[merge(strategy = merge_nested)]
 	pub config: Workflow,
 }
 
@@ -152,12 +150,10 @@ impl GithubWorkflowPreset {
 #[derive(Clone, Debug, Serialize, Deserialize, JsonSchema, PartialEq, Eq, Merge, Default)]
 pub struct JobPreset {
 	/// The list of extended presets.
-	#[merge(strategy = IndexSet::extend)]
 	#[serde(skip_serializing, default)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	#[merge(strategy = merge_nested)]
 	pub job: Job,
 }
 
@@ -208,7 +204,6 @@ impl JobPreset {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge)]
-#[merge(strategy = overwrite_if_some)]
 pub struct Workflow {
 	/// The name of your workflow. GitHub displays the names of your workflows on your repository's actions page. If you omit this field, GitHub sets the name to the workflow's filename.
 	///
@@ -226,21 +221,21 @@ pub struct Workflow {
 	///
 	/// For a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_event)]
+	#[merge(with = merge_event)]
 	pub on: Option<Event>,
 
 	/// You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub permissions: Option<Permissions>,
 
 	/// A map of variables that are available to the steps of all jobs in the workflow. You can also set variables that are only available to the steps of a single job or to a single step.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#env
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
+	#[merge(with = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
@@ -263,7 +258,7 @@ pub struct Workflow {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
 	#[serde(default)]
-	#[merge(strategy = IndexMap::extend)]
+	#[merge(with = IndexMap::extend)]
 	pub jobs: IndexMap<String, JobReference>,
 }
 
@@ -309,11 +304,11 @@ impl Merge for Job {
 					left_job.merge(right_job);
 				}
 				Self::Reusable(right_job) => {
-					overwrite_if_some(&mut left_job.name, right_job.name);
-					merge_optional_nested(&mut left_job.needs, right_job.needs);
-					overwrite_if_some(&mut left_job.if_, right_job.if_);
-					overwrite_if_some(&mut left_job.concurrency, right_job.concurrency);
-					merge_optional_nested(&mut left_job.permissions, right_job.permissions);
+					left_job.name.merge(right_job.name);
+					merge_option(&mut left_job.needs, right_job.needs);
+					left_job.if_.merge(right_job.if_);
+					left_job.concurrency.merge(right_job.concurrency);
+					merge_option(&mut left_job.permissions, right_job.permissions);
 				}
 			},
 			Self::Reusable(left_job) => match other {
@@ -321,11 +316,11 @@ impl Merge for Job {
 					left_job.merge(right_job);
 				}
 				Self::Normal(right_job) => {
-					overwrite_if_some(&mut left_job.name, right_job.name);
-					merge_optional_nested(&mut left_job.needs, right_job.needs);
-					overwrite_if_some(&mut left_job.if_, right_job.if_);
-					overwrite_if_some(&mut left_job.concurrency, right_job.concurrency);
-					merge_optional_nested(&mut left_job.permissions, right_job.permissions);
+					left_job.name.merge(right_job.name);
+					merge_option(&mut left_job.needs, right_job.needs);
+					left_job.if_.merge(right_job.if_);
+					left_job.concurrency.merge(right_job.concurrency);
+					merge_option(&mut left_job.permissions, right_job.permissions);
 				}
 			},
 		}
@@ -336,13 +331,12 @@ impl Merge for Job {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge, Default)]
-#[merge(strategy = overwrite_if_some)]
 pub struct NormalJob {
 	/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
 	#[serde(rename = "runs-on", default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub runs_on: Option<RunsOn>,
 
 	/// The name of the job displayed on GitHub.
@@ -357,7 +351,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub needs: Option<StringOrSortedList>,
 
 	/// You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.
@@ -372,7 +366,6 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub outputs: StringBTreeMap,
 
 	/// A map of default settings that will apply to all steps in the job.
@@ -387,7 +380,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub permissions: Option<Permissions>,
 
 	/// Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time. A concurrency group can be any string or expression.
@@ -406,7 +399,6 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idenv
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// The maximum number of minutes to let a workflow run before GitHub automatically cancels it. Default: 360
@@ -439,7 +431,6 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idservices
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub services: BTreeMap<String, Container>,
 
 	/// A strategy creates a build matrix for your jobs. You can define different variations of an environment to run each job in.
@@ -452,13 +443,12 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	pub steps: Vec<GHStepData>,
 }
 
 /// A reusable job, imported from a file or repo.
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge, Default)]
-#[merge(strategy = overwrite_if_some)]
 pub struct ReusableWorkflowCallJob {
 	/// The location and version of a reusable workflow file to run as a job, of the form './{path/to}/{localfile}.yml' or '{owner}/{repo}/{path}/{filename}@{ref}'. {ref} can be a SHA, a release tag, or a branch name. Using the commit SHA is the safest for stability and security.
 	///
@@ -476,7 +466,7 @@ pub struct ReusableWorkflowCallJob {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub needs: Option<StringOrSortedList>,
 
 	/// You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.
@@ -497,21 +487,20 @@ pub struct ReusableWorkflowCallJob {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub permissions: Option<Permissions>,
 
 	/// A map of inputs that are passed to the called workflow. Any inputs that you pass must match the input specifications defined in the called workflow. Unlike 'jobs.<job_id>.steps[*].with', the inputs you pass with 'jobs.<job_id>.with' are not be available as environment variables in the called workflow. Instead, you can reference the inputs by using the inputs context.
 	///
 	/// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idwith
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow. Any secrets that you pass must match the names defined in the called workflow.
 	///
 	/// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = merge_optional_nested)]
+	#[merge(with = merge_option)]
 	pub secrets: Option<JobSecret>,
 
 	/// A build matrix is a set of different configurations of the virtual environment.
@@ -960,7 +949,6 @@ pub enum PermissionsLevel {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, JsonSchema, Merge)]
-#[merge(strategy = overwrite_if_some)]
 pub struct PermissionsEvent {
 	/// Work with GitHub Actions. For example, `actions: write` permits an action to cancel a workflow run.
 	///
@@ -1382,7 +1370,7 @@ macro_rules! events {
       pub struct $name {
         /// The types of events that should trigger this workflow.
         #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-        #[merge(strategy = BTreeSet::extend)]
+        #[merge(with = BTreeSet::extend)]
         pub types: BTreeSet<[< $name Events >]>
       }
 
@@ -1523,7 +1511,7 @@ events!(
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = BTreeSet::extend)]
+#[merge(with = BTreeSet::extend)]
 pub struct PullRequest {
 	/// The types of events that should trigger this workflow.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -1621,7 +1609,7 @@ events!(
 ///
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#push-event-push
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = BTreeSet::extend)]
+#[merge(with = BTreeSet::extend)]
 pub struct Push {
 	/// Runs only when specific branches are pushed.
 	///
@@ -1698,7 +1686,7 @@ events!(
 ///
 /// See more: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_run
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = BTreeSet::extend)]
+#[merge(with = BTreeSet::extend)]
 pub struct WorkflowRun {
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	/// The types of events that should trigger this workflow.
@@ -1750,7 +1738,7 @@ pub struct Schedule {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#about-events-that-trigger-workflows
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = merge_optional_nested)]
+#[merge(with = merge_option)]
 pub struct EventObject {
 	/// Runs your workflow anytime the branch_protection_rule event occurs
 	///
@@ -1774,28 +1762,24 @@ pub struct EventObject {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#create-event-create
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub create: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime someone deletes a branch or tag, which triggers the delete event.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#delete-event-delete
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub delete: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime someone creates a deployment, which triggers the deployment event. Deployments created with a commit SHA may not have a Git ref.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#deployment-event-deployment
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub deployment: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime a third party provides a deployment status, which triggers the deployment_status event. Deployments created with a commit SHA may not have a Git ref.
 	///
 	/// See more: https://docs.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub deployment_status: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime the discussion event occurs. More than one activity type triggers this event.
@@ -1814,14 +1798,12 @@ pub struct EventObject {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#fork-event-fork
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub fork: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow when someone creates or updates a Wiki page, which triggers the gollum event.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#gollum-event-gollum
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub gollum: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime the issue_comment event occurs. More than one activity type triggers this event.
@@ -1858,7 +1840,6 @@ pub struct EventObject {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#page-build-event-page_build
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub page_build: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime the project event occurs. More than one activity type triggers this event.
@@ -1883,7 +1864,6 @@ pub struct EventObject {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#public-event-public
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub public: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime the pull_request event occurs. More than one activity type triggers this event.
@@ -1932,28 +1912,25 @@ pub struct EventObject {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#external-events-repository_dispatch
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub repository_dispatch: Option<JsonValueBTreeMap>,
 
 	/// You can schedule a workflow to run at specific UTC times using POSIX cron syntax (https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07). Scheduled workflows run on the latest commit on the default or base branch. The shortest interval you can run scheduled workflows is once every 5 minutes.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	#[merge(strategy = Vec::extend)]
+	#[merge(with = Vec::extend)]
 	pub schedule: Vec<Schedule>,
 
 	/// Runs your workflow anytime the status of a Git commit changes, which triggers the status event.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#status-event-status
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub status: Option<JsonValueBTreeMap>,
 
 	/// Runs your workflow anytime the watch event occurs.
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#watch-event-watch
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(strategy = overwrite_if_some)]
 	pub watch: Option<JsonValueBTreeMap>,
 
 	/// `workflow_call` is used to indicate that a workflow can be called by another workflow.
@@ -2050,7 +2027,7 @@ pub struct Secret {
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_call
 #[derive(Debug, Clone, JsonSchema, Serialize, Deserialize, PartialEq, Eq, Merge)]
-#[merge(strategy = BTreeMap::extend)]
+#[merge(with = BTreeMap::extend)]
 pub struct WorkflowCall {
 	/// When using the `workflow_call` keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.
 	///
@@ -2132,6 +2109,6 @@ pub struct WorkflowDispatch {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
+	#[merge(with = BTreeMap::extend)]
 	pub inputs: BTreeMap<String, WorkflowDispatchInput>,
 }

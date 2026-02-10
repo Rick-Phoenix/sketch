@@ -150,7 +150,6 @@ impl From<OptLevel> for RawOptLevel {
 
 /// Compilation/optimization settings for a workspace
 #[derive(Debug, Clone, PartialEq, Default, JsonSchema, Serialize, Deserialize, Merge)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(rename_all = "kebab-case")]
 pub struct Profile {
 	/// num or z, s
@@ -199,7 +198,6 @@ pub struct Profile {
 
 	/// Profile overrides for dependencies, `*` is special.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy = BTreeMap::extend)]
 	pub package: BTreeMap<String, Self>,
 
 	/// Profile overrides for build dependencies, `*` is special.
@@ -244,7 +242,7 @@ impl AsTomlValue for Profile {
 
 /// Build-in an custom build/optimization settings
 #[derive(Debug, Clone, PartialEq, Default, JsonSchema, Serialize, Deserialize, Merge)]
-#[merge(strategy = merge_optional_nested)]
+#[merge(with = merge_option)]
 pub struct Profiles {
 	/// Used for `--release`
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -264,7 +262,7 @@ pub struct Profiles {
 
 	/// User-suppiled for `cargo --profile=name`
 	#[serde(flatten)]
-	#[merge(strategy = BTreeMap::extend)]
+	#[merge(with = BTreeMap::extend)]
 	pub custom: BTreeMap<String, Profile>,
 }
 

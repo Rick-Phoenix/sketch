@@ -7,7 +7,6 @@ use super::*;
 /// You can replace `Metadata` generic type with your own
 /// to parse into something more useful than a generic toml `Value`
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema, Merge, Default)]
-#[merge(strategy = overwrite_if_some)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct Package {
 	/// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.
@@ -61,23 +60,23 @@ pub struct Package {
 
 	/// Up to 5, for search
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(strategy = merge_inheritable_set)]
+	#[merge(with = merge_inheritable_set)]
 	pub keywords: Inheritable<BTreeSet<String>>,
 
 	/// This is a list of up to five categories where this crate would fit.
 	/// e.g. `["command-line-utilities", "development-tools::cargo-plugins"]`
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(strategy = merge_inheritable_set)]
+	#[merge(with = merge_inheritable_set)]
 	pub categories: Inheritable<BTreeSet<String>>,
 
 	/// Don't publish these files
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(strategy = merge_inheritable_set)]
+	#[merge(with = merge_inheritable_set)]
 	pub exclude: Inheritable<BTreeSet<String>>,
 
 	/// Publish these files
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(strategy = merge_inheritable_set)]
+	#[merge(with = merge_inheritable_set)]
 	pub include: Inheritable<BTreeSet<String>>,
 
 	/// e.g. "MIT"
@@ -134,7 +133,6 @@ pub struct Package {
 
 	/// Arbitrary metadata of any type, an extension point for 3rd party tools.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(strategy= BTreeMap::extend)]
 	pub metadata: BTreeMap<String, Value>,
 }
 

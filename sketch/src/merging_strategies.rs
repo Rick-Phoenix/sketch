@@ -4,16 +4,6 @@ pub trait Extensible {
 	fn get_extended(&self) -> &IndexSet<String>;
 }
 
-pub(crate) fn merge_if_not_default<T: Default + PartialEq>(left: &mut T, right: T) {
-	if !is_default(&right) {
-		*left = right
-	}
-}
-
-pub(crate) fn is_default<T: Default + PartialEq>(v: &T) -> bool {
-	v == &T::default()
-}
-
 pub(crate) fn merge_nested_maps<T>(
 	left: &mut BTreeMap<String, BTreeMap<String, T>>,
 	right: BTreeMap<String, BTreeMap<String, T>>,
@@ -91,28 +81,4 @@ pub(crate) fn merge_presets<T: Merge + Extensible + Clone>(
 	aggregated.merge(preset);
 
 	Ok(aggregated)
-}
-
-pub(crate) fn merge_nested<T: Merge>(left: &mut T, right: T) {
-	left.merge(right)
-}
-
-pub(crate) fn merge_optional_nested<T: Merge>(left: &mut Option<T>, right: Option<T>) {
-	if let Some(right_data) = right {
-		if let Some(left_data) = left {
-			left_data.merge(right_data);
-		} else {
-			*left = Some(right_data);
-		}
-	}
-}
-
-pub(crate) fn overwrite_if_some<T>(left: &mut Option<T>, right: Option<T>) {
-	if let Some(new) = right {
-		*left = Some(new)
-	}
-}
-
-pub(crate) fn overwrite_always<T>(left: &mut T, right: T) {
-	*left = right;
 }
