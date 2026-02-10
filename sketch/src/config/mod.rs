@@ -34,6 +34,7 @@ impl Config {
 }
 
 /// The global configuration struct.
+#[allow(clippy::struct_field_names)]
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, JsonSchema, Default)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
@@ -98,9 +99,9 @@ pub struct Config {
 
 impl Config {
 	fn merge_configs_recursive(
-		&mut self,
+		&self,
 		is_initial: bool,
-		base: &mut Config,
+		base: &mut Self,
 
 		processed_sources: &mut IndexSet<PathBuf>,
 	) -> Result<(), GenError> {
@@ -117,9 +118,9 @@ impl Config {
 					source: e,
 				})?;
 
-			let mut extended_config = extract_config_from_file(&abs_path)?;
+			let extended_config = extract_config_from_file(&abs_path)?;
 
-			let was_absent = processed_sources.insert(abs_path.to_path_buf());
+			let was_absent = processed_sources.insert(abs_path.clone());
 
 			if !was_absent {
 				let chain: Vec<_> = processed_sources
@@ -147,7 +148,7 @@ impl Config {
 	}
 
 	/// Recursively merges a [`Config`] with its extended configs.
-	pub fn merge_config_files(mut self) -> Result<Self, GenError> {
+	pub fn merge_config_files(self) -> Result<Self, GenError> {
 		let mut processed_sources: IndexSet<PathBuf> = Default::default();
 
 		let config_file = self
@@ -157,7 +158,7 @@ impl Config {
 
 		processed_sources.insert(config_file.clone());
 
-		let mut extended = Config::default();
+		let mut extended = Self::default();
 
 		self.merge_configs_recursive(true, &mut extended, &mut processed_sources)?;
 

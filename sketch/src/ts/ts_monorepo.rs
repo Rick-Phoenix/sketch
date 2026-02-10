@@ -141,7 +141,7 @@ impl Config {
 						(id, tsconfig)
 					}
 					TsConfigKind::Config(data) => {
-						(format!("__inlined_definition_{}", root_package_name), data)
+						(format!("__inlined_definition_{root_package_name}"), data)
 					}
 				};
 

@@ -80,7 +80,7 @@ pub(crate) fn merge_presets<T: Merge + Extensible + Clone>(
 			.get(id)
 			.ok_or(GenError::PresetNotFound {
 				kind: preset_kind,
-				name: id.to_string(),
+				name: id.clone(),
 			})?
 			.clone();
 
@@ -145,7 +145,7 @@ pub(crate) fn merge_optional_index_sets<T>(
 {
 	if let Some(right_data) = right {
 		if let Some(left_data) = left {
-			for item in right_data.into_iter() {
+			for item in right_data {
 				left_data.insert(item);
 			}
 		} else {
@@ -185,7 +185,7 @@ pub(crate) fn merge_optional_btree_maps<T>(
 ) {
 	if let Some(right_data) = right {
 		if let Some(left_data) = left {
-			for (key, val) in right_data.into_iter() {
+			for (key, val) in right_data {
 				left_data.insert(key, val);
 			}
 		} else {

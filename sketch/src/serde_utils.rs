@@ -15,7 +15,8 @@ use crate::{
 	fs::{deserialize_json, deserialize_toml, deserialize_yaml},
 };
 
-pub fn is_false(bool: &bool) -> bool {
+#[allow(clippy::trivially_copy_pass_by_ref)]
+pub const fn is_false(bool: &bool) -> bool {
 	!*bool
 }
 
@@ -29,8 +30,8 @@ pub enum StringOrNum {
 impl Display for StringOrNum {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::Num(n) => write!(f, "{}", n),
-			Self::String(s) => write!(f, "{}", s),
+			Self::Num(n) => write!(f, "{n}"),
+			Self::String(s) => write!(f, "{s}"),
 		}
 	}
 }
@@ -52,15 +53,15 @@ pub enum ListOrMap {
 impl ListOrMap {
 	pub fn contains(&self, key: &str) -> bool {
 		match self {
-			ListOrMap::List(list) => list.contains(key),
-			ListOrMap::Map(map) => map.contains_key(key),
+			Self::List(list) => list.contains(key),
+			Self::Map(map) => map.contains_key(key),
 		}
 	}
 
 	pub fn get(&self, key: &str) -> Option<&String> {
 		match self {
-			ListOrMap::List(list) => list.get(key),
-			ListOrMap::Map(map) => map.get(key),
+			Self::List(list) => list.get(key),
+			Self::Map(map) => map.get(key),
 		}
 	}
 }
@@ -114,19 +115,19 @@ pub enum StringOrSortedList {
 impl Merge for StringOrSortedList {
 	fn merge(&mut self, right: Self) {
 		match self {
-			StringOrSortedList::String(left_string) => {
-				if let StringOrSortedList::List(mut right_list) = right {
+			Self::String(left_string) => {
+				if let Self::List(mut right_list) = right {
 					right_list.insert(left_string.clone());
-					*self = StringOrSortedList::List(right_list);
+					*self = Self::List(right_list);
 				} else {
 					*self = right;
 				}
 			}
-			StringOrSortedList::List(left_list) => match right {
-				StringOrSortedList::String(right_string) => {
+			Self::List(left_list) => match right {
+				Self::String(right_string) => {
 					left_list.insert(right_string);
 				}
-				StringOrSortedList::List(right_list) => {
+				Self::List(right_list) => {
 					for item in right_list {
 						left_list.insert(item);
 					}

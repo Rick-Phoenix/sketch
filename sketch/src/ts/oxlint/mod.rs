@@ -37,7 +37,7 @@ impl OxlintPreset {
 	pub fn process_data(
 		self,
 		id: &str,
-		store: &IndexMap<String, OxlintPreset>,
+		store: &IndexMap<String, Self>,
 	) -> Result<OxlintConfig, GenError> {
 		if self.extends_presets.is_empty() {
 			return Ok(self.config);
@@ -137,7 +137,7 @@ impl Default for OxlintConfigSetting {
 
 /// Settings for generating an `oxlint` configuration file.
 /// It can be set to true/false (to use defaults or to disable it entirely) or to a literal configuration.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 pub enum OxlintConfigSetting {
 	Bool(bool),
@@ -154,7 +154,7 @@ impl std::str::FromStr for OxlintConfigSetting {
 }
 
 impl OxlintConfigSetting {
-	pub fn is_enabled(&self) -> bool {
+	pub const fn is_enabled(&self) -> bool {
 		!matches!(self, Self::Bool(false))
 	}
 }

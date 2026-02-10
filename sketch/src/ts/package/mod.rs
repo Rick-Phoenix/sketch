@@ -42,7 +42,9 @@ pub enum PackageKind {
 }
 
 /// The configuration struct that is used to generate new packages.
-#[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, JsonSchema, Default)]
+#[derive(
+	Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, Eq, JsonSchema, Default,
+)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct PackageConfig {

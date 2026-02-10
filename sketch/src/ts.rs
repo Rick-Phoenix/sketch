@@ -42,7 +42,9 @@ impl TypescriptConfig {
 }
 
 /// All settings related to typescript projects.
-#[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, JsonSchema, Default)]
+#[derive(
+	Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, Eq, JsonSchema, Default,
+)]
 #[merge(strategy = overwrite_if_some)]
 #[serde(default)]
 pub struct TypescriptConfig {

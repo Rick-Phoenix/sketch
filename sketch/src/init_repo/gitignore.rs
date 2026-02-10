@@ -48,7 +48,7 @@ fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
 }
 
 /// A preset for a `.gitignore` file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema, Merge, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema, Merge, Default)]
 #[serde(default)]
 pub struct GitignorePreset {
 	/// The ids of the extended presets.
@@ -66,11 +66,7 @@ impl Extensible for GitignorePreset {
 }
 
 impl GitignorePreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, GitignorePreset>,
-	) -> Result<Self, GenError> {
+	pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
 		if self.extends_presets.is_empty() {
 			return Ok(self);
 		}
@@ -83,7 +79,7 @@ impl GitignorePreset {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 /// Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)
 pub enum GitIgnoreRef {
@@ -99,7 +95,7 @@ impl std::str::FromStr for GitIgnoreRef {
 	}
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, JsonSchema)]
 #[serde(untagged)]
 /// A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).
 pub enum GitIgnore {
@@ -116,10 +112,10 @@ impl Default for GitIgnore {
 impl Display for GitIgnore {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			GitIgnore::List(items) => {
+			Self::List(items) => {
 				write!(f, "{}", items.join("\n"))
 			}
-			GitIgnore::String(entire) => write!(f, "{}", entire),
+			Self::String(entire) => write!(f, "{entire}"),
 		}
 	}
 }
