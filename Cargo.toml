@@ -17,11 +17,14 @@ authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
 [workspace.dependencies]
 merge-it = { path = "../merge-it/prelude/", features = ["indexmap"] }
 paste = "1"
+schemars = { version = "1", features = ["indexmap2"] }
+serde_json = { version = "1", features = ["preserve_order"] }
 askama = { version = "0.14", default-features = false, features = [
   "config",
   "derive",
   "std",
 ] }
+clap = { version = "4.5", features = ["derive", "string"] }
 maplit = "1"
 regex = "1"
 thiserror = "2"

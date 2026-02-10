@@ -5,8 +5,8 @@ edition.workspace = true
 
 [dependencies]
 sketch-it = { path = "../sketch/", features = ["schemars"] }
-schemars = { version = "1", features = ["indexmap2"] }
-serde_json = "1"
-paste = "1"
-clap = { version = "4.5", features = ["derive"] }
+schemars = { workspace = true }
+serde_json = { workspace = true }
+paste = { workspace = true }
+clap = { workspace = true }
 regex = { workspace = true }
