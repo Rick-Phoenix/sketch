@@ -854,10 +854,10 @@ impl AsTomlValue for Target {
 pub enum Dependency {
 	/// Version requirement (e.g. `^1.5`)
 	Simple(String),
-	/// Incomplete data
-	Inherited(InheritedDependencyDetail), // order is important for serde
 	/// `{ version = "^1.5", features = ["a", "b"] }` etc.
 	Detailed(Box<DependencyDetail>),
+	/// Incomplete data
+	Inherited(InheritedDependencyDetail), // order is important for serde
 }
 
 impl AsTomlValue for Dependency {
