@@ -45,8 +45,8 @@ impl Merge for GitIgnore {
 /// A preset for a `.gitignore` file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(default)]
 pub struct GitignorePreset {
+	#[serde(default)]
 	/// The ids of the extended presets.
 	pub extends_presets: IndexSet<String>,
 
@@ -77,12 +77,12 @@ impl GitignorePreset {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 /// Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)
-pub enum GitIgnoreRef {
+pub enum GitIgnorePresetRef {
 	Id(String),
 	Config(GitignorePreset),
 }
 
-impl std::str::FromStr for GitIgnoreRef {
+impl std::str::FromStr for GitIgnorePresetRef {
 	type Err = std::convert::Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {

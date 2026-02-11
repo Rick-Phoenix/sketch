@@ -3,6 +3,8 @@ use super::*;
 /// Handling of LTO in a build profile
 #[derive(Debug, Clone, PartialEq, Serialize, Eq, PartialOrd, Ord, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(try_from = "RawLto", into = "RawLto")]
+#[cfg_attr(feature = "schemars", schemars(with = "RawLto"))]
 #[serde(rename_all = "kebab-case")]
 pub enum LtoSetting {
 	/// off
@@ -12,6 +14,44 @@ pub enum LtoSetting {
 	Thin,
 	/// True
 	Fat,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+enum RawLto {
+	Bool(bool),
+	String(String),
+}
+
+impl TryFrom<RawLto> for LtoSetting {
+	type Error = String;
+
+	fn try_from(value: RawLto) -> Result<Self, Self::Error> {
+		match value {
+			RawLto::Bool(false) => Ok(Self::ThinLocal),
+			RawLto::Bool(true) => Ok(Self::Fat),
+
+			RawLto::String(s) => match s.as_str() {
+				"off" => Ok(Self::None),
+				"thin-local" => Ok(Self::ThinLocal),
+				"thin" => Ok(Self::Thin),
+				"fat" => Ok(Self::Fat),
+				_ => Err(format!("Unknown LTO setting: {s}")),
+			},
+		}
+	}
+}
+
+impl From<LtoSetting> for RawLto {
+	fn from(setting: LtoSetting) -> Self {
+		match setting {
+			LtoSetting::None => Self::String("off".to_string()),
+			LtoSetting::ThinLocal => Self::Bool(false),
+			LtoSetting::Thin => Self::String("thin".to_string()),
+			LtoSetting::Fat => Self::Bool(true),
+		}
+	}
 }
 
 impl AsTomlValue for LtoSetting {

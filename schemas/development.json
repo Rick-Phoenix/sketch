@@ -104,8 +104,8 @@
     "rust_presets": {
       "$ref": "#/$defs/RustPresets",
       "default": {
-        "manifest": {},
-        "crate": {}
+        "manifest_presets": {},
+        "crate_presets": {}
       }
     },
     "github": {
@@ -429,23 +429,9 @@
             "null"
           ]
         },
-        "pnpm": {
-          "description": "Configuration settings for pnpm.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PnpmWorkspace"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "overrides": {
           "description": "Overrides is used to support selective version overrides using npm, which lets you define custom package versions or ranges inside your dependencies. For yarn, use resolutions instead. See: https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": true
         },
         "catalog": {
@@ -490,10 +476,7 @@
         },
         "peerDependenciesMeta": {
           "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/PeerDependencyMeta"
           }
@@ -507,10 +490,7 @@
         },
         "bundleDependencies": {
           "description": "Array of package names that will be bundled when publishing the package.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -581,10 +561,7 @@
         },
         "config": {
           "description": "An object that can be used to set configuration parameters used in package scripts that persist across upgrades.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": true
         },
         "publishConfig": {
@@ -633,7 +610,7 @@
       ]
     },
     "Person": {
-      "description": "The kinds of values used for representing an individual in a `package.json` file, which can be used to populate the `contributors` and `maintainers` fields.\nIf a plain string is used, it will be interpreted as an id for a [`PersonData`] that is stored in the global config.",
+      "description": "The kinds of values used for representing an individual in a `package.json` file, which can be used to populate the `contributors` and `maintainers` fields.\n\nIf a plain string is used, it will be interpreted as an id for a [`PersonData`] that is stored in the global config.",
       "anyOf": [
         {
           "type": "string"
@@ -770,1134 +747,6 @@
         }
       ]
     },
-    "PnpmWorkspace": {
-      "description": "A struct representing a pnpm-workspace.yaml config.\n\nSee more: https://pnpm.io/settings",
-      "type": "object",
-      "properties": {
-        "packages": {
-          "description": "Glob patterns for the directories containing the packages for this workspace.",
-          "type": "array",
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "cleanupUnusedCatalogs": {
-          "description": "When set to true, pnpm will remove unused catalog entries during installation.\n\nSee more: https://pnpm.io/settings#cleanupunusedcatalogs",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "catalog": {
-          "description": "The dependencies to store in the unnamed (default) catalog.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "catalogs": {
-          "description": "A map of named catalogs and the dependencies listed in them.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            }
-          }
-        },
-        "onlyBuiltDependencies": {
-          "description": "A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts.\n\nSee more: https://pnpm.io/settings#onlybuiltdependencies",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "onlyBuiltDependenciesFile": {
-          "description": "Specifies a JSON file that lists the only packages permitted to run installation scripts during the pnpm install process.\n\nSee more: https://pnpm.io/settings#onlybuiltdependenciesfile",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "neverBuiltDependencies": {
-          "description": "A list of dependencies to run builds for. See more: https://pnpm.io/settings#neverbuiltdependencies",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "ignoredBuiltDependencies": {
-          "description": "A list of package names that should not be built during installation.\n\nSee more: https://pnpm.io/settings#ignoredbuiltdependencies",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "dangerouslyAllowAllBuilds": {
-          "description": "If set to true, all build scripts (e.g. preinstall, install, postinstall) from dependencies will run automatically, without requiring approval.\n\nSee more: https://pnpm.io/settings#dangerouslyallowallbuilds",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "overrides": {
-          "description": "This field allows you to instruct pnpm to override any dependency in the dependency graph. This is useful for enforcing all your packages to use a single version of a dependency, backporting a fix, replacing a dependency with a fork, or removing an unused dependency.\n\nSee more: https://pnpm.io/settings#overrides",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "updateConfig": {
-          "description": "Configuration for package updates.\n\nSee more: https://pnpm.io/settings#updateconfig",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/UpdateConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "minimumReleaseAge": {
-          "description": "It specifies the number of minutes that must pass after a version is published before pnpm will install it. For example, setting `minimumReleaseAge: 1440` ensures that only packages released at least one day ago can be installed.\n\nSee more: https://pnpm.io/settings#minimumreleaseage",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "minimumReleaseAgeExclude": {
-          "description": "If you set `minimumReleaseAge` but need to disable this restriction for certain dependencies, you can list them under the `minimumReleaseAgeExclude` setting.\n\nSee more: https://pnpm.io/settings#minimumreleaseageexclude",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "packageExtensions": {
-          "description": "The packageExtensions fields offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions.\n\nSee more: https://pnpm.io/settings#packageextensions",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "$ref": "#/$defs/PackageExtension"
-          }
-        },
-        "peerDependencyRules": {
-          "description": "Rules for peer dependencies.\n\nSee more: https://pnpm.io/settings#peerdependencyrules",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PeerDependencyRules"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "allowedDeprecatedVersions": {
-          "description": "A list of deprecated versions that the warnings are suppressed.\n\nSee more: https://pnpm.io/settings#alloweddeprecatedversions",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "patchedDependencies": {
-          "description": "A list of dependencies that are patched.\n\nSee more: https://pnpm.io/settings#patcheddependencies",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "allowUnusedPatches": {
-          "description": "When true, installation won't fail if some of the patches from the `patchedDependencies` field were not applied. Previously named `allowNonAppliedPatches`.\n\nSee more: https://pnpm.io/settings#allowunusedpatches",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ignorePatchFailures": {
-          "description": "Default is undefined. Errors out when a patch with an exact version or version range fails. Ignores failures from name-only patches. When true, prints a warning instead of failing when any patch cannot be applied. When false, errors out for any patch failure.\n\nSee more: https://pnpm.io/settings#ignorepatchfailures",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "configDependencies": {
-          "description": "Config dependencies allow you to share and centralize configuration files, settings, and hooks across multiple projects. They are installed before all regular dependencies ('dependencies', 'devDependencies', 'optionalDependencies'), making them ideal for setting up custom hooks, patches, and catalog entries.\n\nSee more: https://pnpm.io/config-dependencies",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "auditConfig": {
-          "description": "Settings for the `pnpm audit` command.\n\nSee more: https://pnpm.io/settings#auditconfig",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/AuditConfig"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "requiredScripts": {
-          "description": "Scripts listed in this array will be required in each project of the workspace. Otherwise, pnpm -r run <script name> will fail.\n\nSee more: https://pnpm.io/settings#requiredscripts",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "supportedArchitectures": {
-          "description": "Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install.\n\nSee more: https://pnpm.io/settings#supportedarchitectures",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SupportedArchitectures"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "ignoredOptionalDependencies": {
-          "description": "A list of optional dependencies that the install should be skipped.\n\nSee more: https://pnpm.io/settings#ignoredoptionaldependencies",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "executionEnv": {
-          "description": "Instructions for the runtime, such as the node version to use.\n\nSee more: https://pnpm.io/settings#executionenvnodeversion",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ExecutionEnv"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "hoist": {
-          "description": "When true, all dependencies are hoisted to node_modules/.pnpm/node_modules.\n\nSee more: https://pnpm.io/settings#hoist",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "hoistWorkspacePackages": {
-          "description": "When true, packages from the workspaces are symlinked to either <workspace_root>/node_modules/.pnpm/node_modules or to <workspace_root>/node_modules depending on other hoisting settings (hoistPattern and publicHoistPattern).\n\nSee more: https://pnpm.io/settings#hoistworkspacepackages",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "hoistPattern": {
-          "description": "Tells pnpm which packages should be hoisted to node_modules/.pnpm/node_modules.\n\nSee more: https://pnpm.io/settings#hoistpattern",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "publicHoistPattern": {
-          "description": "Unlike hoistPattern, which hoists dependencies to a hidden modules directory inside the virtual store, publicHoistPattern hoists dependencies matching the pattern to the root modules directory.\n\nSee more: https://pnpm.io/settings#publichoistpattern",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "shamefullyHoist": {
-          "description": "By default, pnpm creates a semistrict node_modules, meaning dependencies have access to undeclared dependencies but modules outside of node_modules do not.\n\nSee more: https://pnpm.io/settings#shamefullyhoist",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "modulesDir": {
-          "description": "The directory in which dependencies will be installed (instead of node_modules).\n\nSee more: https://pnpm.io/settings#modulesdir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "nodeLinker": {
-          "description": "Defines what linker should be used for installing Node packages.\n\nSee more: https://pnpm.io/settings#nodelinker",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/NodeLinker"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "symlink": {
-          "description": "When symlink is set to false, pnpm creates a virtual store directory without any symlinks. It is a useful setting together with nodeLinker=pnp.\n\nSee more: https://pnpm.io/settings#symlink",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "enableModulesDir": {
-          "description": "When false, pnpm will not write any files to the modules directory (node_modules).\n\nSee more: https://pnpm.io/settings#enablemodulesdir",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "virtualStoreDir": {
-          "description": "The directory with links to the store.\n\nSee more: https://pnpm.io/settings#virtualstoredir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "virtualStoreDirMaxLength": {
-          "description": "Sets the maximum allowed length of directory names inside the virtual store directory (node_modules/.pnpm).\n\nSee more: https://pnpm.io/settings#virtualstoredirmaxlength",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "packageImportMethod": {
-          "description": "Controls the way packages are imported from the store (if you want to disable symlinks inside node_modules, then you need to change the nodeLinker setting, not this one).\n\nSee more: https://pnpm.io/settings#packageimportmethod",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PackageImportMethod"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "modulesCacheMaxAge": {
-          "description": "The time in minutes after which orphan packages from the modules directory should be removed.\n\nSee more: https://pnpm.io/settings#modulescachemaxage",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "dlxCacheMaxAge": {
-          "description": "The time in minutes after which dlx cache expires.\n\nSee more: https://pnpm.io/settings#dlxcachemaxage",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "storeDir": {
-          "description": "The location where all the packages are saved on the disk.\n\nSee more: https://pnpm.io/settings#storedir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "verifyStoreIntegrity": {
-          "description": "By default, if a file in the store has been modified, the content of this file is checked before linking it to a project's node_modules.\n\nSee more: https://pnpm.io/settings#verifystoreintegrity",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "strictStorePkgContentCheck": {
-          "description": "Some registries allow the exact same content to be published under different package names and/or versions.\n\nSee more: https://pnpm.io/settings#strictstorepkgcontentcheck",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "enableGlobalVirtualStore": {
-          "description": "When enabled, node_modules contains only symlinks to a central virtual store, rather than to node_modules/.pnpm.\n\nSee more: https://pnpm.io/settings#enableglobalvirtualstore",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "lockfile": {
-          "description": "When set to false, pnpm won't read or generate a pnpm-lock.yaml file.\n\nSee more: https://pnpm.io/settings#lockfile",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "preferFrozenLockfile": {
-          "description": "When set to true and the available pnpm-lock.yaml satisfies the package.json dependencies directive, a headless installation is performed.\n\nSee more: https://pnpm.io/settings#preferfrozenlockfile",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "lockfileIncludeTarballUrl": {
-          "description": "Add the full URL to the package's tarball to every entry in pnpm-lock.yaml.\n\nSee more: https://pnpm.io/settings#lockfileincludetarballurl",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "gitBranchLockfile": {
-          "description": "When set to true, the generated lockfile name after installation will be named based on the current branch name to completely avoid merge conflicts.\n\nSee more: https://pnpm.io/settings#gitbranchlockfile",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "mergeGitBranchLockfilesBranchPattern": {
-          "description": "This configuration matches the current branch name to determine whether to merge all git branch lockfile files.\n\nSee more: https://pnpm.io/settings#mergegitbranchlockfilesbranchpattern",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "peersSuffixMaxLength": {
-          "description": "Max length of the peer IDs suffix added to dependency keys in the lockfile. If the suffix is longer, it is replaced with a hash.\n\nSee more: https://pnpm.io/settings#peerssuffixmaxlength",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "registry": {
-          "description": "The base URL of the npm package registry (trailing slash included).\n\nSee more: https://pnpm.io/settings#registry",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "ca": {
-          "description": "The Certificate Authority signing certificate that is trusted for SSL connections to the registry.\n\nSee more: https://pnpm.io/settings#ca",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "cafile": {
-          "description": "A path to a file containing one or multiple Certificate Authority signing certificates.\n\nSee more: https://pnpm.io/settings#cafile",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "cert": {
-          "description": "A client certificate to pass when accessing the registry.\n\nSee more: https://pnpm.io/settings#cert",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "key": {
-          "description": "A client key to pass when accessing the registry.\n\nSee more: https://pnpm.io/settings#key",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "gitShallowHosts": {
-          "description": "When fetching dependencies that are Git repositories, if the host is listed in this setting, pnpm will use shallow cloning to fetch only the needed commit, not all the history.\n\nSee more: https://pnpm.io/settings#gitshallowhosts",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "httpsProxy": {
-          "description": "A proxy to use for outgoing HTTPS requests. If the HTTPS_PROXY, https_proxy, HTTP_PROXY or http_proxy environment variables are set, their values will be used instead.\n\nSee more: https://pnpm.io/settings#https-proxy",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "proxy": {
-          "description": "A proxy to use for outgoing http requests. If the HTTP_PROXY or http_proxy environment variables are set, proxy settings will be honored by the underlying request library.\n\nSee more: https://pnpm.io/settings#proxy",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "localAddress": {
-          "description": "The IP address of the local interface to use when making connections to the npm registry.\n\nSee more: https://pnpm.io/settings#local-address",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "maxsockets": {
-          "description": "The maximum number of connections to use per origin (protocol/host/port combination).\n\nSee more: https://pnpm.io/settings#maxsockets",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "noproxy": {
-          "description": "A comma-separated string of domain extensions that a proxy should not be used for.\n\nSee more: https://pnpm.io/settings#noproxy",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "strictSsl": {
-          "description": "Whether or not to do SSL key validation when making requests to the registry via HTTPS.\n\nSee more: https://pnpm.io/settings#strict-ssl",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "networkConcurrency": {
-          "description": "Controls the maximum number of HTTP(S) requests to process simultaneously.\n\nSee more: https://pnpm.io/settings#networkconcurrency",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "fetchRetries": {
-          "description": "How many times to retry if pnpm fails to fetch from the registry.\n\nSee more: https://pnpm.io/settings#fetchretries",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "fetchRetryFactor": {
-          "description": "The exponential factor for retry backoff.\n\nSee more: https://pnpm.io/settings#fetchretryfactor",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "fetchRetryMinTimeout": {
-          "description": "The minimum (base) timeout for retrying requests.\n\nSee more: https://pnpm.io/settings#fetchretrymintimeout",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "fetchRetryMaxTimeout": {
-          "description": "The maximum fallback timeout to ensure the retry factor does not make requests too long.\n\nSee more: https://pnpm.io/settings#fetchretrymaxtimeout",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "fetchTimeout": {
-          "description": "The maximum amount of time to wait for HTTP requests to complete.\n\nSee more: https://pnpm.io/settings#fetchtimeout",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "autoInstallPeers": {
-          "description": "When true, any missing non-optional peer dependencies are automatically installed.\n\nSee more: https://pnpm.io/settings#autoinstallpeers",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "dedupePeerDependents": {
-          "description": "When this setting is set to true, packages with peer dependencies will be deduplicated after peers resolution.\n\nSee more: https://pnpm.io/settings#dedupepeerdependents",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "strictPeerDependencies": {
-          "description": "If this is enabled, commands will fail if there is a missing or invalid peer dependency in the tree.\n\nSee more: https://pnpm.io/settings#strictpeerdependencies",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "resolvePeersFromWorkspaceRoot": {
-          "description": "When enabled, dependencies of the root workspace project are used to resolve peer dependencies of any projects in the workspace.\n\nSee more: https://pnpm.io/settings#resolvepeersfromworkspaceroot",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "color": {
-          "description": "Controls colors in the output.\n\nSee more: https://pnpm.io/settings#no-color",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Color"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "loglevel": {
-          "description": "Any logs at or higher than the given level will be shown.\n\nSee more: https://pnpm.io/settings#loglevel",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/LogLevel"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "useBetaCli": {
-          "description": "Experimental option that enables beta features of the CLI.\n\nSee more: https://pnpm.io/settings#usebetacli",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "recursiveInstall": {
-          "description": "If this is enabled, the primary behaviour of pnpm install becomes that of pnpm install -r, meaning the install is performed on all workspace or subdirectory packages.\n\nSee more: https://pnpm.io/settings#recursiveinstall",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "engineStrict": {
-          "description": "If this is enabled, pnpm will not install any package that claims to not be compatible with the current Node version.\n\nSee more: https://pnpm.io/settings#enginestrict",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "npmPath": {
-          "description": "The location of the npm binary that pnpm uses for some actions, like publishing.\n\nSee more: https://pnpm.io/settings#npmpath",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "packageManagerStrict": {
-          "description": "If this setting is disabled, pnpm will not fail if a different package manager is specified in the packageManager field of package.json. When enabled, only the package name is checked (since pnpm v9.2.0), so you can still run any version of pnpm regardless of the version specified in the packageManager field.\n\nSee more: https://pnpm.io/settings#packagemanagerstrict",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "packageManagerStrictVersion": {
-          "description": "When enabled, pnpm will fail if its version doesn't exactly match the version specified in the packageManager field of package.json.\n\nSee more: https://pnpm.io/settings#packagemanagerstrictversion",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "managePackageManagerVersions": {
-          "description": "When enabled, pnpm will automatically download and run the version of pnpm specified in the packageManager field of package.json.\n\nSee more: https://pnpm.io/settings#managepackagemanagerversions",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ignoreScripts": {
-          "description": "Do not execute any scripts defined in the project package.json and its dependencies.\n\nSee more: https://pnpm.io/settings#ignorescripts",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ignoreDepScripts": {
-          "description": "Do not execute any scripts of the installed packages. Scripts of the projects are executed.\n\nSee more: https://pnpm.io/settings#ignoredepscripts",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "childConcurrency": {
-          "description": "The maximum number of child processes to allocate simultaneously to build node_modules.\n\nSee more: https://pnpm.io/settings#childconcurrency",
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint",
-          "minimum": 0
-        },
-        "sizeEffectsCache": {
-          "description": "Use and cache the results of (pre/post)install hooks.\n\nSee more: https://pnpm.io/settings#sideeffectscache",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "sizeEffectsCacheReadOnly": {
-          "description": "Only use the side effects cache if present, do not create it for new packages.\n\nSee more: https://pnpm.io/settings#sideeffectscachereadonly",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "unsafePerm": {
-          "description": "Set to true to enable UID/GID switching when running package scripts. If set explicitly to false, then installing as a non-root user will fail.\n\nSee more: https://pnpm.io/settings#unsafeperm",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "nodeOptions": {
-          "description": "Options to pass through to Node.js via the NODE_OPTIONS environment variable.\n\nSee more: https://pnpm.io/settings#nodeoptions",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "verifyDepsBeforeRun": {
-          "description": "This setting allows the checking of the state of dependencies before running scripts.\n\nSee more: https://pnpm.io/settings#verifydepsbeforerun",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/VerifyDepsBeforeRun"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "strictDepBuilds": {
-          "description": "When strictDepBuilds is enabled, the installation will exit with a non-zero exit code if any dependencies have unreviewed build scripts (aka postinstall scripts).\n\nSee more: https://pnpm.io/settings#strictdepbuilds",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "useNodeVersion": {
-          "description": "Specifies which exact Node.js version should be used for the project's runtime.\n\nSee more: https://pnpm.io/settings#usenodeversion",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "nodeVersion": {
-          "description": "The Node.js version to use when checking a package's engines setting.\n\nSee more: https://pnpm.io/settings#nodeversion",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "linkWorkspacePackages": {
-          "description": "If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry.\n\nSee more: https://pnpm.io/settings#linkworkspacepackages",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/LinkWorkspacePackages"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "injectWorkspacePackages": {
-          "description": "Enables hard-linking of all local workspace dependencies instead of symlinking them.\n\nSee more: https://pnpm.io/settings#injectworkspacepackages",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "syncInjectedDepsAfterScripts": {
-          "description": "Injected workspace dependencies are collections of hardlinks, which don't add or remove the files when their sources change.\n\nSee more: https://pnpm.io/settings#syncinjecteddepsafterscripts",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "preferWorkspacePackages": {
-          "description": "If this is enabled, local packages from the workspace are preferred over packages from the registry, even if there is a newer version of the package in the registry.\n\nSee more: https://pnpm.io/settings#preferworkspacepackages",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "sharedWorkspaceLockfile": {
-          "description": "If this is enabled, pnpm creates a single pnpm-lock.yaml file in the root of the workspace.\n\nSee more: https://pnpm.io/settings#sharedworkspacelockfile",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "saveWorkspaceProtocol": {
-          "description": "This setting controls how dependencies that are linked from the workspace are added to package.json.\n\nSee more: https://pnpm.io/settings#saveworkspaceprotocol",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SaveWorkspaceProtocol"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "includeWorkspaceRoot": {
-          "description": "When executing commands recursively in a workspace, execute them on the root workspace project as well.\n\nSee more: https://pnpm.io/settings#includeworkspaceroot",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ignoreWorkspaceCycles": {
-          "description": "When set to true, no workspace cycle warnings will be printed.\n\nSee more: https://pnpm.io/settings#ignoreworkspacecycles",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ignoreWorkspaceRootCheck": {
-          "description": "Adding a new dependency to the root workspace package fails, unless the --ignore-workspace-root-check or -w flag is used.",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "disallowWorkspaceCycles": {
-          "description": "When set to true, installation will fail if the workspace has cycles.\n\nSee more: https://pnpm.io/settings#disallowworkspacecycles",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "forceLegacyDeploy": {
-          "description": "By default, pnpm deploy will try creating a dedicated lockfile from a shared lockfile for deployment. If this setting is set to true, the legacy deploy behavior will be used.\n\nSee more: https://pnpm.io/settings#forcelegacydeploy",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "savePrefix": {
-          "description": "Configure how versions of packages installed to a package.json file get prefixed.\n\nSee more: https://pnpm.io/settings#saveprefix",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/SavePrefix"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "tag": {
-          "description": "If you pnpm add a package and you don't provide a specific version, then it will install the package at the version registered under the tag from this setting.\n\nSee more: https://pnpm.io/settings#tag",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "globalDir": {
-          "description": "Specify a custom directory to store global packages.\n\nSee more: https://pnpm.io/settings#globaldir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "globalBinDir": {
-          "description": "Allows to set the target directory for the bin files of globally installed packages.\n\nSee more: https://pnpm.io/settings#globalbindir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "stateDir": {
-          "description": "The location where all the packages are saved on the disk.\n\nSee more: https://pnpm.io/settings#statedir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "cacheDir": {
-          "description": "The location of the cache (package metadata and dlx).\n\nSee more: https://pnpm.io/settings#cachedir",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "useStderr": {
-          "description": "When true, all the output is written to stderr.\n\nSee more: https://pnpm.io/settings#usestderr",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "updateNotifier": {
-          "description": "When true, pnpm will check for updates to the installed packages and notify the user.\n\nSee more: https://pnpm.io/settings#updatenotifier",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "preferSymlinkedExecutabled": {
-          "description": "Create symlinks to executables in node_modules/.bin instead of command shims. This setting is ignored on Windows, where only command shims work.\n\nSee more: https://pnpm.io/settings#prefersymlinkedexecutables",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "ignoreCompatibilityDb": {
-          "description": "During installation the dependencies of some packages are automatically patched. If you want to disable this, set this config to false.\n\nSee more: https://pnpm.io/settings#ignorecompatibilitydb",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "resolutionMode": {
-          "description": "Determines how pnpm resolves dependencies.\n\nSee more: https://pnpm.io/settings#resolutionmode",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ResolutionMode"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "registrySupportsTimeField": {
-          "description": "Set this to true if the registry that you are using returns the `time` field in the abbreviated metadata.\n\nSee more: https://pnpm.io/settings#registrysupportstimefield",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "extendNodePath": {
-          "description": "When false, the NODE_PATH environment variable is not set in the command shims.\n\nSee more: https://pnpm.io/settings#extendnodepath",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "deployAllFiles": {
-          "description": "When deploying a package or installing a local package, all files of the package are copied.\n\nSee more: https://pnpm.io/settings#deployallfiles",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "dedupeDirectDeps": {
-          "description": "When set to true, dependencies that are already symlinked to the root node_modules directory of the workspace will not be symlinked to subproject node_modules directories.\n\nSee more: https://pnpm.io/settings#dedupedirectdeps",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "dedupeInjectedDeps": {
-          "description": "When this setting is enabled, dependencies that are injected will be symlinked from the workspace whenever possible.\n\nSee more: https://pnpm.io/settings#dedupeinjecteddeps",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "optimisticRepeatInstall": {
-          "description": "When enabled, a fast check will be performed before proceeding to installation. This way a repeat install or an install on a project with everything up-to-date becomes a lot faster.\n\nSee more: https://pnpm.io/settings#optimisticrepeatinstall",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "gitChecks": {
-          "description": "Check if current branch is your publish branch, clean, and up-to-date with remote.\n\nSee more: https://pnpm.io/cli/publish#configuration",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "publishBranch": {
-          "description": "The primary branch of the repository which is used for publishing the latest changes.\n\nSee more: https://pnpm.io/cli/publish#configuration",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "pnpmfile": {
-          "description": "The location of the local pnpmfile.\n\nSee more: https://pnpm.io/settings#pnpmfile",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "globalPnpmfile": {
-          "description": "The location of a global pnpmfile. A global pnpmfile is used by all projects during installation.\n\nSee more: https://pnpm.io/settings#globalpnpmfile",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "ignorePnpmfile": {
-          "description": ".pnpmfile.cjs will be ignored. Useful together with --ignore-scripts when you want to make sure that no script gets executed during install.\n\nSee more: https://pnpm.io/settings#ignorepnpmfile",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "patchesDir": {
-          "description": "The generated patch file will be saved to this directory.\n\nSee more: https://pnpm.io/cli/patch-commit",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "enablePrePostScripts": {
-          "description": "When true, pnpm will run any pre/post scripts automatically.\n\nSee more: https://pnpm.io/settings#enableprepostscripts",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "scriptShell": {
-          "description": "The shell to use for scripts run with the pnpm run command.\n\nSee more: https://pnpm.io/settings#scriptshell",
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "shellEmulator": {
-          "description": "When true, pnpm will use a JavaScript implementation of a bash-like shell to execute scripts.\n\nSee more: https://pnpm.io/settings#shellemulator",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        },
-        "saveExact": {
-          "description": "Saved dependencies will be configured with an exact version rather than using pnpm's default semver range operator.\n\nSee more: https://pnpm.io/cli/add#--save-exact--e",
-          "type": [
-            "boolean",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": true
-    },
-    "UpdateConfig": {
-      "description": "Configuration for package updates. See more: https://pnpm.io/settings#updateconfig",
-      "type": "object",
-      "properties": {
-        "ignoreDependencies": {
-          "description": "A list of packages that should be ignored when running `pnpm outdated` or `pnpm update --latest`.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "PackageExtension": {
-      "description": "Package extensions offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions",
-      "type": "object",
-      "properties": {
-        "dependencies": {
-          "description": "Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "devDependencies": {
-          "description": "Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "optionalDependencies": {
-          "description": "Specifies dependencies that are optional for your project. These dependencies are attempted to be installed during the npm install process, but if they fail to install, the installation process will not fail.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "peerDependencies": {
-          "description": "Specifies dependencies that are required by the package but are expected to be provided by the consumer of the package.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "peerDependenciesMeta": {
-          "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "$ref": "#/$defs/PeerDependencyMeta"
-          }
-        }
-      }
-    },
     "PeerDependencyMeta": {
       "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
       "type": "object",
@@ -1911,297 +760,6 @@
         }
       },
       "additionalProperties": true
-    },
-    "PeerDependencyRules": {
-      "description": "Rules for peer dependencies. See more: https://pnpm.io/settings#peerdependencyrules",
-      "type": "object",
-      "properties": {
-        "allowedVersions": {
-          "description": "Unmet peer dependency warnings will not be printed for peer dependencies of the specified range.",
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "allowAny": {
-          "description": "A list of package name patterns, any peer dependency matching the pattern will be resolved from any version, regardless of the range specified in peerDependencies.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "ignoreMissing": {
-          "description": "pnpm will not print warnings about missing peer dependencies from this list.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "AuditConfig": {
-      "description": "Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig",
-      "type": "object",
-      "properties": {
-        "ignoreCves": {
-          "description": "A list of CVE IDs that will be ignored by `pnpm audit`.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "ignoreGhas": {
-          "description": "A list of GHSA Codes that will be ignored by `pnpm audit`.",
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "SupportedArchitectures": {
-      "description": "Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures",
-      "type": "object",
-      "properties": {
-        "cpu": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "libc": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        },
-        "os": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "uniqueItems": true,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "ExecutionEnv": {
-      "description": "Instructions for the runtime, such as the node version to use. See more: https://pnpm.io/settings#executionenvnodeversion",
-      "type": "object",
-      "properties": {
-        "nodeVersion": {
-          "description": "Specifies which exact Node.js version should be used for the project's runtime.",
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      }
-    },
-    "NodeLinker": {
-      "description": "Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker",
-      "oneOf": [
-        {
-          "description": "Dependencies are symlinked from a virtual store at node_modules/.pnpm",
-          "type": "string",
-          "const": "isolated"
-        },
-        {
-          "description": "A flat node_modules without symlinks is created.",
-          "type": "string",
-          "const": "hoisted"
-        },
-        {
-          "description": "No node_modules. Plug'n'Play is an innovative strategy for Node that is used by Yarn Berry. It is recommended to also set symlink setting to false when using pnp as your linker.",
-          "type": "string",
-          "const": "pnp"
-        }
-      ]
-    },
-    "PackageImportMethod": {
-      "description": "Controls the way packages are imported from the store (if you want to disable symlinks inside node_modules, then you need to change the nodeLinker setting, not this one). See more: https://pnpm.io/settings#packageimportmethod",
-      "oneOf": [
-        {
-          "description": "Try to clone packages from the store. If cloning is not supported then hardlink packages from the store. If neither cloning nor linking is possible, fall back to copying.",
-          "type": "string",
-          "const": "auto"
-        },
-        {
-          "description": "Hard link packages from the store.",
-          "type": "string",
-          "const": "hardlink"
-        },
-        {
-          "description": "Clone (AKA copy-on-write or reference link) packages from the store.",
-          "type": "string",
-          "const": "clone"
-        },
-        {
-          "description": "Try to clone packages from the store. If cloning is not supported then fall back to copying.",
-          "type": "string",
-          "const": "clone-or-copy"
-        },
-        {
-          "description": "Copy packages from the store.",
-          "type": "string",
-          "const": "copy"
-        }
-      ]
-    },
-    "Color": {
-      "description": "Controls colors in the output. See more: https://pnpm.io/settings#no-color",
-      "oneOf": [
-        {
-          "description": "Ignore the difference between terminals and pipes.",
-          "type": "string",
-          "const": "always"
-        },
-        {
-          "description": "Output uses colors when the standard output is a terminal or TTY",
-          "type": "string",
-          "const": "auto"
-        },
-        {
-          "description": "Turns off colors. This is the setting used by --no-color.",
-          "type": "string",
-          "const": "never"
-        }
-      ]
-    },
-    "LogLevel": {
-      "description": "Any logs at or higher than the given level will be shown. See more: https://pnpm.io/settings#loglevel",
-      "type": "string",
-      "enum": [
-        "debug",
-        "info",
-        "warn",
-        "error"
-      ]
-    },
-    "VerifyDepsBeforeRun": {
-      "description": "This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun",
-      "anyOf": [
-        {
-          "description": "Automatically runs install if node_modules is not up to date.",
-          "type": "string",
-          "const": "Install"
-        },
-        {
-          "description": "Prints a warning if node_modules is not up to date.",
-          "type": "string",
-          "const": "Warn"
-        },
-        {
-          "description": "Throws an error if node_modules is not up to date.",
-          "type": "string",
-          "const": "Error"
-        },
-        {
-          "description": "Prompts the user for permission to run install if node_modules is not up to date.",
-          "type": "string",
-          "const": "Prompt"
-        },
-        {
-          "type": "boolean"
-        }
-      ]
-    },
-    "LinkWorkspacePackages": {
-      "description": "If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry. See more: https://pnpm.io/settings#linkworkspacepackages",
-      "anyOf": [
-        {
-          "type": "string",
-          "enum": [
-            "Deep"
-          ]
-        },
-        {
-          "type": "boolean"
-        }
-      ]
-    },
-    "SaveWorkspaceProtocol": {
-      "description": "This setting controls how dependencies that are linked from the workspace are added to package.json. See more: https://pnpm.io/settings#saveworkspaceprotocol",
-      "anyOf": [
-        {
-          "type": "string",
-          "enum": [
-            "Rolling"
-          ]
-        },
-        {
-          "type": "boolean"
-        }
-      ]
-    },
-    "SavePrefix": {
-      "description": "Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix",
-      "oneOf": [
-        {
-          "description": "Do not allow upgrades.",
-          "type": "string",
-          "const": ""
-        },
-        {
-          "description": "Allows patch upgrades.",
-          "type": "string",
-          "const": "~"
-        },
-        {
-          "description": "Allows minor upgrades.",
-          "type": "string",
-          "const": "^"
-        }
-      ]
-    },
-    "ResolutionMode": {
-      "description": "Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode",
-      "oneOf": [
-        {
-          "description": "Dependencies will be resolved to their highest versions.",
-          "type": "string",
-          "const": "highest"
-        },
-        {
-          "description": "Direct dependencies will be resolved to their lowest versions.",
-          "type": "string",
-          "const": "lowest-direct"
-        },
-        {
-          "description": "When resolutionMode is set to time-based, dependencies will be resolved the following way:\nDirect dependencies will be resolved to their lowest versions. So if there is foo@^1.1.0 in the dependencies, then 1.1.0 will be installed.\nSubdependencies will be resolved from versions that were published before the last direct dependency was published.",
-          "type": "string",
-          "const": "time-based"
-        }
-      ]
     },
     "Directories": {
       "description": "A struct that represents the value of the `directories` field in a `package.json` file.",
@@ -2349,10 +907,7 @@
         },
         "files": {
           "description": "If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. When a 'files' property is specified, only those files and those specified by 'include' are included.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -2360,10 +915,7 @@
         },
         "exclude": {
           "description": "Specifies a list of files to be excluded from compilation. The 'exclude' property only affects the files included via the 'include' property and not the 'files' property. Glob patterns require TypeScript version 2.0 or later.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -2371,10 +923,7 @@
         },
         "include": {
           "description": "Specifies a list of glob patterns that match files to be included in compilation. If no 'files' or 'include' property is present in a tsconfig.json, the compiler defaults to including all files in the containing directory and subdirectories except those specified by 'exclude'. Requires TypeScript version 2.0 or later.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -2382,10 +931,7 @@
         },
         "references": {
           "description": "Referenced projects. Requires TypeScript version 3.0 or later.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/TsConfigReference"
@@ -2516,10 +1062,7 @@
         },
         "excludeFiles": {
           "description": "Remove a list of files from the watch mode's processing.\n\nSee more: https://www.typescriptlang.org/tsconfig#excludeFiles",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -2527,10 +1070,7 @@
         },
         "excludeDirectories": {
           "description": "Remove a list of directories from the watch process.\n\nSee more: https://www.typescriptlang.org/tsconfig#excludeDirectories",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -2681,10 +1221,7 @@
         },
         "customConditions": {
           "description": "Conditions to set in addition to the resolver-specific defaults when resolving imports.\n\nSee more: https://www.typescriptlang.org/tsconfig#customConditions",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -2857,10 +1394,7 @@
         },
         "lib": {
           "description": "Specify a set of bundled library declaration files that describe the target runtime environment.\n\nSee more: https://www.typescriptlang.org/tsconfig#lib",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Lib"
@@ -2927,10 +1461,7 @@
         },
         "moduleSuffixes": {
           "description": "Provides a way to override the default list of file name suffixes to search when resolving a module.\n\nSee more: https://www.typescriptlang.org/tsconfig/#moduleSuffixes",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -3149,10 +1680,7 @@
         },
         "paths": {
           "description": "Specify a set of entries that re-map imports to additional lookup locations.\n\nSee more: https://www.typescriptlang.org/tsconfig/#paths",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "array",
             "uniqueItems": true,
@@ -3163,10 +1691,7 @@
         },
         "plugins": {
           "description": "Specify a list of language service plugins to include.\n\nSee more: https://www.typescriptlang.org/tsconfig#plugins",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/TsPlugin"
@@ -3230,10 +1755,7 @@
         },
         "rootDirs": {
           "description": "Specify the root folder within your source files.\n\nSee more: https://www.typescriptlang.org/tsconfig#rootDir",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -3357,10 +1879,7 @@
         },
         "types": {
           "description": "Specify type package names to be included without being referenced in a source file.\n\nSee more: https://www.typescriptlang.org/tsconfig#types",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -3368,10 +1887,7 @@
         },
         "typeRoots": {
           "description": "Specify multiple folders that act like `./node_modules/@types`.\n\nSee more: https://www.typescriptlang.org/tsconfig#typeRoots",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -3644,10 +2160,7 @@
         },
         "extends": {
           "description": "Paths of configuration files that this configuration file extends (inherits from). The files are resolved relative to the location of the configuration file that contains the `extends` property. The configuration files are merged from the first to the last, with the last file overriding the previous ones.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -3655,19 +2168,11 @@
         },
         "plugins": {
           "description": "A list of plugins to enable for this config.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Plugin"
-          },
-          "default": [
-            "oxc",
-            "typescript",
-            "unicorn"
-          ]
+          }
         },
         "settings": {
           "description": "Contains the settings for various plugins.",
@@ -3682,20 +2187,14 @@
         },
         "globals": {
           "description": "Enables or disables specific global variables.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/GlobalValue"
           }
         },
         "env": {
           "description": "Environments enable and disable collections of global variables.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "boolean"
           }
@@ -3713,10 +2212,7 @@
         },
         "ignorePatterns": {
           "description": "Globs to ignore during linting. These are resolved from the configuration file path.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -3724,32 +2220,20 @@
         },
         "rules": {
           "description": "Settings for individual rules. See [Oxlint Rules](https://oxc.rs/docs/guide/usage/linter/rules.html) for the list of rules.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/RuleSetting"
           }
         },
         "overrides": {
           "description": "Add, remove, or otherwise reconfigure rules for specific files or groups of files.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/Override"
           }
-        },
-        "extras": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
         }
-      }
+      },
+      "additionalProperties": true
     },
     "Plugin": {
       "description": "Ways of referring to a plugin.",
@@ -4284,14 +2768,11 @@
         },
         "ts_config": {
           "description": "A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/TsConfigDirective"
           },
-          "default": null
+          "default": []
         },
         "package_json": {
           "description": "The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).",
@@ -4327,25 +2808,19 @@
         },
         "hooks_pre": {
           "description": "One or many rendered commands to execute before the repo's creation",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/Hook"
           },
-          "default": null
+          "default": []
         },
         "hooks_post": {
           "description": "One or many rendered commands to execute after the repo's creation",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/Hook"
           },
-          "default": null
+          "default": []
         },
         "vitest": {
           "description": "The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.",
@@ -4794,10 +3269,7 @@
         },
         "onlyBuiltDependencies": {
           "description": "A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts.\n\nSee more: https://pnpm.io/settings#onlybuiltdependencies",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -4812,10 +3284,7 @@
         },
         "neverBuiltDependencies": {
           "description": "A list of dependencies to run builds for. See more: https://pnpm.io/settings#neverbuiltdependencies",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -4823,10 +3292,7 @@
         },
         "ignoredBuiltDependencies": {
           "description": "A list of package names that should not be built during installation.\n\nSee more: https://pnpm.io/settings#ignoredbuiltdependencies",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -4841,10 +3307,7 @@
         },
         "overrides": {
           "description": "This field allows you to instruct pnpm to override any dependency in the dependency graph. This is useful for enforcing all your packages to use a single version of a dependency, backporting a fix, replacing a dependency with a fork, or removing an unused dependency.\n\nSee more: https://pnpm.io/settings#overrides",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           }
@@ -4871,10 +3334,7 @@
         },
         "minimumReleaseAgeExclude": {
           "description": "If you set `minimumReleaseAge` but need to disable this restriction for certain dependencies, you can list them under the `minimumReleaseAgeExclude` setting.\n\nSee more: https://pnpm.io/settings#minimumreleaseageexclude",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -4882,10 +3342,7 @@
         },
         "packageExtensions": {
           "description": "The packageExtensions fields offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions.\n\nSee more: https://pnpm.io/settings#packageextensions",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/PackageExtension"
           }
@@ -4903,20 +3360,14 @@
         },
         "allowedDeprecatedVersions": {
           "description": "A list of deprecated versions that the warnings are suppressed.\n\nSee more: https://pnpm.io/settings#alloweddeprecatedversions",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
         "patchedDependencies": {
           "description": "A list of dependencies that are patched.\n\nSee more: https://pnpm.io/settings#patcheddependencies",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           }
@@ -4937,10 +3388,7 @@
         },
         "configDependencies": {
           "description": "Config dependencies allow you to share and centralize configuration files, settings, and hooks across multiple projects. They are installed before all regular dependencies ('dependencies', 'devDependencies', 'optionalDependencies'), making them ideal for setting up custom hooks, patches, and catalog entries.\n\nSee more: https://pnpm.io/config-dependencies",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           }
@@ -4958,10 +3406,7 @@
         },
         "requiredScripts": {
           "description": "Scripts listed in this array will be required in each project of the workspace. Otherwise, pnpm -r run <script name> will fail.\n\nSee more: https://pnpm.io/settings#requiredscripts",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -4980,10 +3425,7 @@
         },
         "ignoredOptionalDependencies": {
           "description": "A list of optional dependencies that the install should be skipped.\n\nSee more: https://pnpm.io/settings#ignoredoptionaldependencies",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -5016,10 +3458,7 @@
         },
         "hoistPattern": {
           "description": "Tells pnpm which packages should be hoisted to node_modules/.pnpm/node_modules.\n\nSee more: https://pnpm.io/settings#hoistpattern",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -5027,10 +3466,7 @@
         },
         "publicHoistPattern": {
           "description": "Unlike hoistPattern, which hoists dependencies to a hidden modules directory inside the virtual store, publicHoistPattern hoists dependencies matching the pattern to the root modules directory.\n\nSee more: https://pnpm.io/settings#publichoistpattern",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -5178,10 +3614,7 @@
         },
         "mergeGitBranchLockfilesBranchPattern": {
           "description": "This configuration matches the current branch name to determine whether to merge all git branch lockfile files.\n\nSee more: https://pnpm.io/settings#mergegitbranchlockfilesbranchpattern",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -5233,10 +3666,7 @@
         },
         "gitShallowHosts": {
           "description": "When fetching dependencies that are Git repositories, if the host is listed in this setting, pnpm will use shallow cloning to fetch only the needed commit, not all the history.\n\nSee more: https://pnpm.io/settings#gitshallowhosts",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -5542,10 +3972,7 @@
         },
         "syncInjectedDepsAfterScripts": {
           "description": "Injected workspace dependencies are collections of hardlinks, which don't add or remove the files when their sources change.\n\nSee more: https://pnpm.io/settings#syncinjecteddepsafterscripts",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -5811,6 +4238,384 @@
       },
       "additionalProperties": true
     },
+    "UpdateConfig": {
+      "description": "Configuration for package updates. See more: https://pnpm.io/settings#updateconfig",
+      "type": "object",
+      "properties": {
+        "ignoreDependencies": {
+          "description": "A list of packages that should be ignored when running `pnpm outdated` or `pnpm update --latest`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PackageExtension": {
+      "description": "Package extensions offer a way to extend the existing package definitions with additional information. For example, if react-redux should have react-dom in its peerDependencies but it has not, it is possible to patch react-redux using packageExtensions. See more: https://pnpm.io/settings#packageextensions",
+      "type": "object",
+      "properties": {
+        "dependencies": {
+          "description": "Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "devDependencies": {
+          "description": "Specifies dependencies that are required for the development and testing of the project. These dependencies are not needed in the production environment.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "optionalDependencies": {
+          "description": "Specifies dependencies that are optional for your project. These dependencies are attempted to be installed during the npm install process, but if they fail to install, the installation process will not fail.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "peerDependencies": {
+          "description": "Specifies dependencies that are required by the package but are expected to be provided by the consumer of the package.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "peerDependenciesMeta": {
+          "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "$ref": "#/$defs/PeerDependencyMeta2"
+          }
+        }
+      }
+    },
+    "PeerDependencyMeta2": {
+      "description": "When a user installs your package, warnings are emitted if packages specified in \"peerDependencies\" are not already installed. The \"peerDependenciesMeta\" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.",
+      "type": "object",
+      "properties": {
+        "optional": {
+          "description": "Specifies that this peer dependency is optional and should not be installed automatically.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "PeerDependencyRules": {
+      "description": "Rules for peer dependencies. See more: https://pnpm.io/settings#peerdependencyrules",
+      "type": "object",
+      "properties": {
+        "allowedVersions": {
+          "description": "Unmet peer dependency warnings will not be printed for peer dependencies of the specified range.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "allowAny": {
+          "description": "A list of package name patterns, any peer dependency matching the pattern will be resolved from any version, regardless of the range specified in peerDependencies.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignoreMissing": {
+          "description": "pnpm will not print warnings about missing peer dependencies from this list.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "AuditConfig": {
+      "description": "Settings for the `pnpm audit` command. See more: https://pnpm.io/settings#auditconfig",
+      "type": "object",
+      "properties": {
+        "ignoreCves": {
+          "description": "A list of CVE IDs that will be ignored by `pnpm audit`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "ignoreGhas": {
+          "description": "A list of GHSA Codes that will be ignored by `pnpm audit`.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "SupportedArchitectures": {
+      "description": "Specifies architectures for which you'd like to install optional dependencies, even if they don't match the architecture of the system running the install. See more: https://pnpm.io/settings#supportedarchitectures",
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "libc": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "os": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExecutionEnv": {
+      "description": "Instructions for the runtime, such as the node version to use. See more: https://pnpm.io/settings#executionenvnodeversion",
+      "type": "object",
+      "properties": {
+        "nodeVersion": {
+          "description": "Specifies which exact Node.js version should be used for the project's runtime.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "NodeLinker": {
+      "description": "Defines what linker should be used for installing Node packages. See more: https://pnpm.io/settings#nodelinker",
+      "oneOf": [
+        {
+          "description": "Dependencies are symlinked from a virtual store at node_modules/.pnpm",
+          "type": "string",
+          "const": "isolated"
+        },
+        {
+          "description": "A flat node_modules without symlinks is created.",
+          "type": "string",
+          "const": "hoisted"
+        },
+        {
+          "description": "No node_modules. Plug'n'Play is an innovative strategy for Node that is used by Yarn Berry. It is recommended to also set symlink setting to false when using pnp as your linker.",
+          "type": "string",
+          "const": "pnp"
+        }
+      ]
+    },
+    "PackageImportMethod": {
+      "description": "Controls the way packages are imported from the store (if you want to disable symlinks inside node_modules, then you need to change the nodeLinker setting, not this one). See more: https://pnpm.io/settings#packageimportmethod",
+      "oneOf": [
+        {
+          "description": "Try to clone packages from the store. If cloning is not supported then hardlink packages from the store. If neither cloning nor linking is possible, fall back to copying.",
+          "type": "string",
+          "const": "auto"
+        },
+        {
+          "description": "Hard link packages from the store.",
+          "type": "string",
+          "const": "hardlink"
+        },
+        {
+          "description": "Clone (AKA copy-on-write or reference link) packages from the store.",
+          "type": "string",
+          "const": "clone"
+        },
+        {
+          "description": "Try to clone packages from the store. If cloning is not supported then fall back to copying.",
+          "type": "string",
+          "const": "clone-or-copy"
+        },
+        {
+          "description": "Copy packages from the store.",
+          "type": "string",
+          "const": "copy"
+        }
+      ]
+    },
+    "Color": {
+      "description": "Controls colors in the output. See more: https://pnpm.io/settings#no-color",
+      "oneOf": [
+        {
+          "description": "Ignore the difference between terminals and pipes.",
+          "type": "string",
+          "const": "always"
+        },
+        {
+          "description": "Output uses colors when the standard output is a terminal or TTY",
+          "type": "string",
+          "const": "auto"
+        },
+        {
+          "description": "Turns off colors. This is the setting used by --no-color.",
+          "type": "string",
+          "const": "never"
+        }
+      ]
+    },
+    "LogLevel": {
+      "description": "Any logs at or higher than the given level will be shown. See more: https://pnpm.io/settings#loglevel",
+      "type": "string",
+      "enum": [
+        "debug",
+        "info",
+        "warn",
+        "error"
+      ]
+    },
+    "VerifyDepsBeforeRun": {
+      "description": "This setting allows the checking of the state of dependencies before running scripts. See more: https://pnpm.io/settings#verifydepsbeforerun",
+      "anyOf": [
+        {
+          "description": "Automatically runs install if node_modules is not up to date.",
+          "type": "string",
+          "const": "Install"
+        },
+        {
+          "description": "Prints a warning if node_modules is not up to date.",
+          "type": "string",
+          "const": "Warn"
+        },
+        {
+          "description": "Throws an error if node_modules is not up to date.",
+          "type": "string",
+          "const": "Error"
+        },
+        {
+          "description": "Prompts the user for permission to run install if node_modules is not up to date.",
+          "type": "string",
+          "const": "Prompt"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "LinkWorkspacePackages": {
+      "description": "If this is enabled, locally available packages are linked to node_modules instead of being downloaded from the registry. See more: https://pnpm.io/settings#linkworkspacepackages",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "Deep"
+          ]
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "SaveWorkspaceProtocol": {
+      "description": "This setting controls how dependencies that are linked from the workspace are added to package.json. See more: https://pnpm.io/settings#saveworkspaceprotocol",
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "Rolling"
+          ]
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "SavePrefix": {
+      "description": "Configure how versions of packages installed to a package.json file get prefixed. See more: https://pnpm.io/settings#saveprefix",
+      "oneOf": [
+        {
+          "description": "Do not allow upgrades.",
+          "type": "string",
+          "const": ""
+        },
+        {
+          "description": "Allows patch upgrades.",
+          "type": "string",
+          "const": "~"
+        },
+        {
+          "description": "Allows minor upgrades.",
+          "type": "string",
+          "const": "^"
+        }
+      ]
+    },
+    "ResolutionMode": {
+      "description": "Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode",
+      "oneOf": [
+        {
+          "description": "Dependencies will be resolved to their highest versions.",
+          "type": "string",
+          "const": "highest"
+        },
+        {
+          "description": "Direct dependencies will be resolved to their lowest versions.",
+          "type": "string",
+          "const": "lowest-direct"
+        },
+        {
+          "description": "When resolutionMode is set to time-based, dependencies will be resolved the following way:\nDirect dependencies will be resolved to their lowest versions. So if there is foo@^1.1.0 in the dependencies, then 1.1.0 will be installed.\nSubdependencies will be resolved from versions that were published before the last direct dependency was published.",
+          "type": "string",
+          "const": "time-based"
+        }
+      ]
+    },
     "DockerConfig": {
       "description": "All settings and presets related to Docker.",
       "type": "object",
@@ -5855,10 +4660,7 @@
         },
         "include": {
           "description": "Requires: Docker Compose 2.20.0 and later\n\nThe include top-level section is used to define the dependency on another Compose application, or sub-domain. Each path listed in the include section is loaded as an individual Compose application model, with its own project directory, in order to resolve relative paths.\n\nSee more: https://docs.docker.com/reference/compose-file/include/",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Include"
@@ -5868,55 +4670,40 @@
           "description": "Defines the services for the Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/services/",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/ServiceData"
+            "$ref": "#/$defs/ServicePresetRef"
           }
         },
         "configs": {
           "description": "Defines or references configuration data that is granted to services in your Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/configs/",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/TopLevelConfig"
           }
         },
         "models": {
           "description": "The top-level models section declares AI models that are used by your Compose application. These models are typically pulled as OCI artifacts, run by a model runner, and exposed as an API that your service containers can consume.\n\nSee more: https://docs.docker.com/reference/compose-file/models/",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/TopLevelModel"
           }
         },
         "networks": {
           "description": "The named networks for the Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/networks/",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/TopLevelNetwork"
           }
         },
         "secrets": {
           "description": "The named secrets for the Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/secrets/",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/TopLevelSecret"
           }
         },
         "volumes": {
           "description": "The named volumes for the Compose application.\n\nSee more: https://docs.docker.com/reference/compose-file/volumes/",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/TopLevelVolume"
           }
@@ -5996,7 +4783,7 @@
         }
       ]
     },
-    "ServiceData": {
+    "ServicePresetRef": {
       "description": "Ways of representing a service in a Docker preset.",
       "anyOf": [
         {
@@ -6111,10 +4898,7 @@
         },
         "expose": {
           "description": "Defines the (incoming) port or a range of ports that Compose exposes from the container. These ports must be accessible to linked services and should not be published to the host machine. Only the internal container ports can be specified.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#expose",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/StringOrNum"
@@ -6133,25 +4917,11 @@
         },
         "environment": {
           "description": "Defines environment variables set in the container. environment can use either an array or a map. Any boolean values; true, false, yes, no, should be enclosed in quotes to ensure they are not converted to True or False by the YAML parser.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#environment",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "annotations": {
           "description": "Defines annotations for the container. annotations can use either an array or a map.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "attach": {
           "description": "Requires: Docker Compose 2.20.0 and later\n\nWhen attach is defined and set to false Compose does not collect service logs, until you explicitly request it to.",
@@ -6173,10 +4943,7 @@
         },
         "cap_add": {
           "description": "Specifies additional container [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html) as strings.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6184,10 +4951,7 @@
         },
         "cap_drop": {
           "description": "Specifies container [capabilities](https://man7.org/linux/man-pages/man7/capabilities.7.html) to drop as strings.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6213,10 +4977,7 @@
         },
         "configs": {
           "description": "Lets services adapt their behaviour without the need to rebuild a Docker image.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#configs",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ServiceConfigOrSecret"
@@ -6352,10 +5113,7 @@
         },
         "device_cgroup_rules": {
           "description": "A list of device cgroup rules for this container. The format is the same format the Linux kernel specifies in the Control [Groups Device Whitelist Controller]().",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6363,10 +5121,7 @@
         },
         "devices": {
           "description": "Defines a list of device mappings for created containers.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#devices",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/DeviceMapping"
@@ -6374,21 +5129,11 @@
         },
         "dns": {
           "description": "Custom DNS servers to set on the container network interface configuration. It can be a single value or a list.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringOrSortedList"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/StringOrSortedList"
         },
         "dns_opt": {
           "description": "Custom DNS options to be passed to the container’s DNS resolver (/etc/resolv.conf file on Linux).",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6396,14 +5141,7 @@
         },
         "dns_search": {
           "description": "Custom DNS search domains to set on container network interface configuration. It can be a single value or a list.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringOrSortedList"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/StringOrSortedList"
         },
         "domainname": {
           "description": "A custom domain name to use for the service container. It must be a valid RFC 1123 hostname.",
@@ -6414,20 +5152,14 @@
         },
         "driver_opts": {
           "description": "Requires: Docker Compose 2.27.1 and later\n\nSpecifies a list of options as key-value pairs to pass to the driver. These options are driver-dependent.\nConsult the [network drivers documentation](https://docs.docker.com/engine/network/) for more information.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/StringOrNum"
           }
         },
         "external_links": {
           "description": "`external_links` link service containers to services managed outside of your Compose application. `external_links` define the name of an existing service to retrieve using the platform lookup mechanism.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6457,10 +5189,7 @@
         },
         "group_add": {
           "description": "Additional groups, by name or number, which the user inside the container must be a member of.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#group_add",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/StringOrNum"
@@ -6489,32 +5218,15 @@
         },
         "labels": {
           "description": "Add metadata to containers. You can use either an array or a map.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#labels",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "label_file": {
           "description": "Requires: Docker Compose 2.32.2 and later\n\nThe label_file attribute lets you load labels for a service from an external file or a list of files. This provides a convenient way to manage multiple labels without cluttering the Compose file.\nSee more: https://docs.docker.com/reference/compose-file/services/#label_file",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/StringOrSortedList"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/StringOrSortedList"
         },
         "links": {
           "description": "Defines a network link to containers in another service. Either specify both the service name and a link alias (SERVICE:ALIAS), or just the service name.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#links",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6653,10 +5365,7 @@
         },
         "ports": {
           "description": "Used to define the port mappings between the host machine and the containers.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#ports",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Port"
@@ -6664,20 +5373,14 @@
         },
         "post_start": {
           "description": "Requires: Docker Compose 2.30.0 and later\n\nDefines a sequence of lifecycle hooks to run after a container has started. The exact timing of when the command is run is not guaranteed.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#post_start",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/ServiceHook"
           }
         },
         "pre_stop": {
           "description": "Defines a sequence of lifecycle hooks to run before the container is stopped. These hooks won't run if the container stops by itself or is terminated suddenly.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/ServiceHook"
           }
@@ -6691,10 +5394,7 @@
         },
         "profiles": {
           "description": "Defines a list of named profiles for the service to be enabled under. If unassigned, the service is always started but if assigned, it is only started if the profile is activated.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#profiles",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6765,10 +5465,7 @@
         },
         "secrets": {
           "description": "The secrets attribute grants access to sensitive data defined by the secrets top-level element on a per-service basis. Services can be granted access to multiple secrets.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#secrets",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ServiceConfigOrSecret"
@@ -6776,10 +5473,7 @@
         },
         "security_opt": {
           "description": "Overrides the default labeling scheme for each container.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#security_opt",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -6819,22 +5513,12 @@
         },
         "storage_opt": {
           "description": "Defines storage driver options for a service.",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": true
         },
         "sysctls": {
           "description": "Defines kernel parameters to set in the container. sysctls can use either an array or a map.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#sysctls",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "tmpfs": {
           "description": "Mounts a temporary file system inside the container. It can be a single value or a list.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#tmpfs",
@@ -6856,10 +5540,7 @@
         },
         "ulimits": {
           "description": "Overrides the default ulimits for a container. It's specified either as an integer for a single limit or as mapping for soft/hard limits.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#ulimits",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Ulimit"
           }
@@ -6898,20 +5579,14 @@
         },
         "volumes": {
           "description": "The volumes attribute define mount host paths or named volumes that are accessible by service containers.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#volumes",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/ServiceVolume"
           }
         },
         "volumes_from": {
           "description": "Mounts all of the volumes from another service or container. You can optionally specify read-only access ro or read-write rw. If no access level is specified, then read-write access is used.\n\nYou can also mount volumes from a container that is not managed by Compose by using the container: prefix.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "type": "string"
           }
@@ -6979,14 +5654,7 @@
         },
         "additional_contexts": {
           "description": "Requires: Docker Compose 2.17.0 and later\n\nDefines a list of named contexts the image builder should use during image build. Can be a mapping or a list.\nSee more: https://docs.docker.com/reference/compose-file/build/#additional_contexts",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "dockerfile": {
           "description": "Sets an alternate Dockerfile. A relative path is resolved from the build context. Compose warns you about the absolute path used to define the Dockerfile as it prevents Compose files from being portable.\n\nWhen set, dockerfile_inline attribute is not allowed and Compose rejects any Compose file having both set.",
@@ -7015,30 +5683,21 @@
         },
         "cache_from": {
           "description": "Defines a list of sources the image builder should use for cache resolution.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#cache_from",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "type": "string"
           }
         },
         "cache_to": {
           "description": "Defines a list of export locations to be used to share build cache with future builds.\n\nCache location syntax follows the global format [NAME|type=TYPE[,KEY=VALUE]]. Simple NAME is actually a shortcut notation for type=registry,ref=NAME.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#cache_to",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "type": "string"
           }
         },
         "entitlements": {
           "description": "Requires: Docker Compose 2.27.1 and later\n\nDefines extra privileged entitlements to be allowed during the build.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -7064,14 +5723,7 @@
         },
         "labels": {
           "description": "Add metadata to the resulting image. Can be set either as an array or a map.\n\nIt's recommended that you use reverse-DNS notation to prevent your labels from conflicting with other software.",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "network": {
           "description": "Network mode to use for the build. Options include 'default', 'none', 'host', or a network name.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#network",
@@ -7089,10 +5741,7 @@
         },
         "platforms": {
           "description": "Defines a list of target [platforms](https://docs.docker.com/reference/compose-file/services/#platform).\n\nSee more: https://docs.docker.com/reference/compose-file/build/#platforms",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -7128,10 +5777,7 @@
         },
         "secrets": {
           "description": "Grants access to sensitive data defined by secrets on a per-service build basis.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#secrets",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ServiceConfigOrSecret"
@@ -7139,14 +5785,7 @@
         },
         "ssh": {
           "description": "SSH agent socket or keys to expose to the build. Format is either a string or a list of 'default|<id>[=<socket>|<key>[,<key>]]'.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#ssh",
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ListOrMap"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/ListOrMap"
         },
         "shm_size": {
           "description": "Size of /dev/shm for the build container. A string value can use suffix like '2g' for 2 gigabytes.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#shm_size",
@@ -7161,10 +5800,7 @@
         },
         "tags": {
           "description": "Defines a list of tag mappings that must be associated to the build image. This list comes in addition to the image property defined in the service section.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -7179,10 +5815,7 @@
         },
         "ulimits": {
           "description": "Requires: Docker Compose 2.23.1 and later\n\nulimits overrides the default ulimits for a container. It's specified either as an integer for a single limit or as mapping for soft/hard limits.\n\nSee more: https://docs.docker.com/reference/compose-file/build/#ulimits",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Ulimit"
           }
@@ -7289,11 +5922,11 @@
     "StringOrNum": {
       "anyOf": [
         {
-          "type": "integer",
-          "format": "int64"
+          "type": "string"
         },
         {
-          "type": "string"
+          "type": "integer",
+          "format": "int64"
         }
       ]
     },
@@ -7320,7 +5953,7 @@
       ]
     },
     "DependsOn": {
-      "description": "With the depends_on attribute, you can control the order of service startup and shutdown. It is useful if services are closely coupled, and the startup sequence impacts the application's functionality.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#depends_on",
+      "description": "With the depends_on attribute, you can control the order of service startup and shutdown.\n\nIt is useful if services are closely coupled, and the startup sequence impacts the application's functionality.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#depends_on",
       "anyOf": [
         {
           "type": "array",
@@ -7337,7 +5970,7 @@
       ]
     },
     "DependsOnSettings": {
-      "description": "With the depends_on attribute, you can control the order of service startup and shutdown. It is useful if services are closely coupled, and the startup sequence impacts the application's functionality.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#depends_on",
+      "description": "With the depends_on attribute, you can control the order of service startup and shutdow```\n\nIt is useful if services are closely coupled, and the startup sequence impacts the application's functionality.\n\nSee more: https://docs.docker.com/reference/compose-file/services/#depends_on",
       "type": "object",
       "properties": {
         "condition": {
@@ -7447,7 +6080,7 @@
       "additionalProperties": false
     },
     "Envfile": {
-      "description": "Defines an environment file(s) to use to define default values when interpolating variables in the Compose file being parsed. It defaults to .env file in the project_directory for the Compose file being parsed.\n\nSee more: https://docs.docker.com/reference/compose-file/include/#env_file",
+      "description": "Defines an environment file(s) to use to define default values when interpolating variables in the Compose file being parsed.\n\nIt defaults to .env file in the project_directory for the Compose file being parsed.\n\nSee more: https://docs.docker.com/reference/compose-file/include/#env_file",
       "anyOf": [
         {
           "description": "Path to a file containing environment variables.",
@@ -7462,7 +6095,7 @@
       ]
     },
     "EnvfileFormat": {
-      "description": "Defines an environment file(s) to use to define default values when interpolating variables in the Compose file being parsed. It defaults to .env file in the project_directory for the Compose file being parsed.\n\nSee more: https://docs.docker.com/reference/compose-file/include/#env_file",
+      "description": "Defines an environment file(s) to use to define default values when interpolating variables in the Compose file being parsed.\n\nIt defaults to .env file in the project_directory for the Compose file being parsed.\n\nSee more: https://docs.docker.com/reference/compose-file/include/#env_file",
       "anyOf": [
         {
           "description": "Path to a file containing environment variables.",
@@ -9630,10 +8263,7 @@
         },
         "default_install_hook_types": {
           "description": "A list of hook types which will be used by default when running `pre-commit install` https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -9641,20 +8271,14 @@
         },
         "default_language_version": {
           "description": "Mappings for the default language versions of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
         "default_stages": {
           "description": "The default stages of the current project https://pre-commit.com/#pre-commit-configyaml---top-level",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Stage"
@@ -9698,18 +8322,7 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/Repo"
-          },
-          "default": [
-            {
-              "repo": "https://github.com/gitleaks/gitleaks",
-              "rev": "v8.28.0",
-              "hooks": [
-                {
-                  "id": "gitleaks"
-                }
-              ]
-            }
-          ]
+          }
         }
       }
     },
@@ -9838,7 +8451,7 @@
               "type": "array",
               "uniqueItems": true,
               "items": {
-                "$ref": "#/$defs/Hook2"
+                "$ref": "#/$defs/PreCommitHook"
               }
             }
           },
@@ -9867,7 +8480,7 @@
               "type": "array",
               "uniqueItems": true,
               "items": {
-                "$ref": "#/$defs/Hook2"
+                "$ref": "#/$defs/PreCommitHook"
               }
             }
           },
@@ -9909,7 +8522,7 @@
         "local"
       ]
     },
-    "Hook2": {
+    "PreCommitHook": {
       "description": "Description for a pre-commit hook. https://pre-commit.com/#pre-commit-configyaml---hooks",
       "type": "object",
       "properties": {
@@ -10376,10 +8989,12 @@
           "default": []
         },
         "content": {
-          "$ref": "#/$defs/GitIgnore",
-          "default": ""
+          "$ref": "#/$defs/GitIgnore"
         }
-      }
+      },
+      "required": [
+        "content"
+      ]
     },
     "GitIgnore": {
       "description": "A definition for a gitignore template. It can be a list of strings (to define each element) or a single string (to define the entire file).",
@@ -10403,7 +9018,7 @@
           "description": "Settings for the gitignore file.",
           "anyOf": [
             {
-              "$ref": "#/$defs/GitIgnoreRef"
+              "$ref": "#/$defs/GitIgnorePresetRef"
             },
             {
               "type": "null"
@@ -10469,7 +9084,7 @@
         }
       }
     },
-    "GitIgnoreRef": {
+    "GitIgnorePresetRef": {
       "description": "Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)",
       "anyOf": [
         {
@@ -10617,14 +9232,14 @@
           "description": "A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/JobReference"
+            "$ref": "#/$defs/JobPresetRef"
           },
           "default": {}
         }
       }
     },
     "Event": {
-      "description": "The name of the GitHub event that triggers the workflow. You can provide a single event string, array of events, array of event types, or an event configuration map that schedules a workflow or restricts the execution of a workflow to specific files, tags, or branch changes.\n\nFor a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.",
+      "description": "The name of the GitHub event that triggers the workflow.\n\nYou can provide a single event string, array of events, array of event types, or an event configuration map that schedules a workflow or restricts the execution of a workflow to specific files, tags, or branch changes.\n\nFor a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.",
       "anyOf": [
         {
           "$ref": "#/$defs/EventDefinition"
@@ -11114,10 +9729,7 @@
         },
         "schedule": {
           "description": "You can schedule a workflow to run at specific UTC times using POSIX cron syntax (https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07). Scheduled workflows run on the latest commit on the default or base branch. The shortest interval you can run scheduled workflows is once every 5 minutes.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "items": {
             "$ref": "#/$defs/Schedule"
           }
@@ -11179,10 +9791,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/BranchProtectionRuleEvents"
@@ -11205,10 +9814,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/CheckRunEvents"
@@ -11232,10 +9838,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/CheckSuiteEvents"
@@ -11258,10 +9861,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/DiscussionEvents"
@@ -11294,10 +9894,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/DiscussionCommentEvents"
@@ -11320,10 +9917,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/IssueCommentEvents"
@@ -11346,10 +9940,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/IssuesEvents"
@@ -11384,10 +9975,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/LabelEvents"
@@ -11410,10 +9998,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/MergeGroupEvents"
@@ -11434,10 +10019,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/MilestoneEvents"
@@ -11462,10 +10044,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ProjectEvents"
@@ -11491,10 +10070,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ProjectCardEvents"
@@ -11519,10 +10095,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ProjectColumnEvents"
@@ -11541,15 +10114,12 @@
       ]
     },
     "PullRequest": {
-      "description": "Runs your workflow when activity on a pull request in the workflow's repository occurs. For example, if no activity types are specified, the workflow runs when a pull request is opened or reopened or when the head branch of the pull request is updated. For activity related to pull request reviews, pull request review comments, or pull request comments, use the `pull_request_review`, `pull_request_review_comment`, or `issue_comment` events instead.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request",
+      "description": "Runs your workflow when activity on a pull request in the workflow's repository occurs.\n\nFor example, if no activity types are specified, the workflow runs when a pull request is opened or reopened or when the head branch of the pull request is updated. For activity related to pull request reviews, pull request review comments, or pull request comments, use the `pull_request_review`, `pull_request_review_comment`, or `issue_comment` events instead.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request",
       "type": "object",
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/PullRequestEvents"
@@ -11557,10 +10127,7 @@
         },
         "branches": {
           "description": "Runs on pull requests that target specific branches.\n\nCannot be used with `branches-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11568,10 +10135,7 @@
         },
         "branches-ignore": {
           "description": "Runs on pull requests that target specific branches, except those listed here.\n\nCannot be used with `branches`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11579,10 +10143,7 @@
         },
         "tags": {
           "description": "Cannot be used with `tags-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11590,10 +10151,7 @@
         },
         "tags-ignore": {
           "description": "Cannot be used with `tags`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11601,10 +10159,7 @@
         },
         "paths": {
           "description": "Runs when a pull request changes specific files.\n\nCannot be used with `paths-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11612,10 +10167,7 @@
         },
         "paths-ignore": {
           "description": "Runs when a pull request changes specific files, except those listed here.\n\nCannot be used with `paths`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11656,10 +10208,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/PullRequestReviewEvents"
@@ -11682,10 +10231,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/PullRequestReviewCommentEvents"
@@ -11708,10 +10254,7 @@
       "properties": {
         "branches": {
           "description": "Runs only when specific branches are pushed.\n\nCannot be used with `branches-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11719,10 +10262,7 @@
         },
         "branches-ignore": {
           "description": "Runs only when specific branches are pushed, except those listed here.\n\nCannot be used with `branches`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11730,10 +10270,7 @@
         },
         "tags": {
           "description": "Runs only when specific tags are pushed.\n\nCannot be used with `tags-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11741,10 +10278,7 @@
         },
         "tags-ignore": {
           "description": "Runs only when specific tags are pushed, except for the ones listed here.\n\nCannot be used with `tags`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11752,10 +10286,7 @@
         },
         "paths": {
           "description": "Runs only when a push changes specific files.\n\nCannot be used with `paths-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11763,10 +10294,7 @@
         },
         "paths-ignore": {
           "description": "Runs only when a push changes specific files, except those listed here.\n\nCannot be used with `paths`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -11780,10 +10308,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/RegistryPackageEvents"
@@ -11805,10 +10330,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/ReleaseEvents"
@@ -11830,7 +10352,7 @@
       ]
     },
     "Schedule": {
-      "description": "You can schedule a workflow to run at specific UTC times using POSIX cron syntax (https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07). Scheduled workflows run on the latest commit on the default or base branch. The shortest interval you can run scheduled workflows is once every 5 minutes.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule",
+      "description": "You can schedule a workflow to run at specific UTC times using POSIX cron syntax (https://pubs.opengroup.org/onlinepubs/9699919799/utilities/crontab.html#tag_20_25_07).\n\nScheduled workflows run on the latest commit on the default or base branch. The shortest interval you can run scheduled workflows is once every 5 minutes.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule",
       "type": "object",
       "properties": {
         "cron": {
@@ -11848,30 +10370,21 @@
       "properties": {
         "inputs": {
           "description": "When using the `workflow_call` keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callinputs",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/WorkflowCallInput"
           }
         },
         "outputs": {
           "description": "A map of outputs for a called workflow. Called workflow outputs are available to all downstream jobs in the caller workflow. Each output has an identifier, an optional `description`, and a `value`. The `value` must be set to the value of an output from a job within the called workflow.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_calloutputs",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/WorkflowCallOutput"
           }
         },
         "secrets": {
           "description": "A map of the secrets that can be used in the called workflow.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callsecrets",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Secret"
           }
@@ -11976,10 +10489,7 @@
       "properties": {
         "inputs": {
           "description": "The triggered workflow receives the inputs in the `inputs` context.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/WorkflowDispatchInput"
           }
@@ -12052,10 +10562,7 @@
       "properties": {
         "types": {
           "description": "The types of events that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/WorkflowRunEvents"
@@ -12063,10 +10570,7 @@
         },
         "workflows": {
           "description": "The workflows that should trigger this workflow.",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -12074,10 +10578,7 @@
         },
         "branches": {
           "description": "Runs only when specific branches are involved.\n\nCannot be used with `branches-ignore`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -12085,10 +10586,7 @@
         },
         "branches-ignore": {
           "description": "Runs only when specific branches are involved, except those listed here.\n\nCannot be used with `branches`",
-          "type": [
-            "array",
-            "null"
-          ],
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string"
@@ -12123,7 +10621,7 @@
       ]
     },
     "PermissionsEvent": {
-      "description": "For each of the available permissions, you can assign one of the access levels: read (if applicable), write, or none. write includes read. If you specify the access for any of these permissions, all of those that are not specified are set to none.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions",
+      "description": "For each of the available permissions, you can assign one of the access levels: read (if applicable), write, or none.\n\nwrite includes read. If you specify the access for any of these permissions, all of those that are not specified are set to none.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions",
       "type": "object",
       "properties": {
         "actions": {
@@ -12364,7 +10862,7 @@
       ]
     },
     "Concurrency": {
-      "description": "Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time. A concurrency group can be any string or expression. The expression can use any context except for the secrets context.\n\nYou can also specify concurrency at the workflow level.\n\nWhen a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled. To also cancel any currently running job or workflow in the same concurrency group, specify cancel-in-progress: true.\n\nSee more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency",
+      "description": "Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time.\n\nA concurrency group can be any string or expression. The expression can use any context except for the secrets context.\n\nYou can also specify concurrency at the workflow level.\n\nWhen a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled. To also cancel any currently running job or workflow in the same concurrency group, specify cancel-in-progress: true.\n\nSee more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency",
       "type": "object",
       "properties": {
         "group": {
@@ -12397,7 +10895,7 @@
         }
       ]
     },
-    "JobReference": {
+    "JobPresetRef": {
       "description": "A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs\n\nYou can use a job preset (by referring to it by its ID) or define a new one.",
       "anyOf": [
         {
@@ -12461,7 +10959,7 @@
           "description": "Identifies any jobs that must complete successfully before this job will run. It can be a string or array of strings. If a job fails, all jobs that need it are skipped unless the jobs use a conditional statement that causes the job to continue.\n\nCan be a string or a list of strings.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds",
           "anyOf": [
             {
-              "$ref": "#/$defs/StringOrSortedList"
+              "$ref": "#/$defs/StringOrSortedList2"
             },
             {
               "type": "null"
@@ -12477,10 +10975,7 @@
         },
         "outputs": {
           "description": "A map of outputs for a job. Job outputs are available to all downstream jobs that depend on this job.\n\nSee more: https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "type": "string"
           }
@@ -12540,7 +11035,7 @@
           "description": "The maximum number of minutes to let a workflow run before GitHub automatically cancels it. Default: 360\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes",
           "anyOf": [
             {
-              "$ref": "#/$defs/StringOrNum"
+              "$ref": "#/$defs/StringOrNum2"
             },
             {
               "type": "null"
@@ -12571,10 +11066,7 @@
         },
         "services": {
           "description": "Additional containers to host services for a job in a workflow. These are useful for creating databases or cache services like redis. The runner on the virtual machine will automatically create a network and manage the life cycle of the service containers.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idservices",
-          "type": [
-            "object",
-            "null"
-          ],
+          "type": "object",
           "additionalProperties": {
             "$ref": "#/$defs/Container"
           }
@@ -12624,7 +11116,7 @@
               "description": "When you combine groups and labels, the runner must meet both requirements to be eligible to run the job.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#example-combining-groups-and-labels",
               "anyOf": [
                 {
-                  "$ref": "#/$defs/StringOrSortedList"
+                  "$ref": "#/$defs/StringOrSortedList2"
                 },
                 {
                   "type": "null"
@@ -12721,6 +11213,20 @@
         }
       ]
     },
+    "StringOrSortedList2": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
     "Environment2": {
       "description": "The environment that the job references. You can provide the environment as only the environment name, or as an environment object with the `name` and `url`.\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idenvironment",
       "anyOf": [
@@ -12750,8 +11256,19 @@
         }
       ]
     },
+    "StringOrNum2": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "integer",
+          "format": "int64"
+        }
+      ]
+    },
     "Container": {
-      "description": "A container to run any steps in a job that don't already specify a container. If you have steps that use both script and container actions, the container actions will run as sibling containers on the same network with the same volume mounts.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainer",
+      "description": "A container to run any steps in a job that don't already specify a container.\n\nIf you have steps that use both script and container actions, the container actions will run as sibling containers on the same network with the same volume mounts.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainer",
       "type": "object",
       "properties": {
         "image": {
@@ -12784,7 +11301,7 @@
           ],
           "uniqueItems": true,
           "items": {
-            "$ref": "#/$defs/StringOrNum"
+            "$ref": "#/$defs/StringOrNum2"
           }
         },
         "volumes": {
@@ -12811,7 +11328,7 @@
       ]
     },
     "Credentials": {
-      "description": "If the image's container registry requires authentication to pull the image, you can use credentials to set a map of the username and password. The credentials are the same values that you would provide to the `docker login` command.\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idcontainercredentials",
+      "description": "If the image's container registry requires authentication to pull the image, you can use credentials to set a map of the username and password.\n\nThe credentials are the same values that you would provide to the `docker login` command.\n\nSee more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idcontainercredentials",
       "type": "object",
       "properties": {
         "username": {
@@ -12845,7 +11362,7 @@
           "description": "The maximum number of jobs that can run simultaneously when using a matrix job strategy. By default, GitHub will maximize the number of jobs run in parallel depending on the available runners on GitHub-hosted virtual machines.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstrategymax-parallel",
           "anyOf": [
             {
-              "$ref": "#/$defs/StringOrNum"
+              "$ref": "#/$defs/StringOrNum2"
             },
             {
               "type": "null"
@@ -12918,7 +11435,7 @@
           "description": "The maximum number of minutes to run the step before killing the process.\n\nSee more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstepstimeout-minutes",
           "anyOf": [
             {
-              "$ref": "#/$defs/StringOrNum"
+              "$ref": "#/$defs/StringOrNum2"
             },
             {
               "type": "null"
@@ -12988,7 +11505,7 @@
           "description": "Identifies any jobs that must complete successfully before this job will run. It can be a string or array of strings. If a job fails, all jobs that need it are skipped unless the jobs use a conditional statement that causes the job to continue.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds",
           "anyOf": [
             {
-              "$ref": "#/$defs/StringOrSortedList"
+              "$ref": "#/$defs/StringOrSortedList2"
             },
             {
               "type": "null"
@@ -13059,7 +11576,7 @@
       ]
     },
     "JobSecret": {
-      "description": "When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow. Any secrets that you pass must match the names defined in the called workflow.\n\nSee more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets",
+      "description": "When a job is used to call a reusable workflow, you can use 'secrets' to provide a map of secrets that are passed to the called workflow.\n\nAny secrets that you pass must match the names defined in the called workflow.\n\nSee more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets",
       "anyOf": [
         {
           "description": "Use the `inherit` keyword to pass all the calling workflow's secrets to the called workflow. This includes all secrets the calling workflow has access to, namely organization, repository, and environment secrets. The `inherit` keyword can be used to pass secrets across repositories within the same organization, or across organizations within the same enterprise.",
@@ -13078,7 +11595,7 @@
     "RustPresets": {
       "type": "object",
       "properties": {
-        "manifest": {
+        "manifest_presets": {
           "description": "A map that contains presets for `Cargo.toml` files.",
           "type": "object",
           "additionalProperties": {
@@ -13086,10 +11603,10 @@
           },
           "default": {}
         },
-        "crate": {
+        "crate_presets": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/Crate"
+            "$ref": "#/$defs/CratePreset"
           },
           "default": {}
         }
@@ -13548,7 +12065,10 @@
         "workspace": {
           "type": "boolean"
         }
-      }
+      },
+      "required": [
+        "workspace"
+      ]
     },
     "DependencyDetail": {
       "description": "When definition of a dependency is more than just a version string.",
@@ -13636,10 +12156,7 @@
             "null"
           ]
         }
-      },
-      "required": [
-        "optional"
-      ]
+      }
     },
     "Lints": {
       "type": "object",
@@ -14048,14 +12565,16 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "default": null
         },
         "name": {
           "description": "The name of a product is the name of the library or binary that will be generated.\nThis is defaulted to the name of the package, with any dashes replaced\nwith underscores. (Rust `extern crate` declarations reference this name;\ntherefore the value must be a valid Rust identifier to be usable.)",
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "default": null
         },
         "test": {
           "description": "A flag for enabling unit tests for this product. This is used by `cargo test`.",
@@ -14359,27 +12878,12 @@
     },
     "LtoSetting": {
       "description": "Handling of LTO in a build profile",
-      "oneOf": [
+      "anyOf": [
         {
-          "type": "string",
-          "enum": [
-            "thin"
-          ]
+          "type": "boolean"
         },
         {
-          "description": "off",
-          "type": "string",
-          "const": "none"
-        },
-        {
-          "description": "false",
-          "type": "string",
-          "const": "thin-local"
-        },
-        {
-          "description": "True",
-          "type": "string",
-          "const": "fat"
+          "type": "string"
         }
       ]
     },
@@ -14423,7 +12927,7 @@
         }
       ]
     },
-    "Crate": {
+    "CratePreset": {
       "type": "object",
       "properties": {
         "manifest": {
@@ -14438,7 +12942,7 @@
           "description": "Settings for the gitignore file.",
           "anyOf": [
             {
-              "$ref": "#/$defs/GitIgnoreRef"
+              "$ref": "#/$defs/GitIgnorePresetRef"
             },
             {
               "type": "null"

@@ -1,138 +1,214 @@
+# yaml-language-server: $schema=../../../schemas/development.json
+
 rust_presets:
-  crate:
-    test-package:
+  crate_presets:
+    simple_test:
       manifest:
-        features:
-          default: []
-          abc:
-            - they
-            - are
-            - taking
-            - the
-            - hobbits
-            - to
-            - Isengard!
-
-        lints:
-          clippy:
-            useless_let_if_seq: allow
-
-        dependencies:
-          serde:
-            version: "1"
-            default_features: false
-            features:
-              - derive
-              - std
-
-          clap: "4.5"
-
-        build-dependencies:
-          serde:
-            version: "1"
-            default_features: false
-            features:
-              - derive
-              - std
-
-          clap: "4.5"
-
-        dev-dependencies:
-          serde:
-            version: "1"
-            default_features: false
-            features:
-              - derive
-              - std
-
-          clap: "4.5"
-
-        lib:
-          proc-macro: true
-
-        target:
-          "cfg(windows)":
-            dependencies:
-              winhttp: "0.1.0"
-
-          "cfg(unix)":
-            dependencies:
-              openssl: "0.1.0"
-
-        bin:
-          - name: abc
-            path: abc
-          - name: abcde
-            path: abcde
-
-        test:
-          - name: abc
-            path: abc
-          - name: abcde
-            path: abcde
-
-        bench:
-          - name: abc
-            path: abc
-          - name: abcde
-            path: abcde
-
-        example:
-          - name: abc
-            path: abc
-          - name: abcde
-            path: abcde
-
-        profile:
-          dev:
-            debug: 0
-            package:
-              "*":
-                debug: 0
-                opt-level: 1
-
-            opt-level: 0
-            lto: fat
-
-          release:
-            debug: 0
-            package:
-              "*":
-                debug: 0
-                opt-level: 1
-
-            opt-level: 0
-            lto: fat
-
-        patch:
-          crates-io:
-            serde:
-              version: "1"
-              default_features: false
-              features:
-                - derive
-                - std
-            clap: "4.5"
-
         package:
-          name: test
-          metadata:
-            release:
-              tags: true
-              prefix: "0.1"
+          name: simple_test
+    test-package:
+      with_templates:
+        - templates:
+            - output: src/lib.rs
+              template:
+                name: lib-rs-file
+                content: |
+                  use clap::Parser;
 
-          autobenches: false
-          autobins: false
-          autoexamples: false
-          autolib: false
-          autotests: false
+      license: MPL-2.0
+      gitignore:
+        content:
+          - target
+      manifest: test-package
 
-          default-run: "a"
-          build: build.rs
-          license-file: abc
-          links: abc
-          resolver: "3"
+    test-workspace:
+      manifest: test-workspace
 
+  manifest_presets:
+    test-package:
+      lints:
+        clippy:
+          useless_let_if_seq: allow
+
+      features:
+        default: []
+        abc:
+          - they
+          - are
+          - taking
+          - the
+          - hobbits
+          - to
+          - Isengard!
+
+      dependencies:
+        serde:
+          version: "1"
+          default-features: false
+          features:
+            - derive
+            - std
+
+        clap:
+          workspace: true
+
+      build-dependencies:
+        serde:
+          version: "1"
+          default-features: false
+          features:
+            - derive
+            - std
+
+        clap:
+          workspace: true
+
+      dev-dependencies:
+        serde:
+          version: "1"
+          default-features: false
+          features:
+            - derive
+            - std
+
+        clap:
+          workspace: true
+
+      lib:
+        proc-macro: true
+
+      target:
+        "cfg(windows)":
+          dependencies:
+            winhttp: "0.1.0"
+
+        "cfg(unix)":
+          dependencies:
+            openssl: "0.1.0"
+
+      bin:
+        - name: abc
+          path: abc
+        - name: abcde
+          path: abcde
+
+      test:
+        - name: abc
+          path: abc
+        - name: abcde
+          path: abcde
+
+      bench:
+        - name: abc
+          path: abc
+        - name: abcde
+          path: abcde
+
+      example:
+        - name: abc
+          path: abc
+        - name: abcde
+          path: abcde
+
+      profile:
+        dev:
+          debug: 0
+          package:
+            "*":
+              debug: 0
+              opt-level: 1
+
+          opt-level: 0
+          lto: fat
+
+        release:
+          debug: 0
+          package:
+            "*":
+              debug: 0
+              opt-level: 1
+
+          opt-level: 0
+          lto: fat
+
+      patch:
+        crates-io:
+          serde:
+            version: "1"
+            default-features: false
+            features:
+              - derive
+              - std
+
+      package:
+        name: test
+        metadata:
+          release:
+            tags: true
+            prefix: "0.1"
+
+        autobenches: false
+        autobins: false
+        autoexamples: false
+        autolib: false
+        autotests: false
+
+        default-run: "a"
+        build: build.rs
+        license-file: abc
+        links: abc
+        resolver: "3"
+
+        categories:
+          - they
+          - are
+          - taking
+          - the
+          - hobbits
+          - to
+          - Isengard!
+
+        edition: "2024"
+        description: "description"
+        documentation: "abc.com"
+        homepage: "abc.com"
+
+        license: "Apache-2.0"
+        publish: false
+        readme: true
+        repository: "abc"
+        rust-version: "1.82"
+        version: "0.1.0"
+
+        keywords:
+          - they
+          - are
+          - taking
+          - the
+          - hobbits
+          - to
+          - Isengard!
+
+        include:
+          - they
+          - are
+          - taking
+          - the
+          - hobbits
+          - to
+          - Isengard!
+
+        exclude:
+          - they
+          - are
+          - taking
+          - the
+          - hobbits
+          - to
+          - Isengard!
+    test-workspace:
+      workspace:
+        package:
           categories:
             - they
             - are
@@ -181,99 +257,42 @@ rust_presets:
             - to
             - Isengard!
 
-    test-workspace:
-      manifest:
-        workspace:
-          package:
-            categories:
-              - they
-              - are
-              - taking
-              - the
-              - hobbits
-              - to
-              - Isengard!
+        exclude:
+          - they
+          - are
+          - taking
+          - the
+          - hobbits
+          - to
+          - Isengard!
+        metadata:
+          release:
+            tags: true
+            shared-version: true
 
-            edition: "2024"
-            description: "description"
-            documentation: "abc.com"
-            homepage: "abc.com"
+        resolver: "3"
+        members:
+          - a
+          - b
+        default-members:
+          - a
+          - b
 
-            license: "Apache-2.0"
-            publish: false
-            readme: true
-            repository: "abc"
-            rust-version: "1.82"
-            version: "0.1.0"
+        lints:
+          clippy:
+            useless_let_if_seq: "allow"
+            abc:
+              level: allow
+              priority: 0
+          rust:
+            abc: "allow"
 
-            keywords:
-              - they
-              - are
-              - taking
-              - the
-              - hobbits
-              - to
-              - Isengard!
+        dependencies:
+          serde:
+            version: "1"
+            default-features: false
+            features:
+              - derive
+              - std
 
-            include:
-              - they
-              - are
-              - taking
-              - the
-              - hobbits
-              - to
-              - Isengard!
-
-            exclude:
-              - they
-              - are
-              - taking
-              - the
-              - hobbits
-              - to
-              - Isengard!
-
-          exclude:
-            - they
-            - are
-            - taking
-            - the
-            - hobbits
-            - to
-            - Isengard!
-            - gard
-            - gard
-            - ga
-            - ga
-            - gard
-          metadata:
-            release:
-              tags: true
-              shared-version: true
-
-          resolver: "3"
-          members:
-            - a
-            - b
-          default-members:
-            - a
-            - b
-
-          lints:
-            clippy:
-              useless_let_if_seq: "allow"
-              abc:
-                level: allow
-                priority: 0
-            rust:
-              abc: "allow"
-
-          dependencies:
-            serde:
-              version: "1"
-              default_features: false
-              features:
-                - derive
-                - std
-
-            clap: "4.5"
+          clap: "4.5"

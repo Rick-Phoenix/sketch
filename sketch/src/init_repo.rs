@@ -17,7 +17,7 @@ use pre_commit::*;
 pub struct RepoPreset {
 	#[arg(short, long)]
 	/// Settings for the gitignore file.
-	pub gitignore: Option<GitIgnoreRef>,
+	pub gitignore: Option<GitIgnorePresetRef>,
 
 	#[arg(long)]
 	/// Configuration settings for [`pre-commit`](https://pre-commit.com/).
@@ -80,7 +80,7 @@ impl Config {
 
 		let mut gitignore_id: Option<String> = None;
 
-		if let Some(GitIgnoreRef::Id(id)) = preset.gitignore {
+		if let Some(GitIgnorePresetRef::Id(id)) = preset.gitignore {
 			gitignore_id = Some(id.clone());
 
 			let data = self
@@ -92,26 +92,26 @@ impl Config {
 				})?
 				.clone();
 
-			preset.gitignore = Some(GitIgnoreRef::Config(data));
+			preset.gitignore = Some(GitIgnorePresetRef::Config(data));
 		}
 
-		if let Some(GitIgnoreRef::Config(data)) = preset.gitignore {
+		if let Some(GitIgnorePresetRef::Config(data)) = preset.gitignore {
 			let resolved = data.process_data(
 				gitignore_id.as_deref().unwrap_or("__inlined"),
 				&self.gitignore_presets,
 			)?;
 
-			preset.gitignore = Some(GitIgnoreRef::Config(resolved));
+			preset.gitignore = Some(GitIgnorePresetRef::Config(resolved));
 		}
 
 		if preset.gitignore.is_none() {
-			preset.gitignore = Some(GitIgnoreRef::Config(GitignorePreset {
+			preset.gitignore = Some(GitIgnorePresetRef::Config(GitignorePreset {
 				extends_presets: Default::default(),
 				content: GitIgnore::String(DEFAULT_GITIGNORE.trim().to_string()),
 			}));
 		}
 
-		let Some(GitIgnoreRef::Config(gitignore)) = preset.gitignore else {
+		let Some(GitIgnorePresetRef::Config(gitignore)) = preset.gitignore else {
 			panic!("Unresolved gitignore");
 		};
 

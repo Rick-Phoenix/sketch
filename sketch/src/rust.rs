@@ -2,7 +2,7 @@ pub(crate) use rust_manifest::*;
 
 use crate::{
 	custom_templating::TemplatingPresetReference,
-	init_repo::gitignore::{GitIgnoreRef, GitignorePreset},
+	init_repo::gitignore::{GitIgnorePresetRef, GitignorePreset},
 	licenses::License,
 	*,
 };
@@ -13,24 +13,23 @@ use toml_edit::{Array, Decor, DocumentMut, Item, Table};
 #[serde(default)]
 pub struct RustPresets {
 	/// A map that contains presets for `Cargo.toml` files.
-	pub manifest: IndexMap<String, CargoTomlPreset>,
+	pub manifest_presets: IndexMap<String, CargoTomlPreset>,
 
-	#[serde(rename = "crate")]
-	pub crate_: IndexMap<String, Crate>,
+	pub crate_presets: IndexMap<String, CratePreset>,
 }
 
 #[derive(Args, Clone, Debug, Serialize, Deserialize, PartialEq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[group(id = "crate_config")]
+#[group(id = "input")]
 #[serde(default)]
-pub struct Crate {
-	#[arg(short, long, value_parser = CargoTomlPresetRef::from_cli, default_value_t = CargoTomlPresetRef::default())]
+pub struct CratePreset {
+	#[arg(skip)]
 	#[merge(with = overwrite_always)]
 	pub manifest: CargoTomlPresetRef,
 
 	#[arg(long)]
 	/// Settings for the gitignore file.
-	pub gitignore: Option<GitIgnoreRef>,
+	pub gitignore: Option<GitIgnorePresetRef>,
 
 	#[arg(long)]
 	/// A license file to generate for the new repo.
@@ -68,25 +67,14 @@ pub fn format_array(arr: &mut Array) {
 	}
 }
 
-impl Crate {
+impl CratePreset {
 	pub fn generate(
 		self,
 		dir: &PathBuf,
 		name: Option<String>,
 		config: &Config,
 	) -> Result<(), GenError> {
-		if dir.exists() {
-			panic!("Dir exists");
-		}
-
 		create_all_dirs(dir)?;
-
-		let name = name.unwrap_or_else(|| {
-			dir.file_name()
-				.expect("Empty path")
-				.to_string_lossy()
-				.to_string()
-		});
 
 		let CargoTomlPresetRef::Config(CargoTomlPreset {
 			config: mut manifest,
@@ -96,11 +84,19 @@ impl Crate {
 			panic!("Unresolved manifest");
 		};
 
-		manifest.package.get_or_insert_default().name = Some(name);
-
 		let manifest_is_virtual = manifest.workspace.is_some();
 
-		let workspace_manifest_path = PathBuf::from("Cargo.toml");
+		if !manifest_is_virtual {
+			let name = name.unwrap_or_else(|| {
+				dir.file_name()
+					.expect("Empty path")
+					.to_string_lossy()
+					.to_string()
+			});
+			manifest.package.get_or_insert_default().name = Some(name);
+		}
+
+		let workspace_manifest_path = get_parent_dir(dir).join("Cargo.toml");
 
 		let workspace_manifest = if !manifest_is_virtual && workspace_manifest_path.exists() {
 			let workspace_manifest_raw = read_to_string(&workspace_manifest_path).map_err(|e| {
@@ -129,25 +125,21 @@ impl Crate {
 				.as_array_mut()
 				.unwrap();
 
-			members.set_trailing_comma(true);
-
-			let decor = members
-				.get(0)
-				.map(|i| i.decor().clone())
-				.unwrap_or_else(|| Decor::new("\n\t", ""));
-
-			if decor
-				.prefix()
-				.is_some_and(|p| p.as_str().unwrap().contains("\n"))
-			{
-				members.set_trailing("\n");
-			}
-
-			let mut new_member: toml_edit::Value = dir.to_string_lossy().to_string().into();
-
-			*new_member.decor_mut() = decor;
+			let new_member: toml_edit::Value = dir
+				.file_name()
+				.unwrap()
+				.to_string_lossy()
+				.to_string()
+				.into();
 
 			members.push(new_member);
+
+			for member in members.iter_mut() {
+				*member.decor_mut() = Decor::new("\n\t", "");
+			}
+
+			members.set_trailing("\n");
+			members.set_trailing_comma(true);
 
 			write_file(
 				&workspace_manifest_path,
@@ -186,13 +178,32 @@ impl Crate {
 					};
 				}
 
-				inherit_opt!(edition, license, repository);
+				inherit_opt!(
+					edition,
+					license,
+					homepage,
+					rust_version,
+					description,
+					readme,
+					documentation,
+					publish,
+					version,
+					repository
+				);
 
-				if !workspace_package_config.keywords.is_empty()
-					&& package_config.keywords.is_default()
-				{
-					package_config.keywords = Inheritable::Workspace { workspace: true };
+				macro_rules! inherit_list_opt {
+					($($name:ident),*) => {
+						$(
+							if !workspace_package_config.$name.is_empty() && package_config.$name.is_default() {
+								package_config.$name = Inheritable::Workspace {
+									workspace: true,
+								};
+							}
+						)*
+					};
 				}
+
+				inherit_list_opt!(keywords, categories, exclude, include);
 			}
 		}
 
@@ -202,7 +213,7 @@ impl Crate {
 			true,
 		)?;
 
-		if let Some(GitIgnoreRef::Config(gitignore)) = self.gitignore {
+		if let Some(GitIgnorePresetRef::Config(gitignore)) = self.gitignore {
 			write_file(
 				&dir.join(".gitignore"),
 				&gitignore.content.to_string(),
@@ -222,7 +233,7 @@ impl Crate {
 	}
 }
 
-impl Crate {
+impl CratePreset {
 	pub fn process_data(
 		mut self,
 		manifests_store: &IndexMap<String, CargoTomlPreset>,
@@ -253,7 +264,7 @@ impl Crate {
 
 		let mut gitignore_id: Option<String> = None;
 
-		if let Some(GitIgnoreRef::Id(id)) = self.gitignore {
+		if let Some(GitIgnorePresetRef::Id(id)) = self.gitignore {
 			gitignore_id = Some(id.clone());
 
 			let data = gitignore_store
@@ -264,16 +275,16 @@ impl Crate {
 				})?
 				.clone();
 
-			self.gitignore = Some(GitIgnoreRef::Config(data));
+			self.gitignore = Some(GitIgnorePresetRef::Config(data));
 		}
 
-		if let Some(GitIgnoreRef::Config(data)) = self.gitignore {
+		if let Some(GitIgnorePresetRef::Config(data)) = self.gitignore {
 			let resolved = data.process_data(
 				gitignore_id.as_deref().unwrap_or("__inlined"),
 				gitignore_store,
 			)?;
 
-			self.gitignore = Some(GitIgnoreRef::Config(resolved));
+			self.gitignore = Some(GitIgnorePresetRef::Config(resolved));
 		}
 
 		Ok(self)
@@ -288,24 +299,9 @@ pub enum CargoTomlPresetRef {
 	Config(CargoTomlPreset),
 }
 
-impl std::fmt::Display for CargoTomlPresetRef {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			Self::Id(id) => write!(f, "{id}"),
-			Self::Config(_) => write!(f, "default config"),
-		}
-	}
-}
-
 impl Default for CargoTomlPresetRef {
 	fn default() -> Self {
 		Self::Config(CargoTomlPreset::default())
-	}
-}
-
-impl CargoTomlPresetRef {
-	pub fn from_cli(str: &str) -> Result<Self, String> {
-		Ok(Self::Id(str.to_string()))
 	}
 }
 

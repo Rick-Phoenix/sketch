@@ -18,7 +18,7 @@ use crate::{
 	exec::Hook,
 	init_repo::RepoPreset,
 	licenses::License,
-	rust::Crate,
+	rust::{CargoTomlPresetRef, CratePreset},
 	ts::TypescriptConfig,
 	*,
 };
@@ -58,14 +58,14 @@ impl Cli {
 					RustCommands::Manifest { output, preset } => {
 						let content = config
 							.rust_presets
-							.manifest
+							.manifest_presets
 							.get(&preset)
 							.ok_or_else(|| GenError::PresetNotFound {
 								kind: Preset::RustCrate,
 								name: preset.clone(),
 							})?
 							.clone()
-							.process_data(&preset, &config.rust_presets.manifest)?
+							.process_data(&preset, &config.rust_presets.manifest_presets)?
 							.config;
 
 						let output = output.unwrap_or_else(|| "Cargo.toml".into());
@@ -81,26 +81,40 @@ impl Cli {
 						name,
 						preset: preset_id,
 						config: overrides,
+						manifest,
 					} => {
-						let mut preset = config
-							.rust_presets
-							.crate_
-							.get(&preset_id)
-							.ok_or_else(|| GenError::PresetNotFound {
-								kind: Preset::RustCrate,
-								name: preset_id,
-							})?
-							.clone()
-							.process_data(
-								&config.rust_presets.manifest,
-								&config.gitignore_presets,
-							)?;
+						let mut preset = if let Some(preset_id) = preset_id {
+							config
+								.rust_presets
+								.crate_presets
+								.get(&preset_id)
+								.ok_or_else(|| GenError::PresetNotFound {
+									kind: Preset::RustCrate,
+									name: preset_id,
+								})?
+								.clone()
+						} else {
+							CratePreset::default()
+						};
 
 						if let Some(overrides) = overrides {
 							preset.merge(overrides);
 						}
 
-						preset.generate(&dir, name, &config)?;
+						if let Some(manifest_id) = manifest {
+							preset.manifest = CargoTomlPresetRef::Id(manifest_id);
+						}
+
+						let crate_data = preset.process_data(
+							&config.rust_presets.manifest_presets,
+							&config.gitignore_presets,
+						)?;
+
+						if dir.exists() && !config.can_overwrite() {
+							panic!("Dir exists");
+						}
+
+						crate_data.generate(&dir, name, &config)?;
 					}
 				};
 			}
@@ -701,13 +715,16 @@ pub enum RustCommands {
 		dir: PathBuf,
 
 		#[arg(short, long)]
-		preset: String,
+		preset: Option<String>,
+
+		#[arg(short, long)]
+		manifest: Option<String>,
 
 		#[arg(short, long)]
 		name: Option<String>,
 
 		#[command(flatten)]
-		config: Option<Crate>,
+		config: Option<CratePreset>,
 	},
 
 	Manifest {

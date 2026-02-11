@@ -179,7 +179,7 @@ impl AsTomlValue for PackageTemplate {
 	fn as_toml_value(&self) -> Item {
 		let mut table = Table::new();
 
-		add_value!(self, table => publish, readme);
+		add_value!(self, table => publish, edition, readme);
 
 		add_string_list!(self, table => categories, exclude, include, keywords);
 

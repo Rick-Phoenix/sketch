@@ -405,7 +405,7 @@ impl Manifest {
 				Inheritable::Workspace { workspace } => {
 					Table::from_iter([("workspace", *workspace)]).into()
 				}
-				Inheritable::Set(lints) => lints.as_toml_value(),
+				Inheritable::Value(lints) => lints.as_toml_value(),
 			};
 		}
 
@@ -541,10 +541,12 @@ impl AsTomlValue for Target {
 pub enum Dependency {
 	/// Version requirement (e.g. `^1.5`)
 	Simple(String),
+
+	/// Incomplete data
+	Inherited(InheritedDependencyDetail), // Must be placed first to deserialize correctly
+
 	/// `{ version = "^1.5", features = ["a", "b"] }` etc.
 	Detailed(Box<DependencyDetail>),
-	/// Incomplete data
-	Inherited(InheritedDependencyDetail), // order is important for serde
 }
 
 impl AsTomlValue for Dependency {
@@ -571,6 +573,30 @@ impl Dependency {
 			Self::Simple(_) => None,
 			Self::Inherited(dep) => Some(&dep.features),
 			Self::Detailed(dep) => Some(&dep.features),
+		}
+	}
+
+	pub const fn as_simple(&self) -> Option<&String> {
+		if let Self::Simple(v) = self {
+			Some(v)
+		} else {
+			None
+		}
+	}
+
+	pub const fn as_inherited(&self) -> Option<&InheritedDependencyDetail> {
+		if let Self::Inherited(v) = self {
+			Some(v)
+		} else {
+			None
+		}
+	}
+
+	pub const fn as_detailed(&self) -> Option<&DependencyDetail> {
+		if let Self::Detailed(v) = self {
+			Some(v)
+		} else {
+			None
 		}
 	}
 }
@@ -626,15 +652,16 @@ pub(crate) const fn is_false(boolean: &bool) -> bool {
 /// and workspace data hasn't been applied yet.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(default, rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub struct InheritedDependencyDetail {
-	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
 
-	#[serde(skip_serializing_if = "crate::is_false")]
+	#[serde(default, skip_serializing_if = "crate::is_false")]
 	#[merge(with = overwrite_if_true)]
 	pub optional: bool,
 
+	// Cannot be `default` or it breaks deserialization
 	#[serde(skip_serializing_if = "crate::is_false")]
 	#[merge(with = overwrite_if_true)]
 	pub workspace: bool,
@@ -653,9 +680,9 @@ impl AsTomlValue for InheritedDependencyDetail {
 }
 
 /// When definition of a dependency is more than just a version string.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 pub struct DependencyDetail {
 	/// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -700,7 +727,7 @@ pub struct DependencyDetail {
 	/// Enable these features of the dependency.
 	///
 	/// Note that Cargo interprets `default` in a special way.
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	#[merge(with = BTreeSet::extend)]
 	pub features: BTreeSet<String>,
 
@@ -743,12 +770,20 @@ pub enum Inheritable<T> {
 	Workspace {
 		workspace: bool,
 	},
-	Set(T),
+	Value(T),
 }
 
 impl<T> Inheritable<T> {
 	pub const fn is_workspace(&self) -> bool {
 		matches!(self, Self::Workspace { workspace: true })
+	}
+
+	pub const fn as_value(&self) -> Option<&T> {
+		if let Self::Value(val) = self {
+			Some(val)
+		} else {
+			None
+		}
 	}
 }
 
@@ -758,10 +793,10 @@ impl<T: Merge> Merge for Inheritable<T> {
 			Self::Workspace { .. } => {
 				*self = other;
 			}
-			Self::Set(content_left) => {
+			Self::Value(content_left) => {
 				match other {
 					Self::Workspace { workspace } => *self = Self::Workspace { workspace },
-					Self::Set(content_right) => content_left.merge(content_right),
+					Self::Value(content_right) => content_left.merge(content_right),
 				};
 			}
 		}
@@ -774,7 +809,7 @@ impl<T: AsTomlValue> AsTomlValue for Inheritable<T> {
 			Self::Workspace { workspace } => {
 				InlineTable::from_iter([("workspace", *workspace)]).into()
 			}
-			Self::Set(set) => set.as_toml_value(),
+			Self::Value(set) => set.as_toml_value(),
 		}
 	}
 }
@@ -791,7 +826,7 @@ impl<T: Into<Item> + Clone> AsTomlValue for T {
 
 impl<T: Default> Default for Inheritable<T> {
 	fn default() -> Self {
-		Self::Set(T::default())
+		Self::Value(T::default())
 	}
 }
 
@@ -799,7 +834,7 @@ impl<T: Default + PartialEq> Inheritable<T> {
 	pub fn is_default(&self) -> bool {
 		match self {
 			Self::Workspace { .. } => false,
-			Self::Set(v) => T::default() == *v,
+			Self::Value(v) => T::default() == *v,
 		}
 	}
 }
@@ -912,9 +947,9 @@ impl AsTomlValue for Resolver {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Merge)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 /// Cargo uses the term "target" for both "target platform" and "build target" (the thing to build),
 /// which makes it ambigous.
 /// Here Cargo's bin/lib **target** is renamed to **product**.

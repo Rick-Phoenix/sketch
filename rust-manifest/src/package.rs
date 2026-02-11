@@ -146,7 +146,7 @@ impl AsTomlValue for Package {
 				Inheritable::Workspace { workspace } => {
 					InlineTable::from_iter([("workspace", *workspace)]).into()
 				}
-				Inheritable::Set(path) => path.to_string_lossy().as_ref().into(),
+				Inheritable::Value(path) => path.to_string_lossy().as_ref().into(),
 			};
 		}
 
@@ -158,7 +158,7 @@ impl AsTomlValue for Package {
 							Inheritable::Workspace { workspace } => {
 								InlineTable::from_iter([("workspace", *workspace)]).into()
 							}
-							Inheritable::Set(set) => {
+							Inheritable::Value(set) => {
 								let mut array = Array::from_iter(set);
 								format_array(&mut array);
 
