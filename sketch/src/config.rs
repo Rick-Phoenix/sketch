@@ -1,6 +1,6 @@
 use crate::{
 	docker::DockerConfig,
-	git_workflow::GithubConfig,
+	gh_workflow::GithubConfig,
 	init_repo::{RepoPreset, gitignore::GitignorePreset, pre_commit::PreCommitPreset},
 	rust::RustPresets,
 	ts::TypescriptConfig,

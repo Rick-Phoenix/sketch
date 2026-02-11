@@ -5,7 +5,7 @@ use crate::{
 		ComposeFile,
 		service::{Port, ServiceVolume},
 	},
-	git_workflow::{
+	gh_workflow::{
 		ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool,
 		Workflow,
 	},

@@ -1395,6 +1395,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pre-commit-config"
+version = "0.1.0"
+dependencies = [
+ "maplit",
+ "merge-it",
+ "pretty_assertions",
+ "schemars",
+ "serde",
+]
+
+[[package]]
 name = "predicates"
 version = "3.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1900,6 +1911,7 @@ dependencies = [
  "package-json",
  "paste",
  "pnpm-config",
+ "pre-commit-config",
  "pretty_assertions",
  "regex",
  "reqwest",

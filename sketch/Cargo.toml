@@ -33,6 +33,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+pre-commit-config = { path = "../pre-commit-config" }
 oxlint-config = { path = "../oxlint-config/" }
 package-json = { path = "../package-json/" }
 pnpm-config = { path = "../pnpm-config/" }
@@ -74,5 +75,6 @@ schemars = [
   "ts-config/schemars",
   "pnpm-config/schemars",
   "package-json/schemars",
+  "pre-commit-config/schemars",
   "oxlint-config/schemars",
 ]

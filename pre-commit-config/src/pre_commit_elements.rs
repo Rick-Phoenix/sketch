@@ -1,12 +1,4 @@
-use maplit::btreeset;
-
 use super::*;
-
-pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::Uri {
-	repo: "https://github.com/gitleaks/gitleaks".to_string(),
-	rev: Some("v8.28.0".to_string()),
-	hooks: btreeset! { PreCommitHook { id: "gitleaks".to_string(), ..Default::default() } },
-});
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]

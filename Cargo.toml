@@ -3,7 +3,7 @@ members = [
   "json-schema",
   "oxlint-config",
   "package-json",
-  "pnpm-config",
+  "pnpm-config", "pre-commit-config",
   "sketch",
   "ts-config",
 ]

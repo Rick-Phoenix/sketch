@@ -1,6 +1,6 @@
 use crate::{
 	exec::{Hook, launch_command},
-	git_workflow::WorkflowReference,
+	gh_workflow::WorkflowReference,
 	*,
 };
 
