@@ -12,7 +12,6 @@ use merge_it::{Merge, merge_option, overwrite_always, overwrite_if_none, overwri
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use tera::Tera;
 
 use crate::custom_templating::*;
@@ -21,8 +20,6 @@ use clap::{Args, Parser, ValueEnum};
 use cli::parsers::*;
 use licenses::License;
 use maplit::btreeset;
-#[cfg(feature = "schemars")]
-use schemars::JsonSchema_repr;
 use serde_utils::*;
 use std::{
 	cmp::Ordering,

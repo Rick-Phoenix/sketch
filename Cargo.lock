@@ -1619,6 +1619,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-manifest"
+version = "0.1.0"
+dependencies = [
+ "maplit",
+ "merge-it",
+ "pretty_assertions",
+ "schemars",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "toml_edit",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1915,11 +1929,11 @@ dependencies = [
  "pretty_assertions",
  "regex",
  "reqwest",
+ "rust-manifest",
  "schemars",
  "semver",
  "serde",
  "serde_json",
- "serde_repr",
  "serde_yaml_ng",
  "tera",
  "thiserror",

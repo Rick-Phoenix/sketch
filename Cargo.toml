@@ -3,7 +3,9 @@ members = [
   "json-schema",
   "oxlint-config",
   "package-json",
-  "pnpm-config", "pre-commit-config",
+  "pnpm-config",
+  "pre-commit-config",
+  "rust-manifest",
   "sketch",
   "ts-config",
 ]
@@ -22,6 +24,7 @@ license = "MPL-2.0"
 authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
 
 [workspace.dependencies]
+toml_edit = { version = "0.24.0", features = ["serde"] }
 indexmap = { version = "2.11", features = ["serde"] }
 pretty_assertions = "1"
 serde = { version = "1", features = ["derive"] }
