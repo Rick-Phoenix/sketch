@@ -63,14 +63,11 @@ impl TemplatingPresetReference {
 #[serde(default)]
 pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
-	#[merge(with = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 	/// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
-	#[merge(with = Vec::extend)]
 	pub templates: Vec<PresetElement>,
 
 	/// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
-	#[merge(with = IndexMap::extend)]
 	pub context: IndexMap<String, Value>,
 }
 

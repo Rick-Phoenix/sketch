@@ -57,36 +57,29 @@ pub struct TypescriptConfig {
 
 	/// A map of individual [`PersonData`] that can be referenced as authors, contributors or maintainers in a [`PackageJsonPreset`].
 	#[arg(skip)]
-	#[merge(with = IndexMap::extend)]
 	pub people: IndexMap<String, PersonData>,
 
 	/// A map containing [`PackageJsonPreset`]s.
-	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub package_json_presets: IndexMap<String, PackageJsonPreset>,
 
 	/// A map containing [`TsConfigPreset`]s.
-	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub ts_config_presets: IndexMap<String, TsConfigPreset>,
 
 	/// A map containing [`OxlintPreset`]s.
-	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub oxlint_presets: IndexMap<String, OxlintPreset>,
 
 	/// A map of [`PackageConfig`] presets.
-	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub package_presets: IndexMap<String, PackageConfig>,
 
 	/// A map of presets for `pnpm-workspace.yaml` configurations.
-	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub pnpm_presets: IndexMap<String, PnpmPreset>,
 
 	/// A map of presets for vitest setups.
-	#[merge(with = IndexMap::extend)]
 	#[arg(skip)]
 	pub vitest_presets: IndexMap<String, VitestConfig>,
 }

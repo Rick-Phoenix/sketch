@@ -46,7 +46,6 @@ fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
 #[serde(default)]
 pub struct GitignorePreset {
 	/// The ids of the extended presets.
-	#[merge(with = IndexSet::extend)]
 	pub extends_presets: IndexSet<String>,
 
 	#[merge(with = merge_gitignore)]

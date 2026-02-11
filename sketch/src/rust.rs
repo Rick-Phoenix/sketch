@@ -37,7 +37,6 @@ pub struct Crate {
 	pub license: Option<License>,
 
 	#[arg(short = 't', long = "template", value_name = "PRESET_ID")]
-	#[merge(with = Vec::extend)]
 	pub with_templates: Vec<TemplatingPresetReference>,
 }
 

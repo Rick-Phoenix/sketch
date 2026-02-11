@@ -641,7 +641,6 @@ pub(crate) const fn is_false(boolean: &bool) -> bool {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
 pub struct InheritedDependencyDetail {
-	#[merge(with = BTreeSet::extend)]
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
 
@@ -991,7 +990,6 @@ pub struct Product {
 
 	/// The available options are "dylib", "rlib", "staticlib", "cdylib", and "proc-macro".
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(with = BTreeSet::extend)]
 	pub crate_type: BTreeSet<String>,
 
 	/// The `required-features` field specifies which features the product needs in order to be built.
@@ -999,7 +997,6 @@ pub struct Product {
 	/// This is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,
 	/// it has no effect on `[lib]`.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-	#[merge(with = BTreeSet::extend)]
 	pub required_features: BTreeSet<String>,
 }
 

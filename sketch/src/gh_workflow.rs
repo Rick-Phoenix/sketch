@@ -64,7 +64,6 @@ pub enum WorkflowReference {
 /// Configurations and presets relating to Github
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[merge(with = IndexMap::extend)]
 #[serde(default)]
 pub struct GithubConfig {
 	/// A map of presets for Github workflows

@@ -24,7 +24,6 @@ pub struct RepoPreset {
 	pub pre_commit: Option<PreCommitSetting>,
 
 	#[arg(short = 't', long = "template")]
-	#[merge(with = Vec::extend)]
 	/// A set of templates to generate when this preset is used.
 	pub with_templates: Vec<TemplatingPresetReference>,
 
@@ -33,12 +32,10 @@ pub struct RepoPreset {
 	pub license: Option<License>,
 
 	#[arg(skip)]
-	#[merge(with = Vec::extend)]
 	/// One or many rendered commands to execute before the repo's creation
 	pub hooks_pre: Vec<Hook>,
 
 	#[arg(skip)]
-	#[merge(with = Vec::extend)]
 	/// One or many rendered commands to execute after the repo's creation
 	pub hooks_post: Vec<Hook>,
 
@@ -47,7 +44,6 @@ pub struct RepoPreset {
     value_name = "id=PRESET_ID,file=PATH",
     value_parser = WorkflowReference::from_cli
   )]
-	#[merge(with = Vec::extend)]
 	/// One or many workflows to generate in the new repo.
 	pub workflows: Vec<WorkflowReference>,
 }

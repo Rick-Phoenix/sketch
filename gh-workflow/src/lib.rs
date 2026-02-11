@@ -341,7 +341,6 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
-	#[merge(with = Vec::extend)]
 	#[cfg(feature = "presets")]
 	pub steps: Vec<GHStepData>,
 
@@ -1272,7 +1271,6 @@ macro_rules! events {
       pub struct $name {
         /// The types of events that should trigger this workflow.
         #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
-        #[merge(with = BTreeSet::extend)]
         pub types: BTreeSet<[< $name Events >]>
       }
 
@@ -2023,6 +2021,5 @@ pub struct WorkflowDispatch {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = BTreeMap::extend)]
 	pub inputs: BTreeMap<String, WorkflowDispatchInput>,
 }
