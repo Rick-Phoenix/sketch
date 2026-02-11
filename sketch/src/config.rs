@@ -27,6 +27,7 @@ impl Config {
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
 	#[serde(skip)]
 	#[merge(with = overwrite_if_none)]

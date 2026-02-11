@@ -26,6 +26,7 @@ pub enum Funding {
 /// Used to inform about ways to help fund development of the package.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct FundingData {
 	/// The type of funding or the platform through which funding can be provided, e.g. patreon, opencollective, tidelift or github
 	#[serde(rename = "type", skip_serializing_if = "Option::is_none")]
@@ -62,6 +63,7 @@ pub enum Repository {
 /// A struct representing the `bugs` field in a `package.json` file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Bugs {
 	/// The url to your project's issue tracker.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
@@ -87,6 +89,7 @@ pub enum Person {
 /// A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.
 #[derive(Clone, Debug, Serialize, Deserialize, Default, Ord, PartialEq, PartialOrd, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct PersonData {
 	pub name: String,
 	#[serde(skip_serializing_if = "Option::is_none")]

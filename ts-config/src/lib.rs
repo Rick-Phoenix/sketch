@@ -16,6 +16,7 @@ type JsonValueBTreeMap = BTreeMap<String, Value>;
 #[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct WatchOptions {
 	/// Specify how the TypeScript watch mode works.
 	///
@@ -59,6 +60,7 @@ pub struct WatchOptions {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct TsConfig {
 	/// Path to base configuration file to inherit from (requires TypeScript version 2.1 or later), or array of base files, with the rightmost files having the greater priority (requires TypeScript version 5.0 or later).
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -122,6 +124,7 @@ pub enum TypeAcquisition {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct CompilerOptions {
 	/// Enable importing files with any extension, provided a declaration file is present.
 	///

@@ -112,6 +112,7 @@ mod presets {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Workflow {
 	/// The name of your workflow. GitHub displays the names of your workflows on your repository's actions page. If you omit this field, GitHub sets the name to the workflow's filename.
 	///
@@ -229,6 +230,7 @@ impl Merge for Job {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct NormalJob {
 	/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
 	///
@@ -351,6 +353,7 @@ pub struct NormalJob {
 /// A reusable job, imported from a file or repo.
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct ReusableWorkflowCallJob {
 	/// The location and version of a reusable workflow file to run as a job, of the form './{path/to}/{localfile}.yml' or '{owner}/{repo}/{path}/{filename}@{ref}'. {ref} can be a SHA, a release tag, or a branch name. Using the commit SHA is the safest for stability and security.
 	///
@@ -450,6 +453,7 @@ impl Merge for JobSecret {
 /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idcontainer
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Container {
 	/// The Docker image to use as the container to run the action. The value can be the Docker Hub image name or a registry name.
 	///
@@ -494,6 +498,7 @@ pub struct Container {
 /// See more: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobsjob_idcontainercredentials
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Credentials {
 	pub username: String,
 	pub password: String,
@@ -504,6 +509,7 @@ pub struct Credentials {
 /// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idstrategy
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Strategy {
 	/// When set to true, GitHub cancels all in-progress jobs if any matrix job fails. Default: true
 	///
@@ -533,6 +539,7 @@ pub struct Strategy {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Step {
 	/// A name for your step to display on GitHub.
 	///
@@ -843,6 +850,7 @@ pub enum PermissionsLevel {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct PermissionsEvent {
 	/// Work with GitHub Actions. For example, `actions: write` permits an action to cancel a workflow run.
 	///
@@ -963,6 +971,7 @@ pub enum ModelsPermissions {
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Concurrency {
 	/// When a concurrent job or workflow is queued, if another job or workflow using the same concurrency group in the repository is in progress, the queued job or workflow will be pending. Any previously pending job or workflow in the concurrency group will be canceled.
 	///
@@ -993,6 +1002,7 @@ pub enum StringOrBool {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaults
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Defaults {
 	/// You can use `defaults.run` to provide default `shell` and `working-directory` options for all `run` steps in a workflow. You can also set default settings for run that are only available to a job.
 	///
@@ -1005,6 +1015,7 @@ pub struct Defaults {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#defaultsrun
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct RunObject {
 	/// Use `shell` to `define` the shell for a step.
 	///
@@ -1407,6 +1418,7 @@ events!(
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct PullRequest {
 	/// The types of events that should trigger this workflow.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
@@ -1506,6 +1518,7 @@ events!(
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#push-event-push
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Push {
 	/// Runs only when specific branches are pushed.
 	///
@@ -1583,6 +1596,7 @@ events!(
 /// See more: https://docs.github.com/en/actions/reference/events-that-trigger-workflows#workflow_run
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WorkflowRun {
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	/// The types of events that should trigger this workflow.
@@ -1625,6 +1639,7 @@ pub enum WorkflowRunEvents {
 /// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows#scheduled-events-schedule
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Schedule {
 	/// Use POSIX cron syntax to schedule workflows to run at specific UTC times. Scheduled workflows run on the latest commit on the default branch. The shortest interval you can run scheduled workflows is once every 5 minutes.
 	///
@@ -1638,6 +1653,7 @@ pub struct Schedule {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[merge(with = merge_options)]
+#[serde(deny_unknown_fields)]
 pub struct EventObject {
 	/// Runs your workflow anytime the branch_protection_rule event occurs
 	///
@@ -1856,6 +1872,7 @@ pub struct EventObject {
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#onworkflow_callinputs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WorkflowCallInput {
 	/// Required if input is defined for the on.workflow_call keyword. The value of this parameter is a string specifying the data type of the input. This must be one of: boolean, number, or string.
 	///
@@ -1896,6 +1913,7 @@ pub enum StringNumOrBool {
 /// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#onworkflow_calloutputs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WorkflowCallOutput {
 	/// A string description of the output parameter.
 	///
@@ -1914,6 +1932,7 @@ pub struct WorkflowCallOutput {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_callsecrets
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Secret {
 	/// A boolean specifying whether the secret must be supplied.
 	///
@@ -1931,6 +1950,7 @@ pub struct Secret {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_call
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WorkflowCall {
 	/// When using the `workflow_call` keyword, you can optionally specify inputs that are passed to the called workflow from the caller workflow.
 	///
@@ -1956,6 +1976,7 @@ pub struct WorkflowCall {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatchinputs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WorkflowDispatchInput {
 	/// A string representing the type of the input.
 	///
@@ -2010,6 +2031,7 @@ pub enum InputType {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onworkflow_dispatch
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WorkflowDispatch {
 	/// The triggered workflow receives the inputs in the `inputs` context.
 	///

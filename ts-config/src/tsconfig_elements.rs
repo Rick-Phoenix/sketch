@@ -24,6 +24,7 @@ impl Ord for TsPlugin {
 /// A reference to a Typescript project. Requires TypeScript version 3.0 or later.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct TsConfigReference {
 	/// Path to referenced tsconfig or to folder containing tsconfig.
 	pub path: String,

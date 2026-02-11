@@ -4,6 +4,7 @@ use super::*;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct Workspace {
 	/// Relative paths of crates in here
 	pub members: BTreeSet<String>,
@@ -76,6 +77,7 @@ impl AsTomlValue for Workspace {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Lints {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	pub rust: BTreeMap<String, LintKind>,
@@ -117,7 +119,7 @@ impl AsTomlValue for LintKind {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
-#[non_exhaustive]
+#[serde(deny_unknown_fields)]
 pub struct PackageTemplate {
 	/// See <https://crates.io/category_slugs>
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]

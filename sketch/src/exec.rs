@@ -4,6 +4,7 @@ use crate::*;
 /// A command (rendered as a template) to execute
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Hook {
 	/// The template id or definition for the command to execute
 	pub command: TemplateRef,

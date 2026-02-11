@@ -242,6 +242,7 @@ impl ComposeFile {
 /// See more: https://docs.docker.com/reference/compose-file/include/#long-syntax
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct IncludeSettings {
 	/// Defines the location of the Compose file(s) to be parsed and included into the local Compose model.
@@ -301,6 +302,7 @@ pub enum Ulimit {
 /// See more: https://docs.docker.com/reference/compose-file/networks/
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct TopLevelNetwork {
 	/// If set to true, it specifies that this network’s lifecycle is maintained outside of that of the application. Compose doesn't attempt to create these networks, and returns an error if one doesn't exist.
 	///
@@ -860,6 +862,7 @@ pub struct ServiceConfigOrSecretSettings {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct TopLevelConfig {
 	/// The name of the config object in the container engine to look up. This field can be used to reference configs that contain special characters. The name is used as is and will not be scoped with the project name.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -917,6 +920,7 @@ impl Merge for ExtraHosts {
 /// See more: https://docs.docker.com/reference/compose-file/models/
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct TopLevelModel {
 	/// Language Model to run.
 	pub model: String,
@@ -956,6 +960,7 @@ impl Ord for TopLevelModel {
 /// See more: https://docs.docker.com/reference/compose-file/volumes/
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct TopLevelVolume {
 	/// If set to true, it specifies that this volume already exists on the platform and its lifecycle is managed outside of that of the application.
 	///

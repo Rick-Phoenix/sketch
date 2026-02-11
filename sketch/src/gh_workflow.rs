@@ -65,6 +65,7 @@ pub enum WorkflowReference {
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct GithubConfig {
 	/// A map of presets for Github workflows
 	pub workflow_presets: IndexMap<String, GithubWorkflowPreset>,

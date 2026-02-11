@@ -9,6 +9,7 @@ use super::*;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct Package {
 	/// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.
 	#[serde(skip_serializing_if = "Option::is_none")]

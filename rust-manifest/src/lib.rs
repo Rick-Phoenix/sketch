@@ -259,6 +259,7 @@ pub fn format_array(arr: &mut Array) {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct Manifest {
 	/// Workspace-wide settings
 	#[merge(with = merge_options)]
@@ -482,6 +483,7 @@ fn item_to_toml_value(item: Item) -> TomlValue {
 /// Lint definition.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct Lint {
 	/// allow/warn/deny
 	pub level: LintLevel,
@@ -508,6 +510,7 @@ impl AsTomlValue for Lint {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct Target {
 	/// platform-specific normal deps
 	#[serde(default)]
@@ -653,6 +656,7 @@ pub(crate) const fn is_false(boolean: &bool) -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct InheritedDependencyDetail {
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
@@ -683,6 +687,7 @@ impl AsTomlValue for InheritedDependencyDetail {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct DependencyDetail {
 	/// Semver requirement. Note that a plain version number implies this version *or newer* compatible one.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -953,6 +958,7 @@ impl AsTomlValue for Resolver {
 /// Cargo uses the term "target" for both "target platform" and "build target" (the thing to build),
 /// which makes it ambigous.
 /// Here Cargo's bin/lib **target** is renamed to **product**.
+#[serde(deny_unknown_fields)]
 pub struct Product {
 	/// This field points at where the crate is located, relative to the `Cargo.toml`.
 	pub path: Option<String>,

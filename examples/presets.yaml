@@ -92,7 +92,7 @@ templating_presets:
 # `Cargo.toml` presets
 # ANCHOR: cargo
 rust_presets:
-  manifest:
+  manifest_presets:
     base:
       package:
         version: "0.1.0"

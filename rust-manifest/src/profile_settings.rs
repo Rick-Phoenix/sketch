@@ -184,6 +184,7 @@ impl From<OptLevel> for RawOptLevel {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct Profile {
 	/// num or z, s
 	#[serde(default, skip_serializing_if = "Option::is_none")]

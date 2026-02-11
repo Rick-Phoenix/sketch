@@ -123,6 +123,7 @@ pub enum RuleSetting {
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct Categories {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub correctness: Option<RuleEnforcement>,
@@ -150,6 +151,7 @@ pub struct Categories {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct Override {
 	/// A list of glob patterns to override.
 	pub files: BTreeSet<String>,
@@ -175,6 +177,7 @@ pub struct Override {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginsSettings {
 	/// Settings for the Jsdoc plugin.

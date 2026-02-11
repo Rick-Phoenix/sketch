@@ -11,6 +11,7 @@ use toml_edit::{Array, Decor, DocumentMut, Item, Table};
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct RustPresets {
 	/// A map that contains presets for `Cargo.toml` files.
 	pub manifest_presets: IndexMap<String, CargoTomlPreset>,
@@ -22,6 +23,7 @@ pub struct RustPresets {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[group(id = "input")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct CratePreset {
 	#[arg(skip)]
 	#[merge(with = overwrite_always)]

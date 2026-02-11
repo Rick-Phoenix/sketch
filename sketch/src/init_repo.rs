@@ -14,6 +14,7 @@ use pre_commit::*;
 #[derive(Args, Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct RepoPreset {
 	#[arg(short, long)]
 	/// Settings for the gitignore file.

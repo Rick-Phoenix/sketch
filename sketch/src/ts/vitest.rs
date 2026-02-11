@@ -30,6 +30,7 @@ impl Default for VitestConfigKind {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct VitestConfig {
 	/// The path to the tests directory, from the root of the package. [default: 'tests']
 	pub tests_dir: String,

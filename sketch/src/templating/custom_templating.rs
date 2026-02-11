@@ -64,6 +64,7 @@ impl TemplatingPresetReference {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
 	pub extends_presets: IndexSet<String>,
@@ -113,6 +114,7 @@ pub enum TemplateKind {
 /// A preset defined in a git repository.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct RemotePreset {
 	/// The link of the repo where the preset is defined
 	repo: String,
@@ -124,6 +126,7 @@ pub struct RemotePreset {
 /// A structured preset. It points to a directory within `templates_dir`, and optionally adds additional context. All of the templates inside the specified directory will be recursively rendered in the destination directory, with the same exact directory structure and names. If a template file ends with a `jinja` extension such as `.j2`, that gets stripped automatically.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct StructuredPreset {
 	/// A relative path to a directory starting from `templates_dir`
 	dir: PathBuf,
@@ -172,6 +175,7 @@ pub enum TemplateOutputKind {
 /// The context specified here will override the global context (but not the variables set via cli).
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct TemplateData {
 	/// The definition or id for the template to use.
 	pub template: TemplateRef,

@@ -10,10 +10,10 @@ use std::collections::{BTreeMap, BTreeSet};
 type StringBTreeMap = BTreeMap<String, String>;
 
 /// Configuration settings for [`pre-commit`](https://pre-commit.com)
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
-#[derive(Default)]
+#[serde(deny_unknown_fields)]
 pub struct PreCommitConfig {
 	/// A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -101,6 +101,7 @@ pub enum MetaRepoId {
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct MetaRepoHook {
 	pub id: MetaRepoId,
 }
@@ -116,6 +117,7 @@ pub enum LocalRepo {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default, Ord, PartialOrd)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct PreCommitHook {
 	/// An identifier of the current hook https://pre-commit.com/#pre-commit-configyaml---hooks
 	pub id: String,

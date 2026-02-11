@@ -15,6 +15,7 @@ pub enum PackageKind {
 #[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct PackageConfig {
 	/// The name of the new package. It defaults to the name of its directory.
 	#[arg(short, long)]
@@ -321,10 +322,6 @@ impl Config {
 
 			let file_path = file_parent_dir.join("vitest.config.ts");
 
-			let src_rel_path = get_relative_path(file_parent_dir, &src_dir)?;
-
-			vitest.src_rel_path = src_rel_path.to_string_lossy().to_string();
-
 			vitest.setup_dir = get_relative_path(file_parent_dir, &tests_setup_dir)?
 				.to_string_lossy()
 				.to_string();
@@ -332,6 +329,10 @@ impl Config {
 			let mut context = tera::Context::new();
 
 			context.insert("config", &vitest);
+
+			let src_rel_path = get_relative_path(file_parent_dir, &src_dir)?;
+
+			context.insert("src_rel_path", &src_rel_path);
 
 			let template = read_to_string(templates_dir().join("ts/vitest.config.ts.j2"))
 				.expect("Failed to read vitest template");

@@ -7,7 +7,6 @@ templates_dir = "../templates"
 [typescript.package_presets.circular_package_json]
 name = "circular_package_json"
 package_json = "one"
-dir = "packages/mypkg"
 
 [typescript.package_json_presets.one]
 extends_presets = ["two"]

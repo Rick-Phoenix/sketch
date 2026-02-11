@@ -45,6 +45,7 @@ impl Merge for GitIgnore {
 /// A preset for a `.gitignore` file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct GitignorePreset {
 	#[serde(default)]
 	/// The ids of the extended presets.

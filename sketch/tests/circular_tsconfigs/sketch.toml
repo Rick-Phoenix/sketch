@@ -12,7 +12,6 @@ extends_presets = ["one"]
 [typescript.package_presets.circular_tsconfigs]
 name = "circular_tsconfig"
 package_json = "one"
-dir = "packages/mypkg"
 ts_config = [{ output = "tsconfig.abc.json", config = "one" }]
 
 [typescript.package_json_presets.one]

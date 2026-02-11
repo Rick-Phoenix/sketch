@@ -99,6 +99,7 @@ pub enum TagNamePreference {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct JsDocPluginSettings {
 	/// Only for `require-(yields|returns|description|example|param|throws)` rules.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -138,6 +139,7 @@ pub struct JsDocPluginSettings {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct JsxA11yPluginSettings {
 	/// Map of attribute names to their DOM equivalents.This is useful for non-React frameworks that use different attribute names.
 	///
@@ -199,6 +201,7 @@ pub struct JsxA11yPluginSettings {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct NextPluginSettings {
 	/// The root directory of the Next.js project.
 	///
@@ -232,6 +235,7 @@ pub enum OneOrManyStrings {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 #[serde(default)]
 pub struct ReactPluginSettings {
 	/// Components used as alternatives to `<form>` for forms, such as `<Formik>`.

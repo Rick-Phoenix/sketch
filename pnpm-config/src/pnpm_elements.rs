@@ -140,6 +140,7 @@ pub enum NodeLinker {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct ExecutionEnv {
 	/// Specifies which exact Node.js version should be used for the project's runtime.
 	#[serde(alias = "node_version")]
@@ -151,6 +152,7 @@ pub struct ExecutionEnv {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct SupportedArchitectures {
 	#[serde(alias = "cpu")]
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -170,6 +172,7 @@ pub struct SupportedArchitectures {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct AuditConfig {
 	/// A list of CVE IDs that will be ignored by `pnpm audit`.
 	#[serde(alias = "ignore_cves")]
@@ -186,6 +189,7 @@ pub struct AuditConfig {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct UpdateConfig {
 	/// A list of packages that should be ignored when running `pnpm outdated` or `pnpm update --latest`.
 	#[serde(alias = "ignore_dependencies")]
@@ -198,6 +202,7 @@ pub struct UpdateConfig {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct PeerDependencyRules {
 	/// Unmet peer dependency warnings will not be printed for peer dependencies of the specified range.
 	#[serde(alias = "allowed_versions")]
@@ -220,6 +225,7 @@ pub struct PeerDependencyRules {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct PackageExtension {
 	/// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
 	#[serde(skip_serializing_if = "Option::is_none")]

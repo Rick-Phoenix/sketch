@@ -312,6 +312,7 @@ pub enum AutoUpdateSchedule {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct CiSettings {
 	/// A commit message for pull request autofixes https://pre-commit.ci/#configuration
 	#[serde(skip_serializing_if = "Option::is_none")]

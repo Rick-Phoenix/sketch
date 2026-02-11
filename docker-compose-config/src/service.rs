@@ -48,6 +48,7 @@ mod presets {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct Service {
 	/// `extends` lets you share common configurations among different files, or even different projects entirely.
 	///
@@ -610,6 +611,7 @@ impl Merge for Gpus {
 #[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct GpuSettings {
 	/// List of capabilities the GPU needs to have (e.g., 'compute', 'utility').
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -678,6 +680,7 @@ impl Merge for ServiceModels {
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct ServiceModelSettings {
 	/// Environment variable set to AI model name.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -755,6 +758,7 @@ impl Merge for ServiceNetworks {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct ServiceNetworkSettings {
 	/// Interface network name used to connect to network
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1077,6 +1081,7 @@ pub enum DependsOnCondition {
 /// See more: https://docs.docker.com/reference/compose-file/services/#depends_on
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct DependsOnSettings {
 	/// Condition to wait for.
 	pub condition: DependsOnCondition,
@@ -1098,6 +1103,7 @@ pub struct DependsOnSettings {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct LoggingSettings {
 	/// Logging driver to use, such as 'json-file', 'syslog', 'journald', etc.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1218,6 +1224,7 @@ pub enum EnvfileFormat {
 /// Detailed configuration for an environment file.
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct EnvFileDetailed {
 	/// Path to the environment file.
 	pub path: String,
@@ -1239,6 +1246,7 @@ pub struct EnvFileDetailed {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct BlkioSettings {
 	/// Limit read rate (bytes per second) from a device.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1269,6 +1277,7 @@ pub struct BlkioSettings {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct BlkioLimit {
 	/// Path to the device (e.g., '/dev/sda').
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1297,6 +1306,7 @@ impl Ord for BlkioLimit {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct BlkioWeight {
 	/// Path to the device (e.g., '/dev/sda').
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1339,6 +1349,7 @@ pub enum Cgroup {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct CredentialSpec {
 	/// The name of the credential spec Config to use.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1358,6 +1369,7 @@ pub struct CredentialSpec {
 /// See more: https://docs.docker.com/reference/compose-file/develop
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct DevelopmentSettings {
 	/// The watch attribute defines a list of rules that control automatic service updates based on local file changes. watch is a sequence, each individual item in the sequence defines a rule to be applied by Compose to monitor source code for changes.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1375,6 +1387,7 @@ impl Merge for DevelopmentSettings {
 /// See more: https://docs.docker.com/reference/compose-file/develop/#watch
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct WatchItem {
 	/// Action to take when a change is detected.
 	///
@@ -1447,6 +1460,7 @@ pub enum WatchAction {
 #[derive(Clone, Debug, Serialize, Default, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct ServiceHook {
 	/// Whether to run the command with extended privileges.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -1481,6 +1495,7 @@ pub enum DeviceMapping {
 /// A device mapping for a container.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(deny_unknown_fields)]
 pub struct DeviceMappingSettings {
 	/// Path on the host to the device.
 	pub source: String,
@@ -1744,6 +1759,7 @@ pub enum Port {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct PortSettings {
 	/// A human-readable name for this port mapping.
 	#[serde(skip_serializing_if = "Option::is_none")]

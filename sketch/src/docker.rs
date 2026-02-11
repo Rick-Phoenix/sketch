@@ -5,6 +5,7 @@ pub(crate) use docker_compose_config::*;
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, PartialEq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
+#[serde(deny_unknown_fields)]
 pub struct DockerConfig {
 	/// A map that contains presets for Docker Compose files.
 	pub compose_presets: IndexMap<String, ComposePreset>,
