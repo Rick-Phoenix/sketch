@@ -1,5 +1,5 @@
 [workspace]
-members = ["json-schema", "pnpm-config", "sketch", "ts-config"]
+members = ["json-schema", "package-json", "pnpm-config", "sketch", "ts-config"]
 resolver = "3"
 
 [profile.dev]

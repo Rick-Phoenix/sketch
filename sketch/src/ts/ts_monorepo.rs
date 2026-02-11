@@ -93,9 +93,13 @@ impl Config {
 				.no_convert_latest_to_range
 				.unwrap_or_default();
 
-			package_json_data
-				.process_dependencies(package_manager, convert_latest, version_ranges)
-				.await?;
+			process_package_json_dependencies(
+				&mut package_json_data,
+				package_manager,
+				convert_latest,
+				version_ranges,
+			)
+			.await?;
 		}
 
 		let root_package_name = root_package

@@ -160,7 +160,7 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 
 	create_dir_all(output_path.parent().unwrap()).unwrap();
 
-	serde_json::to_writer_pretty(File::open(&output_path)?, &ts_config)?;
+	serde_json::to_writer_pretty(File::create(&output_path)?, &ts_config)?;
 
 	let result: TsConfig = serde_json::from_reader(File::open(&output_path)?)
 		.expect("Error in TsConfig deserialization in test");

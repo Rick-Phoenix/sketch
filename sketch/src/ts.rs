@@ -145,6 +145,7 @@ impl Display for PackageManager {
 	}
 }
 
+#[cfg(feature = "npm-version")]
 pub(crate) static CATALOG_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 	Regex::new(r"^catalog:(?<name>\w+)?$").expect("Failed to initialize the catalog regex")
 });

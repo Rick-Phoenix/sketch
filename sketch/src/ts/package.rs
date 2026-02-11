@@ -188,9 +188,13 @@ impl Config {
 				.no_convert_latest_to_range
 				.unwrap_or_default();
 
-			package_json_data
-				.process_dependencies(package_manager, convert_latest, version_ranges)
-				.await?;
+			process_package_json_dependencies(
+				&mut package_json_data,
+				package_manager,
+				convert_latest,
+				version_ranges,
+			)
+			.await?;
 		}
 
 		if let Some(workspaces) = &package_json_data.workspaces {

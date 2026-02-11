@@ -1195,6 +1195,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "package-json"
+version = "0.1.0"
+dependencies = [
+ "maplit",
+ "merge-it",
+ "pnpm-config",
+ "pretty_assertions",
+ "schemars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1870,6 +1883,7 @@ dependencies = [
  "indoc",
  "maplit",
  "merge-it",
+ "package-json",
  "paste",
  "pnpm-config",
  "pretty_assertions",
