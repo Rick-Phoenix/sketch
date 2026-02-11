@@ -67,6 +67,8 @@ pub struct TemplatingPreset {
 	/// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
 	pub templates: Vec<PresetElement>,
 
+	// Context on templating presets may seem redundant, but it is useful because it gathers
+	// multiple templates and may set a context for them
 	/// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
 	pub context: IndexMap<String, Value>,
 }
@@ -96,7 +98,7 @@ impl TemplatingPreset {
 #[serde(untagged)]
 pub enum PresetElement {
 	/// The data for a single template.
-	Template(TemplateOutput),
+	Template(TemplateData),
 
 	/// A path to a directory inside `templates_dir`, where all templates will be recursively extracted and rendered in the output directory, following the same file tree structure.
 	Structured(StructuredPreset),
@@ -132,9 +134,9 @@ pub struct StructuredPreset {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum TemplateData {
+pub enum TemplateRef {
 	/// A literal definition for a template.
-	Content {
+	Inline {
 		/// The id of the newly created template. Mostly useful for organizational and debugging purposes.
 		name: String,
 		/// The content of the new template.
@@ -144,10 +146,10 @@ pub enum TemplateData {
 	Id(String),
 }
 
-impl TemplateData {
+impl TemplateRef {
 	pub fn name(&self) -> &str {
 		match self {
-			Self::Content { name, .. } | Self::Id(name) => name,
+			Self::Inline { name, .. } | Self::Id(name) => name,
 		}
 	}
 }
@@ -167,14 +169,11 @@ pub enum TemplateOutputKind {
 /// The context specified here will override the global context (but not the variables set via cli).
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-pub struct TemplateOutput {
+pub struct TemplateData {
 	/// The definition or id for the template to use.
-	pub template: TemplateData,
+	pub template: TemplateRef,
 	/// The output path for the generated file.
 	pub output: TemplateOutputKind,
-	#[serde(default)]
-	/// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
-	pub context: IndexMap<String, Value>,
 }
 
 impl Config {
@@ -282,13 +281,7 @@ impl Config {
 						)?;
 					}
 					PresetElement::Template(template) => {
-						let mut template_context = template.context;
-
-						for (key, val) in cli_overrides {
-							template_context.insert(key.clone(), val.clone());
-						}
-
-						local_context = get_local_context(local_context, &template_context);
+						local_context = get_local_context(local_context, cli_overrides);
 
 						render_template_with_output(
 							overwrite,
@@ -329,11 +322,11 @@ fn render_template_with_output(
 	context: &Context,
 	output_root: &Path,
 	output: TemplateOutputKind,
-	template: &TemplateData,
+	template: &TemplateRef,
 ) -> Result<(), GenError> {
 	let template_name = template.name();
 
-	if let TemplateData::Content { name, content } = &template {
+	if let TemplateRef::Inline { name, content } = &template {
 		tera.add_raw_template(name, content)
 			.map_err(|e| GenError::TemplateParsing {
 				template: name.clone(),

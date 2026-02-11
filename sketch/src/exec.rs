@@ -6,7 +6,7 @@ use crate::*;
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Hook {
 	/// The template id or definition for the command to execute
-	pub command: TemplateData,
+	pub command: TemplateRef,
 	/// Local context variables (they override previously set variables with the same name)
 	#[serde(default)]
 	pub context: IndexMap<String, Value>,
@@ -16,7 +16,7 @@ impl FromStr for Hook {
 	type Err = Infallible;
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(Self {
-			command: TemplateData::Id(s.trim().to_string()),
+			command: TemplateRef::Id(s.trim().to_string()),
 			context: Default::default(),
 		})
 	}
@@ -58,8 +58,8 @@ impl Config {
 				get_local_context(ContextRef::Original(context.clone()), &overrides);
 
 			let template_name = match &cmd.command {
-				TemplateData::Id(id) => id,
-				TemplateData::Content { name, content } => {
+				TemplateRef::Id(id) => id,
+				TemplateRef::Inline { name, content } => {
 					tera.add_raw_template(name, content)
 						.map_err(|e| GenError::TemplateParsing {
 							template: name.clone(),

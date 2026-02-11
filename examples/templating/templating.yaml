@@ -39,14 +39,12 @@ templating_presets:
   # ANCHOR: collection_preset
 
   lotr:
-    # Group context, lower priority
+    # Group context
     context: {}
     templates:
       # Selecting individual templates
       - template: hobbits
         output: hobbits.txt
-        # Individual context, higher priority
-        context: {}
       - template: breakfast
         output: subdir/breakfast.txt
   # ANCHOR_END: collection_preset

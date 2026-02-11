@@ -329,7 +329,7 @@ impl Cli {
 				config.generate_templates(
 					&out_dir,
 					vec![TemplatingPresetReference::Preset {
-						id,
+						id: id,
 						context: Default::default(),
 					}],
 					&cli_vars,
@@ -344,11 +344,11 @@ impl Cli {
 				file,
 			} => {
 				let template_data = if let Some(id) = id {
-					TemplateData::Id(id)
+					TemplateRef::Id(id)
 				} else if let Some(template) = template {
-					TemplateData::Id(template)
+					TemplateRef::Id(template)
 				} else if let Some(content) = content {
-					TemplateData::Content {
+					TemplateRef::Inline {
 						name: "__from_cli".to_string(),
 						content,
 					}
@@ -358,7 +358,7 @@ impl Cli {
 						source: e,
 					})?;
 
-					TemplateData::Content {
+					TemplateRef::Inline {
 						name: format!("__custom_file_{}", file.display()),
 						content: file_content,
 					}
@@ -376,10 +376,9 @@ impl Cli {
 					)
 				};
 
-				let template = TemplateOutput {
+				let template = TemplateData {
 					output,
 					template: template_data,
-					context: Default::default(),
 				};
 
 				config.generate_templates(
@@ -423,19 +422,19 @@ impl Cli {
 				print_cmd,
 			} => {
 				let command = if let Some(literal) = command {
-					TemplateData::Content {
+					TemplateRef::Inline {
 						name: "__from_cli".to_string(),
 						content: literal,
 					}
 				} else if let Some(id) = template {
-					TemplateData::Id(id)
+					TemplateRef::Id(id)
 				} else if let Some(file_path) = file {
 					let content = read_to_string(&file_path).map_err(|e| GenError::ReadError {
 						path: file_path.clone(),
 						source: e,
 					})?;
 
-					TemplateData::Content {
+					TemplateRef::Inline {
 						name: format!("__custom_file_{}", file_path.display()),
 						content,
 					}

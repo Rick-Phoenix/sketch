@@ -84,9 +84,6 @@ templating_presets:
       # Single template
       - output: Dockerfile
         template: dockerfile
-        # Local context with higher priority
-        context:
-          docker_dev_port: 5173
 
 # ANCHOR_END: templates
 
