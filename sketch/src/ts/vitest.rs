@@ -54,9 +54,6 @@ pub struct VitestConfig {
 	/// Silent console output from tests.
 	/// Use 'passed-only' to see logs from failing tests only. Logs from failing tests are printed after a test has finished.
 	pub silent: Silent,
-
-	#[serde(skip_deserializing)]
-	pub(crate) src_rel_path: String,
 }
 
 impl Default for VitestConfig {
@@ -65,7 +62,6 @@ impl Default for VitestConfig {
 			out_dir: None,
 			tests_dir: "tests".to_string(),
 			setup_dir: "setup".to_string(),
-			src_rel_path: "../src".to_string(),
 			environment: Environment::Node,
 			globals: true,
 			setup_files: Default::default(),
