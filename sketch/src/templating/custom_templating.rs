@@ -237,6 +237,7 @@ impl Config {
 
 						let clone_result = Command::new("git")
 							.arg("clone")
+							.arg("--depth=1")
 							.arg(&repo)
 							.arg(&tmp_dir)
 							.output()
@@ -384,7 +385,7 @@ fn render_structured_preset(
 		)));
 	}
 
-	let globset = if exclude.is_empty() {
+	let exclude_glob = if exclude.is_empty() {
 		None
 	} else {
 		let mut glob_builder = GlobSetBuilder::new();
@@ -406,22 +407,25 @@ fn render_structured_preset(
 		.into_iter()
 		.filter_map(|e| e.ok())
 	{
-		let input_path = entry
+		let template_path_from_templates_dir = entry
 			.path()
 			.strip_prefix(&templates_dir)
 			.map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?;
-		let mut output_path = entry
+		let mut output_path_from_root_dir = entry
 			.path()
 			.strip_prefix(&root_dir)
 			.map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?
 			.to_path_buf();
 
-		if output_path.to_string_lossy().is_empty() {
+		if output_path_from_root_dir
+			.to_string_lossy()
+			.is_empty()
+		{
 			continue;
 		}
 
-		if let Some(ref globset) = globset
-			&& globset.is_match(input_path)
+		if let Some(ref globset) = exclude_glob
+			&& globset.is_match(template_path_from_templates_dir)
 		{
 			continue;
 		}
@@ -429,20 +433,20 @@ fn render_structured_preset(
 		let file_type = entry.file_type();
 
 		if file_type.is_dir() {
-			create_all_dirs(&output_path)?;
+			create_all_dirs(entry.path())?;
 			continue;
 		} else if file_type.is_file() {
-			if output_path
+			if output_path_from_root_dir
 				.extension()
 				.is_some_and(|e| e == "j2" || e == "jinja" || e == "jinja2")
 			{
-				output_path = output_path.with_extension("");
+				output_path_from_root_dir = output_path_from_root_dir.with_extension("");
 			}
 
 			render_template(
 				tera,
-				&input_path.to_string_lossy(),
-				&output_root.join(output_path),
+				&template_path_from_templates_dir.to_string_lossy(),
+				&output_root.join(output_path_from_root_dir),
 				context,
 				overwrite,
 			)?;

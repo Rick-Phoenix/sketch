@@ -34,11 +34,11 @@ impl Cli {
 	}
 }
 
-fn get_tree_output<T: Into<PathBuf>>(
+fn get_tree_output<T: AsRef<Path>>(
 	dir: T,
 	file: Option<PathBuf>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-	let dir: PathBuf = dir.into();
+	let dir = dir.as_ref();
 
 	let output_file = if let Some(path) = file {
 		path
