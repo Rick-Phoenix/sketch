@@ -10,21 +10,6 @@ mod pnpm_elements;
 
 pub use pnpm_elements::*;
 
-pub(crate) fn merge_nested_maps<T>(
-	left: &mut BTreeMap<String, BTreeMap<String, T>>,
-	right: BTreeMap<String, BTreeMap<String, T>>,
-) {
-	for (key, right_map) in right {
-		if let Some(left_map) = left.get_mut(&key) {
-			for (inner_key, inner_val) in right_map {
-				left_map.insert(inner_key, inner_val);
-			}
-		} else {
-			left.insert(key, right_map);
-		}
-	}
-}
-
 type JsonValueBTreeMap = BTreeMap<String, Value>;
 type StringBTreeMap = BTreeMap<String, String>;
 
@@ -53,7 +38,7 @@ pub struct PnpmWorkspace {
 
 	/// A map of named catalogs and the dependencies listed in them.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = merge_nested_maps)]
+	#[merge(with = merge_btree_maps)]
 	pub catalogs: BTreeMap<String, StringBTreeMap>,
 
 	/// A list of package names that are allowed to be executed during installation. Only packages listed in this array will be able to run install scripts. If onlyBuiltDependenciesFile and neverBuiltDependencies are not set, this configuration option will default to blocking all install scripts.

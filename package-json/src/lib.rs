@@ -14,21 +14,6 @@ pub use package_json_elements::*;
 type JsonValueBTreeMap = BTreeMap<String, Value>;
 type StringBTreeMap = BTreeMap<String, String>;
 
-pub(crate) fn merge_nested_maps<T>(
-	left: &mut BTreeMap<String, BTreeMap<String, T>>,
-	right: BTreeMap<String, BTreeMap<String, T>>,
-) {
-	for (key, right_map) in right {
-		if let Some(left_map) = left.get_mut(&key) {
-			for (inner_key, inner_val) in right_map {
-				left_map.insert(inner_key, inner_val);
-			}
-		} else {
-			left.insert(key, right_map);
-		}
-	}
-}
-
 /// A struct representing the contents of a `package.json` file.
 #[derive(Debug, Deserialize, Serialize, Merge, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
@@ -123,7 +108,7 @@ pub struct PackageJson {
 	///
 	/// See more: https://bun.com/docs/install/catalogs#catalog-vs-catalogs
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = merge_nested_maps)]
+	#[merge(with = merge_btree_maps)]
 	pub catalogs: BTreeMap<String, StringBTreeMap>,
 
 	/// Dependencies are specified with a simple hash of package name to version range. The version range is a string which has one or more space-separated descriptors. Dependencies can also be identified with a tarball or git URL.
