@@ -127,12 +127,6 @@ impl Config {
 		let package_manager = typescript.package_manager.unwrap_or_default();
 		let version_ranges = typescript.version_range.unwrap_or_default();
 
-		macro_rules! write_pkg_template {
-      ($($tokens:tt)*) => {
-        write_template!(pkg_root, overwrite, $($tokens)*)
-      };
-    }
-
 		let (package_json_id, package_json_preset) = match config.package_json.unwrap_or_default() {
 			PackageJsonData::Id(id) => (
 				id.clone(),
@@ -324,8 +318,28 @@ impl Config {
 				.to_string_lossy()
 				.to_string();
 
-			write_pkg_template!(vitest, file_path);
-			write_pkg_template!(TestsSetupFile, tests_setup_dir.join("tests_setup.ts"));
+			let mut context = tera::Context::new();
+
+			context.insert("config", &vitest);
+
+			dbg!(&context);
+
+			let template = read_to_string(templates_dir().join("ts/vitest.config.ts.j2"))
+				.expect("Failed to read vitest template");
+
+			let output =
+				tera::Tera::one_off(&template, &context, false).expect("Failed to render vitest");
+
+			write_file(&file_path, &output, self.can_overwrite())?;
+
+			let test_setup_file = read_to_string(templates_dir().join("ts/tests_setup.ts.j2"))
+				.expect("Failed to read tests setup template");
+
+			write_file(
+				&tests_setup_dir.join("tests_setup.ts"),
+				&test_setup_file,
+				true,
+			)?;
 		}
 
 		if let Some(oxlint_config) = config.oxlint

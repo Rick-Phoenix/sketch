@@ -27,9 +27,8 @@ impl Default for VitestConfigKind {
 }
 
 /// The data used to generate a new vitest setup.
-#[derive(Clone, Debug, Template, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[template(path = "ts/vitest.config.ts.j2")]
 #[serde(default)]
 pub struct VitestConfig {
 	/// The path to the tests directory, from the root of the package. [default: 'tests']
@@ -55,13 +54,9 @@ pub struct VitestConfig {
 	/// Use 'passed-only' to see logs from failing tests only. Logs from failing tests are printed after a test has finished.
 	pub silent: Silent,
 
-	#[serde(skip)]
+	#[serde(skip_deserializing)]
 	pub(crate) src_rel_path: String,
 }
-
-#[derive(Template)]
-#[template(path = "ts/tests_setup.ts.j2")]
-pub(crate) struct TestsSetupFile;
 
 impl Default for VitestConfig {
 	fn default() -> Self {

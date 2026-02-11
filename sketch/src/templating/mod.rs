@@ -14,3 +14,7 @@ use tera_functions::*;
 
 pub(crate) mod tera_setup;
 use tera_setup::*;
+
+pub(crate) fn templates_dir() -> PathBuf {
+	PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/templates"))
+}

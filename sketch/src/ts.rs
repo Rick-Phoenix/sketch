@@ -6,7 +6,6 @@ pub mod ts_config;
 pub mod ts_monorepo;
 pub mod vitest;
 
-use askama::Template;
 use regex::Regex;
 
 use crate::{

@@ -1,7 +1,7 @@
 use super::*;
 
 #[tokio::test]
-async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
+async fn ts_barrel_test() -> Result<(), Box<dyn std::error::Error>> {
 	let output_dir = PathBuf::from("tests/output/ts_barrel");
 	let commands_dir = output_dir.join("commands");
 

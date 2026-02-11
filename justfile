@@ -3,7 +3,7 @@ json-schema:
 
 [working-directory('sketch')]
 test:
-    cargo test --all-features -- -q --nocapture
+    cargo test -- -q --nocapture
 
 [working-directory('sketch')]
 release-test version="patch":

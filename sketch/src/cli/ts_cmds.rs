@@ -1,6 +1,5 @@
 use super::*;
 
-use askama::Template;
 use globset::{Glob, GlobSetBuilder};
 use walkdir::WalkDir;
 
@@ -234,12 +233,6 @@ pub struct TsBarrelArgs {
 	pub exclude: Option<Vec<String>>,
 }
 
-#[derive(Debug, Template)]
-#[template(path = "ts/barrel.ts.j2")]
-struct BarrelFile {
-	pub files: BTreeSet<PathBuf>,
-}
-
 const JS_EXTENSIONS: &[&str] = &["vue", "svelte", "jsx", "tsx", "ts", "js"];
 
 fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError> {
@@ -311,14 +304,21 @@ fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError>
 
 	let mut file = open_file_if_overwriting(overwrite, &out_file)?;
 
-	let barrel = BarrelFile { files: paths };
+	let template = read_to_string(concat!(
+		env!("CARGO_MANIFEST_DIR"),
+		"/templates/ts/barrel.ts.j2"
+	))
+	.expect("Failed to read template for barrel file");
 
-	barrel
-		.write_into(&mut file)
-		.map_err(|e| GenError::WriteError {
-			path: out_file,
-			source: e,
-		})?;
+	let mut context = tera::Context::new();
+
+	context.insert("files", &paths);
+
+	let file_content =
+		Tera::one_off(&template, &context, false).expect("Failed to create barrel file");
+
+	file.write_all(file_content.as_bytes())
+		.expect("failed to write barrel file");
 
 	Ok(())
 }
