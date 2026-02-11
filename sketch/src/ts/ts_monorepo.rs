@@ -170,8 +170,7 @@ impl Config {
 			}
 
 			#[cfg(feature = "npm-version")]
-			pnpm_data
-				.add_dependencies_to_catalog(version_ranges, &package_json_data)
+			pnpm::add_dependencies_to_catalog(&mut pnpm_data, version_ranges, &package_json_data)
 				.await?;
 
 			serialize_yaml(&pnpm_data, &out_dir.join("pnpm-workspace.yaml"), overwrite)?;

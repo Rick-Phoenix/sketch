@@ -1,6 +1,17 @@
 use super::*;
 
-use crate::ts::package_json::PeerDependencyMeta;
+/// When a user installs your package, warnings are emitted if packages specified in "peerDependencies" are not already installed. The "peerDependenciesMeta" field serves to provide more information on how your peer dependencies are utilized. Most commonly, it allows peer dependencies to be marked as optional. Metadata for this field is specified with a simple hash of the package name to a metadata object.
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(default)]
+pub struct PeerDependencyMeta {
+	/// Specifies that this peer dependency is optional and should not be installed automatically.
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub optional: Option<bool>,
+
+	#[serde(flatten, skip_serializing_if = "BTreeMap::is_empty")]
+	pub extras: JsonValueBTreeMap,
+}
 
 /// Determines how pnpm resolves dependencies. See more: https://pnpm.io/settings#resolutionmode
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Copy, Eq)]

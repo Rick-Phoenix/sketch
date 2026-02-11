@@ -33,6 +33,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+pnpm-config = { path = "../pnpm-config/" }
 ts-config = { path = "../ts-config/" }
 toml_edit = { version = "0.24.0", features = ["serde"] }
 globset = "0.4"
@@ -66,4 +67,4 @@ rustdoc-args = ["--cfg", "docsrs"]
 [features]
 default = []
 npm-version = ["dep:url", "dep:futures", "dep:reqwest"]
-schemars = ["dep:schemars", "ts-config/schemars"]
+schemars = ["dep:schemars", "ts-config/schemars", "pnpm-config/schemars"]

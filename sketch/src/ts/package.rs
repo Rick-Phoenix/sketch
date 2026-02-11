@@ -216,9 +216,12 @@ impl Config {
 			let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
 			#[cfg(feature = "npm-version")]
-			pnpm_workspace
-				.add_dependencies_to_catalog(version_ranges, &package_json_data)
-				.await?;
+			pnpm::add_dependencies_to_catalog(
+				&mut pnpm_workspace,
+				version_ranges,
+				&package_json_data,
+			)
+			.await?;
 
 			serialize_yaml(&pnpm_workspace, &pnpm_workspace_path, overwrite)?;
 		}
