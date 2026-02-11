@@ -261,16 +261,16 @@ pub fn format_array(arr: &mut Array) {
 #[serde(rename_all = "kebab-case")]
 pub struct Manifest {
 	/// Workspace-wide settings
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub workspace: Option<Workspace>,
 
 	/// Package definition (a cargo crate)
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub package: Option<Package>,
 
 	/// Note that due to autolibs feature this is not the complete list
 	/// unless you run [`Manifest::complete_from_path`]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub lib: Option<Product>,
 
@@ -289,7 +289,7 @@ pub struct Manifest {
 
 	/// Compilation/optimization settings
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub profile: Option<Profiles>,
 
 	/// Benchmarks

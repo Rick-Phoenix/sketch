@@ -33,11 +33,11 @@ pub struct Config {
 	pub(crate) config_file: Option<PathBuf>,
 
 	/// The configuration for typescript projects.
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub typescript: Option<TypescriptConfig>,
 
 	/// Configuration and presets for Docker.
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub docker: Option<DockerConfig>,
 
 	/// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].

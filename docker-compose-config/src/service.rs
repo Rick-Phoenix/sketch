@@ -73,14 +73,14 @@ pub struct Service {
 
 	/// Specifies the build configuration for creating a container image from source, as defined in the [Compose Build Specification](https://docs.docker.com/reference/compose-file/build/).
 	#[serde(skip_serializing_if = "Option::is_none", rename = "build")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub build_: Option<BuildStep>,
 
 	/// With the depends_on attribute, you can control the order of service startup and shutdown. It is useful if services are closely coupled, and the startup sequence impacts the application's functionality.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#depends_on
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub depends_on: Option<DependsOn>,
 
 	/// Overrides the default command declared by the container image, for example by Dockerfile's CMD.
@@ -111,7 +111,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#env_file
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub env_file: Option<Envfile>,
 
 	/// Defines environment variables set in the container. environment can use either an array or a map. Any boolean values; true, false, yes, no, should be enclosed in quotes to ensure they are not converted to True or False by the YAML parser.
@@ -215,7 +215,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/develop
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub develop: Option<DevelopmentSettings>,
 
 	/// A list of device cgroup rules for this container. The format is the same format the Linux kernel specifies in the Control [Groups Device Whitelist Controller]().
@@ -259,14 +259,14 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#extra_hosts
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub extra_hosts: Option<ExtraHosts>,
 
 	/// Requires: Docker Compose 2.30.0 and later
 	///
 	/// Specifies GPU devices to be allocated for container usage.
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub gpus: Option<Gpus>,
 
 	/// Additional groups, by name or number, which the user inside the container must be a member of.
@@ -359,7 +359,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#models
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub models: Option<ServiceModels>,
 
 	/// Sets a service container's network mode.
@@ -377,7 +377,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#networks
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub networks: Option<ServiceNetworks>,
 
 	/// If `oom_kill_disable` is set, Compose configures the platform so it won't kill the container in case of memory starvation.
@@ -914,7 +914,7 @@ pub struct AdvancedBuildStep {
 
 	/// Adds hostname mappings at build-time. Use the same syntax as [extra_hosts](https://docs.docker.com/reference/compose-file/services/#extra_hosts).
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub extra_hosts: Option<ExtraHosts>,
 
 	/// Specifies a build’s container isolation technology. Supported values are platform specific.
@@ -1366,7 +1366,7 @@ pub struct DevelopmentSettings {
 
 impl Merge for DevelopmentSettings {
 	fn merge(&mut self, other: Self) {
-		merge_option(&mut self.watch, other.watch);
+		merge_options(&mut self.watch, other.watch);
 	}
 }
 

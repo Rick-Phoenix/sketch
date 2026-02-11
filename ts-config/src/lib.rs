@@ -90,7 +90,7 @@ pub struct TsConfig {
 
 	/// Instructs the TypeScript compiler how to compile .ts files.
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub compiler_options: Option<CompilerOptions>,
 }
 

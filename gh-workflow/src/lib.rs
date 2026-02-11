@@ -129,14 +129,14 @@ pub struct Workflow {
 	///
 	/// For a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub on: Option<Event>,
 
 	/// You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#permissions
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub permissions: Option<Permissions>,
 
 	/// A map of variables that are available to the steps of all jobs in the workflow. You can also set variables that are only available to the steps of a single job or to a single step.
@@ -202,10 +202,10 @@ impl Merge for Job {
 				}
 				Self::Reusable(right_job) => {
 					left_job.name.merge(right_job.name);
-					merge_option(&mut left_job.needs, right_job.needs);
+					merge_options(&mut left_job.needs, right_job.needs);
 					left_job.if_.merge(right_job.if_);
 					left_job.concurrency.merge(right_job.concurrency);
-					merge_option(&mut left_job.permissions, right_job.permissions);
+					merge_options(&mut left_job.permissions, right_job.permissions);
 				}
 			},
 			Self::Reusable(left_job) => match other {
@@ -214,10 +214,10 @@ impl Merge for Job {
 				}
 				Self::Normal(right_job) => {
 					left_job.name.merge(right_job.name);
-					merge_option(&mut left_job.needs, right_job.needs);
+					merge_options(&mut left_job.needs, right_job.needs);
 					left_job.if_.merge(right_job.if_);
 					left_job.concurrency.merge(right_job.concurrency);
-					merge_option(&mut left_job.permissions, right_job.permissions);
+					merge_options(&mut left_job.permissions, right_job.permissions);
 				}
 			},
 		}
@@ -234,7 +234,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on
 	#[serde(rename = "runs-on", default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub runs_on: Option<RunsOn>,
 
 	/// The name of the job displayed on GitHub.
@@ -249,7 +249,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub needs: Option<StringOrSortedList>,
 
 	/// You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.
@@ -278,7 +278,7 @@ pub struct NormalJob {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub permissions: Option<Permissions>,
 
 	/// Concurrency ensures that only a single job or workflow using the same concurrency group will run at a time. A concurrency group can be any string or expression.
@@ -368,7 +368,7 @@ pub struct ReusableWorkflowCallJob {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idneeds
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub needs: Option<StringOrSortedList>,
 
 	/// You can use the if conditional to prevent a job from running unless a condition is met. You can use any supported context and expression to create a conditional.
@@ -389,7 +389,7 @@ pub struct ReusableWorkflowCallJob {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idpermissions
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub permissions: Option<Permissions>,
 
 	/// A map of inputs that are passed to the called workflow. Any inputs that you pass must match the input specifications defined in the called workflow. Unlike 'jobs.<job_id>.steps[*].with', the inputs you pass with 'jobs.<job_id>.with' are not be available as environment variables in the called workflow. Instead, you can reference the inputs by using the inputs context.
@@ -402,7 +402,7 @@ pub struct ReusableWorkflowCallJob {
 	///
 	/// See more: https://docs.github.com/en/actions/learn-github-actions/workflow-syntax-for-github-actions#jobsjob_idsecrets
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub secrets: Option<JobSecret>,
 
 	/// A build matrix is a set of different configurations of the virtual environment.
@@ -1637,7 +1637,7 @@ pub struct Schedule {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#about-events-that-trigger-workflows
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[merge(with = merge_option)]
+#[merge(with = merge_options)]
 pub struct EventObject {
 	/// Runs your workflow anytime the branch_protection_rule event occurs
 	///

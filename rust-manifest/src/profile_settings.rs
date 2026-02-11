@@ -276,7 +276,7 @@ impl AsTomlValue for Profile {
 /// Build-in an custom build/optimization settings
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[merge(with = merge_option)]
+#[merge(with = merge_options)]
 pub struct Profiles {
 	/// Used for `--release`
 	#[serde(skip_serializing_if = "Option::is_none")]

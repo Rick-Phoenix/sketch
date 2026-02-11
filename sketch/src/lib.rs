@@ -7,7 +7,7 @@
 #![doc = include_str!("../README.md")]
 
 use indexmap::{IndexMap, IndexSet};
-use merge_it::{Merge, merge_option, overwrite_always, overwrite_if_none};
+use merge_it::{Merge, merge_options, overwrite_always, overwrite_if_none};
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

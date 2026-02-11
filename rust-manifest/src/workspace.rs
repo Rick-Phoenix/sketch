@@ -16,7 +16,7 @@ pub struct Workspace {
 
 	/// Template for inheritance
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_option)]
+	#[merge(with = merge_options)]
 	pub package: Option<PackageTemplate>,
 
 	/// Ignore these dirs
