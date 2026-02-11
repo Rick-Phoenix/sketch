@@ -15,7 +15,6 @@ use crate::{
 		package_json::*,
 		pnpm::{PnpmPreset, PnpmWorkspace},
 		ts_config::*,
-		tsconfig_defaults::*,
 		vitest::VitestConfig,
 	},
 	versions::*,

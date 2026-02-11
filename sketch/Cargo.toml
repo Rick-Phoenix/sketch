@@ -33,6 +33,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+oxlint-config = { path = "../oxlint-config/" }
 package-json = { path = "../package-json/" }
 pnpm-config = { path = "../pnpm-config/" }
 ts-config = { path = "../ts-config/" }
@@ -57,7 +58,7 @@ maplit = { workspace = true }
 paste = { workspace = true }
 merge-it = { workspace = true }
 tera = "1.20"
-indexmap = { version = "2.11", features = ["serde"] }
+indexmap = { workspace = true }
 uuid = { version = "1.18", features = ["v4"] }
 serde_repr = "0.1"
 
@@ -73,4 +74,5 @@ schemars = [
   "ts-config/schemars",
   "pnpm-config/schemars",
   "package-json/schemars",
+  "oxlint-config/schemars",
 ]

@@ -1,5 +1,12 @@
 [workspace]
-members = ["json-schema", "package-json", "pnpm-config", "sketch", "ts-config"]
+members = [
+  "json-schema",
+  "oxlint-config",
+  "package-json",
+  "pnpm-config",
+  "sketch",
+  "ts-config",
+]
 resolver = "3"
 
 [profile.dev]
@@ -15,6 +22,7 @@ license = "MPL-2.0"
 authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
 
 [workspace.dependencies]
+indexmap = { version = "2.11", features = ["serde"] }
 pretty_assertions = "1"
 serde = { version = "1", features = ["derive"] }
 merge-it = { path = "../merge-it/prelude/", features = ["indexmap"] }

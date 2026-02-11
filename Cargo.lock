@@ -1195,6 +1195,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxlint-config"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "maplit",
+ "merge-it",
+ "pretty_assertions",
+ "schemars",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "package-json"
 version = "0.1.0"
 dependencies = [
@@ -1883,6 +1896,7 @@ dependencies = [
  "indoc",
  "maplit",
  "merge-it",
+ "oxlint-config",
  "package-json",
  "paste",
  "pnpm-config",
