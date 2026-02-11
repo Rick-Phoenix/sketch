@@ -7,7 +7,7 @@
 #![doc = include_str!("../README.md")]
 
 use indexmap::{IndexMap, IndexSet};
-use merge_it::{Merge, merge_option, overwrite_always, overwrite_if_none, overwrite_if_true};
+use merge_it::{Merge, merge_option, overwrite_always, overwrite_if_none};
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -49,8 +49,6 @@ pub(crate) mod merging_strategies;
 pub(crate) mod serde_utils;
 pub(crate) mod templating;
 
-use serde_utils::is_false;
-
 pub mod cli;
 pub mod config;
 pub mod docker;
@@ -69,7 +67,6 @@ pub(crate) use merging_strategies::*;
 pub(crate) use templating::*;
 
 pub(crate) type StringBTreeMap = BTreeMap<String, String>;
-pub(crate) type JsonValueBTreeMap = BTreeMap<String, Value>;
 
 /// The kinds of presets supported by `sketch`.
 #[derive(Debug, Clone, Copy)]

@@ -33,6 +33,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+gh-workflow = { path = "../gh-workflow/", features = ["presets"] }
 rust-manifest = { path = "../rust-manifest/" }
 pre-commit-config = { path = "../pre-commit-config" }
 oxlint-config = { path = "../oxlint-config/" }
@@ -78,4 +79,5 @@ schemars = [
   "pre-commit-config/schemars",
   "oxlint-config/schemars",
   "rust-manifest/schemars",
+  "gh-workflow/schemars",
 ]

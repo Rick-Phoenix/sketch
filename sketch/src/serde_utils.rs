@@ -1,10 +1,5 @@
 use crate::*;
 
-#[allow(clippy::trivially_copy_pass_by_ref)]
-pub const fn is_false(bool: &bool) -> bool {
-	!*bool
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]

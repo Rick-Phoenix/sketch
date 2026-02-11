@@ -5,11 +5,11 @@ use crate::{
 		ComposeFile,
 		service::{Port, ServiceVolume},
 	},
-	gh_workflow::{
-		ActionRunner, Event, Job, JobReference, RunsOn, Shell, StringNumOrBool, StringOrBool,
-		Workflow,
-	},
 	ts::package_json::PackageJson,
+};
+use ::gh_workflow::{
+	ActionRunner, Event, Job, JobPresetRef, RunsOn, Shell, StringNumOrBool, StringOrBool,
+	StringOrNum, Workflow,
 };
 
 #[tokio::test]
@@ -248,7 +248,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 	assert_eq!(jobs.len(), 2);
 
 	for (name, job) in jobs {
-		let mut job = if let JobReference::Data(data) = job
+		let mut job = if let JobPresetRef::Data(data) = job
 			&& let Job::Normal(content) = data.job
 		{
 			content
@@ -273,7 +273,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 			&StringNumOrBool::String("anothervalue".to_string())
 		);
 
-		assert_eq!(job.timeout_minutes.unwrap(), StringOrNum::B(25));
+		assert_eq!(job.timeout_minutes.unwrap(), StringOrNum::Num(25));
 
 		let continue_on_error = unwrap_variant!(StringOrBool, Bool, job.continue_on_error.unwrap());
 		assert!(!continue_on_error);

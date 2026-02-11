@@ -1,5 +1,5 @@
 [workspace]
-members = [
+members = ["gh-workflow",
   "json-schema",
   "oxlint-config",
   "package-json",
