@@ -8,7 +8,7 @@ pub enum TemplatingPresetReference {
 	/// A reference to a templating preset, with some optional context
 	Preset {
 		/// The id of the preset to select.
-		id: String,
+		preset_id: String,
 		/// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
 		#[serde(default)]
 		context: IndexMap<String, Value>,
@@ -22,7 +22,7 @@ impl FromStr for TemplatingPresetReference {
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		Ok(Self::Preset {
-			id: s.to_string(),
+			preset_id: s.to_string(),
 			context: Default::default(),
 		})
 	}
@@ -33,7 +33,10 @@ impl TemplatingPresetReference {
 		let mut preset_id: Option<String> = None;
 
 		let mut content = match self {
-			Self::Preset { id, context } => {
+			Self::Preset {
+				preset_id: id,
+				context,
+			} => {
 				preset_id = Some(id.clone());
 
 				let mut data = store
@@ -197,7 +200,10 @@ impl Config {
 
 		for preset_ref in preset_refs {
 			let (templates, preset_context) = match preset_ref {
-				TemplatingPresetReference::Preset { id, context } => (
+				TemplatingPresetReference::Preset {
+					preset_id: id,
+					context,
+				} => (
 					self.templating_presets
 						.get(&id)
 						.ok_or(GenError::PresetNotFound {

@@ -329,7 +329,7 @@ impl Cli {
 				config.generate_templates(
 					&out_dir,
 					vec![TemplatingPresetReference::Preset {
-						id: id,
+						preset_id: id,
 						context: Default::default(),
 					}],
 					&cli_vars,

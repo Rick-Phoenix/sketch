@@ -247,7 +247,7 @@ git_presets:
     # Templates that will be generated with this preset
     # starting from the new repo's root
     with_templates:
-      - id: dockerfile
+      - preset_id: dockerfile
     # ANCHOR_END: git_preset
 
     # ANCHOR: hooks
