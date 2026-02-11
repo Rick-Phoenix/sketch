@@ -388,7 +388,7 @@ impl PackageJson {
 		get_latest!(optional_dependencies, OptionalDependency);
 		get_latest!(peer_dependencies, PeerDependency);
 
-		let results = get_batch_latest_npm_versions(names_to_update).await;
+		let results = npm_version::get_batch_latest_npm_versions(names_to_update).await;
 
 		for result in results {
 			match result {

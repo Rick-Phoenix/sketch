@@ -981,7 +981,7 @@ impl PnpmWorkspace {
 		let handles = entries
 			.into_iter()
 			.map(|(name, catalog_name)| async move {
-				let actual_latest = get_latest_npm_version(&name).await?;
+				let actual_latest = npm_version::get_latest_npm_version(&name).await?;
 
 				Ok((name, catalog_name, actual_latest))
 			});

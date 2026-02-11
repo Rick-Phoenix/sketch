@@ -1,8 +1,11 @@
-use maplit::btreemap;
+use std::fs::{File, create_dir_all};
+use std::path::PathBuf;
+
+use maplit::{btreemap, btreeset};
 use pretty_assertions::assert_eq;
 use serde_json::Value;
 
-use super::*;
+use ts_config::*;
 
 #[test]
 fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
@@ -153,13 +156,12 @@ fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {
 		}),
 	};
 
-	let output_path = PathBuf::from("tests/output/tsconfig_gen/tsconfig.json");
+	let output_path = PathBuf::from("tests/output/tsconfig.json");
 
 	create_dir_all(output_path.parent().unwrap()).unwrap();
 
-	serialize_json(&ts_config, &output_path, true)?;
+	serde_json::to_writer_pretty(File::open(&output_path)?, &ts_config)?;
 
-	// Check that it deserializes correctly
 	let result: TsConfig = serde_json::from_reader(File::open(&output_path)?)
 		.expect("Error in TsConfig deserialization in test");
 

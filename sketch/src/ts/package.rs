@@ -326,8 +326,6 @@ impl Config {
 
 			context.insert("config", &vitest);
 
-			dbg!(&context);
-
 			let template = read_to_string(templates_dir().join("ts/vitest.config.ts.j2"))
 				.expect("Failed to read vitest template");
 
