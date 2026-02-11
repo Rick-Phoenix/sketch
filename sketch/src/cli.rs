@@ -384,7 +384,7 @@ impl Cli {
 				config.generate_templates(
 					get_cwd(),
 					vec![TemplatingPresetReference::Definition(TemplatingPreset {
-						templates: vec![PresetElement::Template(template)],
+						templates: vec![TemplateKind::Single(template)],
 						..Default::default()
 					})],
 					&cli_vars,

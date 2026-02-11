@@ -68,7 +68,7 @@ pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
 	pub extends_presets: IndexSet<String>,
 	/// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
-	pub templates: Vec<PresetElement>,
+	pub templates: Vec<TemplateKind>,
 
 	// Context on templating presets may seem redundant, but it is useful because it gathers
 	// multiple templates and may set a context for them
@@ -99,9 +99,9 @@ impl TemplatingPreset {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum PresetElement {
+pub enum TemplateKind {
 	/// The data for a single template.
-	Template(TemplateData),
+	Single(TemplateData),
 
 	/// A path to a directory inside `templates_dir`, where all templates will be recursively extracted and rendered in the output directory, following the same file tree structure.
 	Structured(StructuredPreset),
@@ -229,7 +229,7 @@ impl Config {
 
 			for element in templates {
 				match element {
-					PresetElement::Remote(RemotePreset { repo, exclude }) => {
+					TemplateKind::Remote(RemotePreset { repo, exclude }) => {
 						local_context = get_local_context(local_context, cli_overrides);
 
 						let tmp_dir = env::temp_dir().join("sketch/repo");
@@ -286,7 +286,7 @@ impl Config {
 							&exclude,
 						)?;
 					}
-					PresetElement::Template(template) => {
+					TemplateKind::Single(template) => {
 						local_context = get_local_context(local_context, cli_overrides);
 
 						render_template_with_output(
@@ -299,7 +299,7 @@ impl Config {
 						)?;
 					}
 
-					PresetElement::Structured(StructuredPreset { dir, exclude }) => {
+					TemplateKind::Structured(StructuredPreset { dir, exclude }) => {
 						local_context = get_local_context(local_context, cli_overrides);
 
 						render_structured_preset(
