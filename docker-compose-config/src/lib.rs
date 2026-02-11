@@ -896,22 +896,18 @@ pub enum ExtraHosts {
 	Map(BTreeMap<String, StringOrSortedList>),
 }
 
-pub(crate) fn merge_extra_hosts(left: &mut Option<ExtraHosts>, right: Option<ExtraHosts>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			if let ExtraHosts::List(left_list) = left_data
-				&& let ExtraHosts::List(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else if let ExtraHosts::Map(left_map) = left_data
-				&& let ExtraHosts::Map(right_map) = right
-			{
-				left_map.extend(right_map);
-			} else {
-				*left = Some(right);
-			}
+impl Merge for ExtraHosts {
+	fn merge(&mut self, other: Self) {
+		if let Self::List(left_list) = self
+			&& let Self::List(right_list) = other
+		{
+			left_list.extend(right_list);
+		} else if let Self::Map(left_map) = self
+			&& let Self::Map(right_map) = other
+		{
+			left_map.extend(right_map);
 		} else {
-			*left = Some(right);
+			*self = other;
 		}
 	}
 }

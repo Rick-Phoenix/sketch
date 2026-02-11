@@ -33,7 +33,7 @@ pub struct Workspace {
 
 	/// Template for `needs_workspace_inheritance`
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = merge_dependencies)]
+	#[merge(with = merge_btree_maps)]
 	pub dependencies: BTreeMap<String, Dependency>,
 
 	/// Workspace-level lint groups

@@ -1,43 +1,45 @@
 use super::*;
 
-fn merge_gitignore(left: &mut GitIgnore, right: GitIgnore) {
-	match left {
-		GitIgnore::List(left_items) => match right {
-			GitIgnore::List(right_items) => {
-				for entry in right_items.into_iter().rev() {
-					left_items.insert(0, entry);
+impl Merge for GitIgnore {
+	fn merge(&mut self, right: Self) {
+		match self {
+			Self::List(left_items) => match right {
+				Self::List(right_items) => {
+					for entry in right_items.into_iter().rev() {
+						left_items.insert(0, entry);
+					}
 				}
-			}
-			GitIgnore::String(mut right_string) => {
-				for entry in left_items.iter() {
-					right_string.push('\n');
-					right_string.push_str(entry);
+				Self::String(mut right_string) => {
+					for entry in left_items.iter() {
+						right_string.push('\n');
+						right_string.push_str(entry);
+					}
+
+					*self = Self::String(right_string);
 				}
+			},
+			Self::String(left_string) => match right {
+				Self::List(right_items) => {
+					if !right_items.is_empty() {
+						left_string.insert(0, '\n');
+						let len = right_items.len();
 
-				*left = GitIgnore::String(right_string);
-			}
-		},
-		GitIgnore::String(left_string) => match right {
-			GitIgnore::List(right_items) => {
-				if !right_items.is_empty() {
-					left_string.insert(0, '\n');
-					let len = right_items.len();
+						for (i, entry) in right_items.into_iter().rev().enumerate() {
+							left_string.insert_str(0, entry.as_str());
 
-					for (i, entry) in right_items.into_iter().rev().enumerate() {
-						left_string.insert_str(0, entry.as_str());
-
-						if i != len - 1 {
-							left_string.insert(0, '\n');
+							if i != len - 1 {
+								left_string.insert(0, '\n');
+							}
 						}
 					}
 				}
-			}
-			GitIgnore::String(right_string) => {
-				left_string.insert(0, '\n');
-				left_string.insert_str(0, &right_string);
-			}
-		},
-	};
+				Self::String(right_string) => {
+					left_string.insert(0, '\n');
+					left_string.insert_str(0, &right_string);
+				}
+			},
+		};
+	}
 }
 
 /// A preset for a `.gitignore` file.
@@ -48,7 +50,6 @@ pub struct GitignorePreset {
 	/// The ids of the extended presets.
 	pub extends_presets: IndexSet<String>,
 
-	#[merge(with = merge_gitignore)]
 	pub content: GitIgnore,
 }
 

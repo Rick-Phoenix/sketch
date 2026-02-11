@@ -73,14 +73,14 @@ pub struct Service {
 
 	/// Specifies the build configuration for creating a container image from source, as defined in the [Compose Build Specification](https://docs.docker.com/reference/compose-file/build/).
 	#[serde(skip_serializing_if = "Option::is_none", rename = "build")]
-	#[merge(with = merge_build_step)]
+	#[merge(with = merge_option)]
 	pub build_: Option<BuildStep>,
 
 	/// With the depends_on attribute, you can control the order of service startup and shutdown. It is useful if services are closely coupled, and the startup sequence impacts the application's functionality.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#depends_on
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_depends_on)]
+	#[merge(with = merge_option)]
 	pub depends_on: Option<DependsOn>,
 
 	/// Overrides the default command declared by the container image, for example by Dockerfile's CMD.
@@ -215,7 +215,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/develop
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_development_settings)]
+	#[merge(with = merge_option)]
 	pub develop: Option<DevelopmentSettings>,
 
 	/// A list of device cgroup rules for this container. The format is the same format the Linux kernel specifies in the Control [Groups Device Whitelist Controller]().
@@ -259,14 +259,14 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#extra_hosts
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_extra_hosts)]
+	#[merge(with = merge_option)]
 	pub extra_hosts: Option<ExtraHosts>,
 
 	/// Requires: Docker Compose 2.30.0 and later
 	///
 	/// Specifies GPU devices to be allocated for container usage.
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_gpus)]
+	#[merge(with = merge_option)]
 	pub gpus: Option<Gpus>,
 
 	/// Additional groups, by name or number, which the user inside the container must be a member of.
@@ -359,7 +359,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#models
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_service_models)]
+	#[merge(with = merge_option)]
 	pub models: Option<ServiceModels>,
 
 	/// Sets a service container's network mode.
@@ -377,7 +377,7 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#networks
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_service_networks)]
+	#[merge(with = merge_option)]
 	pub networks: Option<ServiceNetworks>,
 
 	/// If `oom_kill_disable` is set, Compose configures the platform so it won't kill the container in case of memory starvation.
@@ -592,18 +592,14 @@ pub enum Gpus {
 	List(BTreeSet<GpuSettings>),
 }
 
-fn merge_gpus(left: &mut Option<Gpus>, right: Option<Gpus>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			match left_data {
-				Gpus::All => {}
-				Gpus::List(left_gpus) => match right {
-					Gpus::All => *left_data = Gpus::All,
-					Gpus::List(right_gpus) => left_gpus.extend(right_gpus),
-				},
-			}
-		} else {
-			*left = Some(right);
+impl Merge for Gpus {
+	fn merge(&mut self, other: Self) {
+		match self {
+			Self::All => {}
+			Self::List(left_gpus) => match other {
+				Self::All => *self = Self::All,
+				Self::List(right_gpus) => left_gpus.extend(right_gpus),
+			},
 		}
 	}
 }
@@ -663,22 +659,18 @@ pub enum ServiceModels {
 	Map(BTreeMap<String, ServiceModelSettings>),
 }
 
-fn merge_service_models(left: &mut Option<ServiceModels>, right: Option<ServiceModels>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			if let ServiceModels::List(left_list) = left_data
-				&& let ServiceModels::List(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else if let ServiceModels::Map(left_list) = left_data
-				&& let ServiceModels::Map(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else {
-				*left = Some(right);
-			}
+impl Merge for ServiceModels {
+	fn merge(&mut self, other: Self) {
+		if let Self::List(left_list) = self
+			&& let Self::List(right_list) = other
+		{
+			left_list.extend(right_list);
+		} else if let Self::Map(left_list) = self
+			&& let Self::Map(right_list) = other
+		{
+			left_list.extend(right_list);
 		} else {
-			*left = Some(right);
+			*self = other;
 		}
 	}
 }
@@ -741,22 +733,18 @@ impl ServiceNetworks {
 	}
 }
 
-fn merge_service_networks(left: &mut Option<ServiceNetworks>, right: Option<ServiceNetworks>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			if let ServiceNetworks::List(left_list) = left_data
-				&& let ServiceNetworks::List(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else if let ServiceNetworks::Map(left_list) = left_data
-				&& let ServiceNetworks::Map(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else {
-				*left = Some(right);
-			}
+impl Merge for ServiceNetworks {
+	fn merge(&mut self, other: Self) {
+		if let Self::List(left_list) = self
+			&& let Self::List(right_list) = other
+		{
+			left_list.extend(right_list);
+		} else if let Self::Map(left_list) = self
+			&& let Self::Map(right_list) = other
+		{
+			left_list.extend(right_list);
 		} else {
-			*left = Some(right);
+			*self = other;
 		}
 	}
 }
@@ -851,18 +839,14 @@ pub enum BuildStep {
 	Advanced(Box<AdvancedBuildStep>),
 }
 
-fn merge_build_step(left: &mut Option<BuildStep>, right: Option<BuildStep>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			if let BuildStep::Advanced(left_data) = left_data
-				&& let BuildStep::Advanced(right_data) = right
-			{
-				left_data.merge(right_data);
-			} else {
-				*left = Some(right);
-			}
+impl Merge for BuildStep {
+	fn merge(&mut self, other: Self) {
+		if let Self::Advanced(left_data) = self
+			&& let Self::Advanced(right_data) = other
+		{
+			left_data.merge(right_data);
 		} else {
-			*left = Some(right);
+			*self = other;
 		}
 	}
 }
@@ -930,7 +914,7 @@ pub struct AdvancedBuildStep {
 
 	/// Adds hostname mappings at build-time. Use the same syntax as [extra_hosts](https://docs.docker.com/reference/compose-file/services/#extra_hosts).
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_extra_hosts)]
+	#[merge(with = merge_option)]
 	pub extra_hosts: Option<ExtraHosts>,
 
 	/// Specifies a build’s container isolation technology. Supported values are platform specific.
@@ -1043,22 +1027,18 @@ pub enum DependsOn {
 	Conditional(IndexMap<String, DependsOnSettings>),
 }
 
-fn merge_depends_on(left: &mut Option<DependsOn>, right: Option<DependsOn>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			if let DependsOn::Simple(left_list) = left_data
-				&& let DependsOn::Simple(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else if let DependsOn::Conditional(left_list) = left_data
-				&& let DependsOn::Conditional(right_list) = right
-			{
-				left_list.extend(right_list);
-			} else {
-				*left = Some(right);
-			}
+impl Merge for DependsOn {
+	fn merge(&mut self, other: Self) {
+		if let Self::Simple(left_list) = self
+			&& let Self::Simple(right_list) = other
+		{
+			left_list.extend(right_list);
+		} else if let Self::Conditional(left_list) = self
+			&& let Self::Conditional(right_list) = other
+		{
+			left_list.extend(right_list);
 		} else {
-			*left = Some(right);
+			*self = other;
 		}
 	}
 }
@@ -1384,16 +1364,9 @@ pub struct DevelopmentSettings {
 	pub watch: Option<BTreeSet<WatchItem>>,
 }
 
-fn merge_development_settings(
-	left: &mut Option<DevelopmentSettings>,
-	right: Option<DevelopmentSettings>,
-) {
-	if let Some(right) = right
-		&& let Some(watch_right) = right.watch
-	{
-		let left_data = left.get_or_insert_default();
-		let watch_left = left_data.watch.get_or_insert_default();
-		watch_left.extend(watch_right);
+impl Merge for DevelopmentSettings {
+	fn merge(&mut self, other: Self) {
+		merge_option(&mut self.watch, other.watch);
 	}
 }
 

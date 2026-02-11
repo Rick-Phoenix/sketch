@@ -61,23 +61,19 @@ pub struct Package {
 
 	/// Up to 5, for search
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(with = merge_inheritable_set)]
 	pub keywords: Inheritable<BTreeSet<String>>,
 
 	/// This is a list of up to five categories where this crate would fit.
 	/// e.g. `["command-line-utilities", "development-tools::cargo-plugins"]`
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(with = merge_inheritable_set)]
 	pub categories: Inheritable<BTreeSet<String>>,
 
 	/// Don't publish these files
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(with = merge_inheritable_set)]
 	pub exclude: Inheritable<BTreeSet<String>>,
 
 	/// Publish these files
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
-	#[merge(with = merge_inheritable_set)]
 	pub include: Inheritable<BTreeSet<String>>,
 
 	/// e.g. "MIT"

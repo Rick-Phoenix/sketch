@@ -129,7 +129,7 @@ pub struct Workflow {
 	///
 	/// For a list of available events, see https://help.github.com/en/github/automating-your-workflow-with-github-actions/events-that-trigger-workflows.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_event)]
+	#[merge(with = merge_option)]
 	pub on: Option<Event>,
 
 	/// You can modify the default permissions granted to the GITHUB_TOKEN, adding or removing access as required, so that you only allow the minimum required access.
@@ -1051,33 +1051,27 @@ pub enum Event {
 	Object(Box<EventObject>),
 }
 
-fn merge_event(left: &mut Option<Event>, right: Option<Event>) {
-	if let Some(right) = right {
-		if let Some(left) = left {
-			match left {
-				Event::Single(_) => {
-					*left = right;
-				}
+impl Merge for Event {
+	fn merge(&mut self, other: Self) {
+		match self {
+			Self::Single(_) => {
+				*self = other;
+			}
 
-				Event::Multiple(left_list) => {
-					if let Event::Multiple(right_list) = right {
-						for item in right_list {
-							left_list.insert(item);
-						}
-					} else {
-						*left = right;
-					}
-				}
-				Event::Object(left_object) => {
-					if let Event::Object(right_object) = right {
-						left_object.merge(right_object);
-					} else {
-						*left = right;
-					}
+			Self::Multiple(left_list) => {
+				if let Self::Multiple(right_list) = other {
+					left_list.extend(right_list);
+				} else {
+					*self = other;
 				}
 			}
-		} else {
-			*left = Some(right);
+			Self::Object(left_object) => {
+				if let Self::Object(right_object) = other {
+					left_object.merge(right_object);
+				} else {
+					*self = other;
+				}
+			}
 		}
 	}
 }

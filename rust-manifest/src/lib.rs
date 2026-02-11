@@ -321,17 +321,17 @@ pub struct Manifest {
 
 	/// Normal dependencies
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = merge_dependencies)]
+	#[merge(with = merge_btree_maps)]
 	pub dependencies: BTreeMap<String, Dependency>,
 
 	/// Dev/test-only deps
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = merge_dependencies)]
+	#[merge(with = merge_btree_maps)]
 	pub dev_dependencies: BTreeMap<String, Dependency>,
 
 	/// Build-time deps
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = merge_dependencies)]
+	#[merge(with = merge_btree_maps)]
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
@@ -575,19 +575,6 @@ impl Dependency {
 	}
 }
 
-pub(crate) fn merge_dependencies(
-	left: &mut BTreeMap<String, Dependency>,
-	right: BTreeMap<String, Dependency>,
-) {
-	for (name, dep) in right {
-		if let Some(previous) = left.get_mut(&name) {
-			previous.merge(dep);
-		} else {
-			left.insert(name, dep);
-		}
-	}
-}
-
 impl Merge for Dependency {
 	fn merge(&mut self, other: Self) {
 		match self {
@@ -598,7 +585,7 @@ impl Merge for Dependency {
 				Self::Simple(_) => *self = other,
 				Self::Inherited(right) => left_options.merge(right),
 				Self::Detailed(mut right) => {
-					if left_options.optional {
+					if right.optional {
 						right.optional = true;
 					}
 
@@ -765,6 +752,22 @@ impl<T> Inheritable<T> {
 	}
 }
 
+impl<T: Merge> Merge for Inheritable<T> {
+	fn merge(&mut self, other: Self) {
+		match self {
+			Self::Workspace { .. } => {
+				*self = other;
+			}
+			Self::Set(content_left) => {
+				match other {
+					Self::Workspace { workspace } => *self = Self::Workspace { workspace },
+					Self::Set(content_right) => content_left.merge(content_right),
+				};
+			}
+		}
+	}
+}
+
 impl<T: AsTomlValue> AsTomlValue for Inheritable<T> {
 	fn as_toml_value(&self) -> Item {
 		match self {
@@ -789,25 +792,6 @@ impl<T: Into<Item> + Clone> AsTomlValue for T {
 impl<T: Default> Default for Inheritable<T> {
 	fn default() -> Self {
 		Self::Set(T::default())
-	}
-}
-
-pub(crate) fn merge_inheritable_set<T: Ord>(
-	left: &mut Inheritable<BTreeSet<T>>,
-	right: Inheritable<BTreeSet<T>>,
-) {
-	match left {
-		Inheritable::Workspace { .. } => {
-			*left = right;
-		}
-		Inheritable::Set(left_list) => {
-			match right {
-				Inheritable::Workspace { workspace } => {
-					*left = Inheritable::Workspace { workspace }
-				}
-				Inheritable::Set(right_list) => left_list.extend(right_list),
-			};
-		}
 	}
 }
 
