@@ -1,94 +1,44 @@
 use super::*;
 
-#[derive(Clone, Debug)]
-pub struct ServiceFromCli {
-	pub preset_id: String,
-	pub name: Option<String>,
-}
+#[cfg(feature = "presets")]
+pub use presets::*;
 
-impl ServiceFromCli {
-	pub fn from_cli(s: &str) -> Result<Self, String> {
-		let s = s.trim();
+#[cfg(feature = "presets")]
+mod presets {
+	use super::*;
 
-		let mut service_name: Option<String> = None;
-		let mut preset_name: Option<String> = None;
+	/// Ways of representing a service in a Docker preset.
+	#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+	#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+	#[serde(untagged)]
+	pub enum ServicePresetRef {
+		/// The id of a service preset.
+		Id(String),
 
-		let parts: Vec<&str> = s.split(',').collect();
+		/// The defitinion for a Docker service.
+		Config(Box<DockerServicePreset>),
+	}
 
-		if parts.len() == 1 {
-			preset_name = Some(parts[0].to_string());
-		} else {
-			for part in parts {
-				let (key, val) = parse_single_key_value_pair("--service", part)?;
-				if key == "id" {
-					preset_name = Some(val.to_string());
-				} else if key == "name" {
-					service_name = Some(val.to_string());
-				} else {
-					return Err(format!("Unknown parameter `{key}` in --service"));
-				}
+	impl ServicePresetRef {
+		pub fn as_config(self) -> Option<Service> {
+			match self {
+				Self::Id(_) => None,
+				Self::Config(docker_service_preset) => Some(docker_service_preset.config),
 			}
 		}
-
-		Ok(Self {
-			name: service_name,
-			preset_id: preset_name.ok_or("No preset id for docker service has been provided")?,
-		})
 	}
-}
 
-/// Ways of representing a service in a Docker preset.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(untagged)]
-pub enum ServiceData {
-	/// The id of a service preset.
-	Id(String),
+	/// A preset for a Docker service
+	#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
+	#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+	#[serde(default)]
+	pub struct DockerServicePreset {
+		/// The list of extended presets.
+		#[serde(skip_serializing)]
+		pub extends_presets: IndexSet<String>,
 
-	/// The defitinion for a Docker service.
-	Config(DockerServicePreset),
-}
-
-impl ServiceData {
-	pub fn as_config(self) -> Result<Service, &'static str> {
-		match self {
-			Self::Id(_) => Err("Cannot convert preset ID to preset data"),
-			Self::Config(docker_service_preset) => Ok(docker_service_preset.config),
-		}
-	}
-}
-
-/// A preset for a Docker service
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
-#[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(default)]
-pub struct DockerServicePreset {
-	/// The list of extended presets.
-	#[serde(skip_serializing)]
-	pub extends_presets: IndexSet<String>,
-
-	#[serde(flatten)]
-	pub config: Service,
-}
-
-impl Extensible for DockerServicePreset {
-	fn get_extended(&self) -> &IndexSet<String> {
-		&self.extends_presets
-	}
-}
-
-impl DockerServicePreset {
-	pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
-		if self.extends_presets.is_empty() {
-			return Ok(self);
-		}
-
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-		let merged_preset =
-			merge_presets(Preset::DockerService, id, self, store, &mut processed_ids)?;
-
-		Ok(merged_preset)
+		#[serde(flatten)]
+		pub config: Service,
 	}
 }
 
@@ -161,20 +111,18 @@ pub struct Service {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#env_file
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_envfile)]
+	#[merge(with = merge_option)]
 	pub env_file: Option<Envfile>,
 
 	/// Defines environment variables set in the container. environment can use either an array or a map. Any boolean values; true, false, yes, no, should be enclosed in quotes to ensure they are not converted to True or False by the YAML parser.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#environment
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub environment: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub environment: ListOrMap,
 
 	/// Defines annotations for the container. annotations can use either an array or a map.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub annotations: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub annotations: ListOrMap,
 
 	/// Requires: Docker Compose 2.20.0 and later
 	///
@@ -281,18 +229,16 @@ pub struct Service {
 	pub devices: BTreeSet<DeviceMapping>,
 
 	/// Custom DNS servers to set on the container network interface configuration. It can be a single value or a list.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_optional_string_or_sorted_list)]
-	pub dns: Option<StringOrSortedList>,
+	#[serde(default, skip_serializing_if = "StringOrSortedList::is_empty")]
+	pub dns: StringOrSortedList,
 
 	/// Custom DNS options to be passed to the container’s DNS resolver (/etc/resolv.conf file on Linux).
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	pub dns_opt: BTreeSet<String>,
 
 	/// Custom DNS search domains to set on container network interface configuration. It can be a single value or a list.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_optional_string_or_sorted_list)]
-	pub dns_search: Option<StringOrSortedList>,
+	#[serde(default, skip_serializing_if = "StringOrSortedList::is_empty")]
+	pub dns_search: StringOrSortedList,
 
 	/// A custom domain name to use for the service container. It must be a valid RFC 1123 hostname.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -352,17 +298,15 @@ pub struct Service {
 	/// Add metadata to containers. You can use either an array or a map.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#labels
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub labels: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub labels: ListOrMap,
 
 	/// Requires: Docker Compose 2.32.2 and later
 	///
 	///The label_file attribute lets you load labels for a service from an external file or a list of files. This provides a convenient way to manage multiple labels without cluttering the Compose file.
 	/// See more: https://docs.docker.com/reference/compose-file/services/#label_file
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_optional_string_or_sorted_list)]
-	pub label_file: Option<StringOrSortedList>,
+	#[serde(default, skip_serializing_if = "StringOrSortedList::is_empty")]
+	pub label_file: StringOrSortedList,
 
 	/// Defines a network link to containers in another service. Either specify both the service name and a link alias (SERVICE:ALIAS), or just the service name.
 	///
@@ -563,9 +507,8 @@ pub struct Service {
 	/// Defines kernel parameters to set in the container. sysctls can use either an array or a map.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/#sysctls
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub sysctls: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub sysctls: ListOrMap,
 
 	/// Mounts a temporary file system inside the container. It can be a single value or a list.
 	///
@@ -905,7 +848,7 @@ pub enum BuildStep {
 	/// Path to the build context. Can be a relative path or a URL.
 	Simple(String),
 	/// Configuration options for building the service's image.
-	Advanced(AdvancedBuildStep),
+	Advanced(Box<AdvancedBuildStep>),
 }
 
 fn merge_build_step(left: &mut Option<BuildStep>, right: Option<BuildStep>) {
@@ -942,9 +885,8 @@ pub struct AdvancedBuildStep {
 	///
 	/// Defines a list of named contexts the image builder should use during image build. Can be a mapping or a list.
 	/// See more: https://docs.docker.com/reference/compose-file/build/#additional_contexts
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub additional_contexts: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub additional_contexts: ListOrMap,
 
 	/// Sets an alternate Dockerfile. A relative path is resolved from the build context. Compose warns you about the absolute path used to define the Dockerfile as it prevents Compose files from being portable.
 	///
@@ -998,9 +940,8 @@ pub struct AdvancedBuildStep {
 	/// Add metadata to the resulting image. Can be set either as an array or a map.
 	///
 	/// It's recommended that you use reverse-DNS notation to prevent your labels from conflicting with other software.
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub labels: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub labels: ListOrMap,
 
 	/// Network mode to use for the build. Options include 'default', 'none', 'host', or a network name.
 	///
@@ -1053,9 +994,8 @@ pub struct AdvancedBuildStep {
 	/// SSH agent socket or keys to expose to the build. Format is either a string or a list of 'default|<id>[=<socket>|<key>[,<key>]]'.
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/build/#ssh
-	#[serde(skip_serializing_if = "Option::is_none")]
-	#[merge(with = merge_list_or_map)]
-	pub ssh: Option<ListOrMap>,
+	#[serde(default, skip_serializing_if = "ListOrMap::is_empty")]
+	pub ssh: ListOrMap,
 
 	/// Size of /dev/shm for the build container. A string value can use suffix like '2g' for 2 gigabytes.
 	///
@@ -1266,20 +1206,16 @@ pub enum Envfile {
 	List(Vec<EnvfileFormat>),
 }
 
-fn merge_envfile(left: &mut Option<Envfile>, right: Option<Envfile>) {
-	if let Some(right) = right {
-		if let Some(left_data) = left {
-			match left_data {
-				Envfile::Simple(_) => {
-					*left = Some(right);
-				}
-				Envfile::List(list) => match right {
-					Envfile::Simple(file) => list.push(EnvfileFormat::Simple(file)),
-					Envfile::List(files) => list.extend(files),
-				},
+impl Merge for Envfile {
+	fn merge(&mut self, other: Self) {
+		match self {
+			Self::Simple(_) => {
+				*self = other;
 			}
-		} else {
-			*left = Some(right);
+			Self::List(list) => match other {
+				Self::Simple(file) => list.push(EnvfileFormat::Simple(file)),
+				Self::List(files) => list.extend(files),
+			},
 		}
 	}
 }

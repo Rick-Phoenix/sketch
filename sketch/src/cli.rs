@@ -14,7 +14,7 @@ pub(crate) mod parsers;
 use clap::Subcommand;
 
 use crate::{
-	docker::compose::service::{ServiceData, ServiceFromCli},
+	docker::{ServiceFromCli, ServicePresetRef},
 	exec::Hook,
 	init_repo::RepoPreset,
 	licenses::License,
@@ -245,7 +245,7 @@ impl Cli {
 					file_preset
 						.config
 						.services
-						.insert(service_name, ServiceData::Id(service.preset_id));
+						.insert(service_name, ServicePresetRef::Id(service.preset_id));
 				}
 
 				let file_data = file_preset

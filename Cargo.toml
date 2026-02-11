@@ -1,5 +1,5 @@
 [workspace]
-members = ["gh-workflow",
+members = ["docker-compose-config","gh-workflow",
   "json-schema",
   "oxlint-config",
   "package-json",

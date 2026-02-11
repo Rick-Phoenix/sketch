@@ -48,7 +48,6 @@ pub struct PreCommitConfig {
 	pub ci: Option<CiSettings>,
 
 	/// Repository mappings of the current project https://pre-commit.com/#pre-commit-configyaml---top-level
-	#[merge(with = BTreeSet::extend)]
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub repos: BTreeSet<Repo>,
 }

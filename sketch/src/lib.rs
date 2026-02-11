@@ -22,13 +22,12 @@ use licenses::License;
 use maplit::btreeset;
 use serde_utils::*;
 use std::{
-	cmp::Ordering,
-	collections::{BTreeMap, BTreeSet, HashMap},
+	collections::{BTreeSet, HashMap},
 	convert::Infallible,
 	env,
 	env::current_dir,
 	ffi::OsStr,
-	fmt::{self, Debug, Display},
+	fmt::{Debug, Display},
 	fs::{File, create_dir_all, exists, read_to_string, remove_dir_all},
 	io::Write,
 	mem,
@@ -66,8 +65,6 @@ pub use errors::*;
 pub(crate) use merging_strategies::*;
 pub(crate) use templating::*;
 
-pub(crate) type StringBTreeMap = BTreeMap<String, String>;
-
 /// The kinds of presets supported by `sketch`.
 #[derive(Debug, Clone, Copy)]
 pub enum Preset {
@@ -97,5 +94,3 @@ pub enum Or<A, B> {
 	A(A),
 	B(B),
 }
-
-type StringOrNum = Or<String, i64>;

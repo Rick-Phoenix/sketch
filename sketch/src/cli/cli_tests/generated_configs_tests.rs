@@ -1,10 +1,7 @@
 use super::*;
 
 use crate::{
-	docker::compose::{
-		ComposeFile,
-		service::{Port, ServiceVolume},
-	},
+	docker::{ComposeFile, Port, ServiceVolume},
 	ts::package_json::PackageJson,
 };
 use ::gh_workflow::{
@@ -98,7 +95,11 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 
 	let mut services = output.services;
 
-	let caddy_service = services.remove("caddy").unwrap().as_config()?;
+	let caddy_service = services
+		.remove("caddy")
+		.unwrap()
+		.as_config()
+		.unwrap();
 
 	assert!(
 		caddy_service
@@ -121,7 +122,8 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 	let service = services
 		.remove("my_service")
 		.unwrap()
-		.as_config()?;
+		.as_config()
+		.unwrap();
 
 	assert!(
 		service
@@ -136,7 +138,11 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 			.contains(&ServiceVolume::Simple("my_volume:/target".to_string()))
 	);
 
-	let db_service = services.remove("db").unwrap().as_config()?;
+	let db_service = services
+		.remove("db")
+		.unwrap()
+		.as_config()
+		.unwrap();
 
 	assert!(db_service.image.unwrap() == "postgres");
 	assert!(
@@ -147,15 +153,7 @@ async fn generated_configs() -> Result<(), Box<dyn std::error::Error>> {
 			.contains("my_network")
 	);
 
-	assert_eq!(
-		db_service
-			.environment
-			.as_ref()
-			.unwrap()
-			.get("TZ")
-			.unwrap(),
-		"Europe/Berlin"
-	);
+	assert_eq!(db_service.environment.get("TZ").unwrap(), "Europe/Berlin");
 
 	let networks = output.networks;
 	let my_network = networks.get("my_network").unwrap();

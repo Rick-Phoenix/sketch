@@ -143,7 +143,6 @@ pub struct Workflow {
 	///
 	/// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#env
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	#[merge(with = BTreeMap::extend)]
 	pub env: BTreeMap<String, StringNumOrBool>,
 
 	/// Use `defaults` to create a map of default settings that will apply to all jobs in the workflow. You can also set default settings that are only available to a job.
@@ -166,7 +165,6 @@ pub struct Workflow {
 	///
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
 	#[serde(default)]
-	#[merge(with = IndexMap::extend)]
 	#[cfg(feature = "presets")]
 	pub jobs: IndexMap<String, JobPresetRef>,
 

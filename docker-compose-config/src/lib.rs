@@ -1,70 +1,170 @@
-use crate::*;
+use core::fmt;
+use indexmap::{IndexMap, IndexSet};
+use merge_it::*;
+#[cfg(feature = "schemars")]
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, BTreeSet};
 
-pub mod service;
-use service::{DockerServicePreset, ServiceData};
+type StringBTreeMap = BTreeMap<String, String>;
 
-/// A preset for Docker Compose files.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
+mod service;
+pub use service::*;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(default)]
-pub struct ComposePreset {
-	/// The list of extended presets.
-	pub extends_presets: IndexSet<String>,
-
-	#[serde(flatten)]
-	pub config: ComposeFile,
+#[serde(untagged)]
+pub enum StringOrNum {
+	String(String),
+	Num(i64),
 }
 
-impl Extensible for ComposePreset {
-	fn get_extended(&self) -> &IndexSet<String> {
-		&self.extends_presets
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+pub enum SingleValue {
+	String(String),
+	Bool(bool),
+	Int(i64),
+	Float(f64),
+}
+
+impl fmt::Display for SingleValue {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			Self::String(s) => f.write_str(s),
+			Self::Bool(b) => write!(f, "{b}"),
+			Self::Int(i) => write!(f, "{i}"),
+			Self::Float(fl) => write!(f, "{fl}"),
+		}
 	}
 }
 
-impl ComposePreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, Self>,
-		services_store: &IndexMap<String, DockerServicePreset>,
-	) -> Result<ComposeFile, GenError> {
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+pub enum ListOrMap {
+	List(BTreeSet<String>),
+	Map(BTreeMap<String, String>),
+}
 
-		// Must not skip here in case of no extended presets, because services must be processed regardless
-		let merged_preset = if self.extends_presets.is_empty() {
-			self
-		} else {
-			merge_presets(Preset::DockerCompose, id, self, store, &mut processed_ids)?
-		};
+impl ListOrMap {
+	pub fn contains(&self, key: &str) -> bool {
+		match self {
+			Self::List(list) => list.contains(key),
+			Self::Map(map) => map.contains_key(key),
+		}
+	}
 
-		let mut config = merged_preset.config;
+	pub fn get(&self, key: &str) -> Option<&String> {
+		match self {
+			Self::List(list) => list.get(key),
+			Self::Map(map) => map.get(key),
+		}
+	}
 
-		for (_, service_data) in config.services.iter_mut() {
-			match service_data {
-				ServiceData::Id(id) => {
-					let preset = services_store
-						.get(id)
-						.ok_or(GenError::PresetNotFound {
-							kind: Preset::DockerService,
-							name: id.clone(),
-						})?
-						.clone();
+	pub fn is_empty(&self) -> bool {
+		match self {
+			Self::List(btree_set) => btree_set.is_empty(),
+			Self::Map(btree_map) => btree_map.is_empty(),
+		}
+	}
+}
 
-					*service_data = ServiceData::Config(preset.process_data(id, services_store)?);
+impl Default for ListOrMap {
+	fn default() -> Self {
+		Self::List(Default::default())
+	}
+}
+
+impl Merge for ListOrMap {
+	fn merge(&mut self, other: Self) {
+		match self {
+			Self::List(left_list) => match other {
+				Self::List(other_list) => {
+					left_list.extend(other_list);
 				}
-				ServiceData::Config(config) => {
-					if !config.extends_presets.is_empty() {
-						*service_data = ServiceData::Config(
-							config
-								.clone()
-								.process_data("__inlined", services_store)?,
-						);
+				Self::Map(other_map) => {
+					if left_list.is_empty() || !other_map.is_empty() {
+						*self = Self::Map(other_map);
 					}
 				}
-			};
+			},
+			Self::Map(left_map) => match other {
+				Self::List(other_list) => {
+					if left_map.is_empty() || !other_list.is_empty() {
+						*self = Self::List(other_list);
+					}
+				}
+				Self::Map(other_map) => {
+					left_map.extend(other_map);
+				}
+			},
 		}
+	}
+}
 
-		Ok(config)
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+pub enum StringOrList {
+	String(String),
+	List(Vec<String>),
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq, PartialOrd, Ord)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+pub enum StringOrSortedList {
+	String(String),
+	List(BTreeSet<String>),
+}
+
+impl StringOrSortedList {
+	pub fn is_empty(&self) -> bool {
+		match self {
+			Self::String(str) => str.is_empty(),
+			Self::List(list) => list.is_empty(),
+		}
+	}
+}
+
+impl Default for StringOrSortedList {
+	fn default() -> Self {
+		Self::List(Default::default())
+	}
+}
+
+impl Merge for StringOrSortedList {
+	fn merge(&mut self, right: Self) {
+		match self {
+			Self::String(left_string) => {
+				match right {
+					Self::List(mut right_list) => {
+						let left_string = std::mem::take(left_string);
+
+						right_list.insert(left_string);
+
+						*self = Self::List(right_list);
+					}
+					Self::String(right_string) => {
+						if left_string.is_empty() || !right_string.is_empty() {
+							*left_string = right_string;
+						}
+					}
+				};
+			}
+			Self::List(left_list) => match right {
+				Self::String(right_string) => {
+					left_list.insert(right_string);
+				}
+				Self::List(right_list) => {
+					left_list.extend(right_list);
+				}
+			},
+		}
 	}
 }
 
@@ -91,7 +191,11 @@ pub struct ComposeFile {
 	///
 	/// See more: https://docs.docker.com/reference/compose-file/services/
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-	pub services: BTreeMap<String, ServiceData>,
+	#[cfg(feature = "presets")]
+	pub services: BTreeMap<String, ServicePresetRef>,
+
+	#[cfg(not(feature = "presets"))]
+	pub services: BTreeMap<String, Service>,
 
 	/// Defines or references configuration data that is granted to services in your Compose application.
 	///
