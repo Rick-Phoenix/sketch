@@ -1,7 +1,5 @@
-use futures::StreamExt;
 mod pnpm_elements;
 
-use futures::stream;
 pub use pnpm_elements::*;
 
 use crate::{
@@ -943,6 +941,7 @@ pub struct PnpmWorkspace {
 }
 
 impl PnpmWorkspace {
+	#[cfg(feature = "npm-version")]
 	/// A helper to add all [`PackageJson`] dependencies (dev, optional, peer, etc) marked with `catalog:` to the pnpm catalogs.
 	pub async fn add_dependencies_to_catalog(
 		&mut self,
@@ -970,12 +969,15 @@ impl PnpmWorkspace {
 			.await
 	}
 
+	#[cfg(feature = "npm-version")]
 	/// A helper to add several dependencies to one of this config's catalog.
 	pub async fn add_names_to_catalog(
 		&mut self,
 		range_kind: VersionRange,
 		entries: Vec<(String, Option<String>)>,
 	) -> Result<(), GenError> {
+		use futures::{StreamExt, stream};
+
 		let handles = entries
 			.into_iter()
 			.map(|(name, catalog_name)| async move {

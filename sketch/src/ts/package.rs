@@ -182,13 +182,16 @@ impl Config {
 
 		package_json_data.name = Some(package_name.clone());
 
-		let convert_latest = !typescript
-			.no_convert_latest_to_range
-			.unwrap_or_default();
+		#[cfg(feature = "npm-version")]
+		{
+			let convert_latest = !typescript
+				.no_convert_latest_to_range
+				.unwrap_or_default();
 
-		package_json_data
-			.process_dependencies(package_manager, convert_latest, version_ranges)
-			.await?;
+			package_json_data
+				.process_dependencies(package_manager, convert_latest, version_ranges)
+				.await?;
+		}
 
 		if let Some(workspaces) = &package_json_data.workspaces {
 			for path in workspaces {
@@ -212,6 +215,7 @@ impl Config {
 
 			let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
+			#[cfg(feature = "npm-version")]
 			pnpm_workspace
 				.add_dependencies_to_catalog(version_ranges, &package_json_data)
 				.await?;

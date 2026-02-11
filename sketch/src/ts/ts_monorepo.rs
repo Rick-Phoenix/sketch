@@ -87,13 +87,16 @@ impl Config {
 			}
 		}
 
-		let convert_latest = !typescript
-			.no_convert_latest_to_range
-			.unwrap_or_default();
+		#[cfg(feature = "npm-version")]
+		{
+			let convert_latest = !typescript
+				.no_convert_latest_to_range
+				.unwrap_or_default();
 
-		package_json_data
-			.process_dependencies(package_manager, convert_latest, version_ranges)
-			.await?;
+			package_json_data
+				.process_dependencies(package_manager, convert_latest, version_ranges)
+				.await?;
+		}
 
 		let root_package_name = root_package
 			.name
@@ -166,6 +169,7 @@ impl Config {
 				create_dirs_from_stripped_glob(&out_dir.join(dir))?;
 			}
 
+			#[cfg(feature = "npm-version")]
 			pnpm_data
 				.add_dependencies_to_catalog(version_ranges, &package_json_data)
 				.await?;

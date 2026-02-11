@@ -34,14 +34,17 @@ async fn js_catalog() -> Result<(), Box<dyn std::error::Error>> {
 
 	let target_package_json: PackageJson = deserialize_json(&output_dir.join("package.json"))?;
 
-	assert!(target_package_json.catalog.contains_key("hono"));
-	assert!(
-		target_package_json
-			.catalogs
-			.get("svelte")
-			.unwrap()
-			.contains_key("svelte")
-	);
+	#[cfg(feature = "npm-version")]
+	{
+		assert!(target_package_json.catalog.contains_key("hono"));
+		assert!(
+			target_package_json
+				.catalogs
+				.get("svelte")
+				.unwrap()
+				.contains_key("svelte")
+		);
+	}
 
 	Ok(())
 }

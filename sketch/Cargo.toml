@@ -43,10 +43,10 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { workspace = true }
 clap = { workspace = true }
 thiserror = { workspace = true }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", features = ["json"], optional = true }
 tokio = { version = "1", features = ["full"] }
-url = "2.5"
-futures = "0.3"
+url = { version = "2", optional = true }
+futures = { version = "0.3", optional = true }
 serde_yaml_ng = "0.10"
 convert_case = { workspace = true }
 regex = { workspace = true }
@@ -64,4 +64,5 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = []
+npm-version = ["dep:url", "dep:futures", "dep:reqwest"]
 schemars = ["dep:schemars"]

@@ -1,7 +1,3 @@
-use futures::{StreamExt, stream};
-use reqwest::Client;
-use url::Url;
-
 use crate::{ts::package_json::JsDepKind, *};
 
 /// The kinds of version ranges for a dependency with semantic versioning.
@@ -34,48 +30,56 @@ impl VersionRange {
 	}
 }
 
-#[derive(Debug, serde::Deserialize)]
-struct NpmApiResponse {
-	version: String,
-}
+#[cfg(feature = "npm-version")]
+pub mod npm_version {
+	use super::*;
+	use futures::{StreamExt, stream};
 
-static CLIENT: LazyLock<Client> = LazyLock::new(Client::new);
+	#[derive(Debug, serde::Deserialize)]
+	struct NpmApiResponse {
+		version: String,
+	}
 
-/// A helper to get the latest version of an npm package.
-pub async fn get_latest_npm_version(package_name: &str) -> Result<String, GenError> {
-	let url_str = format!("https://registry.npmjs.org/{package_name}/latest");
-	let url = Url::parse(&url_str).map_err(|e| {
-		generic_error!(
-			"Could not get the latest version for `{package_name}` due to an invalid URL: {e}"
-		)
-	})?;
+	static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
-	let response = CLIENT
-		.get(url)
-		.send()
-		.await
-		.map_err(|e| generic_error!("Could not get the latest version for `{package_name}`: {e}"))?
-		.json::<NpmApiResponse>()
-		.await
-		.map_err(|e| {
-			generic_error!("Could not get the latest version for `{package_name}`: {e}")
+	/// A helper to get the latest version of an npm package.
+	pub async fn get_latest_npm_version(package_name: &str) -> Result<String, GenError> {
+		let url_str = format!("https://registry.npmjs.org/{package_name}/latest");
+		let url = url::Url::parse(&url_str).map_err(|e| {
+			generic_error!(
+				"Could not get the latest version for `{package_name}` due to an invalid URL: {e}"
+			)
 		})?;
 
-	Ok(response.version)
-}
+		let response = CLIENT
+			.get(url)
+			.send()
+			.await
+			.map_err(|e| {
+				generic_error!("Could not get the latest version for `{package_name}`: {e}")
+			})?
+			.json::<NpmApiResponse>()
+			.await
+			.map_err(|e| {
+				generic_error!("Could not get the latest version for `{package_name}`: {e}")
+			})?;
 
-pub async fn get_batch_latest_npm_versions(
-	deps: Vec<(JsDepKind, String)>,
-) -> Vec<Result<(JsDepKind, String, String), GenError>> {
-	let handles = deps.into_iter().map(|(kind, name)| async move {
-		let actual_latest = get_latest_npm_version(&name).await?;
+		Ok(response.version)
+	}
 
-		Ok((kind, name, actual_latest))
-	});
+	pub async fn get_batch_latest_npm_versions(
+		deps: Vec<(JsDepKind, String)>,
+	) -> Vec<Result<(JsDepKind, String, String), GenError>> {
+		let handles = deps.into_iter().map(|(kind, name)| async move {
+			let actual_latest = get_latest_npm_version(&name).await?;
 
-	let stream = stream::iter(handles).buffer_unordered(10);
+			Ok((kind, name, actual_latest))
+		});
 
-	let results: Vec<Result<(JsDepKind, String, String), GenError>> = stream.collect().await;
+		let stream = stream::iter(handles).buffer_unordered(10);
 
-	results
+		let results: Vec<Result<(JsDepKind, String, String), GenError>> = stream.collect().await;
+
+		results
+	}
 }

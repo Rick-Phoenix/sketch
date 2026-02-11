@@ -77,22 +77,28 @@ async fn ts_examples() -> Result<(), Box<dyn std::error::Error>> {
 			.contains("esbuild")
 	);
 	assert!(pnpm_file.packages.contains("packages/*"));
-	assert!(
-		pnpm_file
-			.catalog
-			.get("hono")
-			.unwrap()
-			.starts_with('^')
-	);
-	assert!(
-		pnpm_file
-			.catalogs
-			.get("svelte")
-			.unwrap()
-			.get("svelte")
-			.unwrap()
-			.starts_with('^')
-	);
+
+	#[cfg(feature = "npm-version")]
+	{
+		assert!(
+			pnpm_file
+				.catalog
+				.get("hono")
+				.unwrap()
+				.starts_with('^')
+		);
+
+		assert!(
+			pnpm_file
+				.catalogs
+				.get("svelte")
+				.unwrap()
+				.get("svelte")
+				.unwrap()
+				.starts_with('^')
+		);
+	}
+
 	assert_eq!(pnpm_file.minimum_release_age.unwrap(), 1440);
 
 	// Check if the workspaces directories were created correctly

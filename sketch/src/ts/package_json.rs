@@ -332,6 +332,7 @@ impl Default for PackageJson {
 }
 
 impl PackageJson {
+	#[cfg(feature = "npm-version")]
 	/// Converts dependencies marked with `latest` into a version range starting from the latest version fetched with the npm API.
 	pub async fn process_dependencies(
 		&mut self,
