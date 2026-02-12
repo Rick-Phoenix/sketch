@@ -34,13 +34,7 @@ impl Cli {
 		let mut config = get_config_from_cli(self.overrides.unwrap_or_default(), &self.command)?;
 
 		let command = self.command;
-		let mut cli_vars: IndexMap<String, Value> = IndexMap::new();
-
-		if let Some(cli_overrides) = self.vars_overrides {
-			for (name, value) in cli_overrides {
-				cli_vars.insert(name, value);
-			}
-		}
+		let cli_vars: IndexMap<String, Value> = self.vars_overrides.into_iter().collect();
 
 		for file in self.vars_files {
 			let vars = deserialize_vars_file(&file)?;
@@ -428,7 +422,7 @@ pub struct Cli {
 
 	/// Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
 	#[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
-	pub vars_overrides: Option<Vec<(String, Value)>>,
+	pub vars_overrides: Vec<(String, Value)>,
 
 	/// One or more paths to json, yaml or toml files to extract template variables from, in the given order.
 	#[arg(long = "vars-file")]

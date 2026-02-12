@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use serde_json::Value;
 
-pub fn parse_key_value_pairs<'a>(
+pub(crate) fn parse_key_value_pairs<'a>(
 	name: &'a str,
 	s: &'a str,
 ) -> Result<Vec<(&'a str, &'a str)>, String> {
@@ -22,7 +22,7 @@ pub fn parse_key_value_pairs<'a>(
 	Ok(pairs)
 }
 
-pub fn parse_single_key_value_pair<'a>(
+pub(crate) fn parse_single_key_value_pair<'a>(
 	name: &'a str,
 	trimmed_part: &'a str,
 ) -> Result<(&'a str, &'a str), String> {
@@ -40,7 +40,7 @@ pub fn parse_single_key_value_pair<'a>(
 	}
 }
 
-pub fn parse_serializable_key_value_pair(s: &str) -> Result<(String, Value), String> {
+pub(crate) fn parse_serializable_key_value_pair(s: &str) -> Result<(String, Value), String> {
 	let (key, val) = parse_single_key_value_pair("context", s)?;
 
 	let parsed_val: Value = Value::from_str(val)

@@ -11,8 +11,6 @@ pub(crate) fn get_config_from_cli(
 		ignore_config,
 	} = overrides;
 
-	let mut config = Config::default();
-
 	let config_path = if let Some(path) = config_path {
 		Some(path)
 	} else if !ignore_config {
@@ -21,9 +19,11 @@ pub(crate) fn get_config_from_cli(
 		None
 	};
 
-	if let Some(config_path) = config_path {
-		config.merge(Config::from_file(&config_path)?);
-	}
+	let mut config = if let Some(config_path) = config_path {
+		Config::from_file(&config_path)?
+	} else {
+		Config::default()
+	};
 
 	if let Some(templates_dir) = templates_dir {
 		config.templates_dir = Some(templates_dir);
@@ -80,5 +80,6 @@ fn get_config_from_xdg() -> Option<PathBuf> {
 			}
 		}
 	}
+
 	None
 }
