@@ -42,21 +42,15 @@ impl Config {
 	) -> Result<(), GenError> {
 		let mut tera = self.initialize_tera()?;
 
-		let mut context = create_context(&self.vars)?;
+		let mut global_context = create_context(&self.vars)?;
+		global_context.extend(get_default_context());
 
-		context.extend(get_default_context());
-
-		let context = Arc::new(context);
+		let mut template_context = TemplateContext::new(&global_context, cli_vars);
 
 		for cmd in commands {
-			let mut overrides = cmd.context;
+			let overrides = cmd.context;
 
-			for (key, val) in cli_vars {
-				overrides.insert(key.clone(), val.clone());
-			}
-
-			let local_context =
-				get_local_context(ContextRef::Original(context.clone()), &overrides);
+			template_context.apply_local_context(&overrides);
 
 			let template_name = match &cmd.command {
 				TemplateRef::Id(id) => id,
@@ -72,7 +66,7 @@ impl Config {
 			};
 
 			let rendered_command = tera
-				.render(template_name, local_context.as_ref())
+				.render(template_name, template_context.as_ref())
 				.map_err(|e| GenError::TemplateParsing {
 					template: template_name.clone(),
 					source: e,
@@ -108,7 +102,7 @@ pub(crate) fn launch_command(
 		.stdout(Stdio::inherit())
 		.stderr(Stdio::inherit())
 		.output()
-		.with_context(|| format!("Failed to execute shell command '{}'", commands.join(" "),))?;
+		.with_context(|| format!("Failed to execute shell command '{}'", commands.join(" ")))?;
 
 	if output.status.success() {
 		Ok(())

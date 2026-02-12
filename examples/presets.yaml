@@ -77,7 +77,7 @@ templates:
 templating_presets:
   dockerfile:
     context:
-      # Group context, lower priority
+      # Group context
       docker_dev_port: 9530
     # List of templates
     templates:

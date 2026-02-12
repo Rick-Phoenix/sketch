@@ -84,7 +84,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     FROM node:23-alpine
 
     COPY . .
-    EXPOSE 5173
+    EXPOSE 9530
     CMD ["npm", "run", "dev"]
   "#};
 

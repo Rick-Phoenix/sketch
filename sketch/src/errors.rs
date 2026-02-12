@@ -30,9 +30,6 @@ pub enum GenError {
 		source: ::tera::Error,
 	},
 
-	#[error("Failed to parse the templating context: {source}")]
-	TemplateContextParsing { source: ::tera::Error },
-
 	#[error("Failed to render the template `{template}`: {source}")]
 	TemplateRendering {
 		template: String,

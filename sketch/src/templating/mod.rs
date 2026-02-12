@@ -87,6 +87,7 @@ impl TemplatingPresetReference {
 pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
 	pub extends_presets: IndexSet<String>,
+
 	/// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
 	pub templates: Vec<TemplateKind>,
 

@@ -67,7 +67,7 @@ fn get_env_with_fallback(context: &mut Context, name: &str, vars: &[&str]) {
 
 /// Test if the program is running under WSL
 #[cfg(target_os = "linux")]
-pub fn is_wsl() -> bool {
+fn is_wsl() -> bool {
 	if let Ok(b) = std::fs::read("/proc/sys/kernel/osrelease")
 		&& let Ok(s) = std::str::from_utf8(&b)
 	{
@@ -79,7 +79,7 @@ pub fn is_wsl() -> bool {
 
 /// Test if the program is running under WSL
 #[cfg(not(target_os = "linux"))]
-pub fn is_wsl() -> bool {
+fn is_wsl() -> bool {
 	false
 }
 
@@ -92,7 +92,7 @@ pub(crate) fn get_default_context() -> Context {
 		($name:ident, $env_name:ident) => {
 			paste::paste! {
 			  if let Ok($name) = env::var(stringify!($env_name)) {
-				context.insert(concat!("sketch_", stringify!($name)), &$name);
+					context.insert(concat!("sketch_", stringify!($name)), &$name);
 			  }
 			}
 		};
@@ -100,7 +100,7 @@ pub(crate) fn get_default_context() -> Context {
 		($name:ident) => {
 			paste::paste! {
 			  if let Ok($name) = env::var(stringify!([< $name:upper >])) {
-				context.insert(concat!("sketch_", stringify!($name)), &$name);
+					context.insert(concat!("sketch_", stringify!($name)), &$name);
 			  }
 			}
 		};
