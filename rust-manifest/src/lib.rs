@@ -1,3 +1,14 @@
+#[macro_use]
+mod macros;
+mod toml_helpers;
+use toml_helpers::*;
+mod package;
+pub use package::*;
+mod profile_settings;
+pub use profile_settings::*;
+mod workspace;
+pub use workspace::*;
+
 use merge_it::*;
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
@@ -6,261 +17,19 @@ use serde_json::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 use std::path::PathBuf;
+use toml_edit::{Array, ArrayOfTables, DocumentMut, InlineTable, Item, Table, Value as TomlValue};
 
 // Some of the code for this module comes from the [`cargo_toml`](https://docs.rs/cargo_toml/0.22.3/cargo_toml/index.html) crate.
 
-macro_rules! prop_name {
-	($name:ident) => {
-		&stringify!($name).replace("_", "-")
-	};
-}
-
-macro_rules! add_if_false {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if $target.$names.is_some_and(|v| !v) {
-				$table.insert(prop_name!($names), false.into());
-			}
-		)*
-	};
-}
-
-macro_rules! add_string {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if let Some(str) = &$target.$names {
-				$table.insert(prop_name!($names), str.into());
-			}
-		)*
-	};
-}
-
-macro_rules! add_bool {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if $target.$names {
-				$table.insert(prop_name!($names), true.into());
-			}
-		)*
-	};
-}
-
-macro_rules! add_optional_bool {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if let Some(bool) = $target.$names {
-				$table.insert(prop_name!($names), bool.into());
-			}
-		)*
-	};
-}
-
-macro_rules! add_value {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if let Some(val) = &$target.$names {
-				$table.insert(prop_name!($names), val.as_toml_value().into());
-			}
-		)*
-	};
-}
-
-macro_rules! add_table {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if !$target.$names.is_empty() {
-				let mut table = Table::from_iter(
-					$target.$names.iter().map(
-						|(k, v)| (toml_edit::Key::from(k), Item::from(v.as_toml_value()))
-					)
-				);
-
-				table.set_implicit(true);
-				$table.insert(prop_name!($names), table.into());
-			}
-		)*
-	};
-}
-
-macro_rules! add_string_list {
-	($target:ident, $table:ident => $($names:ident),*) => {
-		$(
-			if !$target.$names.is_empty() {
-				let mut array = Array::from_iter(&$target.$names);
-
-				format_array(&mut array);
-
-				$table.insert(prop_name!($names), array.into());
-			}
-		)*
-	};
-}
-
-fn json_to_toml(json: &Value) -> Option<Item> {
-	match json {
-		Value::Null => None,
-
-		Value::Bool(b) => Some(Item::Value(TomlValue::from(*b))),
-
-		Value::Number(n) => {
-			if let Some(i) = n.as_i64() {
-				Some(Item::Value(TomlValue::from(i)))
-			} else if let Some(f) = n.as_f64() {
-				Some(Item::Value(TomlValue::from(f)))
-			} else {
-				Some(Item::Value(TomlValue::from(n.to_string())))
-			}
-		}
-
-		Value::String(s) => Some(Item::Value(TomlValue::from(s))),
-
-		Value::Array(vec) => {
-			if vec.is_empty() {
-				return Some(Item::Value(TomlValue::Array(Array::new())));
-			}
-
-			let all_objects = vec.iter().all(|v| v.is_object());
-
-			if all_objects {
-				// CASE A: [[bin]] style (Array of Tables)
-				let mut array_of_tables = ArrayOfTables::new();
-
-				for val in vec {
-					// We know it's an object, so we force conversion to a standard Table
-					if let Some(table) = json_to_standard_table(val) {
-						array_of_tables.push(table);
-					}
-				}
-				Some(Item::ArrayOfTables(array_of_tables))
-			} else {
-				// CASE B: features = ["a", "b"] style (Inline Array)
-				let mut arr = Array::new();
-				for val in vec {
-					if let Some(item) = json_to_toml(val) {
-						match item {
-							Item::Value(v) => arr.push(v),
-							Item::Table(t) => {
-								// Inline arrays can't hold standard tables, convert to inline
-								let mut inline = t.into_inline_table();
-								InlineTable::fmt(&mut inline);
-								arr.push(TomlValue::InlineTable(inline));
-							}
-							_ => {} // formatting error or invalid structure
-						}
-					}
-				}
-
-				format_array(&mut arr);
-				Some(Item::Value(TomlValue::Array(arr)))
-			}
-		}
-
-		Value::Object(_) => json_to_item_table(json),
-	}
-}
-
-/// Used specifically for populating ArrayOfTables
-fn json_to_standard_table(json: &Value) -> Option<Table> {
-	if let Value::Object(map) = json {
-		let mut table = Table::new();
-		table.set_implicit(true);
-		for (k, v) in map {
-			if let Some(item) = json_to_toml(v) {
-				table.insert(k, item);
-			}
-		}
-		Some(table)
-	} else {
-		None
-	}
-}
-
-/// Helper to decide between InlineTable vs Standard Table (for single objects)
-fn json_to_item_table(json: &Value) -> Option<Item> {
-	if let Value::Object(map) = json {
-		// 1. Dependency Heuristic
-		let is_dependency =
-			map.contains_key("version") || map.contains_key("git") || map.contains_key("path");
-
-		// 2. Complexity Heuristic
-		let has_nested_objects = map.values().any(|v| v.is_object());
-		let is_small = map.len() <= 3;
-
-		if is_dependency || (is_small && !has_nested_objects) {
-			// Inline Table: { version = "1.0" }
-			let mut inline = InlineTable::new();
-			for (k, v) in map {
-				// We need values, not Items, for InlineTable
-				if let Some(Item::Value(val)) = json_to_toml(v) {
-					inline.insert(k, val);
-				}
-			}
-			InlineTable::fmt(&mut inline);
-			Some(Item::Value(TomlValue::InlineTable(inline)))
-		} else {
-			// Standard Table: [section]
-			json_to_standard_table(json).map(Item::Table)
-		}
-	} else {
-		None
-	}
-}
-
-mod package;
-pub use package::*;
-mod profile_settings;
-pub use profile_settings::*;
-mod workspace;
-pub use workspace::*;
-
-use toml_edit::{Array, ArrayOfTables, DocumentMut, InlineTable, Item, Table, Value as TomlValue};
-
-pub fn toml_string_list<'a>(strings: impl IntoIterator<Item = &'a String>) -> Item {
-	let mut arr = Array::from_iter(strings);
-
-	format_array(&mut arr);
-
-	arr.into()
-}
-
-pub fn format_array(arr: &mut Array) {
-	const MAX_INLINE_ITEMS: usize = 4;
-	const MAX_INLINE_CHARS: usize = 50;
-
-	let count = arr.len();
-
-	let total_chars: usize = arr
-		.iter()
-		.map(|item| item.to_string().len())
-		.sum();
-
-	let has_tables = arr.iter().any(|item| item.is_inline_table());
-
-	let should_expand = count > MAX_INLINE_ITEMS || total_chars > MAX_INLINE_CHARS || has_tables;
-
-	if should_expand {
-		for item in arr.iter_mut() {
-			item.decor_mut().set_prefix("\n\t");
-		}
-
-		arr.set_trailing_comma(true);
-
-		arr.set_trailing("\n");
-	} else {
-		arr.fmt();
-	}
-}
-
-/// The top-level `Cargo.toml` structure. **This is the main type in this library.**
+/// The top-level `Cargo.toml` structure.
 ///
-/// The `Metadata` is a generic type for `[package.metadata]` table. You can replace it with
-/// your own struct type if you use the metadata and don't want to use the catch-all `Value` type.
+/// For more info, visit the [manifest guide](https://doc.rust-lang.org/cargo/reference/manifest.html#the-manifest-format)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
-	/// Workspace-wide settings
+	/// The workspace definition.
 	#[merge(with = merge_options)]
 	pub workspace: Option<Workspace>,
 
@@ -268,22 +37,20 @@ pub struct Manifest {
 	#[merge(with = merge_options)]
 	pub package: Option<Package>,
 
-	/// Note that due to autolibs feature this is not the complete list
-	/// unless you run [`Manifest::complete_from_path`]
+	/// Library target settings.
 	#[merge(with = merge_options)]
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub lib: Option<Product>,
 
-	/// Note that due to autobins feature this is not the complete list
-	/// unless you run [`Manifest::complete_from_path`]
+	/// Binary target settings.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	pub bin: BTreeSet<Product>,
 
-	/// `[target.cfg.dependencies]`
+	/// Platform-specific dependencies.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	pub target: BTreeMap<String, Target>,
 
-	/// `[patch.crates-io]` section
+	/// Override dependencies.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	pub patch: BTreeMap<String, BTreeMap<String, Dependency>>,
 
@@ -308,14 +75,7 @@ pub struct Manifest {
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub lints: Option<Inheritable<Lints>>,
 
-	/// The `[features]` section. This set may be incomplete!
-	///
-	/// Optional dependencies may create implied Cargo features.
-	/// This features section also supports microsyntax with `dep:`, `/`, and `?`
-	/// for managing dependencies and their features.io
-	///
-	/// This crate has an optional [`features`] module for dealing with this
-	/// complexity and getting the real list of features.
+	/// The `[features]` section.
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	pub features: BTreeMap<String, BTreeSet<String>>,
 
@@ -324,18 +84,19 @@ pub struct Manifest {
 	#[merge(with = merge_btree_maps)]
 	pub dependencies: BTreeMap<String, Dependency>,
 
-	/// Dev/test-only deps
+	/// Dev/test-only dependencies
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	#[merge(with = merge_btree_maps)]
 	pub dev_dependencies: BTreeMap<String, Dependency>,
 
-	/// Build-time deps
+	/// Build-time dependencies
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	#[merge(with = merge_btree_maps)]
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
 impl Manifest {
+	/// Turns the manifest into a [`DocumentMut`] that can be used for more customized serialization.
 	pub fn as_document(&self) -> DocumentMut {
 		let mut document = DocumentMut::new();
 
@@ -483,7 +244,7 @@ fn item_to_toml_value(item: Item) -> Option<TomlValue> {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct Lint {
-	/// allow/warn/deny
+	/// Lint level.
 	pub level: LintLevel,
 
 	/// Controls which lints or lint groups override other lint groups.
@@ -512,11 +273,11 @@ impl AsTomlValue for Lint {
 #[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Target {
-	/// platform-specific normal deps
+	/// platform-specific normal dependencies
 	pub dependencies: BTreeMap<String, Dependency>,
-	/// platform-specific dev-only/test-only deps
+	/// platform-specific dev-only/test-only dependencies
 	pub dev_dependencies: BTreeMap<String, Dependency>,
-	/// platform-specific build-time deps
+	/// platform-specific build-time dependencies
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
@@ -532,20 +293,20 @@ impl AsTomlValue for Target {
 	}
 }
 
-/// Dependency definition. Note that this struct doesn't carry it's key/name, which you need to read from its section.
+/// Dependency definition.
 ///
-/// It can be simple version number, or detailed settings, or inherited.
+/// It can be a simple version number, or detailed settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum Dependency {
-	/// Version requirement (e.g. `^1.5`)
+	/// Simple version requirement (e.g. `^1.5`)
 	Simple(String),
 
-	/// Incomplete data
+	/// A dependency inherited from the workspace.
 	Inherited(InheritedDependencyDetail), // Must be placed before `detailed` to deserialize correctly
 
-	/// `{ version = "^1.5", features = ["a", "b"] }` etc.
+	/// A detailed dependency table.
 	Detailed(Box<DependencyDetail>),
 }
 
@@ -560,6 +321,7 @@ impl AsTomlValue for Dependency {
 }
 
 impl Dependency {
+	/// Checks whether the dependency is marked as optional.
 	pub fn optional(&self) -> bool {
 		match self {
 			Self::Simple(_) => false,
@@ -568,6 +330,7 @@ impl Dependency {
 		}
 	}
 
+	/// Returns the features enabled in the dependency.
 	pub fn features(&self) -> Option<&BTreeSet<String>> {
 		match self {
 			Self::Simple(_) => None,
@@ -679,21 +442,23 @@ pub(crate) const fn is_false(boolean: &bool) -> bool {
 	!*boolean
 }
 
-/// When a dependency is defined as `{ workspace = true }`,
-/// and workspace data hasn't been applied yet.
+/// Describes a dependency inherited from the workspace.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct InheritedDependencyDetail {
+	/// The features for the dependency.
 	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
 	pub features: BTreeSet<String>,
 
+	/// Makes the dependency optional.
 	#[serde(default, skip_serializing_if = "crate::is_false")]
 	#[merge(with = overwrite_if_true)]
 	pub optional: bool,
 
 	// Cannot be `default` or it breaks deserialization
+	/// Inherits the dependency from the workspace.
 	#[serde(skip_serializing_if = "crate::is_false")]
 	#[merge(with = overwrite_if_true)]
 	pub workspace: bool,
@@ -711,7 +476,7 @@ impl AsTomlValue for InheritedDependencyDetail {
 	}
 }
 
-/// When definition of a dependency is more than just a version string.
+/// A detailed definition for a dependency.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
@@ -721,7 +486,7 @@ pub struct DependencyDetail {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub version: Option<String>,
 
-	/// If `Some`, use this as the crate name instead of `[dependencies]`'s table key.
+	/// If defined, use this as the crate name instead of `[dependencies]`'s table key.
 	///
 	/// By using this, a crate can have multiple versions of the same dependency.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -737,23 +502,23 @@ pub struct DependencyDetail {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub registry_index: Option<String>,
 
-	/// This path is usually relative to the crate's manifest, but when using workspace inheritance, it may be relative to the workspace!
-	///
-	/// When calling [`Manifest::complete_from_path_and_workspace`] use absolute path for the workspace manifest, and then this will be corrected to be an absolute
-	/// path when inherited from the workspace.
+	/// This path is usually relative to the crate's manifest, but when using workspace inheritance, it may be relative to the workspace.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub path: Option<String>,
 
-	/// Read dependency from git repo URL, not allowed on crates-io.
+	/// Read dependency from git repo URL.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub git: Option<String>,
-	/// Read dependency from git branch, not allowed on crates-io.
+
+	/// Read dependency from git branch.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub branch: Option<String>,
-	/// Read dependency from git tag, not allowed on crates-io.
+
+	/// Read dependency from git tag.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub tag: Option<String>,
-	/// Read dependency from git commit, not allowed on crates-io.
+
+	/// Read dependency from git commit.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub rev: Option<String>,
 
@@ -764,10 +529,11 @@ pub struct DependencyDetail {
 	#[merge(with = BTreeSet::extend)]
 	pub features: BTreeSet<String>,
 
+	/// Makes the dependency optional.\
+	///
 	/// NB: Not allowed at workspace level
 	///
 	/// If not used with `dep:` or `?/` syntax in `[features]`, this also creates an implicit feature.
-	/// See the [`features`] module for more info.
 	#[serde(skip_serializing_if = "crate::is_false")]
 	#[merge(with = overwrite_if_true)]
 	pub optional: bool,
@@ -793,7 +559,7 @@ impl AsTomlValue for DependencyDetail {
 	}
 }
 
-/// A value that can be set to `workspace`
+/// A value that can be set to `{ workspace = true }`
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
@@ -854,21 +620,12 @@ impl<T: Default> Default for Inheritable<T> {
 }
 
 impl<T: Default + PartialEq> Inheritable<T> {
+	/// Checks if the [`Inheritable`] is set to [`Value`](Inheritable::Value), and that the value is the default for that type.
 	pub fn is_default(&self) -> bool {
 		match self {
 			Self::Workspace { .. } => false,
 			Self::Value(v) => T::default() == *v,
 		}
-	}
-}
-
-pub trait AsTomlValue {
-	fn as_toml_value(&self) -> Item;
-}
-
-impl<T: Into<Item> + Clone> AsTomlValue for T {
-	fn as_toml_value(&self) -> Item {
-		self.clone().into()
 	}
 }
 
@@ -978,6 +735,7 @@ impl AsTomlValue for Resolver {
 	}
 }
 
+/// A library/binary/test target.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
@@ -987,6 +745,7 @@ pub struct Product {
 	pub path: Option<String>,
 
 	/// The name of a product is the name of the library or binary that will be generated.
+	///
 	/// This is defaulted to the name of the package, with any dashes replaced
 	/// with underscores. (Rust `extern crate` declarations reference this name;
 	/// therefore the value must be a valid Rust identifier to be usable.)

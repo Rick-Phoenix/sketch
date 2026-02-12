@@ -7,12 +7,9 @@ use super::*;
 #[cfg_attr(feature = "schemars", schemars(with = "RawLto"))]
 #[serde(rename_all = "kebab-case")]
 pub enum LtoSetting {
-	/// off
 	None,
-	/// false
 	ThinLocal,
 	Thin,
-	/// True
 	Fat,
 }
 
@@ -145,11 +142,8 @@ impl AsTomlValue for DebugSetting {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[cfg_attr(feature = "schemars", schemars(with = "RawStripSetting"))]
 pub enum StripSetting {
-	/// "none" or false
 	None,
-	/// "debuginfo"
 	Debuginfo,
-	/// "symbols" or true
 	Symbols,
 }
 
@@ -169,7 +163,6 @@ impl TryFrom<RawStripSetting> for StripSetting {
 			RawStripSetting::Bool(false) => Ok(Self::None),
 			RawStripSetting::Bool(true) => Ok(Self::Symbols),
 
-			// Handle Strings
 			RawStripSetting::String(s) => match s.as_str() {
 				"debuginfo" => Ok(Self::Debuginfo),
 				"symbols" | "true" => Ok(Self::Symbols),
@@ -281,59 +274,79 @@ impl From<OptLevel> for RawOptLevel {
 #[serde(rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Profile {
-	/// num or z, s
+	/// The opt-level setting controls the `-C opt-level` flag which controls the level of optimization.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub opt_level: Option<OptLevel>,
 
-	/// 0,1,2 or bool
+	/// The debug setting controls the `-C debuginfo` flag which controls the amount of debug information included in the compiled binary.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub debug: Option<DebugSetting>,
 
-	/// Move debug info to separate files
+	/// The split-debuginfo setting controls the `-C split-debuginfo` flag which controls whether debug information, if generated, is either placed in the executable itself or adjacent to it.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub split_debuginfo: Option<String>,
 
-	/// For dynamic libraries
+	/// The rpath setting controls the `-C rpath` flag which controls whether or not rpath is enabled.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub rpath: Option<bool>,
 
-	/// Link-time-optimization
+	/// The lto setting controls rustc’s `-C lto`, `-C linker-plugin-lto`, and `-C embed-bitcode` options, which control LLVM’s link time optimizations.
+	///
+	/// LTO can produce better optimized code, using whole-program analysis, at the cost of longer linking time.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub lto: Option<LtoSetting>,
 
-	/// Extra assertions
+	/// The debug-assertions setting controls the `-C debug-assertions` flag which turns `cfg(debug_assertions)` conditional compilation on or off.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub debug_assertions: Option<bool>,
 
-	/// Parallel compilation
+	/// The codegen-units setting controls the `-C codegen-units` flag which controls how many “code generation units” a crate will be split into.
+	///
+	/// More code generation units allows more of a crate to be processed in parallel possibly reducing compile time, but may produce slower code.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub codegen_units: Option<u16>,
 
-	/// Handling of panics/unwinding
+	/// The panic setting controls the `-C panic` flag which controls which panic strategy to use.
+	///
+	/// The valid options are:
+	/// - `unwind`: Unwind the stack upon panic.
+	/// - `abort`: Terminate the process upon panic.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub panic: Option<String>,
 
-	/// Support for incremental rebuilds
+	/// The incremental setting controls the `-C incremental` flag which controls whether or not incremental compilation is enabled.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub incremental: Option<bool>,
 
-	/// Check integer arithmetic
+	/// The overflow-checks setting controls the `-C overflow-checks` flag which controls the behavior of runtime integer overflow.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub overflow_checks: Option<bool>,
 
-	/// Remove debug info
+	/// The strip option controls the `-C strip` flag, which directs rustc to strip either symbols or debuginfo from a binary.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub strip: Option<StripSetting>,
 
-	/// Profile overrides for dependencies, `*` is special.
+	/// Profile settings can be overridden for specific packages and build-time crates.
+	///
+	/// To override the settings for a specific package, use the package table to change the settings for the named package:
+	/// ```toml
+	/// # The `foo` package will use the -Copt-level=3 flag.
+	/// [profile.dev.package.foo]
+	/// opt-level = 3
+	/// ```
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	pub package: BTreeMap<String, Self>,
 
-	/// Profile overrides for build dependencies, `*` is special.
+	/// To override the settings for build scripts, proc macros, and their dependencies, use the build-override table:
+	/// ```toml
+	/// # Set the settings for build scripts and proc-macros.
+	/// [profile.dev.build-override]
+	/// opt-level = 3
+	/// ```
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub build_override: Option<Box<Self>>,
 
-	/// Only relevant for non-standard profiles
+	/// Specifies which profile the custom profile inherits settings from when the setting is not specified.
 	#[serde(default, skip_serializing_if = "Option::is_none")]
 	pub inherits: Option<String>,
 }
@@ -369,7 +382,7 @@ impl AsTomlValue for Profile {
 	}
 }
 
-/// Build-in an custom build/optimization settings
+/// Custom build/optimization settings
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[merge(with = merge_options)]
@@ -378,7 +391,7 @@ pub struct Profiles {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub release: Option<Profile>,
 
-	/// Used by default, weirdly called `debug` profile.
+	/// Used by default
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub dev: Option<Profile>,
 
@@ -386,7 +399,7 @@ pub struct Profiles {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub test: Option<Profile>,
 
-	/// Used for `cargo bench` (nightly)
+	/// Used for `cargo bench`
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub bench: Option<Profile>,
 

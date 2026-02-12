@@ -1,27 +1,20 @@
 use super::*;
 
 /// The `[package]` section of the [`Manifest`]. This is where crate properties are.
-///
-/// Note that most of these properties can be inherited from a workspace, and therefore not available just from reading a single `Cargo.toml`. See [`Manifest::inherit_workspace`].
-///
-/// You can replace `Metadata` generic type with your own
-/// to parse into something more useful than a generic toml `Value`
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Package {
+	/// The name of the crate.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub name: Option<String>,
 
 	/// Must parse as semver, e.g. "1.9.0"
-	///
-	/// This field may have unknown value when using workspace inheritance,
-	/// and when the `Manifest` has been loaded without its workspace.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub version: Option<Inheritable<String>>,
 
-	/// Package's edition opt-in. Use [`Package::edition()`] to read it.
+	/// Package's edition opt-in.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub edition: Option<Inheritable<Edition>>,
 
@@ -29,11 +22,11 @@ pub struct Package {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub rust_version: Option<Inheritable<String>>,
 
-	/// Build script definition
+	/// Build script definition.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub build: Option<OptionalFile>,
 
-	/// Workspace this package is a member of (`None` if it's implicit)
+	/// Workspace this package is a member of (`None` if it's implicit).
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub workspace: Option<PathBuf>,
 
@@ -46,7 +39,7 @@ pub struct Package {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub description: Option<Inheritable<String>>,
 
-	/// Project's homepage
+	/// Project's homepage.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub homepage: Option<Inheritable<String>>,
 
@@ -59,12 +52,11 @@ pub struct Package {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub readme: Option<Inheritable<OptionalFile>>,
 
-	/// Up to 5, for search
+	/// Up to 5, for search.
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
 	pub keywords: Inheritable<BTreeSet<String>>,
 
 	/// This is a list of up to five categories where this crate would fit.
-	/// e.g. `["command-line-utilities", "development-tools::cargo-plugins"]`
 	#[serde(skip_serializing_if = "Inheritable::is_default")]
 	pub categories: Inheritable<BTreeSet<String>>,
 
@@ -93,8 +85,6 @@ pub struct Package {
 	pub default_run: Option<String>,
 
 	/// Discover binaries from the file system
-	///
-	/// This may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[bin]]` sections
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub autobins: Option<bool>,
 
@@ -103,20 +93,14 @@ pub struct Package {
 	pub autolib: Option<bool>,
 
 	/// Discover examples from the file system
-	///
-	/// This may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[example]]` sections
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub autoexamples: Option<bool>,
 
 	/// Discover tests from the file system
-	///
-	/// This may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[test]]` sections
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub autotests: Option<bool>,
 
 	/// Discover benchmarks from the file system
-	///
-	/// This may be incorrectly set to `true` if the crate uses 2015 edition and has explicit `[[bench]]` sections
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub autobenches: Option<bool>,
 

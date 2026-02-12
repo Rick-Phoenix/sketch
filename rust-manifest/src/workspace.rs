@@ -1,12 +1,12 @@
 use super::*;
 
-/// A manifest can contain both a package and workspace-wide properties
+/// Workspace settings.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Workspace {
-	/// Relative paths of crates in here
+	/// Relative paths of crates in this workspace.
 	pub members: BTreeSet<String>,
 
 	/// Members to operate on when in the workspace root.
@@ -15,7 +15,7 @@ pub struct Workspace {
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub default_members: BTreeSet<String>,
 
-	/// Template for inheritance
+	/// Settings that can be inherited by packages in this workspace.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	#[merge(with = merge_options)]
 	pub package: Option<PackageTemplate>,
@@ -24,20 +24,20 @@ pub struct Workspace {
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub exclude: BTreeSet<String>,
 
-	/// Shared info
+	/// Custom settings for the workspace.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	pub metadata: BTreeMap<String, Value>,
 
-	/// Compatibility setting
+	/// The resolver to use for the workspace.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub resolver: Option<Resolver>,
 
-	/// Template for `needs_workspace_inheritance`
+	/// Dependencies that can be inherited by packages in the workspace.
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	#[merge(with = merge_btree_maps)]
 	pub dependencies: BTreeMap<String, Dependency>,
 
-	/// Workspace-level lint groups
+	/// Workspace-level lint groups, which can be inherited by packages.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub lints: Option<Lints>,
 }
@@ -75,13 +75,16 @@ impl AsTomlValue for Workspace {
 	}
 }
 
+/// Settings for lint groups in a workspace/package.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, deny_unknown_fields)]
 pub struct Lints {
+	/// rustc lints
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	pub rust: BTreeMap<String, LintKind>,
 
+	/// Clippy lints
 	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	pub clippy: BTreeMap<String, LintKind>,
 }
@@ -98,11 +101,14 @@ impl AsTomlValue for Lints {
 	}
 }
 
+/// Lint group entry
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum LintKind {
+	/// Simple definition, with lint level (i.e. "allow")
 	Simple(LintLevel),
+	/// Detailed definintion
 	Detailed(Lint),
 }
 
@@ -115,7 +121,7 @@ impl AsTomlValue for LintKind {
 	}
 }
 
-/// Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.
+/// Properties that can be inherited via `{ workspace = true }` by member packages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
@@ -125,11 +131,11 @@ pub struct PackageTemplate {
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub categories: BTreeSet<String>,
 
-	/// Multi-line text, some people use Markdown here
+	/// Description for a package.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub description: Option<String>,
 
-	/// URL
+	/// Link to the documentation
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub documentation: Option<String>,
 
@@ -149,10 +155,11 @@ pub struct PackageTemplate {
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub include: BTreeSet<String>,
 
-	/// For search
+	/// Keywords to use for a package
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub keywords: BTreeSet<String>,
 
+	/// License
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub license: Option<String>,
 
