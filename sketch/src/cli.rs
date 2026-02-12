@@ -116,26 +116,6 @@ impl Cli {
 
 				serialize_yaml(&content, &output, overwrite)?;
 			}
-			Commands::TsConfig { output, preset } => {
-				let typescript = config.typescript.unwrap_or_default();
-
-				let content = typescript
-					.ts_config_presets
-					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
-						kind: PresetKind::TsConfig,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(preset.as_str(), &typescript.ts_config_presets)?
-					.config;
-
-				let output = output.unwrap_or_else(|| "tsconfig.json".into());
-
-				create_parent_dirs(&output)?;
-
-				serialize_json(&content, &output, overwrite)?;
-			}
 			Commands::Oxlint { output, preset } => {
 				let typescript = config.typescript.unwrap_or_default();
 
@@ -611,15 +591,6 @@ pub enum Commands {
 		preset: String,
 
 		/// The output path of the generated file [default: `package.json`]
-		output: Option<PathBuf>,
-	},
-
-	/// Generates a `tsconfig.json` file from a preset.
-	TsConfig {
-		/// The preset id
-		preset: String,
-
-		/// The output path of the generated file [default: `tsconfig.json`]
 		output: Option<PathBuf>,
 	},
 

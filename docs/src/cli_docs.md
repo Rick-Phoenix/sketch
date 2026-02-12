@@ -21,8 +21,8 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch ts monorepo`↴](#sketch-ts-monorepo)
 * [`sketch ts package`↴](#sketch-ts-package)
 * [`sketch ts barrel`↴](#sketch-ts-barrel)
+* [`sketch ts config`↴](#sketch-ts-config)
 * [`sketch package-json`↴](#sketch-package-json)
-* [`sketch ts-config`↴](#sketch-ts-config)
 * [`sketch oxlint`↴](#sketch-oxlint)
 * [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
 * [`sketch license`↴](#sketch-license)
@@ -47,7 +47,6 @@ This document contains the help content for the `sketch` command-line program.
 * `rust` — 
 * `ts` — Executes typescript-specific commands
 * `package-json` — Generates a `package.json` file from a preset
-* `ts-config` — Generates a `tsconfig.json` file from a preset
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
 * `license` — Generates a license file
@@ -283,6 +282,7 @@ Executes typescript-specific commands
 * `monorepo` — Generates a new typescript monorepo
 * `package` — Generates a new typescript package
 * `barrel` — Creates a barrel file
+* `config` — Generates a `tsconfig.json` file from a preset
 
 ###### **Options:**
 
@@ -405,6 +405,19 @@ Creates a barrel file
 
 
 
+## `sketch ts config`
+
+Generates a `tsconfig.json` file from a preset
+
+**Usage:** `sketch ts config <PRESET> [OUTPUT]`
+
+###### **Arguments:**
+
+* `<PRESET>` — The preset id
+* `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
+
+
+
 ## `sketch package-json`
 
 Generates a `package.json` file from a preset
@@ -415,19 +428,6 @@ Generates a `package.json` file from a preset
 
 * `<PRESET>` — The preset id
 * `<OUTPUT>` — The output path of the generated file [default: `package.json`]
-
-
-
-## `sketch ts-config`
-
-Generates a `tsconfig.json` file from a preset
-
-**Usage:** `sketch ts-config <PRESET> [OUTPUT]`
-
-###### **Arguments:**
-
-* `<PRESET>` — The preset id
-* `<OUTPUT>` — The output path of the generated file [default: `tsconfig.json`]
 
 
 

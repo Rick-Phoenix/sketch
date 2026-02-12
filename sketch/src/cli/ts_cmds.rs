@@ -24,6 +24,26 @@ pub(crate) async fn handle_ts_commands(
 	let typescript = config.typescript.get_or_insert_default();
 
 	match command {
+		TsCommands::Config { output, preset } => {
+			let typescript = config.typescript.unwrap_or_default();
+
+			let content = typescript
+				.ts_config_presets
+				.get(&preset)
+				.ok_or(GenError::PresetNotFound {
+					kind: PresetKind::TsConfig,
+					name: preset.clone(),
+				})?
+				.clone()
+				.merge_presets(preset.as_str(), &typescript.ts_config_presets)?
+				.config;
+
+			let output = output.unwrap_or_else(|| "tsconfig.json".into());
+
+			create_parent_dirs(&output)?;
+
+			serialize_json(&content, &output, overwrite)?;
+		}
 		TsCommands::Barrel { args } => {
 			create_ts_barrel(args, overwrite)?;
 		}
@@ -210,6 +230,15 @@ pub enum TsCommands {
 	Barrel {
 		#[command(flatten)]
 		args: TsBarrelArgs,
+	},
+
+	/// Generates a `tsconfig.json` file from a preset.
+	Config {
+		/// The preset id
+		preset: String,
+
+		/// The output path of the generated file [default: `tsconfig.json`]
+		output: Option<PathBuf>,
 	},
 }
 
