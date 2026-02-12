@@ -357,7 +357,6 @@ impl Manifest {
 
 			document["target"] = table.into();
 		}
-		add_table!(self, document => target);
 
 		if !self.bin.is_empty() {
 			let array =
@@ -469,13 +468,15 @@ impl AsTomlValue for LintLevel {
 }
 
 #[track_caller]
-fn item_to_toml_value(item: Item) -> TomlValue {
-	match item {
+fn item_to_toml_value(item: Item) -> Option<TomlValue> {
+	let output = match item {
 		Item::Value(value) => value,
 		Item::Table(table) => table.into_inline_table().into(),
 		Item::ArrayOfTables(arr) => arr.into_array().into(),
-		_ => panic!("Failed to convert item to value"),
-	}
+		_ => return None,
+	};
+
+	Some(output)
 }
 
 /// Lint definition.
@@ -494,7 +495,9 @@ impl AsTomlValue for Lint {
 	fn as_toml_value(&self) -> Item {
 		let mut table = InlineTable::new();
 
-		table.insert("level", item_to_toml_value(self.level.as_toml_value()));
+		if let Some(level) = item_to_toml_value(self.level.as_toml_value()) {
+			table.insert("level", level);
+		}
 
 		if let Some(priority) = self.priority {
 			table.insert("priority", i64::from(priority).into());
@@ -507,17 +510,14 @@ impl AsTomlValue for Lint {
 /// Dependencies that are platform-specific or enabled through custom `cfg()`.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Target {
 	/// platform-specific normal deps
-	#[serde(default)]
 	pub dependencies: BTreeMap<String, Dependency>,
 	/// platform-specific dev-only/test-only deps
-	#[serde(default)]
 	pub dev_dependencies: BTreeMap<String, Dependency>,
 	/// platform-specific build-time deps
-	#[serde(default)]
 	pub build_dependencies: BTreeMap<String, Dependency>,
 }
 
@@ -527,7 +527,7 @@ impl AsTomlValue for Target {
 
 		table.set_implicit(true);
 
-		add_table!(self, table => dependencies, dev_dependencies, build_dependencies);
+		add_table!(self, table => dev_dependencies, dependencies, build_dependencies);
 
 		table.into()
 	}
@@ -544,7 +544,7 @@ pub enum Dependency {
 	Simple(String),
 
 	/// Incomplete data
-	Inherited(InheritedDependencyDetail), // Must be placed first to deserialize correctly
+	Inherited(InheritedDependencyDetail), // Must be placed before `detailed` to deserialize correctly
 
 	/// `{ version = "^1.5", features = ["a", "b"] }` etc.
 	Detailed(Box<DependencyDetail>),
@@ -605,39 +605,69 @@ impl Dependency {
 impl Merge for Dependency {
 	fn merge(&mut self, other: Self) {
 		match self {
-			Self::Simple(_) => {
-				*self = other;
+			Self::Simple(left_simple) => {
+				match other {
+					Self::Simple(right_simple) => *left_simple = right_simple,
+					Self::Inherited(right_inherited) => *self = Self::Inherited(right_inherited),
+					Self::Detailed(mut right_detailed) => {
+						if right_detailed.version.is_none() {
+							let version = mem::take(left_simple);
+
+							right_detailed.version = Some(version);
+						}
+
+						*self = Self::Detailed(right_detailed);
+					}
+				};
 			}
-			Self::Inherited(left_options) => match other {
-				Self::Simple(_) => *self = other,
-				Self::Inherited(right) => left_options.merge(right),
+			Self::Inherited(left_inherited) => match other {
+				// Merging inherited with a version is awkward, but reasonably
+				// it should be converted to detailed
+				Self::Simple(right_simple) => {
+					let features = mem::take(&mut left_inherited.features);
+
+					*self = Self::Detailed(
+						DependencyDetail {
+							version: Some(right_simple),
+							optional: left_inherited.optional,
+							features,
+							..Default::default()
+						}
+						.into(),
+					);
+				}
+				Self::Inherited(right) => left_inherited.merge(right),
 				Self::Detailed(mut right) => {
-					if right.optional {
+					if left_inherited.optional {
 						right.optional = true;
 					}
 
-					let left_features = mem::take(&mut left_options.features);
+					let left_features = mem::take(&mut left_inherited.features);
 
 					right.features.extend(left_features);
 
 					*self = Self::Detailed(right);
 				}
 			},
-			Self::Detailed(left) => match other {
-				Self::Simple(_) => *self = other,
+			Self::Detailed(left_detailed) => match other {
+				Self::Simple(right_simple) => {
+					if left_detailed.version.is_none() {
+						left_detailed.version = Some(right_simple);
+					}
+				}
 				Self::Inherited(mut right) => {
-					if left.optional {
+					if left_detailed.optional {
 						right.optional = true;
 					}
 
-					let left_features = mem::take(&mut left.features);
+					let left_features = mem::take(&mut left_detailed.features);
 
 					right.features.extend(left_features);
 
 					*self = Self::Inherited(right);
 				}
 				Self::Detailed(right) => {
-					left.merge(*right);
+					left_detailed.merge(*right);
 				}
 			},
 		}
