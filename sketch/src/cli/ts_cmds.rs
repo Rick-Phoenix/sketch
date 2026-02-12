@@ -8,9 +8,8 @@ use crate::{
 	ts::{
 		PackageManager,
 		oxlint::OxlintConfigSetting,
-		package::{PackageConfig, PackageData},
+		package::{PackageConfig, PackageData, PackageType},
 		pnpm::PnpmWorkspace,
-		ts_monorepo::CreateTsMonorepoSettings,
 		vitest::VitestConfigKind,
 	},
 	*,
@@ -77,12 +76,13 @@ pub(crate) async fn handle_ts_commands(
 			};
 
 			config
-				.create_ts_monorepo(CreateTsMonorepoSettings {
-					root_package,
-					out_dir: &out_dir,
-					pnpm_config,
+				.crate_ts_package(
+					PackageData::Config(root_package),
+					&out_dir,
+					None,
 					cli_vars,
-				})
+					PackageType::MonorepoRoot { pnpm: pnpm_config },
+				)
 				.await?;
 
 			if install {
@@ -143,11 +143,12 @@ pub(crate) async fn handle_ts_commands(
 			}
 
 			config
-				.build_package(
+				.crate_ts_package(
 					PackageData::Config(package),
-					package_dir,
+					&package_dir,
 					update_tsconfig,
 					cli_vars,
+					PackageType::Normal,
 				)
 				.await?;
 		}

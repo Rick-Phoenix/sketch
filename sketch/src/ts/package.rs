@@ -76,14 +76,30 @@ pub enum PackageData {
 	Config(PackageConfig),
 }
 
+pub enum PackageType {
+	MonorepoRoot { pnpm: Option<PnpmWorkspace> },
+	Normal,
+}
+
+impl PackageType {
+	/// Returns `true` if the package kind is [`MonorepoRoot`].
+	///
+	/// [`MonorepoRoot`]: PackageType::MonorepoRoot
+	#[must_use]
+	pub(crate) const fn is_monorepo_root(&self) -> bool {
+		matches!(self, Self::MonorepoRoot { .. })
+	}
+}
+
 impl Config {
 	/// Generates a new typescript package.
-	pub async fn build_package(
+	pub async fn crate_ts_package(
 		mut self,
 		data: PackageData,
-		pkg_root: PathBuf,
+		pkg_root: &Path,
 		tsconfig_files_to_update: Option<Vec<PathBuf>>,
 		cli_vars: &IndexMap<String, Value>,
+		mut package_type: PackageType,
 	) -> Result<(), GenError> {
 		let overwrite = self.can_overwrite();
 
@@ -91,7 +107,10 @@ impl Config {
 
 		let package_json_presets = &typescript.package_json_presets;
 
-		let config = match data {
+		let package_manager = typescript.package_manager.unwrap_or_default();
+		let version_ranges = typescript.version_range.unwrap_or_default();
+
+		let package_config = match data {
 			PackageData::Config(conf) => conf,
 			PackageData::Preset(id) => typescript
 				.package_presets
@@ -103,46 +122,47 @@ impl Config {
 				.clone(),
 		};
 
-		let package_name = if let Some(name) = config.name.as_ref() {
+		let package_name = if let Some(name) = package_config.name.as_ref() {
 			name.clone()
-		} else if let Some(dir_name) = pkg_root.file_name() {
-			dir_name.to_string_lossy().to_string()
 		} else {
-			"my-awesome-package".to_string()
+			pkg_root
+				.file_name()
+				.expect("Failed to detect dirname")
+				.to_string_lossy()
+				.to_string()
 		};
 
-		create_all_dirs(&pkg_root)?;
+		create_all_dirs(pkg_root)?;
 
-		let pkg_root = get_abs_path(&pkg_root)?;
+		// We must get the absolute path after creation
+		let pkg_root = get_abs_path(pkg_root)?;
 
-		if !config.hooks_pre.is_empty() {
+		if !package_config.hooks_pre.is_empty() {
 			self.execute_command(
 				self.shell.as_deref(),
 				&pkg_root,
-				config.hooks_pre,
+				package_config.hooks_pre,
 				cli_vars,
 				false,
 			)?;
 		}
 
-		let package_manager = typescript.package_manager.unwrap_or_default();
-		let version_ranges = typescript.version_range.unwrap_or_default();
-
-		let (package_json_id, package_json_preset) = match config.package_json.unwrap_or_default() {
-			PackageJsonData::Id(id) => (
-				id.clone(),
-				package_json_presets
-					.get(&id)
-					.ok_or(GenError::PresetNotFound {
-						kind: Preset::PackageJson,
-						name: id,
-					})?
-					.clone(),
-			),
-			PackageJsonData::Config(package_json) => {
-				("__inlined_definition".to_string(), package_json)
-			}
-		};
+		let (package_json_id, package_json_preset) =
+			match package_config.package_json.unwrap_or_default() {
+				PackageJsonData::Id(id) => (
+					id.clone(),
+					package_json_presets
+						.get(&id)
+						.ok_or(GenError::PresetNotFound {
+							kind: Preset::PackageJson,
+							name: id,
+						})?
+						.clone(),
+				),
+				PackageJsonData::Config(package_json) => {
+					("__inlined_definition".to_string(), package_json)
+				}
+			};
 
 		let mut package_json_data = package_json_preset.process_data(
 			package_json_id.as_str(),
@@ -154,10 +174,12 @@ impl Config {
 			package_json_data.package_manager = Some(package_manager.to_string());
 		}
 
+		package_json_data.name = Some(package_name.clone());
+
 		if !typescript.no_default_deps.unwrap_or_default() {
 			let mut default_deps = vec!["typescript", "oxlint"];
 
-			if let Some(ref vitest) = config.vitest
+			if let Some(ref vitest) = package_config.vitest
 				&& vitest.is_enabled()
 			{
 				default_deps.push("vitest")
@@ -180,8 +202,6 @@ impl Config {
 				}
 			}
 		}
-
-		package_json_data.name = Some(package_name.clone());
 
 		#[cfg(feature = "npm-version")]
 		{
@@ -210,7 +230,24 @@ impl Config {
 			overwrite,
 		)?;
 
-		if typescript.catalog.unwrap_or_default() && matches!(package_manager, PackageManager::Pnpm)
+		if let PackageType::MonorepoRoot { pnpm } = &mut package_type
+			&& let Some(pnpm_data) = pnpm
+		{
+			for dir in &pnpm_data.packages {
+				create_dirs_from_stripped_glob(&pkg_root.join(dir))?;
+			}
+
+			#[cfg(feature = "npm-version")]
+			pnpm::add_dependencies_to_catalog(pnpm_data, version_ranges, &package_json_data)
+				.await?;
+
+			serialize_yaml(&pnpm_data, &pkg_root.join("pnpm-workspace.yaml"), overwrite)?;
+		}
+
+		#[cfg(feature = "npm-version")]
+		if !package_type.is_monorepo_root()
+			&& typescript.catalog.unwrap_or_default()
+			&& matches!(package_manager, PackageManager::Pnpm)
 		{
 			let pnpm_workspace_path =
 				find_file_up(&pkg_root, "pnpm-workspace.yaml").ok_or(GenError::Custom(format!(
@@ -220,7 +257,6 @@ impl Config {
 
 			let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
-			#[cfg(feature = "npm-version")]
 			pnpm::add_dependencies_to_catalog(
 				&mut pnpm_workspace,
 				version_ranges,
@@ -235,8 +271,8 @@ impl Config {
 
 		let tsconfig_presets = &typescript.ts_config_presets;
 
-		if !config.ts_config.is_empty() {
-			for directive in config.ts_config {
+		if !package_config.ts_config.is_empty() {
+			for directive in package_config.ts_config {
 				let (id, tsconfig) = match directive.config.unwrap_or_default() {
 					TsConfigKind::Id(id) => {
 						let tsconfig = tsconfig_presets
@@ -254,15 +290,30 @@ impl Config {
 					}
 				};
 
-				let tsconfig = tsconfig.process_data(id.as_str(), tsconfig_presets)?;
+				let tsconfig_data = tsconfig.process_data(id.as_str(), tsconfig_presets)?;
 
 				tsconfig_files.push((
 					directive
 						.output
 						.unwrap_or_else(|| "tsconfig.json".to_string()),
-					tsconfig,
+					tsconfig_data,
 				));
 			}
+		} else if package_type.is_monorepo_root() {
+			let root_tsconfig_name = "tsconfig.options.json".to_string();
+
+			let root_tsconfig_plain = TsConfig {
+				extends: Some(root_tsconfig_name.clone()),
+				files: btreeset![],
+				references: btreeset![],
+				..Default::default()
+			};
+
+			tsconfig_files.push(("tsconfig.json".to_string(), root_tsconfig_plain));
+
+			let tsconfig_options = get_default_root_tsconfig();
+
+			tsconfig_files.push((root_tsconfig_name, tsconfig_options));
 		} else {
 			tsconfig_files.push(("tsconfig.json".to_string(), get_default_package_tsconfig()));
 		}
@@ -288,12 +339,11 @@ impl Config {
 			}
 		}
 
-		let src_dir = pkg_root.join("src");
-		create_all_dirs(&src_dir)?;
+		if !package_type.is_monorepo_root() {
+			create_all_dirs(&pkg_root.join("src"))?;
+		}
 
-		let _index_file = open_file_if_overwriting(overwrite, &src_dir.join("index.ts"))?;
-
-		if let Some(vitest_config) = config.vitest
+		if let Some(vitest_config) = package_config.vitest
 			&& vitest_config.is_enabled()
 		{
 			let mut vitest = match vitest_config {
@@ -330,7 +380,7 @@ impl Config {
 
 			context.insert("config", &vitest);
 
-			let src_rel_path = get_relative_path(file_parent_dir, &src_dir)?;
+			let src_rel_path = get_relative_path(file_parent_dir, &pkg_root.join("src"))?;
 
 			context.insert("src_rel_path", &src_rel_path);
 
@@ -352,7 +402,7 @@ impl Config {
 			)?;
 		}
 
-		if let Some(oxlint_config) = config.oxlint
+		if let Some(oxlint_config) = package_config.oxlint
 			&& oxlint_config.is_enabled()
 		{
 			let (id, oxlint_config) = match oxlint_config {
@@ -380,19 +430,19 @@ impl Config {
 			serialize_json(&merged_config, &pkg_root.join(".oxlintrc.json"), overwrite)?;
 		}
 
-		if let Some(license) = config.license {
+		if let Some(license) = package_config.license {
 			write_file(&pkg_root.join("LICENSE"), license.get_content(), overwrite)?;
 		}
 
-		if !config.with_templates.is_empty() {
-			self.generate_templates(&pkg_root, config.with_templates, cli_vars)?;
+		if !package_config.with_templates.is_empty() {
+			self.generate_templates(&pkg_root, package_config.with_templates, cli_vars)?;
 		}
 
-		if !config.hooks_post.is_empty() {
+		if !package_config.hooks_post.is_empty() {
 			self.execute_command(
 				self.shell.as_deref(),
 				&pkg_root,
-				config.hooks_post,
+				package_config.hooks_post,
 				cli_vars,
 				false,
 			)?;

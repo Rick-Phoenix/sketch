@@ -3,7 +3,6 @@ pub mod package;
 pub mod package_json;
 pub mod pnpm;
 pub mod ts_config;
-pub mod ts_monorepo;
 pub mod vitest;
 
 use regex::Regex;
