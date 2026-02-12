@@ -451,7 +451,6 @@ impl Manifest {
 pub enum LintLevel {
 	Allow,
 	Warn,
-	ForceWarn,
 	Deny,
 	Forbid,
 }
@@ -461,7 +460,6 @@ impl AsTomlValue for LintLevel {
 		let str = match self {
 			Self::Allow => "allow",
 			Self::Warn => "warn",
-			Self::ForceWarn => "force-warn",
 			Self::Deny => "deny",
 			Self::Forbid => "forbid",
 		};
