@@ -105,15 +105,17 @@ impl Config {
 			preset.gitignore = Some(GitIgnorePresetRef::Config(resolved));
 		}
 
-		if preset.gitignore.is_none() {
-			preset.gitignore = Some(GitIgnorePresetRef::Config(GitignorePreset {
+		let gitignore = match preset.gitignore {
+			None => GitignorePreset {
 				extends_presets: Default::default(),
 				content: GitIgnore::String(DEFAULT_GITIGNORE.trim().to_string()),
-			}));
-		}
-
-		let Some(GitIgnorePresetRef::Config(gitignore)) = preset.gitignore else {
-			panic!("Unresolved gitignore");
+			},
+			Some(preset_ref) => match preset_ref {
+				GitIgnorePresetRef::Id(id) => {
+					return Err(anyhow!("Unresolved gitignore preset with id `{id}`").into());
+				}
+				GitIgnorePresetRef::Config(preset) => preset,
+			},
 		};
 
 		write_file(

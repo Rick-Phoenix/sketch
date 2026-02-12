@@ -387,15 +387,15 @@ impl Config {
 			context.insert("src_rel_path", &src_rel_path);
 
 			let template = read_to_string(templates_dir().join("ts/vitest.config.ts.j2"))
-				.expect("Failed to read vitest template");
+				.context("Failed to read vitest template")?;
 
-			let output =
-				tera::Tera::one_off(&template, &context, false).expect("Failed to render vitest");
+			let output = tera::Tera::one_off(&template, &context, false)
+				.context("Failed to render vitest template")?;
 
 			write_file(&file_path, &output, self.can_overwrite())?;
 
 			let test_setup_file = read_to_string(templates_dir().join("ts/tests_setup.ts.j2"))
-				.expect("Failed to read tests setup template");
+				.context("Failed to read tests setup template")?;
 
 			write_file(
 				&tests_setup_dir.join("tests_setup.ts"),

@@ -78,12 +78,11 @@ impl CratePreset {
 	) -> Result<(), GenError> {
 		create_all_dirs(dir)?;
 
-		let CargoTomlPresetRef::Config(CargoTomlPreset {
-			config: mut manifest,
-			..
-		}) = self.manifest
-		else {
-			panic!("Unresolved manifest");
+		let mut manifest = match self.manifest {
+			CargoTomlPresetRef::Config(CargoTomlPreset { config, .. }) => config,
+			CargoTomlPresetRef::Id(id) => {
+				return Err(anyhow!("Unresolved manifest preset with id `{id}`").into());
+			}
 		};
 
 		let manifest_is_virtual = manifest.workspace.is_some();
@@ -98,7 +97,7 @@ impl CratePreset {
 			manifest.package.get_or_insert_default().name = Some(name);
 		}
 
-		let workspace_manifest_path = get_parent_dir(dir).join("Cargo.toml");
+		let workspace_manifest_path = get_parent_dir(dir)?.join("Cargo.toml");
 
 		let workspace_manifest = if !manifest_is_virtual && workspace_manifest_path.exists() {
 			let workspace_manifest_raw = read_to_string(&workspace_manifest_path).map_err(|e| {

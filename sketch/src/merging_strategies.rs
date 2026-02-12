@@ -15,9 +15,7 @@ fn process_preset_id(
 		let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
 
 		return Err(GenError::CircularDependency(format!(
-			"Found circular {:?} dependency for '{}'. The full processed chain is: {}",
-			preset_kind,
-			id,
+			"Found circular {preset_kind:?} dependency for preset with id '{id}'. The full processed chain is: {}",
 			chain.join(" -> ")
 		)));
 	}

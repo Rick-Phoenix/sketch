@@ -461,7 +461,7 @@ fn render_template(
 	context: &Context,
 	overwrite: bool,
 ) -> Result<(), GenError> {
-	create_all_dirs(get_parent_dir(output_path))?;
+	create_all_dirs(get_parent_dir(output_path)?)?;
 
 	let mut output_file = open_file_if_overwriting(overwrite, output_path)?;
 

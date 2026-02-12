@@ -251,7 +251,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 		{
 			content
 		} else {
-			panic!()
+			panic!("Unresolved job preset")
 		};
 
 		assert_eq!(

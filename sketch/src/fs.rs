@@ -57,9 +57,10 @@ pub fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
 	}
 }
 
-pub fn get_extension(file: &Path) -> &OsStr {
-	file.extension()
-		.unwrap_or_else(|| panic!("File `{}` has no extension", file.display()))
+pub fn get_extension(file: &Path) -> Result<&OsStr, GenError> {
+	Ok(file
+		.extension()
+		.with_context(|| format!("File `{}` has no extension", file.display()))?)
 }
 
 pub fn serialize_toml<T: Serialize>(
@@ -179,7 +180,7 @@ pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, Ge
 }
 
 pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), GenError> {
-	let dirname = get_parent_dir(path);
+	let dirname = get_parent_dir(path)?;
 
 	create_all_dirs(dirname)
 }
@@ -197,9 +198,10 @@ pub(crate) fn get_abs_path(path: &Path) -> Result<PathBuf, GenError> {
 		})
 }
 
-pub(crate) fn get_parent_dir(path: &Path) -> &Path {
-	path.parent()
-		.unwrap_or_else(|| panic!("Could not get the parent directory of '{}'", path.display()))
+pub(crate) fn get_parent_dir(path: &Path) -> Result<&Path, GenError> {
+	Ok(path
+		.parent()
+		.with_context(|| format!("Could not get the parent directory of '{}'", path.display()))?)
 }
 
 pub(crate) fn get_cwd() -> PathBuf {

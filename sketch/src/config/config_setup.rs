@@ -1,7 +1,7 @@
 use super::*;
 
 pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Config, GenError> {
-	let extension = get_extension(config_file_abs_path);
+	let extension = get_extension(config_file_abs_path)?;
 
 	let mut config: Config = if extension == "yaml" || extension == "yml" {
 		deserialize_yaml(config_file_abs_path)?
@@ -21,7 +21,7 @@ pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Co
 
 	config.config_file = Some(config_file_abs_path.to_path_buf());
 
-	let config_parent_dir = get_parent_dir(config_file_abs_path);
+	let config_parent_dir = get_parent_dir(config_file_abs_path)?;
 
 	if let Some(templates_dir) = &config.templates_dir {
 		let templates_dir = config_parent_dir.join(templates_dir);

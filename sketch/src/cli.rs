@@ -111,7 +111,9 @@ impl Cli {
 						)?;
 
 						if dir.exists() && !config.can_overwrite() {
-							panic!("Dir exists");
+							return Err(
+								anyhow!("Directory `{}` already exists", dir.display()).into()
+							);
 						}
 
 						crate_data.generate(&dir, name, &config)?;
@@ -361,7 +363,7 @@ impl Cli {
 						content: file_content,
 					}
 				} else {
-					panic!("Missing id or content for template generation");
+					return Err(anyhow!("Missing id or content for template generation").into());
 				};
 
 				let output = if output.stdout {
@@ -370,7 +372,7 @@ impl Cli {
 					TemplateOutputKind::Path(
 						output
 							.output_path
-							.expect("At least one must be set between output_path and --stdout"),
+							.context("At least one must be set between output_path and --stdout")?,
 					)
 				};
 
@@ -393,7 +395,7 @@ impl Cli {
 
 				create_parent_dirs(&output_path)?;
 
-				let format = get_extension(&output_path).to_string_lossy();
+				let format = get_extension(&output_path)?.to_string_lossy();
 
 				let new_config = Config::default();
 
@@ -437,7 +439,9 @@ impl Cli {
 						content,
 					}
 				} else {
-					panic!("At least one between command and file must be set.")
+					return Err(
+						anyhow!("At least one between command and file must be set.").into(),
+					);
 				};
 
 				let cwd = cwd.unwrap_or_else(get_cwd);

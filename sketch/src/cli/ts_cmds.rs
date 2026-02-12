@@ -310,17 +310,17 @@ fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError>
 		env!("CARGO_MANIFEST_DIR"),
 		"/templates/ts/barrel.ts.j2"
 	))
-	.expect("Failed to read template for barrel file");
+	.context("Failed to read template for barrel file")?;
 
 	let mut context = tera::Context::new();
 
 	context.insert("files", &paths);
 
 	let file_content =
-		Tera::one_off(&template, &context, false).expect("Failed to create barrel file");
+		Tera::one_off(&template, &context, false).context("Failed to create barrel file")?;
 
 	file.write_all(file_content.as_bytes())
-		.expect("failed to write barrel file");
+		.context("Failed to write barrel file")?;
 
 	Ok(())
 }

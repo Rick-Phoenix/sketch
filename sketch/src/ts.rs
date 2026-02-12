@@ -87,7 +87,11 @@ impl PackageManager {
 	pub fn find_root(&self, start_dir: &Path) -> Option<PathBuf> {
 		let root_marker = self.root_marker();
 
-		find_file_up(start_dir, root_marker).map(|file| get_parent_dir(&file).to_path_buf())
+		if let Some(file) = find_file_up(start_dir, root_marker) {
+			Some(get_parent_dir(&file).ok()?.to_path_buf())
+		} else {
+			None
+		}
 	}
 
 	pub const fn root_marker(&self) -> &str {

@@ -88,7 +88,7 @@ impl Config {
 	) -> Result<(), GenError> {
 		// Safe unwrapping due to the check below
 		let current_config_file = self.config_file.as_ref();
-		let current_dir = get_parent_dir(current_config_file.unwrap());
+		let current_dir = get_parent_dir(current_config_file.unwrap())?;
 
 		for rel_path in &self.extends {
 			let abs_path = current_dir
@@ -135,7 +135,7 @@ impl Config {
 		let config_file = self
 			.config_file
 			.clone()
-			.expect("Cannot use merge_config_files with a config that has no source file.");
+			.context("Attempted to merge a config without a source file")?;
 
 		processed_sources.insert(config_file.clone());
 
