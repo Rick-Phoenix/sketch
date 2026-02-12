@@ -380,7 +380,7 @@ impl Cli {
 				)?;
 			}
 			Commands::Ts { command, .. } => {
-				handle_ts_commands(config, command, &cli_vars).await?;
+				command.execute(config, &cli_vars).await?;
 			}
 		}
 		Ok(())

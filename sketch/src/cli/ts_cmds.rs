@@ -3,6 +3,9 @@ use super::*;
 use globset::{Glob, GlobSetBuilder};
 use walkdir::WalkDir;
 
+mod ts_barrel;
+use ts_barrel::*;
+
 use crate::{
 	exec::launch_command,
 	ts::{
@@ -14,169 +17,6 @@ use crate::{
 	},
 	*,
 };
-
-pub(crate) async fn handle_ts_commands(
-	mut config: Config,
-	command: TsCommands,
-	cli_vars: &IndexMap<String, Value>,
-) -> Result<(), AppError> {
-	let overwrite = config.can_overwrite();
-	let typescript = config.typescript.get_or_insert_default();
-
-	match command {
-		TsCommands::Config { output, preset } => {
-			let typescript = config.typescript.unwrap_or_default();
-
-			let content = typescript
-				.ts_config_presets
-				.get(&preset)
-				.ok_or(AppError::PresetNotFound {
-					kind: PresetKind::TsConfig,
-					name: preset.clone(),
-				})?
-				.clone()
-				.merge_presets(preset.as_str(), &typescript.ts_config_presets)?
-				.config;
-
-			let output = output.unwrap_or_else(|| "tsconfig.json".into());
-
-			create_parent_dirs(&output)?;
-
-			serialize_json(&content, &output, overwrite)?;
-		}
-		TsCommands::Barrel { args } => {
-			create_ts_barrel(args, overwrite)?;
-		}
-		TsCommands::Monorepo {
-			install,
-			root_package_overrides,
-			root_package,
-			dir,
-			pnpm,
-		} => {
-			let mut root_package = if let Some(id) = root_package {
-				typescript
-					.package_presets
-					.get(&id)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::TsPackage,
-						name: id,
-					})?
-					.clone()
-			} else {
-				let mut package = PackageConfig::default();
-				package.oxlint = Some(OxlintConfigSetting::Bool(true));
-				package.name = Some("root".to_string());
-				package
-			};
-
-			if let Some(overrides) = root_package_overrides {
-				root_package.merge(overrides);
-			}
-
-			let package_manager = *typescript.package_manager.get_or_insert_default();
-			let out_dir = dir.unwrap_or_else(|| "ts_root".into());
-
-			let pnpm_config = if let Some(id) = pnpm {
-				Some(
-					typescript
-						.pnpm_presets
-						.get(&id)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::PnpmWorkspace,
-							name: id.clone(),
-						})?
-						.clone()
-						.merge_presets(id.as_str(), &typescript.pnpm_presets)?
-						.config,
-				)
-			} else if matches!(package_manager, PackageManager::Pnpm) {
-				Some(PnpmWorkspace::default())
-			} else {
-				None
-			};
-
-			config
-				.crate_ts_package(
-					PackageData::Config(root_package),
-					&out_dir,
-					None,
-					cli_vars,
-					PackageType::MonorepoRoot { pnpm: pnpm_config },
-				)
-				.await?;
-
-			if install {
-				launch_command(
-					package_manager.to_string().as_str(),
-					&["install"],
-					&out_dir,
-					Some("Could not install dependencies"),
-				)?;
-			}
-		}
-		TsCommands::Package {
-			preset,
-			package_config,
-			update_tsconfig,
-			dir,
-			vitest,
-			install,
-		} => {
-			let mut package = if let Some(preset) = preset {
-				typescript
-					.package_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::TsPackage,
-						name: preset.clone(),
-					})?
-					.clone()
-			} else {
-				PackageConfig::default()
-			};
-
-			if let Some(overrides) = package_config {
-				package.merge(overrides);
-			}
-
-			if let Some(vitest) = vitest {
-				package.vitest = Some(VitestConfigKind::Id(vitest))
-			}
-
-			let package_dir = dir.unwrap_or_else(|| {
-				package
-					.name
-					.as_deref()
-					.unwrap_or("new_package")
-					.into()
-			});
-
-			if install {
-				let package_manager = *typescript.package_manager.get_or_insert_default();
-
-				launch_command(
-					package_manager.to_string().as_str(),
-					&["install"],
-					&package_dir,
-					Some("Could not install dependencies"),
-				)?;
-			}
-
-			config
-				.crate_ts_package(
-					PackageData::Config(package),
-					&package_dir,
-					update_tsconfig,
-					cli_vars,
-					PackageType::Normal,
-				)
-				.await?;
-		}
-	}
-
-	Ok(())
-}
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum TsCommands {
@@ -242,115 +82,167 @@ pub enum TsCommands {
 	},
 }
 
-#[derive(Debug, Clone, Args)]
-pub struct TsBarrelArgs {
-	/// The directory where to search recursively for the files and generate the barrel file [default: `.`]
-	pub dir: Option<PathBuf>,
+impl TsCommands {
+	pub(crate) async fn execute(
+		self,
+		mut config: Config,
+		cli_vars: &IndexMap<String, Value>,
+	) -> Result<(), AppError> {
+		let overwrite = config.can_overwrite();
+		let typescript = config.typescript.get_or_insert_default();
 
-	/// The output path for the barrel file. It defaults to `{dir}/index.ts`
-	#[arg(short, long)]
-	pub output: Option<PathBuf>,
+		match self {
+			Self::Config { output, preset } => {
+				let typescript = config.typescript.unwrap_or_default();
 
-	/// The file extensions that should be kept in export statements.
-	#[arg(long = "keep-ext", value_name = "EXT")]
-	pub keep_extensions: Vec<String>,
+				let content = typescript
+					.ts_config_presets
+					.get(&preset)
+					.ok_or(AppError::PresetNotFound {
+						kind: PresetKind::TsConfig,
+						name: preset.clone(),
+					})?
+					.clone()
+					.merge_presets(preset.as_str(), &typescript.ts_config_presets)?
+					.config;
 
-	/// Exports `.ts` files as `.js`. It assumes that `js` is among the file extensions to keep.
-	#[arg(long)]
-	pub js_ext: bool,
+				let output = output.unwrap_or_else(|| "tsconfig.json".into());
 
-	/// One or more glob patterns to exclude from the imported modules.
-	#[arg(long)]
-	pub exclude: Option<Vec<String>>,
-}
+				create_parent_dirs(&output)?;
 
-const JS_EXTENSIONS: &[&str] = &["vue", "svelte", "jsx", "tsx", "ts", "js"];
+				serialize_json(&content, &output, overwrite)?;
+			}
+			Self::Barrel { args } => {
+				args.create_ts_barrel(overwrite)?;
+			}
+			Self::Monorepo {
+				install,
+				root_package_overrides,
+				root_package,
+				dir,
+				pnpm,
+			} => {
+				let mut root_package = if let Some(id) = root_package {
+					typescript
+						.package_presets
+						.get(&id)
+						.ok_or(AppError::PresetNotFound {
+							kind: PresetKind::TsPackage,
+							name: id,
+						})?
+						.clone()
+				} else {
+					let mut package = PackageConfig::default();
+					package.oxlint = Some(OxlintConfigSetting::Bool(true));
+					package.name = Some("root".to_string());
+					package
+				};
 
-fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), AppError> {
-	let TsBarrelArgs {
-		dir,
-		keep_extensions,
-		exclude,
-		js_ext,
-		output,
-	} = args;
+				if let Some(overrides) = root_package_overrides {
+					root_package.merge(overrides);
+				}
 
-	let dir = dir.unwrap_or_else(get_cwd);
+				let package_manager = *typescript.package_manager.get_or_insert_default();
+				let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
-	if !dir.is_dir() {
-		return Err(anyhow!("`{}` is not a directory", dir.display()).into());
-	}
+				let pnpm_config = if let Some(id) = pnpm {
+					Some(
+						typescript
+							.pnpm_presets
+							.get(&id)
+							.ok_or(AppError::PresetNotFound {
+								kind: PresetKind::PnpmWorkspace,
+								name: id.clone(),
+							})?
+							.clone()
+							.merge_presets(id.as_str(), &typescript.pnpm_presets)?
+							.config,
+					)
+				} else if matches!(package_manager, PackageManager::Pnpm) {
+					Some(PnpmWorkspace::default())
+				} else {
+					None
+				};
 
-	let mut glob_builder = GlobSetBuilder::new();
+				config
+					.crate_ts_package(
+						PackageData::Config(root_package),
+						&out_dir,
+						None,
+						cli_vars,
+						PackageType::MonorepoRoot { pnpm: pnpm_config },
+					)
+					.await?;
 
-	glob_builder.add(Glob::new("index.ts").unwrap());
+				if install {
+					launch_command(
+						package_manager.to_string().as_str(),
+						&["install"],
+						&out_dir,
+						Some("Could not install dependencies"),
+					)?;
+				}
+			}
+			Self::Package {
+				preset,
+				package_config,
+				update_tsconfig,
+				dir,
+				vitest,
+				install,
+			} => {
+				let mut package = if let Some(preset) = preset {
+					typescript
+						.package_presets
+						.get(&preset)
+						.ok_or(AppError::PresetNotFound {
+							kind: PresetKind::TsPackage,
+							name: preset.clone(),
+						})?
+						.clone()
+				} else {
+					PackageConfig::default()
+				};
 
-	if let Some(ref patterns) = exclude {
-		for pattern in patterns {
-			glob_builder.add(
-				Glob::new(pattern)
-					.with_context(|| format!("Could not parse glob pattern `{pattern}`"))?,
-			);
+				if let Some(overrides) = package_config {
+					package.merge(overrides);
+				}
+
+				if let Some(vitest) = vitest {
+					package.vitest = Some(VitestConfigKind::Id(vitest))
+				}
+
+				let package_dir = dir.unwrap_or_else(|| {
+					package
+						.name
+						.as_deref()
+						.unwrap_or("new_package")
+						.into()
+				});
+
+				if install {
+					let package_manager = *typescript.package_manager.get_or_insert_default();
+
+					launch_command(
+						package_manager.to_string().as_str(),
+						&["install"],
+						&package_dir,
+						Some("Could not install dependencies"),
+					)?;
+				}
+
+				config
+					.crate_ts_package(
+						PackageData::Config(package),
+						&package_dir,
+						update_tsconfig,
+						cli_vars,
+						PackageType::Normal,
+					)
+					.await?;
+			}
 		}
+
+		Ok(())
 	}
-
-	let globset = glob_builder
-		.build()
-		.context("Could not build globset")?;
-
-	let mut paths: BTreeSet<PathBuf> = BTreeSet::new();
-
-	for entry in WalkDir::new(&dir)
-		.into_iter()
-		.filter_map(|e| e.ok())
-		.filter(|e| e.file_type().is_file())
-	{
-		let mut path = entry
-			.path()
-			.strip_prefix(&dir)
-			.unwrap()
-			.to_path_buf();
-
-		let extension = if let Some(ext) = path.extension() {
-			ext.to_string_lossy().to_string()
-		} else {
-			continue;
-		};
-
-		if !JS_EXTENSIONS.contains(&extension.as_str()) || globset.is_match(&path) {
-			continue;
-		}
-
-		if js_ext && (extension == "js" || extension == "ts") {
-			path = path.with_extension("js");
-		} else if !keep_extensions.contains(&extension) {
-			path = path.with_extension("");
-		}
-
-		paths.insert(path);
-	}
-
-	let out_file = output.unwrap_or_else(|| dir.join("index.ts"));
-
-	create_parent_dirs(&out_file)?;
-
-	let mut file = open_file_if_overwriting(overwrite, &out_file)?;
-
-	let template = read_to_string(concat!(
-		env!("CARGO_MANIFEST_DIR"),
-		"/templates/ts/barrel.ts.j2"
-	))
-	.context("Failed to read template for barrel file")?;
-
-	let mut context = tera::Context::new();
-
-	context.insert("files", &paths);
-
-	let file_content =
-		Tera::one_off(&template, &context, false).context("Failed to create barrel file")?;
-
-	file.write_all(file_content.as_bytes())
-		.context("Failed to write barrel file")?;
-
-	Ok(())
 }
