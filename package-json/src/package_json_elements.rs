@@ -74,6 +74,7 @@ pub struct Bugs {
 	pub email: Option<String>,
 }
 
+#[cfg(feature = "presets")]
 /// The kinds of values used for representing an individual in a `package.json` file, which can be used to populate the `contributors` and `maintainers` fields.
 ///
 /// If a plain string is used, it will be interpreted as an id for a [`PersonData`] that is stored in the global config.

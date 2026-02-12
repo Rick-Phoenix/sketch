@@ -41,7 +41,7 @@ gh-workflow = { path = "../gh-workflow/", features = ["presets"] }
 rust-manifest = { path = "../rust-manifest/" }
 pre-commit-config = { path = "../pre-commit-config" }
 oxlint-config = { path = "../oxlint-config/" }
-package-json = { path = "../package-json/" }
+package-json = { path = "../package-json/", features = ["pnpm", "presets"] }
 pnpm-config = { path = "../pnpm-config/" }
 ts-config = { path = "../ts-config/" }
 toml_edit = { workspace = true }

@@ -168,7 +168,6 @@ pub struct Workflow {
 	#[serde(default)]
 	#[cfg(feature = "presets")]
 	pub jobs: IndexMap<String, JobPresetRef>,
-
 	#[cfg(not(feature = "presets"))]
 	pub jobs: IndexMap<String, Job>,
 }
@@ -345,7 +344,6 @@ pub struct NormalJob {
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
 	#[cfg(feature = "presets")]
 	pub steps: Vec<GHStepData>,
-
 	#[cfg(not(feature = "presets"))]
 	pub steps: Vec<Step>,
 }

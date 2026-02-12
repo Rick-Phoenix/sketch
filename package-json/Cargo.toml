@@ -21,5 +21,6 @@ workspace = true
 
 [features]
 default = []
+presets = []
 schemars = ["dep:schemars", "pnpm-config?/schemars"]
 pnpm = ["dep:pnpm-config"]

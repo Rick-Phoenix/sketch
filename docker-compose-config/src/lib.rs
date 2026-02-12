@@ -193,7 +193,6 @@ pub struct ComposeFile {
 	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
 	#[cfg(feature = "presets")]
 	pub services: BTreeMap<String, ServicePresetRef>,
-
 	#[cfg(not(feature = "presets"))]
 	pub services: BTreeMap<String, Service>,
 
