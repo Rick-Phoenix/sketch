@@ -66,21 +66,76 @@ impl AsTomlValue for LtoSetting {
 }
 
 /// Verbosity of debug info in a [`Profile`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize_repr, Deserialize_repr)]
-#[cfg_attr(feature = "schemars", derive(JsonSchema_repr))]
-#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(try_from = "RawDebugSetting", into = "RawDebugSetting")]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[cfg_attr(feature = "schemars", schemars(with = "RawDebugSetting"))]
 pub enum DebugSetting {
-	/// 0 or false
-	None = 0,
-	/// 1 = line tables only
-	Lines = 1,
-	/// 2 or true
-	Full = 2,
+	None,               // 0, false, "none"
+	LineDirectivesOnly, // "line-directives-only"
+	LineTablesOnly,     // "line-tables-only"
+	Limited,            // 1, "limited"
+	Full,               // 2, true, "full"
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+enum RawDebugSetting {
+	Bool(bool),
+	Integer(u8),
+	String(String),
+}
+
+impl TryFrom<RawDebugSetting> for DebugSetting {
+	type Error = String;
+
+	fn try_from(value: RawDebugSetting) -> Result<Self, Self::Error> {
+		match value {
+			RawDebugSetting::Bool(false) | RawDebugSetting::Integer(0) => Ok(Self::None),
+			RawDebugSetting::Integer(1) => Ok(Self::Limited),
+			RawDebugSetting::Bool(true) | RawDebugSetting::Integer(2) => Ok(Self::Full),
+			RawDebugSetting::Integer(n) => {
+				Err(format!("Invalid debug level: {n}. Use 0, 1, or 2."))
+			}
+
+			RawDebugSetting::String(s) => match s.as_str() {
+				"none" | "false" | "0" => Ok(Self::None),
+
+				"line-directives-only" => Ok(Self::LineDirectivesOnly),
+				"line-tables-only" => Ok(Self::LineTablesOnly),
+
+				"limited" | "1" => Ok(Self::Limited),
+				"full" | "true" | "2" => Ok(Self::Full),
+				_ => Err(format!("Unknown debug setting: '{s}'")),
+			},
+		}
+	}
+}
+
+impl From<DebugSetting> for RawDebugSetting {
+	fn from(setting: DebugSetting) -> Self {
+		match setting {
+			DebugSetting::None => Self::Bool(false),
+			DebugSetting::Full => Self::Bool(true),
+
+			DebugSetting::Limited => Self::Integer(1),
+
+			DebugSetting::LineDirectivesOnly => Self::String("line-directives-only".to_string()),
+			DebugSetting::LineTablesOnly => Self::String("line-tables-only".to_string()),
+		}
+	}
 }
 
 impl AsTomlValue for DebugSetting {
 	fn as_toml_value(&self) -> Item {
-		i64::from(*self as u8).into()
+		let raw: RawDebugSetting = (*self).into();
+
+		match raw {
+			RawDebugSetting::Bool(bool) => bool.into(),
+			RawDebugSetting::Integer(int) => (i64::from(int)).into(),
+			RawDebugSetting::String(str) => str.into(),
+		}
 	}
 }
 

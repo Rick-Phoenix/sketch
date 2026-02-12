@@ -1,9 +1,8 @@
 use merge_it::*;
 #[cfg(feature = "schemars")]
-use schemars::{JsonSchema, JsonSchema_repr};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
 use std::path::PathBuf;
@@ -674,6 +673,7 @@ impl Merge for Dependency {
 	}
 }
 
+// serde helper
 #[allow(clippy::trivially_copy_pass_by_ref)]
 pub(crate) const fn is_false(boolean: &bool) -> bool {
 	!*boolean
@@ -781,13 +781,13 @@ impl AsTomlValue for DependencyDetail {
 	fn as_toml_value(&self) -> Item {
 		let mut table = InlineTable::new();
 
-		add_string!(self, table => version, package, registry, registry_index, path, git, branch, tag, rev);
-
-		add_string_list!(self, table => features);
+		add_string!(self, table => version, path, package, registry, registry_index, git, branch, tag, rev);
 
 		add_bool!(self, table => optional);
 
 		add_if_false!(self, table => default_features);
+
+		add_string_list!(self, table => features);
 
 		table.into()
 	}
@@ -842,18 +842,8 @@ impl<T: AsTomlValue> AsTomlValue for Inheritable<T> {
 			Self::Workspace { workspace } => {
 				InlineTable::from_iter([("workspace", *workspace)]).into()
 			}
-			Self::Value(set) => set.as_toml_value(),
+			Self::Value(value) => value.as_toml_value(),
 		}
-	}
-}
-
-pub trait AsTomlValue {
-	fn as_toml_value(&self) -> Item;
-}
-
-impl<T: Into<Item> + Clone> AsTomlValue for T {
-	fn as_toml_value(&self) -> Item {
-		self.clone().into()
 	}
 }
 
@@ -869,6 +859,16 @@ impl<T: Default + PartialEq> Inheritable<T> {
 			Self::Workspace { .. } => false,
 			Self::Value(v) => T::default() == *v,
 		}
+	}
+}
+
+pub trait AsTomlValue {
+	fn as_toml_value(&self) -> Item;
+}
+
+impl<T: Into<Item> + Clone> AsTomlValue for T {
+	fn as_toml_value(&self) -> Item {
+		self.clone().into()
 	}
 }
 
@@ -953,9 +953,7 @@ impl AsTomlValue for Publish {
 /// Needed in [`Workspace`], but implied by [`Edition`] in packages.
 #[derive(Debug, Default, PartialEq, Eq, Ord, PartialOrd, Copy, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(
-	expecting = "if there's a newer resolver, then this parser (cargo_toml crate) has to be updated"
-)]
+#[serde(expecting = "if there's a newer resolver, then this parser has to be updated")]
 #[repr(u8)]
 pub enum Resolver {
 	#[serde(rename = "1")]
@@ -983,9 +981,6 @@ impl AsTomlValue for Resolver {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, PartialOrd, Ord, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default, rename_all = "kebab-case")]
-/// Cargo uses the term "target" for both "target platform" and "build target" (the thing to build),
-/// which makes it ambigous.
-/// Here Cargo's bin/lib **target** is renamed to **product**.
 #[serde(deny_unknown_fields)]
 pub struct Product {
 	/// This field points at where the crate is located, relative to the `Cargo.toml`.
@@ -998,27 +993,26 @@ pub struct Product {
 	pub name: Option<String>,
 
 	/// A flag for enabling unit tests for this product. This is used by `cargo test`.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub test: Option<bool>,
 
 	/// A flag for enabling documentation tests for this product. This is only relevant
 	/// for libraries, it has no effect on other sections. This is used by
 	/// `cargo test`.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub doctest: Option<bool>,
 
 	/// A flag for enabling benchmarks for this product. This is used by `cargo bench`.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub bench: Option<bool>,
 
 	/// A flag for enabling documentation of this product. This is used by `cargo doc`.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub doc: Option<bool>,
 
 	/// If the product is meant to be a "macros 1.1" procedural macro, this field must
 	/// be set to true.
 	#[serde(
-		default,
 		alias = "proc_macro",
 		alias = "proc-macro",
 		skip_serializing_if = "crate::is_false"
@@ -1029,27 +1023,18 @@ pub struct Product {
 	/// If set to false, `cargo test` will omit the `--test` flag to rustc, which
 	/// stops it from generating a test harness. This is useful when the binary being
 	/// built manages the test runner itself.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub harness: Option<bool>,
 
-	/// Deprecated. Edition should be set only per package.
-	///
-	/// If set then a product can be configured to use a different edition than the
-	/// `[package]` is configured to use, perhaps only compiling a library with the
-	/// 2018 edition or only compiling one unit test with the 2015 edition. By default
-	/// all products are compiled with the edition specified in `[package]`.
-	#[serde(default, skip_serializing_if = "Option::is_none")]
-	pub edition: Option<Edition>,
-
 	/// The available options are "dylib", "rlib", "staticlib", "cdylib", and "proc-macro".
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub crate_type: BTreeSet<String>,
 
 	/// The `required-features` field specifies which features the product needs in order to be built.
 	/// If any of the required features are not selected, the product will be skipped.
 	/// This is only relevant for the `[[bin]]`, `[[bench]]`, `[[test]]`, and `[[example]]` sections,
 	/// it has no effect on `[lib]`.
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub required_features: BTreeSet<String>,
 }
 
@@ -1057,7 +1042,6 @@ impl AsTomlValue for Product {
 	fn as_toml_value(&self) -> Item {
 		let mut table = Table::new();
 
-		add_value!(self, table => edition);
 		add_string!(self, table => path, name);
 		add_bool!(self, table => proc_macro);
 		add_string_list!(self, table => crate_type, required_features);

@@ -11,7 +11,6 @@ use super::*;
 #[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct Package {
-	/// Careful: some names are uppercase, case-sensitive. `-` changes to `_` when used as a Rust identifier.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub name: Option<String>,
 
@@ -38,7 +37,7 @@ pub struct Package {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub workspace: Option<PathBuf>,
 
-	/// It doesn't link to anything
+	/// Name of the native library the package links with.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub links: Option<String>,
 
@@ -51,7 +50,7 @@ pub struct Package {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub homepage: Option<Inheritable<String>>,
 
-	/// Path to your custom docs. Unnecssary if you rely on docs.rs.
+	/// Path to your custom docs. Unnecessary if you rely on docs.rs.
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub documentation: Option<Inheritable<String>>,
 
