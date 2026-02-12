@@ -1,8 +1,12 @@
 use super::*;
 pub(crate) use ::package_json::*;
 
-impl Extensible for PackageJsonPreset {
-	fn get_extended(&self) -> &IndexSet<String> {
+impl ExtensiblePreset for PackageJsonPreset {
+	fn kind() -> PresetKind {
+		PresetKind::PackageJson
+	}
+
+	fn get_extended_ids(&self) -> &IndexSet<String> {
 		&self.extends_presets
 	}
 }
@@ -21,50 +25,54 @@ impl PackageJsonPreset {
 		let merged_preset = if self.extends_presets.is_empty() {
 			self
 		} else {
-			let mut processed_ids: IndexSet<String> = IndexSet::new();
-			merge_presets(
-				Preset::PackageJson,
-				current_id,
-				self,
-				store,
-				&mut processed_ids,
-			)?
+			self.merge_presets(current_id, store)?
 		};
 
 		let mut package_json = merged_preset.config;
 
-		package_json.contributors = package_json
-			.contributors
-			.into_iter()
-			.map(|person| {
-				if let Person::Id(ref id) = person
-					&& let Some(data) = get_person_data(id, people)
-				{
-					Person::Data(data)
-				} else {
-					person
-				}
-			})
-			.collect();
+		let mut contributors_to_fetch: Vec<String> = Vec::new();
 
-		package_json.maintainers = package_json
-			.maintainers
-			.into_iter()
-			.map(|person| {
-				if let Person::Id(ref id) = person
-					&& let Some(data) = get_person_data(id, people)
-				{
-					Person::Data(data)
-				} else {
-					person
-				}
-			})
-			.collect();
+		for person in &package_json.contributors {
+			if let Person::PresetId(id) = person {
+				contributors_to_fetch.push(id.clone());
+			}
+		}
+
+		for id in contributors_to_fetch {
+			let data = get_person_data(&id, people).with_context(|| {
+				format!("Failed to find the data for the contributor with the id `{id}`")
+			})?;
+
+			package_json
+				.contributors
+				.insert(Person::Data(data));
+		}
+
+		let mut maintainers_to_fetch: Vec<String> = Vec::new();
+
+		for person in &package_json.maintainers {
+			if let Person::PresetId(id) = person {
+				maintainers_to_fetch.push(id.clone());
+			}
+		}
+
+		for id in maintainers_to_fetch {
+			let data = get_person_data(&id, people).with_context(|| {
+				format!("Failed to find the data for the contributor with the id `{id}`")
+			})?;
+
+			package_json
+				.maintainers
+				.insert(Person::Data(data));
+		}
 
 		if let Some(author) = package_json.author.as_mut()
-			&& let Person::Id(id) = author
-			&& let Some(data) = get_person_data(id.as_str(), people)
+			&& let Person::PresetId(id) = author
 		{
+			let data = get_person_data(id, people).with_context(|| {
+				format!("Failed to find the data for the contributor with the id `{id}`")
+			})?;
+
 			*author = Person::Data(data);
 		};
 

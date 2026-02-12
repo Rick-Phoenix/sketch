@@ -11,30 +11,16 @@ pub struct TsConfigPreset {
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
-	pub tsconfig: TsConfig,
+	pub config: TsConfig,
 }
 
-impl Extensible for TsConfigPreset {
-	fn get_extended(&self) -> &IndexSet<String> {
-		&self.extends_presets
+impl ExtensiblePreset for TsConfigPreset {
+	fn kind() -> PresetKind {
+		PresetKind::TsConfig
 	}
-}
 
-impl TsConfigPreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, Self>,
-	) -> Result<TsConfig, GenError> {
-		if self.extends_presets.is_empty() {
-			return Ok(self.tsconfig);
-		}
-
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-		let merged_preset = merge_presets(Preset::TsConfig, id, self, store, &mut processed_ids)?;
-
-		Ok(merged_preset.tsconfig)
+	fn get_extended_ids(&self) -> &IndexSet<String> {
+		&self.extends_presets
 	}
 }
 

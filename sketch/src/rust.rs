@@ -1,7 +1,7 @@
 pub(crate) use rust_manifest::*;
 
 use crate::{
-	custom_templating::TemplatingPresetReference,
+	TemplatingPresetReference,
 	init_repo::gitignore::{GitIgnorePresetRef, GitignorePreset},
 	licenses::License,
 	*,
@@ -41,34 +41,6 @@ pub struct CratePreset {
 	pub with_templates: Vec<TemplatingPresetReference>,
 }
 
-pub fn format_array(arr: &mut Array) {
-	const MAX_INLINE_ITEMS: usize = 4;
-	const MAX_INLINE_CHARS: usize = 50;
-
-	let count = arr.len();
-
-	let total_chars: usize = arr
-		.iter()
-		.map(|item| item.to_string().len())
-		.sum();
-
-	let has_tables = arr.iter().any(|item| item.is_inline_table());
-
-	let should_expand = count > MAX_INLINE_ITEMS || total_chars > MAX_INLINE_CHARS || has_tables;
-
-	if should_expand {
-		for item in arr.iter_mut() {
-			item.decor_mut().set_prefix("\n\t");
-		}
-
-		arr.set_trailing_comma(true);
-
-		arr.set_trailing("\n");
-	} else {
-		arr.fmt();
-	}
-}
-
 impl CratePreset {
 	pub fn generate(
 		self,
@@ -80,7 +52,7 @@ impl CratePreset {
 
 		let mut manifest = match self.manifest {
 			CargoTomlPresetRef::Config(CargoTomlPreset { config, .. }) => config,
-			CargoTomlPresetRef::Id(id) => {
+			CargoTomlPresetRef::PresetId(id) => {
 				return Err(anyhow!("Unresolved manifest preset with id `{id}`").into());
 			}
 		};
@@ -240,15 +212,24 @@ impl CratePreset {
 		manifests_store: &IndexMap<String, CargoTomlPreset>,
 		gitignore_store: &IndexMap<String, GitignorePreset>,
 	) -> Result<Self, GenError> {
+		if !self.manifest.is_preset_id()
+			&& self
+				.gitignore
+				.as_ref()
+				.is_none_or(|g| !g.is_preset_id())
+		{
+			return Ok(self);
+		}
+
 		let mut manifest_id: Option<String> = None;
 
-		if let CargoTomlPresetRef::Id(id) = self.manifest {
+		if let CargoTomlPresetRef::PresetId(id) = self.manifest {
 			manifest_id = Some(id.clone());
 
 			let data = manifests_store
 				.get(&id)
 				.ok_or_else(|| GenError::PresetNotFound {
-					kind: Preset::CargoToml,
+					kind: PresetKind::CargoToml,
 					name: id,
 				})?
 				.clone();
@@ -257,7 +238,7 @@ impl CratePreset {
 		}
 
 		if let CargoTomlPresetRef::Config(data) = self.manifest {
-			self.manifest = CargoTomlPresetRef::Config(data.process_data(
+			self.manifest = CargoTomlPresetRef::Config(data.merge_presets(
 				manifest_id.as_deref().unwrap_or("__inlined"),
 				manifests_store,
 			)?);
@@ -265,13 +246,13 @@ impl CratePreset {
 
 		let mut gitignore_id: Option<String> = None;
 
-		if let Some(GitIgnorePresetRef::Id(id)) = self.gitignore {
+		if let Some(GitIgnorePresetRef::PresetId(id)) = self.gitignore {
 			gitignore_id = Some(id.clone());
 
 			let data = gitignore_store
 				.get(&id)
 				.ok_or_else(|| GenError::PresetNotFound {
-					kind: Preset::Gitignore,
+					kind: PresetKind::Gitignore,
 					name: id,
 				})?
 				.clone();
@@ -280,7 +261,7 @@ impl CratePreset {
 		}
 
 		if let Some(GitIgnorePresetRef::Config(data)) = self.gitignore {
-			let resolved = data.process_data(
+			let resolved = data.merge_presets(
 				gitignore_id.as_deref().unwrap_or("__inlined"),
 				gitignore_store,
 			)?;
@@ -296,8 +277,18 @@ impl CratePreset {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum CargoTomlPresetRef {
-	Id(String),
+	PresetId(String),
 	Config(CargoTomlPreset),
+}
+
+impl CargoTomlPresetRef {
+	/// Returns `true` if the cargo toml preset ref is [`PresetId`].
+	///
+	/// [`PresetId`]: CargoTomlPresetRef::PresetId
+	#[must_use]
+	pub const fn is_preset_id(&self) -> bool {
+		matches!(self, Self::PresetId(..))
+	}
 }
 
 impl Default for CargoTomlPresetRef {
@@ -318,22 +309,12 @@ pub struct CargoTomlPreset {
 	pub config: Manifest,
 }
 
-impl Extensible for CargoTomlPreset {
-	fn get_extended(&self) -> &IndexSet<String> {
-		&self.extends_presets
+impl ExtensiblePreset for CargoTomlPreset {
+	fn kind() -> PresetKind {
+		PresetKind::CargoToml
 	}
-}
 
-impl CargoTomlPreset {
-	pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
-		if self.extends_presets.is_empty() {
-			return Ok(self);
-		}
-
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-		let merged_preset = merge_presets(Preset::CargoToml, id, self, store, &mut processed_ids)?;
-
-		Ok(merged_preset)
+	fn get_extended_ids(&self) -> &IndexSet<String> {
+		&self.extends_presets
 	}
 }

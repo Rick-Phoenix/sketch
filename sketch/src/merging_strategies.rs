@@ -1,13 +1,68 @@
 use crate::*;
 
-pub trait Extensible {
-	fn get_extended(&self) -> &IndexSet<String>;
+pub trait ExtensiblePreset: Merge + Sized + Clone {
+	fn kind() -> PresetKind;
+
+	fn get_extended_ids(&self) -> &IndexSet<String>;
+
+	fn merge_presets(
+		self,
+		current_id: &str,
+		store: &IndexMap<String, Self>,
+	) -> Result<Self, GenError> {
+		self.merge_presets_recursive(current_id, store, &mut IndexSet::new())
+	}
+
+	fn merge_presets_recursive(
+		self,
+		current_id: &str,
+		store: &IndexMap<String, Self>,
+		processed_ids: &mut IndexSet<String>,
+	) -> Result<Self, GenError> {
+		let presets_to_extend = self.get_extended_ids();
+
+		if presets_to_extend.is_empty() {
+			return Ok(self);
+		}
+
+		check_for_circular_dependencies(current_id, processed_ids, Self::kind())?;
+
+		let mut base_preset: Option<Self> = None;
+
+		for id in presets_to_extend {
+			let extend_target = store
+				.get(id)
+				.ok_or(GenError::PresetNotFound {
+					kind: Self::kind(),
+					name: id.clone(),
+				})?
+				.clone();
+
+			let complete_target =
+				extend_target.merge_presets_recursive(id, store, processed_ids)?;
+
+			if let Some(base) = base_preset.as_mut() {
+				base.merge(complete_target);
+			} else {
+				base_preset = Some(complete_target)
+			}
+		}
+
+		// Can never be None due to the early exit
+		let mut aggregated = base_preset.unwrap();
+
+		// We merge `self` last because this is an extension more than a merge,
+		// the last element is the most relevant
+		aggregated.merge(self);
+
+		Ok(aggregated)
+	}
 }
 
-fn process_preset_id(
+fn check_for_circular_dependencies(
 	id: &str,
 	processed_ids: &mut IndexSet<String>,
-	preset_kind: Preset,
+	preset_kind: PresetKind,
 ) -> Result<(), GenError> {
 	let was_absent = processed_ids.insert(id.to_string());
 
@@ -21,47 +76,4 @@ fn process_preset_id(
 	}
 
 	Ok(())
-}
-
-pub(crate) fn merge_presets<T: Merge + Extensible + Clone>(
-	preset_kind: Preset,
-	current_id: &str,
-	preset: T,
-	store: &IndexMap<String, T>,
-	processed_ids: &mut IndexSet<String>,
-) -> Result<T, GenError> {
-	process_preset_id(current_id, processed_ids, preset_kind)?;
-
-	let presets_to_extend = preset.get_extended();
-
-	if presets_to_extend.is_empty() {
-		return Ok(preset);
-	}
-
-	let mut base: Option<T> = None;
-
-	for id in presets_to_extend {
-		let extend_target = store
-			.get(id)
-			.ok_or(GenError::PresetNotFound {
-				kind: preset_kind,
-				name: id.clone(),
-			})?
-			.clone();
-
-		let complete_target = merge_presets(preset_kind, id, extend_target, store, processed_ids)?;
-
-		if let Some(aggregated) = base.as_mut() {
-			aggregated.merge(complete_target);
-		} else {
-			base = Some(complete_target)
-		}
-	}
-
-	// Can never be None due to the early exit
-	let mut aggregated = base.unwrap();
-
-	aggregated.merge(preset);
-
-	Ok(aggregated)
 }

@@ -2,7 +2,7 @@ use std::{io, path::PathBuf};
 
 use thiserror::Error;
 
-use crate::Preset;
+use crate::PresetKind;
 
 /// The kinds of errors that can occur during operations.
 #[derive(Debug, Error)]
@@ -22,7 +22,7 @@ pub enum GenError {
 
 	// Invalid values
 	#[error("{kind:?} preset `{name}` not found")]
-	PresetNotFound { kind: Preset, name: String },
+	PresetNotFound { kind: PresetKind, name: String },
 
 	#[error("Failed to parse the template `{template}`: {source}")]
 	TemplateParsing {

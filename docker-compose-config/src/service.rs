@@ -13,7 +13,7 @@ mod presets {
 	#[serde(untagged)]
 	pub enum ServicePresetRef {
 		/// The id of a service preset.
-		Id(String),
+		PresetId(String),
 
 		/// The defitinion for a Docker service.
 		Config(Box<DockerServicePreset>),
@@ -22,8 +22,15 @@ mod presets {
 	impl ServicePresetRef {
 		pub fn as_config(self) -> Option<Service> {
 			match self {
-				Self::Id(_) => None,
+				Self::PresetId(_) => None,
 				Self::Config(docker_service_preset) => Some(docker_service_preset.config),
+			}
+		}
+
+		pub fn requires_processing(&self) -> bool {
+			match self {
+				Self::PresetId(_) => true,
+				Self::Config(data) => !data.extends_presets.is_empty(),
 			}
 		}
 	}

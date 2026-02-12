@@ -39,7 +39,7 @@ pub(crate) async fn handle_ts_commands(
 					.package_presets
 					.get(&id)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::TsPackage,
+						kind: PresetKind::TsPackage,
 						name: id,
 					})?
 					.clone()
@@ -63,11 +63,12 @@ pub(crate) async fn handle_ts_commands(
 						.pnpm_presets
 						.get(&id)
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::PnpmWorkspace,
+							kind: PresetKind::PnpmWorkspace,
 							name: id.clone(),
 						})?
 						.clone()
-						.process_data(id.as_str(), &typescript.pnpm_presets)?,
+						.merge_presets(id.as_str(), &typescript.pnpm_presets)?
+						.config,
 				)
 			} else if matches!(package_manager, PackageManager::Pnpm) {
 				Some(PnpmWorkspace::default())
@@ -107,7 +108,7 @@ pub(crate) async fn handle_ts_commands(
 					.package_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::TsPackage,
+						kind: PresetKind::TsPackage,
 						name: preset.clone(),
 					})?
 					.clone()

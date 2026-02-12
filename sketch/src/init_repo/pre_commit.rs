@@ -23,27 +23,13 @@ impl Default for PreCommitPreset {
 	}
 }
 
-impl Extensible for PreCommitPreset {
-	fn get_extended(&self) -> &IndexSet<String> {
-		&self.extends_presets
+impl ExtensiblePreset for PreCommitPreset {
+	fn kind() -> PresetKind {
+		PresetKind::PreCommit
 	}
-}
 
-impl PreCommitPreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, Self>,
-	) -> Result<PreCommitConfig, GenError> {
-		if self.extends_presets.is_empty() {
-			return Ok(self.config);
-		}
-
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-		let merged_preset = merge_presets(Preset::PreCommit, id, self, store, &mut processed_ids)?;
-
-		Ok(merged_preset.config)
+	fn get_extended_ids(&self) -> &IndexSet<String> {
+		&self.extends_presets
 	}
 }
 

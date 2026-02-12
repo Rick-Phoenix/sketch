@@ -81,14 +81,14 @@ impl Config {
 
 		let mut gitignore_id: Option<String> = None;
 
-		if let Some(GitIgnorePresetRef::Id(id)) = preset.gitignore {
+		if let Some(GitIgnorePresetRef::PresetId(id)) = preset.gitignore {
 			gitignore_id = Some(id.clone());
 
 			let data = self
 				.gitignore_presets
 				.get(&id)
 				.ok_or_else(|| GenError::PresetNotFound {
-					kind: Preset::Gitignore,
+					kind: PresetKind::Gitignore,
 					name: id,
 				})?
 				.clone();
@@ -97,7 +97,7 @@ impl Config {
 		}
 
 		if let Some(GitIgnorePresetRef::Config(data)) = preset.gitignore {
-			let resolved = data.process_data(
+			let resolved = data.merge_presets(
 				gitignore_id.as_deref().unwrap_or("__inlined"),
 				&self.gitignore_presets,
 			)?;
@@ -111,7 +111,7 @@ impl Config {
 				content: GitIgnore::String(DEFAULT_GITIGNORE.trim().to_string()),
 			},
 			Some(preset_ref) => match preset_ref {
-				GitIgnorePresetRef::Id(id) => {
+				GitIgnorePresetRef::PresetId(id) => {
 					return Err(anyhow!("Unresolved gitignore preset with id `{id}`").into());
 				}
 				GitIgnorePresetRef::Config(preset) => preset,
@@ -140,7 +140,7 @@ impl Config {
 					self.pre_commit_presets
 						.get(id.as_str())
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::PreCommit,
+							kind: PresetKind::PreCommit,
 							name: id.clone(),
 						})?
 						.clone(),
@@ -151,8 +151,9 @@ impl Config {
 				}
 			};
 
-			let pre_commit_config =
-				pre_commit_preset.process_data(&pre_commit_id, &self.pre_commit_presets)?;
+			let pre_commit_config = pre_commit_preset
+				.merge_presets(&pre_commit_id, &self.pre_commit_presets)?
+				.config;
 
 			serialize_yaml(
 				&pre_commit_config,
@@ -193,7 +194,7 @@ impl Config {
 							.workflow_presets
 							.get(&id)
 							.ok_or(GenError::PresetNotFound {
-								kind: Preset::GithubWorkflow,
+								kind: PresetKind::GithubWorkflow,
 								name: id.clone(),
 							})?
 							.clone()

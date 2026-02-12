@@ -116,7 +116,7 @@ impl Config {
 				.package_presets
 				.get(&id)
 				.ok_or(GenError::PresetNotFound {
-					kind: Preset::TsPackage,
+					kind: PresetKind::TsPackage,
 					name: id.clone(),
 				})?
 				.clone(),
@@ -154,7 +154,7 @@ impl Config {
 					package_json_presets
 						.get(&id)
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::PackageJson,
+							kind: PresetKind::PackageJson,
 							name: id,
 						})?
 						.clone(),
@@ -280,7 +280,7 @@ impl Config {
 						let tsconfig = tsconfig_presets
 							.get(&id)
 							.ok_or(GenError::PresetNotFound {
-								kind: Preset::TsConfig,
+								kind: PresetKind::TsConfig,
 								name: id.clone(),
 							})?
 							.clone();
@@ -292,7 +292,9 @@ impl Config {
 					}
 				};
 
-				let tsconfig_data = tsconfig.process_data(id.as_str(), tsconfig_presets)?;
+				let tsconfig_data = tsconfig
+					.merge_presets(id.as_str(), tsconfig_presets)?
+					.config;
 
 				tsconfig_files.push((
 					directive
@@ -354,7 +356,7 @@ impl Config {
 					.vitest_presets
 					.get(&id)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::Vitest,
+						kind: PresetKind::Vitest,
 						name: id.clone(),
 					})?
 					.clone(),
@@ -415,7 +417,7 @@ impl Config {
 						.oxlint_presets
 						.get(id.as_str())
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::Oxlint,
+							kind: PresetKind::Oxlint,
 							name: id.clone(),
 						})?
 						.clone(),
@@ -426,8 +428,9 @@ impl Config {
 				),
 			};
 
-			let merged_config =
-				oxlint_config.process_data(id.as_str(), &typescript.oxlint_presets)?;
+			let merged_config = oxlint_config
+				.merge_presets(id.as_str(), &typescript.oxlint_presets)?
+				.config;
 
 			serialize_json(&merged_config, &pkg_root.join(".oxlintrc.json"), overwrite)?;
 		}

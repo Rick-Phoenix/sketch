@@ -83,8 +83,19 @@ pub struct Bugs {
 #[serde(untagged)]
 #[derive(Clone)]
 pub enum Person {
-	Id(String),
+	PresetId(String),
 	Data(PersonData),
+}
+
+#[cfg(feature = "presets")]
+impl Person {
+	/// Returns `true` if the person is [`PresetId`].
+	///
+	/// [`PresetId`]: Person::PresetId
+	#[must_use]
+	pub const fn is_preset_id(&self) -> bool {
+		matches!(self, Self::PresetId(..))
+	}
 }
 
 /// A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.

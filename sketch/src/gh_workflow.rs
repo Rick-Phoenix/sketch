@@ -1,5 +1,5 @@
 use crate::{cli::parsers::parse_key_value_pairs, *};
-pub(crate) use ::gh_workflow::{GHStepData, Job, JobPreset, JobPresetRef, Step, Workflow};
+pub(crate) use ::gh_workflow::{Job, JobPreset, JobPresetRef, Step, StepPresetRef, Workflow};
 
 impl WorkflowReference {
 	pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
@@ -89,8 +89,12 @@ pub struct GithubWorkflowPreset {
 	pub config: Workflow,
 }
 
-impl Extensible for GithubWorkflowPreset {
-	fn get_extended(&self) -> &IndexSet<String> {
+impl ExtensiblePreset for GithubWorkflowPreset {
+	fn kind() -> PresetKind {
+		PresetKind::GithubWorkflow
+	}
+
+	fn get_extended_ids(&self) -> &IndexSet<String> {
 		&self.extends_presets
 	}
 }
@@ -101,65 +105,66 @@ impl GithubWorkflowPreset {
 		id: &str,
 		github_config: &GithubConfig,
 	) -> Result<Workflow, GenError> {
-		if self.extends_presets.is_empty() {
+		if self.extends_presets.is_empty()
+			&& !self
+				.config
+				.jobs
+				.values()
+				.any(|j| j.requires_processing())
+		{
 			return Ok(self.config);
 		}
 
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
+		let mut merged_preset = self.merge_presets(id, &github_config.workflow_presets)?;
 
-		let merged_preset = merge_presets(
-			Preset::GithubWorkflow,
-			id,
-			self,
-			&github_config.workflow_presets,
-			&mut processed_ids,
-		)?;
-
-		let mut config = merged_preset.config;
-
-		for (_, job) in config.jobs.iter_mut() {
+		for job in merged_preset.config.jobs.values_mut() {
 			match job {
-				JobPresetRef::Preset(id) => {
-					let data = github_config
+				JobPresetRef::PresetId(id) => {
+					let mut data = github_config
 						.workflow_job_presets
 						.get(id)
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::GithubWorkflowJob,
+							kind: PresetKind::GithubWorkflowJob,
 							name: id.clone(),
 						})?
 						.clone();
 
-					*job = JobPresetRef::Data(
-						process_gh_job_preset(
+					if data.requires_processing() {
+						data = process_gh_job_preset(
 							data,
 							id,
 							&github_config.workflow_job_presets,
 							&github_config.steps_presets,
-						)?
-						.into(),
-					);
+						)?;
+					}
+
+					*job = JobPresetRef::Data(data.into());
 				}
 				JobPresetRef::Data(data) => {
-					let data = mem::take(data);
-					*job = JobPresetRef::Data(
-						process_gh_job_preset(
-							*data,
+					if data.requires_processing() {
+						let owned_data = mem::take(data);
+						*data = process_gh_job_preset(
+							*owned_data,
 							"__inlined",
 							&github_config.workflow_job_presets,
 							&github_config.steps_presets,
 						)?
-						.into(),
-					);
+						.into();
+					}
 				}
 			};
 		}
 
-		Ok(config)
+		Ok(merged_preset.config)
 	}
 }
 
-impl Extensible for JobPreset {
-	fn get_extended(&self) -> &IndexSet<String> {
+impl ExtensiblePreset for JobPreset {
+	fn kind() -> PresetKind {
+		PresetKind::GithubWorkflowJob
+	}
+
+	fn get_extended_ids(&self) -> &IndexSet<String> {
 		&self.extends_presets
 	}
 }
@@ -170,28 +175,20 @@ pub fn process_gh_job_preset(
 	store: &IndexMap<String, JobPreset>,
 	steps_store: &IndexMap<String, Step>,
 ) -> Result<JobPreset, GenError> {
-	let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-	let mut merged_preset = merge_presets(
-		Preset::GithubWorkflowJob,
-		id,
-		preset,
-		store,
-		&mut processed_ids,
-	)?;
+	let mut merged_preset = preset.merge_presets(id, store)?;
 
 	if let Job::Normal(job) = &mut merged_preset.job {
 		for step in job.steps.iter_mut() {
-			if let GHStepData::Preset(id) = step {
+			if let StepPresetRef::PresetId(id) = step {
 				let data = steps_store
 					.get(id)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::GithubWorkflowStep,
+						kind: PresetKind::GithubWorkflowStep,
 						name: id.clone(),
 					})?
 					.clone();
 
-				*step = GHStepData::Config(Box::new(data));
+				*step = StepPresetRef::Config(Box::new(data));
 			}
 		}
 	}

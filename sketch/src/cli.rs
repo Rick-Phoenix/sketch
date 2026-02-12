@@ -61,11 +61,11 @@ impl Cli {
 							.manifest_presets
 							.get(&preset)
 							.ok_or_else(|| GenError::PresetNotFound {
-								kind: Preset::RustCrate,
+								kind: PresetKind::RustCrate,
 								name: preset.clone(),
 							})?
 							.clone()
-							.process_data(&preset, &config.rust_presets.manifest_presets)?
+							.merge_presets(&preset, &config.rust_presets.manifest_presets)?
 							.config;
 
 						let output = output.unwrap_or_else(|| "Cargo.toml".into());
@@ -89,7 +89,7 @@ impl Cli {
 								.crate_presets
 								.get(&preset_id)
 								.ok_or_else(|| GenError::PresetNotFound {
-									kind: Preset::RustCrate,
+									kind: PresetKind::RustCrate,
 									name: preset_id,
 								})?
 								.clone()
@@ -102,7 +102,7 @@ impl Cli {
 						}
 
 						if let Some(manifest_id) = manifest {
-							preset.manifest = CargoTomlPresetRef::Id(manifest_id);
+							preset.manifest = CargoTomlPresetRef::PresetId(manifest_id);
 						}
 
 						let crate_data = preset.process_data(
@@ -125,11 +125,11 @@ impl Cli {
 					.gitignore_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::Gitignore,
+						kind: PresetKind::Gitignore,
 						name: preset.clone(),
 					})?
 					.clone()
-					.process_data(&preset, &config.gitignore_presets)?;
+					.merge_presets(&preset, &config.gitignore_presets)?;
 
 				write_file(
 					&output.unwrap_or_else(|| PathBuf::from(".gitignore")),
@@ -143,7 +143,7 @@ impl Cli {
 					.workflow_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::GithubWorkflow,
+						kind: PresetKind::GithubWorkflow,
 						name: preset.clone(),
 					})?
 					.clone()
@@ -165,11 +165,12 @@ impl Cli {
 					.pnpm_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::PnpmWorkspace,
+						kind: PresetKind::PnpmWorkspace,
 						name: preset.clone(),
 					})?
 					.clone()
-					.process_data(preset.as_str(), &typescript.pnpm_presets)?;
+					.merge_presets(preset.as_str(), &typescript.pnpm_presets)?
+					.config;
 
 				let output = output.unwrap_or_else(|| "pnpm-workspace.yaml".into());
 
@@ -184,11 +185,12 @@ impl Cli {
 					.ts_config_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::TsConfig,
+						kind: PresetKind::TsConfig,
 						name: preset.clone(),
 					})?
 					.clone()
-					.process_data(preset.as_str(), &typescript.ts_config_presets)?;
+					.merge_presets(preset.as_str(), &typescript.ts_config_presets)?
+					.config;
 
 				let output = output.unwrap_or_else(|| "tsconfig.json".into());
 
@@ -203,11 +205,12 @@ impl Cli {
 					.oxlint_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::Oxlint,
+						kind: PresetKind::Oxlint,
 						name: preset.clone(),
 					})?
 					.clone()
-					.process_data(preset.as_str(), &typescript.oxlint_presets)?;
+					.merge_presets(preset.as_str(), &typescript.oxlint_presets)?
+					.config;
 
 				let output = output.unwrap_or_else(|| ".oxlintrc.json".into());
 				create_parent_dirs(&output)?;
@@ -221,7 +224,7 @@ impl Cli {
 					.package_json_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::PackageJson,
+						kind: PresetKind::PackageJson,
 						name: preset.clone(),
 					})?
 					.clone()
@@ -248,7 +251,7 @@ impl Cli {
 				let mut file_preset = compose_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::DockerCompose,
+						kind: PresetKind::DockerCompose,
 						name: preset.clone(),
 					})?
 					.clone();
@@ -261,7 +264,7 @@ impl Cli {
 					file_preset
 						.config
 						.services
-						.insert(service_name, ServicePresetRef::Id(service.preset_id));
+						.insert(service_name, ServicePresetRef::PresetId(service.preset_id));
 				}
 
 				let file_data = file_preset.process_data(
@@ -281,11 +284,12 @@ impl Cli {
 					.pre_commit_presets
 					.get(&preset)
 					.ok_or(GenError::PresetNotFound {
-						kind: Preset::PreCommit,
+						kind: PresetKind::PreCommit,
 						name: preset.clone(),
 					})?
 					.clone()
-					.process_data(preset.as_str(), &config.pre_commit_presets)?;
+					.merge_presets(preset.as_str(), &config.pre_commit_presets)?
+					.config;
 
 				let output = output.unwrap_or_else(|| ".pre-commit-config.yaml".into());
 
@@ -304,7 +308,7 @@ impl Cli {
 						.git_presets
 						.get(&id)
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::Repo,
+							kind: PresetKind::Repo,
 							name: id.clone(),
 						})?
 						.clone()

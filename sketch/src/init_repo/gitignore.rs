@@ -54,23 +54,13 @@ pub struct GitignorePreset {
 	pub content: GitIgnore,
 }
 
-impl Extensible for GitignorePreset {
-	fn get_extended(&self) -> &IndexSet<String> {
-		&self.extends_presets
+impl ExtensiblePreset for GitignorePreset {
+	fn kind() -> PresetKind {
+		PresetKind::Gitignore
 	}
-}
 
-impl GitignorePreset {
-	pub fn process_data(self, id: &str, store: &IndexMap<String, Self>) -> Result<Self, GenError> {
-		if self.extends_presets.is_empty() {
-			return Ok(self);
-		}
-
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-		let merged_preset = merge_presets(Preset::Gitignore, id, self, store, &mut processed_ids)?;
-
-		Ok(merged_preset)
+	fn get_extended_ids(&self) -> &IndexSet<String> {
+		&self.extends_presets
 	}
 }
 
@@ -79,15 +69,25 @@ impl GitignorePreset {
 #[serde(untagged)]
 /// Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)
 pub enum GitIgnorePresetRef {
-	Id(String),
+	PresetId(String),
 	Config(GitignorePreset),
+}
+
+impl GitIgnorePresetRef {
+	/// Returns `true` if the git ignore preset ref is [`PresetId`].
+	///
+	/// [`PresetId`]: GitIgnorePresetRef::PresetId
+	#[must_use]
+	pub const fn is_preset_id(&self) -> bool {
+		matches!(self, Self::PresetId(..))
+	}
 }
 
 impl std::str::FromStr for GitIgnorePresetRef {
 	type Err = std::convert::Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(Self::Id(s.to_string()))
+		Ok(Self::PresetId(s.to_string()))
 	}
 }
 

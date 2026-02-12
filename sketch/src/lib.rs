@@ -68,7 +68,7 @@ pub(crate) use templating::*;
 
 /// The kinds of presets supported by `sketch`.
 #[derive(Debug, Clone, Copy)]
-pub enum Preset {
+pub enum PresetKind {
 	PackageJson,
 	TsPackage,
 	TsConfig,

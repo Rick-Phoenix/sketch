@@ -61,20 +61,28 @@ mod presets {
 	#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 	#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 	#[serde(untagged)]
-	pub enum GHStepData {
+	pub enum StepPresetRef {
 		/// A preset ID
 		#[serde(skip_serializing)]
-		Preset(String),
+		PresetId(String),
 		Config(Box<Step>),
 	}
 
-	impl GHStepData {
+	impl StepPresetRef {
 		pub fn as_config(self) -> Option<Step> {
 			if let Self::Config(data) = self {
 				Some(*data)
 			} else {
 				None
 			}
+		}
+
+		/// Returns `true` if the step preset ref is [`PresetId`].
+		///
+		/// [`PresetId`]: StepPresetRef::PresetId
+		#[must_use]
+		pub const fn is_preset_id(&self) -> bool {
+			matches!(self, Self::PresetId(..))
 		}
 	}
 
@@ -88,10 +96,19 @@ mod presets {
 	#[serde(untagged)]
 	pub enum JobPresetRef {
 		/// The preset ID for this job
-		Preset(String),
+		PresetId(String),
 
 		/// The definition for this job
 		Data(Box<JobPreset>),
+	}
+
+	impl JobPresetRef {
+		pub fn requires_processing(&self) -> bool {
+			match self {
+				Self::PresetId(_) => true,
+				Self::Data(data) => data.requires_processing(),
+			}
+		}
 	}
 
 	/// A preset for a gihub workflow job.
@@ -104,6 +121,16 @@ mod presets {
 
 		#[serde(flatten)]
 		pub job: Job,
+	}
+}
+
+impl JobPreset {
+	pub fn requires_processing(&self) -> bool {
+		!self.extends_presets.is_empty()
+			|| self
+				.job
+				.as_normal()
+				.is_some_and(|j| j.steps.iter().any(|s| s.is_preset_id()))
 	}
 }
 
@@ -185,6 +212,16 @@ pub enum Job {
 
 	/// A reusable job, imported from a file or repo.
 	Reusable(ReusableWorkflowCallJob),
+}
+
+impl Job {
+	pub fn as_normal(&self) -> Option<&NormalJob> {
+		if let Self::Normal(v) = self {
+			Some(v)
+		} else {
+			None
+		}
+	}
 }
 
 impl Default for Job {
@@ -343,7 +380,7 @@ pub struct NormalJob {
 	/// See more: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobsjob_idsteps
 	#[serde(default, skip_serializing_if = "Vec::is_empty")]
 	#[cfg(feature = "presets")]
-	pub steps: Vec<GHStepData>,
+	pub steps: Vec<StepPresetRef>,
 	#[cfg(not(feature = "presets"))]
 	pub steps: Vec<Step>,
 }

@@ -26,8 +26,12 @@ pub struct ComposePreset {
 	pub config: ComposeFile,
 }
 
-impl Extensible for ComposePreset {
-	fn get_extended(&self) -> &IndexSet<String> {
+impl ExtensiblePreset for ComposePreset {
+	fn kind() -> PresetKind {
+		PresetKind::DockerCompose
+	}
+
+	fn get_extended_ids(&self) -> &IndexSet<String> {
 		&self.extends_presets
 	}
 }
@@ -39,46 +43,52 @@ impl ComposePreset {
 		store: &IndexMap<String, Self>,
 		services_store: &IndexMap<String, DockerServicePreset>,
 	) -> Result<ComposeFile, GenError> {
-		let mut processed_ids: IndexSet<String> = IndexSet::new();
+		if self.extends_presets.is_empty()
+			&& !self
+				.config
+				.services
+				.values()
+				.any(|s| s.requires_processing())
+		{
+			return Ok(self.config);
+		}
 
-		// Must not skip here in case of no extended presets, because services must be processed regardless
-		let merged_preset = if self.extends_presets.is_empty() {
+		let mut merged_preset = if self.extends_presets.is_empty() {
 			self
 		} else {
-			merge_presets(Preset::DockerCompose, id, self, store, &mut processed_ids)?
+			self.merge_presets(id, store)?
 		};
 
-		let mut config = merged_preset.config;
-
-		for (_, service_data) in config.services.iter_mut() {
+		for service_data in merged_preset.config.services.values_mut() {
 			match service_data {
-				ServicePresetRef::Id(id) => {
-					let preset = services_store
+				ServicePresetRef::PresetId(id) => {
+					let mut service_preset = services_store
 						.get(id)
 						.ok_or(GenError::PresetNotFound {
-							kind: Preset::DockerService,
+							kind: PresetKind::DockerService,
 							name: id.clone(),
 						})?
 						.clone();
 
-					*service_data = ServicePresetRef::Config(
-						process_docker_service_preset(preset, id, services_store)?.into(),
-					);
+					if !service_preset.extends_presets.is_empty() {
+						service_preset = service_preset.merge_presets(id, services_store)?;
+					}
+
+					*service_data = ServicePresetRef::Config(service_preset.into());
 				}
 				ServicePresetRef::Config(config) => {
 					if !config.extends_presets.is_empty() {
 						let data = std::mem::take(config);
 
-						*service_data = ServicePresetRef::Config(
-							process_docker_service_preset(*data, "__inlined", services_store)?
-								.into(),
-						);
+						*config = data
+							.merge_presets("__inlined", services_store)?
+							.into();
 					}
 				}
 			};
 		}
 
-		Ok(config)
+		Ok(merged_preset.config)
 	}
 }
 
@@ -119,25 +129,12 @@ impl ServiceFromCli {
 	}
 }
 
-impl Extensible for DockerServicePreset {
-	fn get_extended(&self) -> &IndexSet<String> {
+impl ExtensiblePreset for DockerServicePreset {
+	fn kind() -> PresetKind {
+		PresetKind::DockerService
+	}
+
+	fn get_extended_ids(&self) -> &IndexSet<String> {
 		&self.extends_presets
 	}
-}
-
-pub fn process_docker_service_preset(
-	preset: DockerServicePreset,
-	id: &str,
-	store: &IndexMap<String, DockerServicePreset>,
-) -> Result<DockerServicePreset, GenError> {
-	if preset.extends_presets.is_empty() {
-		return Ok(preset);
-	}
-
-	let mut processed_ids: IndexSet<String> = IndexSet::new();
-
-	let merged_preset =
-		merge_presets(Preset::DockerService, id, preset, store, &mut processed_ids)?;
-
-	Ok(merged_preset)
 }
