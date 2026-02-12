@@ -14,7 +14,7 @@ impl Config {
 		output_root: impl AsRef<Path>,
 		preset_refs: Vec<TemplatingPresetReference>,
 		cli_overrides: &IndexMap<String, Value>,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let output_root = output_root.as_ref();
 		let overwrite = self.can_overwrite();
 
@@ -33,7 +33,7 @@ impl Config {
 					let mut data = self
 						.templating_presets
 						.get(&id)
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::Templates,
 							name: id.clone(),
 						})?
@@ -91,7 +91,7 @@ impl Config {
 	}
 }
 
-pub(crate) fn create_context(context: &IndexMap<String, Value>) -> Result<Context, GenError> {
+pub(crate) fn create_context(context: &IndexMap<String, Value>) -> Result<Context, AppError> {
 	Ok(Context::from_serialize(context).context("Failed to parse the templating context")?)
 }
 
@@ -178,14 +178,14 @@ impl<'a> TemplateContext<'a> {
 }
 
 impl RenderCtx<'_> {
-	fn render_template(&self, template_name: &str, output_path: &Path) -> Result<(), GenError> {
+	fn render_template(&self, template_name: &str, output_path: &Path) -> Result<(), AppError> {
 		create_all_dirs(get_parent_dir(output_path)?)?;
 
 		let mut output_file = open_file_if_overwriting(self.overwrite, output_path)?;
 
 		self.tera
 			.render_to(template_name, self.context, &mut output_file)
-			.map_err(|e| GenError::TemplateRendering {
+			.map_err(|e| AppError::TemplateRendering {
 				template: template_name.to_string(),
 				source: e,
 			})
@@ -194,7 +194,7 @@ impl RenderCtx<'_> {
 	pub(crate) fn render_remote_preset(
 		&mut self,
 		remote_preset: &RemotePreset,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let RemotePreset { repo, exclude } = remote_preset;
 
 		let tmp_dir = env::temp_dir().join("sketch/repo");
@@ -240,7 +240,7 @@ impl RenderCtx<'_> {
 		dir: &Path,
 		templates_dir: &Path,
 		exclude: &[String],
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let templates_dir = get_abs_path(templates_dir)?;
 		let root_dir = templates_dir.join(dir);
 		if !root_dir.is_dir() {
@@ -324,7 +324,7 @@ impl RenderCtx<'_> {
 	pub(crate) fn render_single_template(
 		&mut self,
 		template_data: &TemplateData,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let TemplateData { template, output } = template_data;
 
 		let template_name = template.name();
@@ -332,7 +332,7 @@ impl RenderCtx<'_> {
 		if let TemplateRef::Inline { name, content } = template {
 			self.tera
 				.add_raw_template(name, content)
-				.map_err(|e| GenError::TemplateParsing {
+				.map_err(|e| AppError::TemplateParsing {
 					template: name.clone(),
 					source: e,
 				})?;
@@ -343,7 +343,7 @@ impl RenderCtx<'_> {
 				let output = self
 					.tera
 					.render(template_name, self.context)
-					.map_err(|e| GenError::TemplateRendering {
+					.map_err(|e| AppError::TemplateRendering {
 						template: template_name.to_string(),
 						source: e,
 					})?;

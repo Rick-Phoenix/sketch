@@ -3,7 +3,7 @@ use super::*;
 pub(crate) fn get_config_from_cli(
 	overrides: ConfigOverrides,
 	command: &Commands,
-) -> Result<Config, GenError> {
+) -> Result<Config, AppError> {
 	let ConfigOverrides {
 		templates_dir,
 		no_overwrite,

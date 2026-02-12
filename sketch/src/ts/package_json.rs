@@ -21,7 +21,7 @@ impl PackageJsonPreset {
 		current_id: &str,
 		store: &IndexMap<String, Self>,
 		people: &IndexMap<String, PersonData>,
-	) -> Result<PackageJson, GenError> {
+	) -> Result<PackageJson, AppError> {
 		let merged_preset = if self.extends_presets.is_empty() {
 			self
 		} else {
@@ -119,7 +119,7 @@ pub async fn process_package_json_dependencies(
 	package_manager: PackageManager,
 	convert_latest: bool,
 	range_kind: VersionRange,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let is_bun = matches!(package_manager, PackageManager::Bun);
 
 	if !convert_latest && !is_bun {

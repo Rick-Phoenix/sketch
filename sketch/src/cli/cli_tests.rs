@@ -24,7 +24,7 @@ use maplit::btreemap;
 use pretty_assertions::assert_eq as pretty_assert_eq;
 
 impl Cli {
-	async fn execute_with<I, T>(itr: I) -> Result<(), GenError>
+	async fn execute_with<I, T>(itr: I) -> Result<(), AppError>
 	where
 		I: IntoIterator<Item = T>,
 		T: Into<std::ffi::OsString> + Clone,

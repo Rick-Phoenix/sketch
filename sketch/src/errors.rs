@@ -6,7 +6,7 @@ use crate::PresetKind;
 
 /// The kinds of errors that can occur during operations.
 #[derive(Debug, Error)]
-pub enum GenError {
+pub enum AppError {
 	// I/O errors
 	#[error("Could not create the dir `{path}`: {source}")]
 	DirCreation { path: PathBuf, source: io::Error },

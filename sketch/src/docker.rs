@@ -42,7 +42,7 @@ impl ComposePreset {
 		id: &str,
 		store: &IndexMap<String, Self>,
 		services_store: &IndexMap<String, DockerServicePreset>,
-	) -> Result<ComposeFile, GenError> {
+	) -> Result<ComposeFile, AppError> {
 		if self.extends_presets.is_empty()
 			&& !self
 				.config
@@ -64,7 +64,7 @@ impl ComposePreset {
 				ServicePresetRef::PresetId(id) => {
 					let mut service_preset = services_store
 						.get(id)
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::DockerService,
 							name: id.clone(),
 						})?

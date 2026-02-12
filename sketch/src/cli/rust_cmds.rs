@@ -33,7 +33,7 @@ impl RustCommands {
 					.rust_presets
 					.manifest_presets
 					.get(&preset)
-					.ok_or_else(|| GenError::PresetNotFound {
+					.ok_or_else(|| AppError::PresetNotFound {
 						kind: PresetKind::RustCrate,
 						name: preset.clone(),
 					})?
@@ -61,7 +61,7 @@ impl RustCommands {
 						.rust_presets
 						.crate_presets
 						.get(&preset_id)
-						.ok_or_else(|| GenError::PresetNotFound {
+						.ok_or_else(|| AppError::PresetNotFound {
 							kind: PresetKind::RustCrate,
 							name: preset_id,
 						})?

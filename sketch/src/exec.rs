@@ -39,7 +39,7 @@ impl Config {
 		commands: Vec<Hook>,
 		cli_vars: &IndexMap<String, Value>,
 		print_cmd: bool,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let mut tera = self.initialize_tera()?;
 
 		let mut global_context = create_context(&self.vars)?;
@@ -56,7 +56,7 @@ impl Config {
 				TemplateRef::Id(id) => id,
 				TemplateRef::Inline { name, content } => {
 					tera.add_raw_template(name, content)
-						.map_err(|e| GenError::TemplateParsing {
+						.map_err(|e| AppError::TemplateParsing {
 							template: name.clone(),
 							source: e,
 						})?;
@@ -67,7 +67,7 @@ impl Config {
 
 			let rendered_command = tera
 				.render(template_name, template_context.as_ref())
-				.map_err(|e| GenError::TemplateParsing {
+				.map_err(|e| AppError::TemplateParsing {
 					template: template_name.clone(),
 					source: e,
 				})?;
@@ -95,7 +95,7 @@ pub(crate) fn launch_command(
 	commands: &[&str],
 	cwd: &Path,
 	custom_error_message: Option<&str>,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let output = Command::new(program)
 		.args(commands)
 		.current_dir(cwd)

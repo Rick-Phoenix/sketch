@@ -100,7 +100,7 @@ impl Config {
 		tsconfig_files_to_update: Option<Vec<PathBuf>>,
 		cli_vars: &IndexMap<String, Value>,
 		mut package_type: PackageType,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let overwrite = self.can_overwrite();
 
 		let typescript = mem::take(&mut self.typescript).unwrap_or_default();
@@ -115,7 +115,7 @@ impl Config {
 			PackageData::Preset(id) => typescript
 				.package_presets
 				.get(&id)
-				.ok_or(GenError::PresetNotFound {
+				.ok_or(AppError::PresetNotFound {
 					kind: PresetKind::TsPackage,
 					name: id.clone(),
 				})?
@@ -153,7 +153,7 @@ impl Config {
 					id.clone(),
 					package_json_presets
 						.get(&id)
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::PackageJson,
 							name: id,
 						})?
@@ -279,7 +279,7 @@ impl Config {
 					TsConfigKind::Id(id) => {
 						let tsconfig = tsconfig_presets
 							.get(&id)
-							.ok_or(GenError::PresetNotFound {
+							.ok_or(AppError::PresetNotFound {
 								kind: PresetKind::TsConfig,
 								name: id.clone(),
 							})?
@@ -355,7 +355,7 @@ impl Config {
 				VitestConfigKind::Id(id) => typescript
 					.vitest_presets
 					.get(&id)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::Vitest,
 						name: id.clone(),
 					})?
@@ -416,7 +416,7 @@ impl Config {
 					typescript
 						.oxlint_presets
 						.get(id.as_str())
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::Oxlint,
 							name: id.clone(),
 						})?

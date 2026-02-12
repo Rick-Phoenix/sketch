@@ -1,7 +1,7 @@
 use super::*;
 
 impl Config {
-	pub(crate) fn initialize_tera(&self) -> Result<Tera, GenError> {
+	pub(crate) fn initialize_tera(&self) -> Result<Tera, AppError> {
 		let mut tera = if let Some(templates_dir) = &self.templates_dir {
 			Tera::new(&format!("{}/**/*", templates_dir.display()))
 				.context("Failed to load the templates directory")?
@@ -39,7 +39,7 @@ impl Config {
 
 		for (name, template) in &self.templates {
 			tera.add_raw_template(name, template)
-				.map_err(|e| GenError::TemplateParsing {
+				.map_err(|e| AppError::TemplateParsing {
 					template: name.clone(),
 					source: e,
 				})?;

@@ -64,7 +64,7 @@ impl Config {
 		remote: Option<&str>,
 		out_dir: &Path,
 		cli_vars: &IndexMap<String, Value>,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		let overwrite = self.can_overwrite();
 
 		if !preset.hooks_pre.is_empty() {
@@ -87,7 +87,7 @@ impl Config {
 			let data = self
 				.gitignore_presets
 				.get(&id)
-				.ok_or_else(|| GenError::PresetNotFound {
+				.ok_or_else(|| AppError::PresetNotFound {
 					kind: PresetKind::Gitignore,
 					name: id,
 				})?
@@ -139,7 +139,7 @@ impl Config {
 					id.clone(),
 					self.pre_commit_presets
 						.get(id.as_str())
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::PreCommit,
 							name: id.clone(),
 						})?
@@ -193,7 +193,7 @@ impl Config {
 							.github
 							.workflow_presets
 							.get(&id)
-							.ok_or(GenError::PresetNotFound {
+							.ok_or(AppError::PresetNotFound {
 								kind: PresetKind::GithubWorkflow,
 								name: id.clone(),
 							})?

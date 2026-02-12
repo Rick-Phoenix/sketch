@@ -19,7 +19,7 @@ pub(crate) async fn handle_ts_commands(
 	mut config: Config,
 	command: TsCommands,
 	cli_vars: &IndexMap<String, Value>,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let overwrite = config.can_overwrite();
 	let typescript = config.typescript.get_or_insert_default();
 
@@ -30,7 +30,7 @@ pub(crate) async fn handle_ts_commands(
 			let content = typescript
 				.ts_config_presets
 				.get(&preset)
-				.ok_or(GenError::PresetNotFound {
+				.ok_or(AppError::PresetNotFound {
 					kind: PresetKind::TsConfig,
 					name: preset.clone(),
 				})?
@@ -58,7 +58,7 @@ pub(crate) async fn handle_ts_commands(
 				typescript
 					.package_presets
 					.get(&id)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::TsPackage,
 						name: id,
 					})?
@@ -82,7 +82,7 @@ pub(crate) async fn handle_ts_commands(
 					typescript
 						.pnpm_presets
 						.get(&id)
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::PnpmWorkspace,
 							name: id.clone(),
 						})?
@@ -127,7 +127,7 @@ pub(crate) async fn handle_ts_commands(
 				typescript
 					.package_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::TsPackage,
 						name: preset.clone(),
 					})?
@@ -266,7 +266,7 @@ pub struct TsBarrelArgs {
 
 const JS_EXTENSIONS: &[&str] = &["vue", "svelte", "jsx", "tsx", "ts", "js"];
 
-fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError> {
+fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), AppError> {
 	let TsBarrelArgs {
 		dir,
 		keep_extensions,

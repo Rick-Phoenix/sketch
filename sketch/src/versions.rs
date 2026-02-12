@@ -43,7 +43,7 @@ pub mod npm_version {
 	static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 	/// A helper to get the latest version of an npm package.
-	pub async fn get_latest_npm_version(package_name: &str) -> Result<String, GenError> {
+	pub async fn get_latest_npm_version(package_name: &str) -> Result<String, AppError> {
 		let error = || format!("Could not get the latest version for `{package_name}`");
 
 		let url_str = format!("https://registry.npmjs.org/{package_name}/latest");
@@ -65,7 +65,7 @@ pub mod npm_version {
 
 	pub async fn get_batch_latest_npm_versions(
 		deps: Vec<(JsDepKind, String)>,
-	) -> Vec<Result<(JsDepKind, String, String), GenError>> {
+	) -> Vec<Result<(JsDepKind, String, String), AppError>> {
 		let handles = deps.into_iter().map(|(kind, name)| async move {
 			let actual_latest = get_latest_npm_version(&name).await?;
 
@@ -74,7 +74,7 @@ pub mod npm_version {
 
 		let stream = stream::iter(handles).buffer_unordered(10);
 
-		let results: Vec<Result<(JsDepKind, String, String), GenError>> = stream.collect().await;
+		let results: Vec<Result<(JsDepKind, String, String), AppError>> = stream.collect().await;
 
 		results
 	}

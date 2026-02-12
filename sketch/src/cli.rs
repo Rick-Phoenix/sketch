@@ -25,12 +25,12 @@ use crate::{
 	*,
 };
 
-pub async fn main_entrypoint() -> Result<(), GenError> {
+pub async fn main_entrypoint() -> Result<(), AppError> {
 	Cli::parse().execute().await
 }
 
 impl Cli {
-	async fn execute(self) -> Result<(), GenError> {
+	async fn execute(self) -> Result<(), AppError> {
 		let mut config = get_config_from_cli(self.overrides.unwrap_or_default(), &self.command)?;
 
 		let command = self.command;
@@ -62,7 +62,7 @@ impl Cli {
 				let data = config
 					.gitignore_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::Gitignore,
 						name: preset.clone(),
 					})?
@@ -80,7 +80,7 @@ impl Cli {
 					.github
 					.workflow_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::GithubWorkflow,
 						name: preset.clone(),
 					})?
@@ -102,7 +102,7 @@ impl Cli {
 				let content = typescript
 					.pnpm_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::PnpmWorkspace,
 						name: preset.clone(),
 					})?
@@ -122,7 +122,7 @@ impl Cli {
 				let content = typescript
 					.oxlint_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::Oxlint,
 						name: preset.clone(),
 					})?
@@ -141,7 +141,7 @@ impl Cli {
 				let content = typescript
 					.package_json_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::PackageJson,
 						name: preset.clone(),
 					})?
@@ -168,7 +168,7 @@ impl Cli {
 
 				let mut file_preset = compose_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::DockerCompose,
 						name: preset.clone(),
 					})?
@@ -201,7 +201,7 @@ impl Cli {
 				let content = config
 					.pre_commit_presets
 					.get(&preset)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::PreCommit,
 						name: preset.clone(),
 					})?
@@ -225,7 +225,7 @@ impl Cli {
 					config
 						.git_presets
 						.get(&id)
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::Repo,
 							name: id.clone(),
 						})?
@@ -275,7 +275,7 @@ impl Cli {
 						content,
 					}
 				} else if let Some(file) = file {
-					let file_content = read_to_string(&file).map_err(|e| GenError::ReadError {
+					let file_content = read_to_string(&file).map_err(|e| AppError::ReadError {
 						path: file.clone(),
 						source: e,
 					})?;
@@ -351,7 +351,7 @@ impl Cli {
 				} else if let Some(id) = template {
 					TemplateRef::Id(id)
 				} else if let Some(file_path) = file {
-					let content = read_to_string(&file_path).map_err(|e| GenError::ReadError {
+					let content = read_to_string(&file_path).map_err(|e| AppError::ReadError {
 						path: file_path.clone(),
 						source: e,
 					})?;

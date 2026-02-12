@@ -34,7 +34,7 @@ pub async fn add_dependencies_to_catalog(
 	config: &mut PnpmWorkspace,
 	range_kind: VersionRange,
 	package_json: &PackageJson,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let names_to_add: Vec<(String, Option<String>)> = package_json
 		.dependencies
 		.iter()
@@ -61,7 +61,7 @@ async fn add_names_to_catalog(
 	config: &mut PnpmWorkspace,
 	range_kind: VersionRange,
 	entries: Vec<(String, Option<String>)>,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	use futures::{StreamExt, stream};
 
 	let handles = entries
@@ -75,7 +75,7 @@ async fn add_names_to_catalog(
 	let stream = stream::iter(handles).buffer_unordered(10);
 
 	#[allow(clippy::type_complexity)]
-	let results: Vec<Result<(String, Option<String>, String), GenError>> = stream.collect().await;
+	let results: Vec<Result<(String, Option<String>, String), AppError>> = stream.collect().await;
 
 	for result in results {
 		match result {

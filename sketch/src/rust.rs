@@ -47,7 +47,7 @@ impl CratePreset {
 		dir: &PathBuf,
 		name: Option<String>,
 		config: &Config,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		create_all_dirs(dir)?;
 
 		let mut manifest = match self.manifest {
@@ -73,7 +73,7 @@ impl CratePreset {
 
 		let workspace_manifest = if !manifest_is_virtual && workspace_manifest_path.exists() {
 			let workspace_manifest_raw = read_to_string(&workspace_manifest_path).map_err(|e| {
-				GenError::DeserializationError {
+				AppError::DeserializationError {
 					file: workspace_manifest_path.clone(),
 					error: e.to_string(),
 				}
@@ -81,7 +81,7 @@ impl CratePreset {
 
 			let mut workspace_manifest_content = workspace_manifest_raw
 				.parse::<DocumentMut>()
-				.map_err(|e| GenError::DeserializationError {
+				.map_err(|e| AppError::DeserializationError {
 					file: workspace_manifest_path.clone(),
 					error: e.to_string(),
 				})?;
@@ -121,7 +121,7 @@ impl CratePreset {
 			)?;
 
 			let workspace_manifest_full: Manifest = toml::from_str(&workspace_manifest_raw)
-				.map_err(|e| GenError::DeserializationError {
+				.map_err(|e| AppError::DeserializationError {
 					file: workspace_manifest_path.clone(),
 					error: e.to_string(),
 				})?;
@@ -211,7 +211,7 @@ impl CratePreset {
 		mut self,
 		manifests_store: &IndexMap<String, CargoTomlPreset>,
 		gitignore_store: &IndexMap<String, GitignorePreset>,
-	) -> Result<Self, GenError> {
+	) -> Result<Self, AppError> {
 		if !self.manifest.is_preset_id()
 			&& self
 				.gitignore
@@ -228,7 +228,7 @@ impl CratePreset {
 
 			let data = manifests_store
 				.get(&id)
-				.ok_or_else(|| GenError::PresetNotFound {
+				.ok_or_else(|| AppError::PresetNotFound {
 					kind: PresetKind::CargoToml,
 					name: id,
 				})?
@@ -251,7 +251,7 @@ impl CratePreset {
 
 			let data = gitignore_store
 				.get(&id)
-				.ok_or_else(|| GenError::PresetNotFound {
+				.ok_or_else(|| AppError::PresetNotFound {
 					kind: PresetKind::Gitignore,
 					name: id,
 				})?

@@ -1,6 +1,6 @@
 use super::*;
 
-pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Config, GenError> {
+pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Config, AppError> {
 	let extension = get_extension(config_file_abs_path)?;
 
 	let mut config: Config = if extension == "yaml" || extension == "yml" {
@@ -10,7 +10,7 @@ pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Co
 	} else if extension == "json" {
 		deserialize_json(config_file_abs_path)?
 	} else {
-		return Err(GenError::DeserializationError {
+		return Err(AppError::DeserializationError {
 			file: config_file_abs_path.to_path_buf(),
 			error: format!(
 				"Invalid config format for `{}`. Allowed formats are: yaml, toml, json",
@@ -37,7 +37,7 @@ pub(crate) fn extract_config_from_file(config_file_abs_path: &Path) -> Result<Co
 
 impl Config {
 	/// Extracts a config from a file.
-	pub fn from_file<T: Into<PathBuf> + Clone>(config_file: T) -> Result<Self, GenError> {
+	pub fn from_file<T: Into<PathBuf> + Clone>(config_file: T) -> Result<Self, AppError> {
 		let config_file_path = config_file.into();
 
 		let config_file_abs = get_abs_path(&config_file_path)?;

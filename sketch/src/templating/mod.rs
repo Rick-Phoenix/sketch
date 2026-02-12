@@ -48,7 +48,7 @@ impl FromStr for TemplatingPresetReference {
 }
 
 impl TemplatingPresetReference {
-	pub fn resolve(self, store: &IndexMap<String, TemplatingPreset>) -> Result<Self, GenError> {
+	pub fn resolve(self, store: &IndexMap<String, TemplatingPreset>) -> Result<Self, AppError> {
 		let mut preset_id: Option<String> = None;
 
 		let mut content = match self {
@@ -60,7 +60,7 @@ impl TemplatingPresetReference {
 
 				let mut data = store
 					.get(&id)
-					.ok_or_else(|| GenError::PresetNotFound {
+					.ok_or_else(|| AppError::PresetNotFound {
 						kind: PresetKind::Templates,
 						name: id,
 					})?

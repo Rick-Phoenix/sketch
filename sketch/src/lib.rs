@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tera::Tera;
 
-pub type AppResult<T = ()> = Result<T, GenError>;
+pub type AppResult<T = ()> = Result<T, AppError>;
 
 use crate::custom_templating::*;
 use crate::fs::*;

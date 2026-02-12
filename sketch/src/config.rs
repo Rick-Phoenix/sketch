@@ -85,7 +85,7 @@ impl Config {
 		base: &mut Self,
 
 		processed_sources: &mut IndexSet<PathBuf>,
-	) -> Result<(), GenError> {
+	) -> Result<(), AppError> {
 		// Safe unwrapping due to the check below
 		let current_config_file = self.config_file.as_ref();
 		let current_dir = get_parent_dir(current_config_file.unwrap())?;
@@ -94,7 +94,7 @@ impl Config {
 			let abs_path = current_dir
 				.join(rel_path)
 				.canonicalize()
-				.map_err(|e| GenError::PathCanonicalization {
+				.map_err(|e| AppError::PathCanonicalization {
 					path: rel_path.clone(),
 					source: e,
 				})?;
@@ -109,7 +109,7 @@ impl Config {
 					.map(|source| source.to_string_lossy())
 					.collect();
 
-				return Err(GenError::CircularDependency(format!(
+				return Err(AppError::CircularDependency(format!(
 					"Found circular dependency to the config file {}. The full processed path is: {}",
 					abs_path.display(),
 					chain.join(" -> ")
@@ -129,7 +129,7 @@ impl Config {
 	}
 
 	/// Recursively merges a [`Config`] with its extended configs.
-	pub fn merge_config_files(self) -> Result<Self, GenError> {
+	pub fn merge_config_files(self) -> Result<Self, AppError> {
 		let mut processed_sources: IndexSet<PathBuf> = Default::default();
 
 		let config_file = self

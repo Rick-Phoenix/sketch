@@ -9,7 +9,7 @@ pub trait ExtensiblePreset: Merge + Sized + Clone {
 		self,
 		current_id: &str,
 		store: &IndexMap<String, Self>,
-	) -> Result<Self, GenError> {
+	) -> Result<Self, AppError> {
 		self.merge_presets_recursive(current_id, store, &mut IndexSet::new())
 	}
 
@@ -18,7 +18,7 @@ pub trait ExtensiblePreset: Merge + Sized + Clone {
 		current_id: &str,
 		store: &IndexMap<String, Self>,
 		processed_ids: &mut IndexSet<String>,
-	) -> Result<Self, GenError> {
+	) -> Result<Self, AppError> {
 		let presets_to_extend = self.get_extended_ids();
 
 		if presets_to_extend.is_empty() {
@@ -32,7 +32,7 @@ pub trait ExtensiblePreset: Merge + Sized + Clone {
 		for id in presets_to_extend {
 			let extend_target = store
 				.get(id)
-				.ok_or(GenError::PresetNotFound {
+				.ok_or(AppError::PresetNotFound {
 					kind: Self::kind(),
 					name: id.clone(),
 				})?
@@ -63,13 +63,13 @@ fn check_for_circular_dependencies(
 	id: &str,
 	processed_ids: &mut IndexSet<String>,
 	preset_kind: PresetKind,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let was_absent = processed_ids.insert(id.to_string());
 
 	if !was_absent {
 		let chain: Vec<&str> = processed_ids.iter().map(|s| s.as_str()).collect();
 
-		return Err(GenError::CircularDependency(format!(
+		return Err(AppError::CircularDependency(format!(
 			"Found circular {preset_kind:?} dependency for preset with id '{id}'. The full processed chain is: {}",
 			chain.join(" -> ")
 		)));

@@ -104,7 +104,7 @@ impl GithubWorkflowPreset {
 		self,
 		id: &str,
 		github_config: &GithubConfig,
-	) -> Result<Workflow, GenError> {
+	) -> Result<Workflow, AppError> {
 		if self.extends_presets.is_empty()
 			&& !self
 				.config
@@ -123,7 +123,7 @@ impl GithubWorkflowPreset {
 					let mut data = github_config
 						.workflow_job_presets
 						.get(id)
-						.ok_or(GenError::PresetNotFound {
+						.ok_or(AppError::PresetNotFound {
 							kind: PresetKind::GithubWorkflowJob,
 							name: id.clone(),
 						})?
@@ -174,7 +174,7 @@ pub fn process_gh_job_preset(
 	id: &str,
 	store: &IndexMap<String, JobPreset>,
 	steps_store: &IndexMap<String, Step>,
-) -> Result<JobPreset, GenError> {
+) -> Result<JobPreset, AppError> {
 	let mut merged_preset = preset.merge_presets(id, store)?;
 
 	if let Job::Normal(job) = &mut merged_preset.job {
@@ -182,7 +182,7 @@ pub fn process_gh_job_preset(
 			if let StepPresetRef::PresetId(id) = step {
 				let data = steps_store
 					.get(id)
-					.ok_or(GenError::PresetNotFound {
+					.ok_or(AppError::PresetNotFound {
 						kind: PresetKind::GithubWorkflowStep,
 						name: id.clone(),
 					})?

@@ -2,7 +2,7 @@ use serde::de::DeserializeOwned;
 
 use crate::*;
 
-pub fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), GenError> {
+pub fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), AppError> {
 	let glob_str = glob.to_string_lossy();
 
 	// Skip complex glob patterns
@@ -57,7 +57,7 @@ pub fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
 	}
 }
 
-pub fn get_extension(file: &Path) -> Result<&OsStr, GenError> {
+pub fn get_extension(file: &Path) -> Result<&OsStr, AppError> {
 	Ok(file
 		.extension()
 		.with_context(|| format!("File `{}` has no extension", file.display()))?)
@@ -67,17 +67,17 @@ pub fn serialize_toml<T: Serialize>(
 	item: &T,
 	path: &Path,
 	overwrite: bool,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let mut output_file = open_file_if_overwriting(overwrite, path)?;
 
-	let content = toml::to_string(item).map_err(|e| GenError::SerializationError {
+	let content = toml::to_string(item).map_err(|e| AppError::SerializationError {
 		file: path.to_path_buf(),
 		error: e.to_string(),
 	})?;
 
 	output_file
 		.write_all(content.as_bytes())
-		.map_err(|e| GenError::WriteError {
+		.map_err(|e| AppError::WriteError {
 			path: path.to_path_buf(),
 			source: e,
 		})?;
@@ -89,10 +89,10 @@ pub fn serialize_yaml<T: Serialize>(
 	item: &T,
 	path: &Path,
 	overwrite: bool,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let output_file = open_file_if_overwriting(overwrite, path)?;
 
-	serde_yaml_ng::to_writer(output_file, item).map_err(|e| GenError::SerializationError {
+	serde_yaml_ng::to_writer(output_file, item).map_err(|e| AppError::SerializationError {
 		file: path.to_path_buf(),
 		error: e.to_string(),
 	})
@@ -102,65 +102,65 @@ pub fn serialize_json<T: Serialize>(
 	item: &T,
 	path: &Path,
 	overwrite: bool,
-) -> Result<(), GenError> {
+) -> Result<(), AppError> {
 	let output_file = open_file_if_overwriting(overwrite, path)?;
 
-	serde_json::to_writer_pretty(output_file, item).map_err(|e| GenError::SerializationError {
+	serde_json::to_writer_pretty(output_file, item).map_err(|e| AppError::SerializationError {
 		file: path.to_path_buf(),
 		error: e.to_string(),
 	})
 }
 
-pub fn deserialize_toml<T: DeserializeOwned>(path: &Path) -> Result<T, GenError> {
-	let contents = read_to_string(path).map_err(|e| GenError::ReadError {
+pub fn deserialize_toml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
+	let contents = read_to_string(path).map_err(|e| AppError::ReadError {
 		path: path.to_path_buf(),
 		source: e,
 	})?;
 
-	toml::from_str(&contents).map_err(|e| GenError::DeserializationError {
+	toml::from_str(&contents).map_err(|e| AppError::DeserializationError {
 		file: path.to_path_buf(),
 		error: e.to_string(),
 	})
 }
 
-pub fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, GenError> {
+pub fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
 	let file = read_file(path)?;
 
-	serde_json::from_reader(file).map_err(|e| GenError::DeserializationError {
+	serde_json::from_reader(file).map_err(|e| AppError::DeserializationError {
 		file: path.to_path_buf(),
 		error: e.to_string(),
 	})
 }
 
-pub fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, GenError> {
+pub fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
 	let file = read_file(path)?;
 
-	serde_yaml_ng::from_reader(file).map_err(|e| GenError::DeserializationError {
+	serde_yaml_ng::from_reader(file).map_err(|e| AppError::DeserializationError {
 		file: path.to_path_buf(),
 		error: e.to_string(),
 	})
 }
 
-pub fn read_file(path: &Path) -> Result<File, GenError> {
-	File::open(path).map_err(|e| GenError::ReadError {
+pub fn read_file(path: &Path) -> Result<File, AppError> {
+	File::open(path).map_err(|e| AppError::ReadError {
 		path: path.to_path_buf(),
 		source: e,
 	})
 }
 
-pub fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), GenError> {
+pub fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), AppError> {
 	let mut file = open_file_if_overwriting(overwrite, path)?;
 
 	file.write_all(content.as_bytes())
-		.map_err(|e| GenError::WriteError {
+		.map_err(|e| AppError::WriteError {
 			path: path.to_path_buf(),
 			source: e,
 		})
 }
 
-pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, GenError> {
+pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, AppError> {
 	if overwrite {
-		File::create(path).map_err(|e| GenError::WriteError {
+		File::create(path).map_err(|e| AppError::WriteError {
 			path: path.to_path_buf(),
 			source: e,
 		})
@@ -171,7 +171,7 @@ pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, Ge
 				path.display()
 			)
 			.into(),
-			_ => GenError::WriteError {
+			_ => AppError::WriteError {
 				path: path.to_path_buf(),
 				source: e,
 			},
@@ -179,26 +179,26 @@ pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, Ge
 	}
 }
 
-pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), GenError> {
+pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), AppError> {
 	let dirname = get_parent_dir(path)?;
 
 	create_all_dirs(dirname)
 }
 
-pub(crate) fn create_all_dirs(path: &Path) -> Result<(), GenError> {
+pub(crate) fn create_all_dirs(path: &Path) -> Result<(), AppError> {
 	Ok(create_dir_all(path)
 		.with_context(|| format!("Could not create the parent dirs for `{}`", path.display()))?)
 }
 
-pub(crate) fn get_abs_path(path: &Path) -> Result<PathBuf, GenError> {
+pub(crate) fn get_abs_path(path: &Path) -> Result<PathBuf, AppError> {
 	path.canonicalize()
-		.map_err(|e| GenError::PathCanonicalization {
+		.map_err(|e| AppError::PathCanonicalization {
 			path: path.into(),
 			source: e,
 		})
 }
 
-pub(crate) fn get_parent_dir(path: &Path) -> Result<&Path, GenError> {
+pub(crate) fn get_parent_dir(path: &Path) -> Result<&Path, AppError> {
 	Ok(path
 		.parent()
 		.with_context(|| format!("Could not get the parent directory of '{}'", path.display()))?)
@@ -208,17 +208,17 @@ pub(crate) fn get_cwd() -> PathBuf {
 	current_dir().expect("Could not get the cwd")
 }
 
-pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, GenError> {
+pub(crate) fn get_relative_path(base: &Path, target: &Path) -> Result<PathBuf, AppError> {
 	let canonical_base = base
 		.canonicalize()
-		.map_err(|e| GenError::PathCanonicalization {
+		.map_err(|e| AppError::PathCanonicalization {
 			path: base.to_path_buf(),
 			source: e,
 		})?;
 
 	let canonical_target = target
 		.canonicalize()
-		.map_err(|e| GenError::PathCanonicalization {
+		.map_err(|e| AppError::PathCanonicalization {
 			path: target.to_path_buf(),
 			source: e,
 		})?;
