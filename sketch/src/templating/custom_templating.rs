@@ -239,8 +239,8 @@ impl Config {
 						let tmp_dir = env::temp_dir().join("sketch/repo");
 
 						if tmp_dir.exists() {
-							remove_dir_all(&tmp_dir).map_err(|e| {
-								generic_error!("Could not empty the directory `{tmp_dir:?}`: {}", e)
+							remove_dir_all(&tmp_dir).with_context(|| {
+								format!("Could not empty the directory `{}`", tmp_dir.display())
 							})?;
 						}
 
@@ -250,34 +250,28 @@ impl Config {
 							.arg(&repo)
 							.arg(&tmp_dir)
 							.output()
-							.map_err(|e| {
-								generic_error!("Could not clone git repo `{}`: {}", repo, e)
-							})?;
+							.with_context(|| format!("Could not clone git repo `{repo}`"))?;
 
 						if !clone_result.status.success() {
 							let stderr = String::from_utf8_lossy(&clone_result.stderr);
-							return Err(generic_error!(
-								"Could not clone git repo `{}`: {}",
-								repo,
-								stderr
-							));
+							return Err(
+								anyhow!("Could not clone git repo `{repo}`: {stderr}",).into()
+							);
 						}
 
-						remove_dir_all(tmp_dir.join(".git")).map_err(|e| {
-							generic_error!("Could not empty the directory `{tmp_dir:?}`: {}", e)
+						remove_dir_all(tmp_dir.join(".git")).with_context(|| {
+							format!("Could not empty the directory `{}`", tmp_dir.display())
 						})?;
 
-						let new_tera =
-							Tera::new(&format!("{}/**/*", tmp_dir.display())).map_err(|e| {
-								GenError::Custom(format!(
-									"Failed to load the templates from remote template `{repo}`: {e}"
-								))
+						let new_tera = Tera::new(&format!("{}/**/*", tmp_dir.display()))
+							.with_context(|| {
+								format!(
+									"Failed to load the templates from remote template `{repo}`"
+								)
 							})?;
 
-						tera.extend(&new_tera).map_err(|e| {
-							GenError::Custom(format!(
-								"Failed to load the templates from remote template `{repo}`: {e}"
-							))
+						tera.extend(&new_tera).with_context(|| {
+							format!("Failed to load the templates from remote template `{repo}`")
 						})?;
 
 						render_structured_preset(
@@ -314,7 +308,7 @@ impl Config {
 							&dir,
 							self.templates_dir
 								.as_ref()
-								.ok_or(GenError::Custom("templates_dir not set".to_string()))?,
+								.context("templates_dir not set")?,
 							&exclude,
 						)?;
 					}
@@ -381,11 +375,12 @@ fn render_structured_preset(
 	let templates_dir = get_abs_path(templates_dir)?;
 	let root_dir = templates_dir.join(dir);
 	if !root_dir.is_dir() {
-		return Err(GenError::Custom(format!(
+		return Err(anyhow!(format!(
 			"`{}` is not a valid directory inside `{}`",
 			dir.display(),
 			templates_dir.display()
-		)));
+		))
+		.into());
 	}
 
 	let exclude_glob = if exclude.is_empty() {
@@ -394,15 +389,16 @@ fn render_structured_preset(
 		let mut glob_builder = GlobSetBuilder::new();
 
 		for pattern in exclude {
-			glob_builder.add(Glob::new(pattern).map_err(|e| {
-				generic_error!("Could not parse glob pattern `{}`: {}", pattern, e)
-			})?);
+			glob_builder.add(
+				Glob::new(pattern)
+					.with_context(|| format!("Could not parse glob pattern `{pattern}`"))?,
+			);
 		}
 
 		Some(
 			glob_builder
 				.build()
-				.map_err(|e| generic_error!("Could not build globset: {}", e))?,
+				.context("Could not build globset")?,
 		)
 	};
 
@@ -413,11 +409,11 @@ fn render_structured_preset(
 		let template_path_from_templates_dir = entry
 			.path()
 			.strip_prefix(&templates_dir)
-			.map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?;
+			.context("`dir` must be a directory inside `templates_dir`")?;
 		let mut output_path_from_root_dir = entry
 			.path()
 			.strip_prefix(&root_dir)
-			.map_err(|_| generic_error!("`dir` must be a directory inside `templates_dir`"))?
+			.context("`dir` must be a directory inside `templates_dir`")?
 			.to_path_buf();
 
 		if output_path_from_root_dir

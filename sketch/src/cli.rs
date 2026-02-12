@@ -262,13 +262,11 @@ impl Cli {
 						.insert(service_name, ServicePresetRef::Id(service.preset_id));
 				}
 
-				let file_data = file_preset
-					.process_data(
-						preset.as_str(),
-						&compose_presets,
-						&docker_config.service_presets,
-					)
-					.map_err(|e| generic_error!("{e}"))?;
+				let file_data = file_preset.process_data(
+					preset.as_str(),
+					&compose_presets,
+					&docker_config.service_presets,
+				)?;
 
 				let output = output.unwrap_or_else(|| "compose.yaml".into());
 
@@ -406,10 +404,10 @@ impl Cli {
 					}
 					"json" => serialize_json(&new_config, &output_path, overwrite)?,
 					_ => {
-						return Err(GenError::Custom(
+						return Err(anyhow!(
 							"Invalid config format. Allowed formats are: yaml, toml, json"
-								.to_string(),
-						));
+						)
+						.into());
 					}
 				};
 			}

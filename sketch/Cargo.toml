@@ -33,6 +33,7 @@ clap-markdown = "0.1.5"
 indoc = "2.0.6"
 
 [dependencies]
+anyhow = { workspace = true }
 docker-compose-config = { path = "../docker-compose-config/", features = [
   "presets",
 ] }

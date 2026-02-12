@@ -1,5 +1,7 @@
 [workspace]
-members = ["docker-compose-config","gh-workflow",
+members = [
+  "docker-compose-config",
+  "gh-workflow",
   "json-schema",
   "oxlint-config",
   "package-json",
@@ -24,6 +26,7 @@ license = "MPL-2.0"
 authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
 
 [workspace.dependencies]
+anyhow = "1"
 toml_edit = { version = "0.24.0", features = ["serde"] }
 indexmap = { version = "2.11", features = ["serde"] }
 pretty_assertions = "1"

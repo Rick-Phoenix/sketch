@@ -248,7 +248,7 @@ fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError>
 	let dir = dir.unwrap_or_else(get_cwd);
 
 	if !dir.is_dir() {
-		return Err(generic_error!("`{:?}` is not a directory", dir));
+		return Err(anyhow!("`{}` is not a directory", dir.display()).into());
 	}
 
 	let mut glob_builder = GlobSetBuilder::new();
@@ -257,15 +257,16 @@ fn create_ts_barrel(args: TsBarrelArgs, overwrite: bool) -> Result<(), GenError>
 
 	if let Some(ref patterns) = exclude {
 		for pattern in patterns {
-			glob_builder.add(Glob::new(pattern).map_err(|e| {
-				generic_error!("Could not parse glob pattern `{}`: {}", pattern, e)
-			})?);
+			glob_builder.add(
+				Glob::new(pattern)
+					.with_context(|| format!("Could not parse glob pattern `{pattern}`"))?,
+			);
 		}
 	}
 
 	let globset = glob_builder
 		.build()
-		.map_err(|e| generic_error!("Could not build globset: {}", e))?;
+		.context("Could not build globset")?;
 
 	let mut paths: BTreeSet<PathBuf> = BTreeSet::new();
 

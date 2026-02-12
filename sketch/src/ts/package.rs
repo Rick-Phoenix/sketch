@@ -250,10 +250,12 @@ impl Config {
 			&& matches!(package_manager, PackageManager::Pnpm)
 		{
 			let pnpm_workspace_path =
-				find_file_up(&pkg_root, "pnpm-workspace.yaml").ok_or(GenError::Custom(format!(
-					"Could not find a `pnpm-workspace.yaml` file while searching upwards from `{}`",
-					pkg_root.display()
-				)))?;
+				find_file_up(&pkg_root, "pnpm-workspace.yaml").with_context(|| {
+					format!(
+						"Could not find a `pnpm-workspace.yaml` file while searching upwards from `{}`",
+						pkg_root.display()
+					)
+				})?;
 
 			let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 

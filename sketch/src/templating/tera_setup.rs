@@ -3,9 +3,8 @@ use super::*;
 impl Config {
 	pub(crate) fn initialize_tera(&self) -> Result<Tera, GenError> {
 		let mut tera = if let Some(templates_dir) = &self.templates_dir {
-			Tera::new(&format!("{}/**/*", templates_dir.display())).map_err(|e| {
-				GenError::Custom(format!("Failed to load the templates directory: {e}"))
-			})?
+			Tera::new(&format!("{}/**/*", templates_dir.display()))
+				.context("Failed to load the templates directory")?
 		} else {
 			Tera::default()
 		};

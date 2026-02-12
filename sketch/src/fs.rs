@@ -165,10 +165,11 @@ pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, Ge
 		})
 	} else {
 		File::create_new(path).map_err(|e| match e.kind() {
-			std::io::ErrorKind::AlreadyExists => GenError::Custom(format!(
+			std::io::ErrorKind::AlreadyExists => anyhow!(
 				"The file `{}` already exists. Set `no_overwrite` to false to overwrite existing files",
 				path.display()
-			)),
+			)
+			.into(),
 			_ => GenError::WriteError {
 				path: path.to_path_buf(),
 				source: e,
@@ -184,13 +185,8 @@ pub(crate) fn create_parent_dirs(path: &Path) -> Result<(), GenError> {
 }
 
 pub(crate) fn create_all_dirs(path: &Path) -> Result<(), GenError> {
-	create_dir_all(path).map_err(|e| {
-		GenError::Custom(format!(
-			"Could not create the parent dirs for `{}`: {}",
-			path.display(),
-			e
-		))
-	})
+	Ok(create_dir_all(path)
+		.with_context(|| format!("Could not create the parent dirs for `{}`", path.display()))?)
 }
 
 pub(crate) fn get_abs_path(path: &Path) -> Result<PathBuf, GenError> {

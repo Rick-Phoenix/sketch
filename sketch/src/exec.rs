@@ -108,13 +108,7 @@ pub(crate) fn launch_command(
 		.stdout(Stdio::inherit())
 		.stderr(Stdio::inherit())
 		.output()
-		.map_err(|e| {
-			GenError::Custom(format!(
-				"Failed to execute shell command '{}': {}",
-				commands.join(" "),
-				e
-			))
-		})?;
+		.with_context(|| format!("Failed to execute shell command '{}'", commands.join(" "),))?;
 
 	if output.status.success() {
 		Ok(())
@@ -130,6 +124,6 @@ pub(crate) fn launch_command(
 			|m| m.to_string(),
 		);
 
-		Err(GenError::Custom(error_message))
+		Err(anyhow!(error_message).into())
 	}
 }

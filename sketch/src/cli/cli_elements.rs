@@ -15,9 +15,10 @@ impl FromStr for ConfigFormat {
 			"yaml" => Ok(Self::Yaml),
 			"toml" => Ok(Self::Toml),
 			"json" => Ok(Self::Json),
-			_ => Err(GenError::Custom(format!(
+			_ => Err(anyhow!(
 				"Invalid configuration format '{s}'. Allowed formats are: yaml, toml, json"
-			))),
+			)
+			.into()),
 		}
 	}
 }

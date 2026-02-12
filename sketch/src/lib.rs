@@ -6,6 +6,7 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![doc = include_str!("../README.md")]
 
+use anyhow::{Context as AnyhowContext, anyhow};
 use indexmap::{IndexMap, IndexSet};
 use merge_it::{Merge, merge_options, overwrite_always, overwrite_if_none};
 #[cfg(feature = "schemars")]

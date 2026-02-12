@@ -85,7 +85,7 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 		"they're taking the hobbits to Isengard!"
 	);
 
-	let mut cmd = assert_cmd::Command::cargo_bin("sketch").expect("Failed to find the app binary");
+	let mut cmd = get_bin!();
 
 	cmd.args([
 		"--ignore-config",

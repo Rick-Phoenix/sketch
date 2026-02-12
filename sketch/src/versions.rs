@@ -44,25 +44,21 @@ pub mod npm_version {
 
 	/// A helper to get the latest version of an npm package.
 	pub async fn get_latest_npm_version(package_name: &str) -> Result<String, GenError> {
+		let error = || format!("Could not get the latest version for `{package_name}`");
+
 		let url_str = format!("https://registry.npmjs.org/{package_name}/latest");
-		let url = url::Url::parse(&url_str).map_err(|e| {
-			generic_error!(
-				"Could not get the latest version for `{package_name}` due to an invalid URL: {e}"
-			)
+		let url = url::Url::parse(&url_str).with_context(|| {
+			format!("Could not get the latest version for `{package_name}` due to an invalid URL")
 		})?;
 
 		let response = CLIENT
 			.get(url)
 			.send()
 			.await
-			.map_err(|e| {
-				generic_error!("Could not get the latest version for `{package_name}`: {e}")
-			})?
+			.with_context(error)?
 			.json::<NpmApiResponse>()
 			.await
-			.map_err(|e| {
-				generic_error!("Could not get the latest version for `{package_name}`: {e}")
-			})?;
+			.with_context(error)?;
 
 		Ok(response.version)
 	}

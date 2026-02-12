@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 #[macro_use]
 mod tests_macros;
 
