@@ -1,6 +1,6 @@
 use crate::*;
 
-pub(crate) fn deserialize_map(path: &Path) -> Result<IndexMap<String, Value>, GenError> {
+pub(crate) fn deserialize_vars_file(path: &Path) -> AppResult<IndexMap<String, Value>> {
 	let ext = path.extension().with_context(|| {
 		format!(
 			"Could not identify the type of the file `{}` for deserialization",

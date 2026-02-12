@@ -8,7 +8,9 @@ use config_discovery::*;
 mod ts_cmds;
 use ts_cmds::*;
 
-mod cli_elements;
+mod rust_cmds;
+use rust_cmds::*;
+
 pub(crate) mod parsers;
 
 use clap::Subcommand;
@@ -41,7 +43,7 @@ impl Cli {
 		}
 
 		for file in self.vars_files {
-			let vars = deserialize_map(&file)?;
+			let vars = deserialize_vars_file(&file)?;
 			config.vars.extend(vars);
 		}
 
@@ -54,71 +56,7 @@ impl Cli {
 
 		match command {
 			Commands::Rust { command } => {
-				match command {
-					RustCommands::Manifest { output, preset } => {
-						let content = config
-							.rust_presets
-							.manifest_presets
-							.get(&preset)
-							.ok_or_else(|| GenError::PresetNotFound {
-								kind: PresetKind::RustCrate,
-								name: preset.clone(),
-							})?
-							.clone()
-							.merge_presets(&preset, &config.rust_presets.manifest_presets)?
-							.config;
-
-						let output = output.unwrap_or_else(|| "Cargo.toml".into());
-
-						write_file(
-							&output,
-							&content.as_document().to_string(),
-							config.can_overwrite(),
-						)?;
-					}
-					RustCommands::Crate {
-						dir,
-						name,
-						preset: preset_id,
-						config: overrides,
-						manifest,
-					} => {
-						let mut preset = if let Some(preset_id) = preset_id {
-							config
-								.rust_presets
-								.crate_presets
-								.get(&preset_id)
-								.ok_or_else(|| GenError::PresetNotFound {
-									kind: PresetKind::RustCrate,
-									name: preset_id,
-								})?
-								.clone()
-						} else {
-							CratePreset::default()
-						};
-
-						if let Some(overrides) = overrides {
-							preset.merge(overrides);
-						}
-
-						if let Some(manifest_id) = manifest {
-							preset.manifest = CargoTomlPresetRef::PresetId(manifest_id);
-						}
-
-						let crate_data = preset.process_data(
-							&config.rust_presets.manifest_presets,
-							&config.gitignore_presets,
-						)?;
-
-						if dir.exists() && !config.can_overwrite() {
-							return Err(
-								anyhow!("Directory `{}` already exists", dir.display()).into()
-							);
-						}
-
-						crate_data.generate(&dir, name, &config)?;
-					}
-				};
+				command.execute(&config)?;
 			}
 			Commands::Gitignore { preset, output } => {
 				let data = config
@@ -710,31 +648,6 @@ pub enum Commands {
 
 		/// The path of the output file [default: `LICENSE`]
 		#[arg(short, long)]
-		output: Option<PathBuf>,
-	},
-}
-
-#[derive(Subcommand, Debug, Clone)]
-pub enum RustCommands {
-	Crate {
-		dir: PathBuf,
-
-		#[arg(short, long)]
-		preset: Option<String>,
-
-		#[arg(short, long)]
-		manifest: Option<String>,
-
-		#[arg(short, long)]
-		name: Option<String>,
-
-		#[command(flatten)]
-		config: Option<CratePreset>,
-	},
-
-	Manifest {
-		preset: String,
-
 		output: Option<PathBuf>,
 	},
 }

@@ -15,6 +15,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tera::Tera;
 
+pub type AppResult<T = ()> = Result<T, GenError>;
+
 use crate::custom_templating::*;
 use crate::fs::*;
 use clap::{Args, Parser, ValueEnum};
@@ -35,7 +37,6 @@ use std::{
 	path::{Component, Path, PathBuf},
 	process::{Command, Stdio},
 	str::FromStr,
-	sync::Arc,
 	sync::LazyLock,
 };
 
