@@ -77,12 +77,12 @@ impl AsTomlValue for Workspace {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(deny_unknown_fields)]
+#[serde(default, deny_unknown_fields)]
 pub struct Lints {
-	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	pub rust: BTreeMap<String, LintKind>,
 
-	#[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+	#[serde(skip_serializing_if = "BTreeMap::is_empty")]
 	pub clippy: BTreeMap<String, LintKind>,
 }
 
@@ -118,62 +118,62 @@ impl AsTomlValue for LintKind {
 /// Workspace can predefine properties that can be inherited via `{ workspace = true }` in its member packages.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(rename_all = "kebab-case")]
+#[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct PackageTemplate {
 	/// See <https://crates.io/category_slugs>
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub categories: BTreeSet<String>,
 
 	/// Multi-line text, some people use Markdown here
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub description: Option<String>,
 
 	/// URL
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub documentation: Option<String>,
 
 	/// Opt-in to new Rust behaviors
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub edition: Option<Edition>,
 
 	/// Don't publish these files, relative to workspace
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub exclude: BTreeSet<String>,
 
 	/// Homepage URL
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub homepage: Option<String>,
 
 	/// Publish these files, relative to workspace
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub include: BTreeSet<String>,
 
 	/// For search
-	#[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub keywords: BTreeSet<String>,
 
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub license: Option<String>,
 
 	/// Block publishing or choose custom registries
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub publish: Option<Publish>,
 
 	/// Opt-out or custom path, relative to workspace
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub readme: Option<OptionalFile>,
 
 	/// (HTTPS) repository URL
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub repository: Option<String>,
 
 	/// Minimum required rustc version in format `1.99`
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub rust_version: Option<String>,
 
 	/// Package version semver
-	#[serde(default, skip_serializing_if = "Option::is_none")]
+	#[serde(skip_serializing_if = "Option::is_none")]
 	pub version: Option<String>,
 }
 

@@ -140,27 +140,67 @@ impl AsTomlValue for DebugSetting {
 }
 
 /// Handling of debug symbols in a build profile
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(try_from = "RawStripSetting", into = "RawStripSetting")]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(rename_all = "kebab-case")]
+#[cfg_attr(feature = "schemars", schemars(with = "RawStripSetting"))]
 pub enum StripSetting {
-	/// Same as `strip = false`
+	/// "none" or false
 	None,
-	/// Detailed debug is stripped, but coarse debug is preserved
+	/// "debuginfo"
 	Debuginfo,
-	/// Stronger than the `Debuginfo` setting, same as `strip = true`
+	/// "symbols" or true
 	Symbols,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemars", derive(JsonSchema))]
+#[serde(untagged)]
+enum RawStripSetting {
+	Bool(bool),
+	String(String),
+}
+
+impl TryFrom<RawStripSetting> for StripSetting {
+	type Error = String;
+
+	fn try_from(value: RawStripSetting) -> Result<Self, Self::Error> {
+		match value {
+			RawStripSetting::Bool(false) => Ok(Self::None),
+			RawStripSetting::Bool(true) => Ok(Self::Symbols),
+
+			// Handle Strings
+			RawStripSetting::String(s) => match s.as_str() {
+				"debuginfo" => Ok(Self::Debuginfo),
+				"symbols" | "true" => Ok(Self::Symbols),
+
+				"none" | "false" => Ok(Self::None),
+				_ => Err(format!(
+					"Invalid strip setting: '{s}'. Use 'none', 'debuginfo', 'symbols', true, or false."
+				)),
+			},
+		}
+	}
+}
+
+impl From<StripSetting> for RawStripSetting {
+	fn from(setting: StripSetting) -> Self {
+		match setting {
+			StripSetting::None => Self::String("none".to_string()),
+			StripSetting::Debuginfo => Self::String("debuginfo".to_string()),
+			StripSetting::Symbols => Self::String("symbols".to_string()),
+		}
+	}
 }
 
 impl AsTomlValue for StripSetting {
 	fn as_toml_value(&self) -> Item {
-		let str = match self {
-			Self::None => "none",
-			Self::Debuginfo => "debuginfo",
-			Self::Symbols => "symbols",
-		};
+		let raw: RawStripSetting = (*self).into();
 
-		str.into()
+		match raw {
+			RawStripSetting::Bool(bool) => bool.into(),
+			RawStripSetting::String(str) => str.into(),
+		}
 	}
 }
 
@@ -307,6 +347,12 @@ impl AsTomlValue for Profile {
 		add_value!(self, table => debug, lto, strip, opt_level, build_override);
 		add_string!(self, table => split_debuginfo, panic, inherits);
 
+		add_optional_bool!(self, table => rpath, debug_assertions, incremental, overflow_checks);
+
+		if let Some(codegen_units) = self.codegen_units {
+			table["codegen-units"] = i64::from(codegen_units).into();
+		}
+
 		if !self.package.is_empty() {
 			let mut pkg_table = Table::from_iter(
 				self.package
@@ -318,12 +364,6 @@ impl AsTomlValue for Profile {
 
 			table.insert("package", pkg_table.into());
 		};
-
-		add_optional_bool!(self, table => rpath, debug_assertions, incremental, overflow_checks);
-
-		if let Some(codegen_units) = self.codegen_units {
-			table["codegen-units"] = i64::from(codegen_units).into();
-		}
 
 		table.into()
 	}
@@ -350,7 +390,7 @@ pub struct Profiles {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub bench: Option<Profile>,
 
-	/// User-suppiled for `cargo --profile=name`
+	/// User-supplied for `cargo --profile=name`
 	#[serde(flatten)]
 	#[merge(with = BTreeMap::extend)]
 	pub custom: BTreeMap<String, Profile>,
@@ -362,7 +402,7 @@ impl AsTomlValue for Profiles {
 
 		table.set_implicit(true);
 
-		add_value!(self, table => release, dev, test, bench);
+		add_value!(self, table => dev, test, bench, release);
 		add_table!(self, table => custom);
 
 		table.into()

@@ -96,7 +96,7 @@ macro_rules! add_string_list {
 	};
 }
 
-pub fn json_to_toml(json: &Value) -> Option<Item> {
+fn json_to_toml(json: &Value) -> Option<Item> {
 	match json {
 		Value::Null => None,
 
