@@ -22,7 +22,7 @@ release-exec version="patch":
     EXEC_RELEASE=true cargo release {{ version }} --execute
 
 [working-directory('docs')]
-docs:
+docs: generate-cli-docs
     mdbook serve --open
 
 install:

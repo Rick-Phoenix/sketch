@@ -1,8 +1,4 @@
-use crate::{
-	exec::{Hook, launch_command},
-	gh_workflow::GhWorkflowPresetRef,
-	*,
-};
+use crate::{exec::launch_command, gh_workflow::GhWorkflowPresetRef, *};
 
 pub mod gitignore;
 use gitignore::*;
@@ -32,14 +28,6 @@ pub struct RepoPreset {
 	/// A license file to generate for the new repo.
 	pub license: Option<License>,
 
-	#[arg(skip)]
-	/// One or many rendered commands to execute before the repo's creation
-	pub hooks_pre: Vec<Hook>,
-
-	#[arg(skip)]
-	/// One or many rendered commands to execute after the repo's creation
-	pub hooks_post: Vec<Hook>,
-
 	#[arg(
     long = "workflow",
     value_name = "id=PRESET_ID,file=PATH",
@@ -66,16 +54,6 @@ impl Config {
 		cli_vars: &IndexMap<String, Value>,
 	) -> Result<(), AppError> {
 		let overwrite = self.can_overwrite();
-
-		if !preset.hooks_pre.is_empty() {
-			self.execute_command(
-				self.shell.as_deref(),
-				out_dir,
-				preset.hooks_pre,
-				cli_vars,
-				false,
-			)?;
-		}
 
 		create_all_dirs(out_dir)?;
 
@@ -170,16 +148,6 @@ impl Config {
 
 		if !preset.with_templates.is_empty() {
 			self.generate_templates(out_dir, preset.with_templates, cli_vars)?;
-		}
-
-		if !preset.hooks_post.is_empty() {
-			self.execute_command(
-				self.shell.as_deref(),
-				out_dir,
-				preset.hooks_post,
-				cli_vars,
-				false,
-			)?;
 		}
 
 		Ok(())

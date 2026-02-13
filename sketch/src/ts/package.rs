@@ -35,22 +35,6 @@ pub struct TsPackagePreset {
 	#[arg(long = "template", short = 't', value_name = "PRESET_ID")]
 	pub with_templates: Vec<TemplatingPresetRef>,
 
-	/// One or many rendered commands to execute before the repo's creation
-	#[arg(
-		long = "hook-pre",
-		help = "One or many IDs of templates to render and execute as commands before the package's creation",
-		value_name = "ID"
-	)]
-	pub hooks_pre: Vec<Hook>,
-
-	/// One or many rendered commands to execute after the repo's creation
-	#[arg(
-		long = "hook-post",
-		help = "One or many IDs of templates to render and execute as commands after the package's creation",
-		value_name = "ID"
-	)]
-	pub hooks_post: Vec<Hook>,
-
 	/// The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
 	#[arg(skip)]
 	pub vitest: Option<VitestPresetRef>,
@@ -135,16 +119,6 @@ impl Config {
 
 		// We must get the absolute path after creation
 		let pkg_root = get_abs_path(pkg_root)?;
-
-		if !package_config.hooks_pre.is_empty() {
-			self.execute_command(
-				self.shell.as_deref(),
-				&pkg_root,
-				package_config.hooks_pre,
-				cli_vars,
-				false,
-			)?;
-		}
 
 		let mut package_json_data = match package_config.package_json.unwrap_or_default() {
 			PackageJsonPresetRef::PresetId(id) => typescript.get_package_json(&id)?.config,
@@ -387,16 +361,6 @@ impl Config {
 
 		if !package_config.with_templates.is_empty() {
 			self.generate_templates(&pkg_root, package_config.with_templates, cli_vars)?;
-		}
-
-		if !package_config.hooks_post.is_empty() {
-			self.execute_command(
-				self.shell.as_deref(),
-				&pkg_root,
-				package_config.hooks_post,
-				cli_vars,
-				false,
-			)?;
 		}
 
 		if install {

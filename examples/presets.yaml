@@ -253,26 +253,6 @@ repo_presets:
           docker_dev_port: 9530
     # ANCHOR_END: git_preset
 
-    # ANCHOR: hooks
-    # Commands to run before generation, from the root of the new project
-    hooks_pre:
-      - command:
-          # Inlining a new template definition here,
-          # but as always, we can use stored templates too
-          name: pre_hook
-          content: "echo '{{ greeting }}' > pre.txt"
-        context:
-          greeting: hi
-
-    # Commands to run after generation, from the root of the new project
-    hooks_post:
-      - command:
-          name: post_hook
-          content: "echo '{{ greeting }}' > post.txt"
-        context:
-          greeting: hi
-    # ANCHOR_END: hooks
-
 typescript:
   # By default, typescript and oxlint are added to
   # the dependencies

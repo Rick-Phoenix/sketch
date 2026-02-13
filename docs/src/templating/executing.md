@@ -60,10 +60,3 @@ Output:
 {{#include ../../../sketch/tests/output/commands_tests/command_output.txt}}
 ```
 
-## Hooks
-
-Templates can be executed as commands as `pre` or `post` hooks in a git `repo`, typecript `monorepo` or typescript `package` presets:
-
-```yaml
-{{#include ../../../examples/presets.yaml:hooks}}
-```

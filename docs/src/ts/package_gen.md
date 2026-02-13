@@ -2,14 +2,6 @@
 
 You can use the command `sketch ts package` to generate a new Typescript package.
 
-## Hooks
-
-We can define some commands (which can also be templates) to execute before and/or after generating the new package:
-
-```yaml
-{{#include ../../../examples/presets.yaml:hooks}}
-```
-
 ## Adding Templates
 
 You can also use the `with_templates` field (or the `--with-template` cli flag) to specify a list of templates or templating presets that should be generated whenever a package preset is being used.

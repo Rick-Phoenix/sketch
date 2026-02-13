@@ -25,6 +25,7 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch oxlint`↴](#sketch-oxlint)
 * [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
 * [`sketch license`↴](#sketch-license)
+* [`sketch json-schema`↴](#sketch-json-schema)
 
 ## `sketch`
 
@@ -48,6 +49,7 @@ This document contains the help content for the `sketch` command-line program.
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
 * `license` — Generates a license file
+* `json-schema` — Generates the json schema for the configuration file
 
 ###### **Options:**
 
@@ -328,8 +330,6 @@ Generates a new typescript monorepo
   - `mpl2`
 
 * `-t`, `--template <PRESET_ID>` — One or many templates to generate along with this package. Relative output paths will resolve from the root of the package
-* `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
-* `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
 * `--oxlint <ID>` — The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration
 * `-i`, `--install` — Installs the dependencies with the chosen package manager
 
@@ -368,8 +368,6 @@ Generates a new typescript package
   - `mpl2`
 
 * `-t`, `--template <PRESET_ID>` — One or many templates to generate along with this package. Relative output paths will resolve from the root of the package
-* `--hook-pre <ID>` — One or many IDs of templates to render and execute as commands before the package's creation
-* `--hook-post <ID>` — One or many IDs of templates to render and execute as commands after the package's creation
 * `--oxlint <ID>` — The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration
 
 
@@ -470,6 +468,18 @@ Generates a license file
 ###### **Options:**
 
 * `-o`, `--output <OUTPUT>` — The path of the output file [default: `LICENSE`]
+
+
+
+## `sketch json-schema`
+
+Generates the json schema for the configuration file
+
+**Usage:** `sketch json-schema <OUTPUT>`
+
+###### **Arguments:**
+
+* `<OUTPUT>` — The output path for the json schema
 
 
 
