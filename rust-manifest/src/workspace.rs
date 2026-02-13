@@ -167,6 +167,10 @@ pub struct PackageTemplate {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub license: Option<String>,
 
+	/// If `license` is not standard
+	#[serde(skip_serializing_if = "Option::is_none")]
+	pub license_file: Option<PathBuf>,
+
 	/// Block publishing or choose custom registries
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub publish: Option<Publish>,
@@ -205,6 +209,10 @@ impl AsTomlValue for PackageTemplate {
 			rust_version,
 			version
 		);
+
+		if let Some(license_file) = &self.license_file {
+			table["license-file"] = license_file.to_string_lossy().to_string().into();
+		}
 
 		table.into()
 	}
