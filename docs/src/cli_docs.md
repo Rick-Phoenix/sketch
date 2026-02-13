@@ -8,7 +8,6 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch new`↴](#sketch-new)
 * [`sketch repo`↴](#sketch-repo)
 * [`sketch render`↴](#sketch-render)
-* [`sketch render-preset`↴](#sketch-render-preset)
 * [`sketch exec`↴](#sketch-exec)
 * [`sketch gitignore`↴](#sketch-gitignore)
 * [`sketch gh-workflow`↴](#sketch-gh-workflow)
@@ -38,7 +37,6 @@ This document contains the help content for the `sketch` command-line program.
 * `new` — Generates a new config file
 * `repo` — Creates a new git repo from a preset
 * `render` — Renders a single template to a file or to stdout
-* `render-preset` — Renders a templating preset
 * `exec` — Renders a template and executes it as a shell command
 * `gitignore` — Generates a `.gitignore` file from a preset
 * `gh-workflow` — Generates a Github workflow
@@ -117,26 +115,14 @@ Renders a single template to a file or to stdout
 
 ###### **Arguments:**
 
-* `<OUTPUT>` — The output path (or stdout, if omitted)
+* `<OUTPUT>` — The output path for the template/preset. Implies `stdout` if absent for single templates. Required when a preset is selected
 
 ###### **Options:**
 
+* `-p`, `--preset <PRESET>` — The id of a templating preset
 * `-f`, `--file <FILE>` — The path to the template file
 * `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
 * `-c`, `--content <CONTENT>` — The literal definition for the template
-
-
-
-## `sketch render-preset`
-
-Renders a templating preset
-
-**Usage:** `sketch render-preset <ID> [OUT_DIR]`
-
-###### **Arguments:**
-
-* `<ID>` — The id of the preset
-* `<OUT_DIR>` — The output root path for the preset. [default: `.`]
 
 
 

@@ -246,65 +246,64 @@ impl Cli {
 				config.init_repo(preset, remote.as_deref(), &out_dir, &cli_vars)?;
 			}
 
-			Commands::RenderPreset { id, out_dir } => {
-				let out_dir = out_dir.unwrap_or(get_cwd());
-
-				config.generate_templates(
-					&out_dir,
-					vec![TemplatingPresetReference::Preset {
-						preset_id: id,
-						context: Default::default(),
-					}],
-					&cli_vars,
-				)?;
-			}
-
 			Commands::Render {
-				template,
+				template: template_id,
 				content,
 				output,
 				file,
+				preset: preset_id,
 			} => {
-				let template_data = if let Some(template) = template {
-					TemplateRef::Id(template)
-				} else if let Some(content) = content {
-					TemplateRef::Inline {
-						name: "__from_cli".to_string(),
-						content,
-					}
-				} else if let Some(file) = file {
-					let file_content = read_to_string(&file).map_err(|e| AppError::ReadError {
-						path: file.clone(),
-						source: e,
-					})?;
+				let is_single = preset_id.is_none();
 
-					TemplateRef::Inline {
-						name: format!("__custom_file_{}", file.display()),
-						content: file_content,
+				let output_root = if is_single {
+					get_cwd()
+				} else {
+					output
+						.clone()
+						.context("The output path is required when using presets")?
+				};
+
+				let template_data = if let Some(preset_id) = preset_id {
+					TemplatingPresetReference::Preset {
+						preset_id,
+						context: Default::default(),
 					}
 				} else {
-					return Err(anyhow!("Missing id or content for template generation").into());
-				};
+					let template = if let Some(id) = template_id {
+						TemplateRef::Id(id)
+					} else if let Some(content) = content {
+						TemplateRef::Inline {
+							name: "__from_cli".to_string(),
+							content,
+						}
+					} else if let Some(file) = file {
+						let file_content =
+							read_to_string(&file).map_err(|e| AppError::ReadError {
+								path: file.clone(),
+								source: e,
+							})?;
 
-				let output = if let Some(path) = output {
-					TemplateOutputKind::Path(path)
-				} else {
-					TemplateOutputKind::Stdout
-				};
+						TemplateRef::Inline {
+							name: format!("__from_file_{}", file.display()),
+							content: file_content,
+						}
+					} else {
+						return Err(anyhow!("Missing id or content for template generation").into());
+					};
 
-				let template = TemplateData {
-					output,
-					template: template_data,
-				};
+					let output = if let Some(path) = output {
+						TemplateOutputKind::Path(path)
+					} else {
+						TemplateOutputKind::Stdout
+					};
 
-				config.generate_templates(
-					get_cwd(),
-					vec![TemplatingPresetReference::Definition(TemplatingPreset {
-						templates: vec![TemplateKind::Single(template)],
+					TemplatingPresetReference::Definition(TemplatingPreset {
+						templates: vec![TemplateKind::Single(TemplateData { template, output })],
 						..Default::default()
-					})],
-					&cli_vars,
-				)?;
+					})
+				};
+
+				config.generate_templates(&output_root, vec![template_data], &cli_vars)?;
 			}
 			Commands::New { output } => {
 				let output_path = output.unwrap_or_else(|| PathBuf::from("sketch.yaml"));
@@ -410,9 +409,13 @@ pub enum Commands {
 
 	/// Renders a single template to a file or to stdout
 	Render {
-		/// The output path (or stdout, if omitted)
+		/// The output path for the template/preset. Implies `stdout` if absent for single templates. Required when a preset is selected.
 		#[arg(requires = "input")]
 		output: Option<PathBuf>,
+
+		/// The id of a templating preset
+		#[arg(short, long, group = "input", requires = "output")]
+		preset: Option<String>,
 
 		/// The path to the template file
 		#[arg(short, long, group = "input")]
@@ -425,15 +428,6 @@ pub enum Commands {
 		/// The literal definition for the template
 		#[arg(short, long, group = "input")]
 		content: Option<String>,
-	},
-
-	/// Renders a templating preset
-	RenderPreset {
-		/// The id of the preset.
-		id: String,
-
-		/// The output root path for the preset. [default: `.`]
-		out_dir: Option<PathBuf>,
 	},
 
 	/// Renders a template and executes it as a shell command

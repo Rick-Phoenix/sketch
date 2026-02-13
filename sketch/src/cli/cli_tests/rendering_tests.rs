@@ -124,7 +124,8 @@ async fn remote_preset() -> Result<(), Box<dyn std::error::Error>> {
 		&config_file.to_string_lossy(),
 		"--set",
 		"continuation=\"gp2 engine... gp2!\"",
-		"render-preset",
+		"render",
+		"--preset",
 		"remote",
 		&output_dir.to_string_lossy(),
 	];
@@ -168,7 +169,8 @@ async fn simple_templating_preset() -> Result<(), Box<dyn std::error::Error>> {
 		"--ignore-config",
 		"-c",
 		&config_file.to_string_lossy(),
-		"render-preset",
+		"render",
+		"--preset",
 		"lotr",
 		"tests/output/templating_presets/simple",
 	];
@@ -208,7 +210,8 @@ async fn structured_presets() -> Result<(), Box<dyn std::error::Error>> {
 		"--ignore-config",
 		"-c",
 		&config_file.to_string_lossy(),
-		"render-preset",
+		"render",
+		"--preset",
 		"structured",
 		"tests/output/templating_presets/structured",
 	];
@@ -244,7 +247,8 @@ async fn extended_templating_preset() -> Result<(), Box<dyn std::error::Error>> 
 		"--ignore-config",
 		"-c",
 		&config_file.to_string_lossy(),
-		"render-preset",
+		"render",
+		"--preset",
 		"lotr",
 		"tests/output/templating_presets/extended",
 	];

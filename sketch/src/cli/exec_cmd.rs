@@ -52,7 +52,7 @@ impl ExecCmd {
 			})?;
 
 			TemplateRef::Inline {
-				name: format!("__custom_file_{}", file_path.display()),
+				name: format!("__from_file_{}", file_path.display()),
 				content,
 			}
 		} else {

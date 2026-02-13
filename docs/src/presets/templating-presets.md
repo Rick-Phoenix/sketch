@@ -2,7 +2,7 @@
 
 Rendering a single template is for cases when we need a simpler or more flexible setup. But things become more interesting with **templating presets**, where different kinds of templates can be aggregated and used in order to define easily reproducible project structures. 
 
-Templating presets can be rendered with the `render-preset` command, or as part of [another preset](../presets/git.md#adding-templates), such as a git repo preset.
+Templating presets can be rendered with the `render` command by using the `--preset` flag, or as part of [another preset](../presets/git.md#adding-templates), such as a git repo preset.
 
 A templating preset contains an optional context (which overrides the global context), and one or many of these items:
 
