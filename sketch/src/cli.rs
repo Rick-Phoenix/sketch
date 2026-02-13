@@ -11,12 +11,15 @@ use ts_cmds::*;
 mod rust_cmds;
 use rust_cmds::*;
 
+mod exec_cmd;
+use exec_cmd::*;
+
 pub(crate) mod parsers;
 
 use clap::Subcommand;
 
 use crate::{
-	docker::{ServiceFromCli, ServicePresetRef},
+	docker::{ComposePreset, ServiceFromCli, ServicePresetRef},
 	exec::Hook,
 	init_repo::RepoPreset,
 	licenses::License,
@@ -160,13 +163,17 @@ impl Cli {
 				let docker_config = config.docker.unwrap_or_default();
 				let compose_presets = docker_config.compose_presets;
 
-				let mut file_preset = compose_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::DockerCompose,
-						name: preset.clone(),
-					})?
-					.clone();
+				let mut file_preset = if let Some(id) = preset.as_ref() {
+					compose_presets
+						.get(id)
+						.ok_or(AppError::PresetNotFound {
+							kind: PresetKind::DockerCompose,
+							name: id.clone(),
+						})?
+						.clone()
+				} else {
+					ComposePreset::default()
+				};
 
 				for service in services {
 					let service_name = service
@@ -180,7 +187,7 @@ impl Cli {
 				}
 
 				let file_data = file_preset.process_data(
-					preset.as_str(),
+					preset.as_deref().unwrap_or("__from_cli"),
 					&compose_presets,
 					&docker_config.service_presets,
 				)?;
@@ -322,55 +329,8 @@ impl Cli {
 					}
 				};
 			}
-			Commands::Exec {
-				cmd: command,
-				file,
-				template,
-				cwd,
-				shell,
-				print_cmd,
-			} => {
-				let command = if let Some(literal) = command {
-					TemplateRef::Inline {
-						name: "__from_cli".to_string(),
-						content: literal,
-					}
-				} else if let Some(id) = template {
-					TemplateRef::Id(id)
-				} else if let Some(file_path) = file {
-					let content = read_to_string(&file_path).map_err(|e| AppError::ReadError {
-						path: file_path.clone(),
-						source: e,
-					})?;
-
-					TemplateRef::Inline {
-						name: format!("__custom_file_{}", file_path.display()),
-						content,
-					}
-				} else {
-					return Err(
-						anyhow!("At least one between command and file must be set.").into(),
-					);
-				};
-
-				let cwd = cwd.unwrap_or_else(get_cwd);
-
-				let shell = if let Some(cli_flag) = shell {
-					Some(cli_flag)
-				} else {
-					config.shell.clone()
-				};
-
-				config.execute_command(
-					shell.as_deref(),
-					&cwd,
-					vec![Hook {
-						command,
-						context: Default::default(),
-					}],
-					&cli_vars,
-					print_cmd,
-				)?;
+			Commands::Exec { cmd } => {
+				cmd.execute(&config, &cli_vars)?;
 			}
 			Commands::Ts { command, .. } => {
 				command.execute(config, &cli_vars).await?;
@@ -478,29 +438,8 @@ pub enum Commands {
 
 	/// Renders a template and executes it as a shell command
 	Exec {
-		/// The literal definition for the template (incompatible with `--file` or `--template`)
-		#[arg(group = "input")]
-		cmd: Option<String>,
-
-		/// Prints the rendered command to stdout before executing it
-		#[arg(long)]
-		print_cmd: bool,
-
-		/// The shell to use for commands [default: `cmd.exe` on windows and `sh` elsewhere].
-		#[arg(short, long)]
-		shell: Option<String>,
-
-		/// The cwd for the command to execute [default: `.`]
-		#[arg(long)]
-		cwd: Option<PathBuf>,
-
-		/// The path to the command's template file, as an absolute path or relative to the cwd
-		#[arg(short, long, group = "input")]
-		file: Option<PathBuf>,
-
-		/// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
-		#[arg(short, long, group = "input")]
-		template: Option<String>,
+		#[command(flatten)]
+		cmd: ExecCmd,
 	},
 
 	/// Generates a `.gitignore` file from a preset.
@@ -523,8 +462,8 @@ pub enum Commands {
 
 	/// Generates a Docker Compose file from a preset.
 	DockerCompose {
-		/// The preset id
-		preset: String,
+		/// The preset id. Not required if services are added manually with the `--service` flag.
+		preset: Option<String>,
 
 		/// The output path of the new file [default: `compose.yaml`]
 		output: Option<PathBuf>,
