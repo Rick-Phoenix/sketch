@@ -69,7 +69,7 @@ impl RustCommands {
 
 				let crate_data = preset.process_data(config)?;
 
-				if dir.exists() && !config.can_overwrite() {
+				if dir.exists() {
 					return Err(anyhow!("Directory `{}` already exists", dir.display()).into());
 				}
 
