@@ -229,7 +229,7 @@ pre_commit_presets:
 
 # ANCHOR: git_preset
 # Git presets
-git_presets:
+repo_presets:
   ts_package:
     # ANCHOR: using_workflow_preset
     workflows:

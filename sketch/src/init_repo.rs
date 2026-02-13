@@ -187,7 +187,7 @@ impl Config {
 
 	pub fn get_repo_preset(&self, id: &str) -> AppResult<RepoPreset> {
 		Ok(self
-			.git_presets
+			.repo_presets
 			.get(id)
 			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::Repo,

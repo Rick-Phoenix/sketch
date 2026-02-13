@@ -67,7 +67,7 @@ pub struct Config {
 	pub gitignore_presets: IndexMap<String, GitignorePreset>,
 
 	/// A map that contains presets for git repos.
-	pub git_presets: IndexMap<String, RepoPreset>,
+	pub repo_presets: IndexMap<String, RepoPreset>,
 
 	/// Configurations and presets for Rust based projects
 	pub rust: RustConfig,

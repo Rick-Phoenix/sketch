@@ -18,7 +18,7 @@ gitignore_presets: {}
 
 templating_presets: {}
 
-git_presets: {}
+repo_presets: {}
 
 docker_compose_presets: {}
 
