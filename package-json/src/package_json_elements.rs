@@ -74,43 +74,11 @@ pub struct Bugs {
 	pub email: Option<String>,
 }
 
-#[cfg(feature = "presets")]
-/// The kinds of values used for representing an individual in a `package.json` file, which can be used to populate the `contributors` and `maintainers` fields.
-///
-/// If a plain string is used, it will be interpreted as an id for a [`PersonData`] that is stored in the global config.
-#[derive(Debug, Serialize, Deserialize, PartialEq, PartialOrd, Ord, Eq)]
-#[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(untagged)]
-#[derive(Clone)]
-pub enum Person {
-	PresetId(String),
-	Data(PersonData),
-}
-
-#[cfg(feature = "presets")]
-impl Person {
-	/// Returns `true` if the person is [`PresetId`].
-	///
-	/// [`PresetId`]: Person::PresetId
-	#[must_use]
-	pub const fn is_preset_id(&self) -> bool {
-		matches!(self, Self::PresetId(..))
-	}
-
-	pub const fn as_data(&self) -> Option<&PersonData> {
-		if let Self::Data(v) = self {
-			Some(v)
-		} else {
-			None
-		}
-	}
-}
-
 /// A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.
 #[derive(Clone, Debug, Serialize, Deserialize, Default, Ord, PartialEq, PartialOrd, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
-pub struct PersonData {
+pub struct Person {
 	pub name: String,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub email: Option<String>,

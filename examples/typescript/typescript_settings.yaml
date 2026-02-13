@@ -33,8 +33,4 @@ typescript:
 
   # A map containing extensible oxlint presets
   oxlint_presets: {}
-
-  # A map of contributors and maintainers, which can be referenced
-  # in `package.json` presets with their ID
-  people: {}
 # ANCHOR_END: all

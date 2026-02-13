@@ -46,10 +46,6 @@ pub struct TypescriptConfig {
 	#[arg(long = "no-convert-latest")]
 	pub no_convert_latest_to_range: Option<bool>,
 
-	/// A map of individual [`PersonData`] that can be referenced as authors, contributors or maintainers in a [`PackageJsonPreset`].
-	#[arg(skip)]
-	pub people: IndexMap<String, PersonData>,
-
 	/// A map containing [`PackageJsonPreset`]s.
 	#[arg(skip)]
 	pub package_json_presets: IndexMap<String, PackageJsonPreset>,
@@ -131,7 +127,7 @@ impl TypescriptConfig {
 			.merge_presets(id, &self.oxlint_presets)
 	}
 
-	pub fn get_package_json(&self, id: &str) -> AppResult<PackageJson> {
+	pub fn get_package_json(&self, id: &str) -> AppResult<PackageJsonPreset> {
 		self.package_json_presets
 			.get(id)
 			.ok_or_else(|| AppError::PresetNotFound {
@@ -139,7 +135,7 @@ impl TypescriptConfig {
 				name: id.to_string(),
 			})?
 			.clone()
-			.process_data(id, &self.package_json_presets, &self.people)
+			.merge_presets(id, &self.package_json_presets)
 	}
 }
 

@@ -1,5 +1,3 @@
-use package_json::{Person, PersonData};
-
 use super::*;
 
 mod ts_barrel_tests;
@@ -98,53 +96,6 @@ async fn monorepo_with_pnpm_catalog() -> Result<(), Box<dyn std::error::Error>> 
 	// Check if the workspaces directories were created correctly
 	assert!(output_dir.join("packages").is_dir());
 	assert!(output_dir.join("apps/test").is_dir());
-
-	Ok(())
-}
-
-#[tokio::test]
-async fn people_registration() -> Result<(), Box<dyn std::error::Error>> {
-	let ts_examples_dir = examples_dir().join("typescript");
-	let output_dir = PathBuf::from("tests/output/ts-people-example");
-	let commands_dir = output_dir.join("commands");
-
-	reset_testing_dir(&output_dir);
-	reset_testing_dir(&commands_dir);
-
-	let people_cmd = [
-		"sketch",
-		"--ignore-config",
-		"-c",
-		path_to_str!(ts_examples_dir.join("people.yaml")),
-		"ts",
-		"package",
-		"--preset",
-		"people-example",
-		&output_dir.to_string_lossy(),
-	];
-
-	get_clean_example_cmd(&people_cmd, &[1, 2, 3], &commands_dir.join("people_cmd"))?;
-
-	Cli::execute_with(people_cmd).await?;
-
-	let output: PackageJson = deserialize_json(&output_dir.join("package.json")).unwrap();
-
-	let bruce_wayne = Person::Data(PersonData {
-		name: "Bruce Wayne".to_string(),
-		email: Some("bruce@gotham.com".to_string()),
-		url: Some("brucewayne.com".to_string()),
-	});
-	let clark_kent = Person::Data(PersonData {
-		name: "Clark Kent".to_string(),
-		email: Some("clark-kent@dailyplanet.com".to_string()),
-		url: Some("clarkkent.com".to_string()),
-	});
-
-	pretty_assert_eq!(output.author.unwrap(), bruce_wayne);
-
-	assert!(output.contributors.contains(&bruce_wayne));
-	assert!(output.maintainers.contains(&bruce_wayne));
-	assert!(output.maintainers.contains(&clark_kent));
 
 	Ok(())
 }

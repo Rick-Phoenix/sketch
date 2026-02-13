@@ -73,7 +73,7 @@ fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
 		},
 		main: Some("dist/index.js".to_string()),
 		browser: Some("dist/index.js".to_string()),
-		author: Some(Person::Data(PersonData {
+		author: Some(Person::Data(Person {
 			url: Some("abc".to_string()),
 			name: "abc".to_string(),
 			email: Some("abc".to_string()),
@@ -132,24 +132,24 @@ fn package_json_gen() -> Result<(), Box<dyn std::error::Error>> {
 			}),
 		},
 		contributors: btreeset! {
-			Person::Data(PersonData {
+			Person::Data(Person {
 				name: "legolas".to_string(),
 				url: Some("legolas.com".to_string()),
 				email: Some("legolas@middleearth.com".to_string()),
 			}),
-			Person::Data(PersonData {
+			Person::Data(Person {
 				name: "aragorn".to_string(),
 				url: Some("aragorn.com".to_string()),
 				email: Some("aragorn@middleearth.com".to_string()),
 			})
 		},
 		maintainers: btreeset! {
-			Person::Data(PersonData {
+			Person::Data(Person {
 				name: "legolas".to_string(),
 				url: Some("legolas.com".to_string()),
 				email: Some("legolas@middleearth.com".to_string()),
 			}),
-			Person::Data(PersonData {
+			Person::Data(Person {
 				name: "aragorn".to_string(),
 				url: Some("aragorn.com".to_string()),
 				email: Some("aragorn@middleearth.com".to_string()),

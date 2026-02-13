@@ -147,12 +147,12 @@ impl Config {
 		}
 
 		let mut package_json_data = match package_config.package_json.unwrap_or_default() {
-			PackageJsonPresetRef::PresetId(id) => typescript.get_package_json(&id)?,
-			PackageJsonPresetRef::Preset(preset) => preset.process_data(
-				"__inlined",
-				&typescript.package_json_presets,
-				&typescript.people,
-			)?,
+			PackageJsonPresetRef::PresetId(id) => typescript.get_package_json(&id)?.config,
+			PackageJsonPresetRef::Preset(preset) => {
+				preset
+					.merge_presets("__inlined", &typescript.package_json_presets)?
+					.config
+			}
 		};
 
 		if package_json_data.package_manager.is_none() {

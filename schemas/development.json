@@ -176,14 +176,6 @@
           ],
           "default": null
         },
-        "people": {
-          "description": "A map of individual [`PersonData`] that can be referenced as authors, contributors or maintainers in a [`PackageJsonPreset`].",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/PersonData"
-          },
-          "default": {}
-        },
         "package_json_presets": {
           "description": "A map containing [`PackageJsonPreset`]s.",
           "type": "object",
@@ -252,31 +244,6 @@
         "major",
         "minor",
         "exact"
-      ]
-    },
-    "PersonData": {
-      "description": "A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "email": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "url": {
-          "type": [
-            "string",
-            "null"
-          ]
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "name"
       ]
     },
     "PackageJsonPreset": {
@@ -621,14 +588,28 @@
       ]
     },
     "Person": {
-      "description": "The kinds of values used for representing an individual in a `package.json` file, which can be used to populate the `contributors` and `maintainers` fields.\n\nIf a plain string is used, it will be interpreted as an id for a [`PersonData`] that is stored in the global config.",
-      "anyOf": [
-        {
+      "description": "A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.",
+      "type": "object",
+      "properties": {
+        "name": {
           "type": "string"
         },
-        {
-          "$ref": "#/$defs/PersonData"
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name"
       ]
     },
     "Funding": {
@@ -4216,7 +4197,7 @@
           "description": "One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.",
           "type": "array",
           "items": {
-            "$ref": "#/$defs/TemplatingPresetReference"
+            "$ref": "#/$defs/TemplatingPresetRef"
           },
           "default": []
         },
@@ -4340,7 +4321,7 @@
         }
       ]
     },
-    "TemplatingPresetReference": {
+    "TemplatingPresetRef": {
       "description": "A reference to a templating preset, or a new preset definition.",
       "anyOf": [
         {
@@ -10104,7 +10085,7 @@
           "description": "A set of templates to generate when this preset is used.",
           "type": "array",
           "items": {
-            "$ref": "#/$defs/TemplatingPresetReference"
+            "$ref": "#/$defs/TemplatingPresetRef"
           },
           "default": []
         },
@@ -10140,7 +10121,7 @@
           "description": "One or many workflows to generate in the new repo.",
           "type": "array",
           "items": {
-            "$ref": "#/$defs/WorkflowPresetReference"
+            "$ref": "#/$defs/GhWorkflowPresetRef"
           },
           "default": []
         }
@@ -10172,7 +10153,7 @@
         }
       ]
     },
-    "WorkflowPresetReference": {
+    "GhWorkflowPresetRef": {
       "description": "The definition for a new Github workflow, or a reference to a preset.",
       "anyOf": [
         {
@@ -10214,7 +10195,7 @@
       ]
     },
     "GhWorkflowPreset": {
-      "description": "A preset for a gihub workflow.",
+      "description": "A preset for a github workflow.",
       "type": "object",
       "properties": {
         "extends_presets": {
@@ -10295,7 +10276,7 @@
           "description": "A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/JobPresetRef"
+            "$ref": "#/$defs/GhJobPresetRef"
           },
           "default": {}
         }
@@ -11973,7 +11954,7 @@
         }
       ]
     },
-    "JobPresetRef": {
+    "GhJobPresetRef": {
       "description": "A workflow run is made up of one or more jobs. Jobs run in parallel by default. To run jobs sequentially, you can define dependencies on other jobs using the jobs.\n\nSee more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs\n\nYou can use a job preset (by referring to it by its ID) or define a new one.",
       "anyOf": [
         {
@@ -11982,11 +11963,11 @@
         },
         {
           "description": "The definition for this job",
-          "$ref": "#/$defs/JobPreset"
+          "$ref": "#/$defs/GhJobPreset"
         }
       ]
     },
-    "JobPreset": {
+    "GhJobPreset": {
       "description": "A preset for a gihub workflow job.",
       "type": "object",
       "properties": {
@@ -14057,7 +14038,7 @@
         "with_templates": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/TemplatingPresetReference"
+            "$ref": "#/$defs/TemplatingPresetRef"
           },
           "default": []
         }
@@ -14090,7 +14071,7 @@
           "description": "A map of presets for Github workflow jobs",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/JobPreset"
+            "$ref": "#/$defs/GhJobPreset"
           },
           "default": {}
         },

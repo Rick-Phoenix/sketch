@@ -45,10 +45,7 @@ pub struct PackageJson {
 
 	/// The author of this package.
 	#[serde(skip_serializing_if = "Option::is_none")]
-	#[cfg(feature = "presets")]
 	pub author: Option<Person>,
-	#[cfg(not(feature = "presets"))]
-	pub author: Option<PersonData>,
 
 	/// This helps people discover your package, as it's listed in 'npm search'.
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -160,17 +157,11 @@ pub struct PackageJson {
 
 	/// A list of people who contributed to this package.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[cfg(feature = "presets")]
 	pub contributors: BTreeSet<Person>,
-	#[cfg(not(feature = "presets"))]
-	pub contributors: BTreeSet<PersonData>,
 
 	/// A list of people who maintain this package.
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
-	#[cfg(feature = "presets")]
 	pub maintainers: BTreeSet<Person>,
-	#[cfg(not(feature = "presets"))]
-	pub maintainers: BTreeSet<PersonData>,
 
 	/// Specify either a single file or an array of filenames to put in place for the man program to find.
 	#[serde(skip_serializing_if = "Option::is_none")]
