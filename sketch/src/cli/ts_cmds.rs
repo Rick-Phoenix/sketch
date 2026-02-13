@@ -22,8 +22,8 @@ use crate::{
 pub enum TsCommands {
 	/// Generates a new typescript monorepo
 	Monorepo {
-		/// The root directory for the new monorepo. [default: `ts_root`].
-		dir: Option<PathBuf>,
+		/// The root directory for the new monorepo.
+		dir: PathBuf,
 
 		/// The `pnpm-workspace.yaml` preset to use for the new monorepo. If it's unset and `pnpm` is the chosen package manager, the default preset will be used.
 		#[arg(short, long, value_name = "PRESET_ID")]
@@ -93,8 +93,6 @@ impl TsCommands {
 
 		match self {
 			Self::Config { output, preset } => {
-				let typescript = config.typescript.unwrap_or_default();
-
 				let content = typescript.get_tsconfig_preset(&preset)?.config;
 
 				let output = output.unwrap_or_else(|| "tsconfig.json".into());
@@ -110,7 +108,7 @@ impl TsCommands {
 				install,
 				root_package_overrides,
 				root_package,
-				dir,
+				dir: out_dir,
 				pnpm,
 			} => {
 				let mut root_package = if let Some(id) = root_package {
@@ -118,7 +116,6 @@ impl TsCommands {
 				} else {
 					let mut package = TsPackagePreset::default();
 					package.oxlint = Some(OxlintConfigSetting::Bool(true));
-					package.name = Some("root".to_string());
 					package
 				};
 
@@ -127,7 +124,6 @@ impl TsCommands {
 				}
 
 				let package_manager = *typescript.package_manager.get_or_insert_default();
-				let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
 				let pnpm_config = if let Some(id) = pnpm {
 					Some(typescript.get_pnpm_preset(&id)?.config)

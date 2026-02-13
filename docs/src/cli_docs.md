@@ -301,11 +301,11 @@ Executes typescript-specific commands
 
 Generates a new typescript monorepo
 
-**Usage:** `sketch ts monorepo [OPTIONS] [DIR]`
+**Usage:** `sketch ts monorepo [OPTIONS] <DIR>`
 
 ###### **Arguments:**
 
-* `<DIR>` — The root directory for the new monorepo. [default: `ts_root`]
+* `<DIR>` — The root directory for the new monorepo
 
 ###### **Options:**
 
