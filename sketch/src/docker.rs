@@ -44,6 +44,7 @@ impl DockerConfig {
 #[serde(default)]
 pub struct ComposePreset {
 	/// The list of extended presets.
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -55,8 +56,8 @@ impl ExtensiblePreset for ComposePreset {
 		PresetKind::ComposeFile
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 
@@ -72,11 +73,7 @@ impl ComposePreset {
 			return Ok(self.config);
 		}
 
-		let mut merged_preset = if self.extends_presets.is_empty() {
-			self
-		} else {
-			self.merge_presets(id, &config.compose_presets)?
-		};
+		let mut merged_preset = self.merge_presets(id, &config.compose_presets)?;
 
 		for service_data in merged_preset.config.services.values_mut() {
 			match service_data {
@@ -87,11 +84,11 @@ impl ComposePreset {
 				}
 				ServicePresetRef::Config(preset) => {
 					if !preset.extends_presets.is_empty() {
-						let data = std::mem::take(preset);
+						let mut data = std::mem::take(preset);
 
-						*preset = data
-							.merge_presets("__inlined", &config.service_presets)?
-							.into();
+						*data = data.merge_presets("__inlined", &config.service_presets)?;
+
+						*preset = data;
 					}
 				}
 			};
@@ -143,7 +140,7 @@ impl ExtensiblePreset for DockerServicePreset {
 		PresetKind::DockerService
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }

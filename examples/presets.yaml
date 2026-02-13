@@ -208,7 +208,7 @@ pre_commit_presets:
   base:
     repos:
       - repo: https://github.com/gitleaks/gitleaks
-        rev: v8.28.0
+        rev: v8.30.0
         hooks:
           - id: gitleaks
 
@@ -280,7 +280,7 @@ typescript:
   no_convert_latest_to_range: true
 
   # Version range to use when converting from `latest`
-  version_range: patch
+  version_range: minor
 
   # `pnpm-workspace.yaml` presets
   pnpm_presets:

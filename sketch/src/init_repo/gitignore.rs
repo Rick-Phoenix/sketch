@@ -51,8 +51,9 @@ impl Merge for GitIgnore {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(deny_unknown_fields)]
 pub struct GitignorePreset {
-	#[serde(default)]
 	/// The ids of the extended presets.
+	#[serde(default)]
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	pub content: GitIgnore,
@@ -63,8 +64,8 @@ impl ExtensiblePreset for GitignorePreset {
 		PresetKind::Gitignore
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 

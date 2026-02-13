@@ -54,6 +54,7 @@ impl FromStr for TemplatingPresetReference {
 #[serde(deny_unknown_fields)]
 pub struct TemplatingPreset {
 	/// The list of extended preset IDs.
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	/// The list of templates for this preset. Each element can be an individual template or a path to a directory inside `templates_dir` to render all the templates inside of it.
@@ -70,8 +71,8 @@ impl ExtensiblePreset for TemplatingPreset {
 		PresetKind::Templates
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 

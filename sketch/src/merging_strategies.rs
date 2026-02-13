@@ -3,7 +3,7 @@ use crate::*;
 pub trait ExtensiblePreset: Merge + Sized + Clone {
 	fn kind() -> PresetKind;
 
-	fn get_extended_ids(&self) -> &IndexSet<String>;
+	fn extended_ids(&mut self) -> &mut IndexSet<String>;
 
 	fn merge_presets(
 		self,
@@ -14,12 +14,12 @@ pub trait ExtensiblePreset: Merge + Sized + Clone {
 	}
 
 	fn merge_presets_recursive(
-		self,
+		mut self,
 		current_id: &str,
 		store: &IndexMap<String, Self>,
 		processed_ids: &mut IndexSet<String>,
 	) -> Result<Self, AppError> {
-		let presets_to_extend = self.get_extended_ids();
+		let presets_to_extend = self.extended_ids().clone();
 
 		if presets_to_extend.is_empty() {
 			return Ok(self);
@@ -27,35 +27,24 @@ pub trait ExtensiblePreset: Merge + Sized + Clone {
 
 		check_for_circular_dependencies(current_id, processed_ids, Self::kind())?;
 
-		let mut base_preset: Option<Self> = None;
-
-		for id in presets_to_extend {
-			let extend_target = store
+		for id in &presets_to_extend {
+			let mut extend_target = store
 				.get(id)
 				.ok_or_else(|| AppError::PresetNotFound {
 					kind: Self::kind(),
 					name: id.clone(),
 				})?
-				.clone();
+				.clone()
+				.merge_presets_recursive(id, store, processed_ids)?;
 
-			let complete_target =
-				extend_target.merge_presets_recursive(id, store, processed_ids)?;
+			extend_target.merge(self);
 
-			if let Some(base) = base_preset.as_mut() {
-				base.merge(complete_target);
-			} else {
-				base_preset = Some(complete_target)
-			}
+			self = extend_target;
 		}
 
-		// Can never be None due to the early exit
-		let mut aggregated = base_preset.unwrap();
+		*self.extended_ids() = presets_to_extend;
 
-		// We merge `self` last because this is an extension more than a merge,
-		// the last element is the most relevant
-		aggregated.merge(self);
-
-		Ok(aggregated)
+		Ok(self)
 	}
 }
 

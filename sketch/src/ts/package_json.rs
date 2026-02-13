@@ -6,8 +6,8 @@ impl ExtensiblePreset for PackageJsonPreset {
 		PresetKind::PackageJson
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 
@@ -82,6 +82,7 @@ impl PackageJsonPreset {
 #[serde(default)]
 pub struct PackageJsonPreset {
 	/// The list of extended presets.
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 	#[serde(flatten)]
 	pub config: PackageJson,

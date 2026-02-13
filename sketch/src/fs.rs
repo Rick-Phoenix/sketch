@@ -2,7 +2,7 @@ use serde::de::DeserializeOwned;
 
 use crate::*;
 
-pub fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), AppError> {
+pub(crate) fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), AppError> {
 	let glob_str = glob.to_string_lossy();
 
 	// Skip complex glob patterns
@@ -40,7 +40,7 @@ pub fn create_dirs_from_stripped_glob(glob: &Path) -> Result<(), AppError> {
 	Ok(())
 }
 
-pub fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
+pub(crate) fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
 	let mut current_dir = start_dir;
 
 	loop {
@@ -57,13 +57,13 @@ pub fn find_file_up(start_dir: &Path, target_file: &str) -> Option<PathBuf> {
 	}
 }
 
-pub fn get_extension(file: &Path) -> Result<&OsStr, AppError> {
+pub(crate) fn get_extension(file: &Path) -> Result<&OsStr, AppError> {
 	Ok(file
 		.extension()
 		.with_context(|| format!("File `{}` has no extension", file.display()))?)
 }
 
-pub fn serialize_toml<T: Serialize>(
+pub(crate) fn serialize_toml<T: Serialize>(
 	item: &T,
 	path: &Path,
 	overwrite: bool,
@@ -85,7 +85,7 @@ pub fn serialize_toml<T: Serialize>(
 	Ok(())
 }
 
-pub fn serialize_yaml<T: Serialize>(
+pub(crate) fn serialize_yaml<T: Serialize>(
 	item: &T,
 	path: &Path,
 	overwrite: bool,
@@ -98,7 +98,7 @@ pub fn serialize_yaml<T: Serialize>(
 	})
 }
 
-pub fn serialize_json<T: Serialize>(
+pub(crate) fn serialize_json<T: Serialize>(
 	item: &T,
 	path: &Path,
 	overwrite: bool,
@@ -111,7 +111,7 @@ pub fn serialize_json<T: Serialize>(
 	})
 }
 
-pub fn deserialize_toml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
+pub(crate) fn deserialize_toml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
 	let contents = read_to_string(path).map_err(|e| AppError::ReadError {
 		path: path.to_path_buf(),
 		source: e,
@@ -123,7 +123,7 @@ pub fn deserialize_toml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError>
 	})
 }
 
-pub fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
+pub(crate) fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
 	let file = read_file(path)?;
 
 	serde_json::from_reader(file).map_err(|e| AppError::DeserializationError {
@@ -132,7 +132,7 @@ pub fn deserialize_json<T: DeserializeOwned>(path: &Path) -> Result<T, AppError>
 	})
 }
 
-pub fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
+pub(crate) fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError> {
 	let file = read_file(path)?;
 
 	serde_yaml_ng::from_reader(file).map_err(|e| AppError::DeserializationError {
@@ -141,14 +141,14 @@ pub fn deserialize_yaml<T: DeserializeOwned>(path: &Path) -> Result<T, AppError>
 	})
 }
 
-pub fn read_file(path: &Path) -> Result<File, AppError> {
+pub(crate) fn read_file(path: &Path) -> Result<File, AppError> {
 	File::open(path).map_err(|e| AppError::ReadError {
 		path: path.to_path_buf(),
 		source: e,
 	})
 }
 
-pub fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), AppError> {
+pub(crate) fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), AppError> {
 	let mut file = open_file_if_overwriting(overwrite, path)?;
 
 	file.write_all(content.as_bytes())
@@ -158,7 +158,7 @@ pub fn write_file(path: &Path, content: &str, overwrite: bool) -> Result<(), App
 		})
 }
 
-pub fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, AppError> {
+pub(crate) fn open_file_if_overwriting(overwrite: bool, path: &Path) -> Result<File, AppError> {
 	if overwrite {
 		File::create(path).map_err(|e| AppError::WriteError {
 			path: path.to_path_buf(),

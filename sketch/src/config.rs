@@ -1,3 +1,5 @@
+use std::mem::take;
+
 use crate::{
 	docker::DockerConfig,
 	gh_workflow::GithubConfig,
@@ -51,6 +53,7 @@ pub struct Config {
 	#[merge(with = overwrite_if_true)]
 	pub no_overwrite: bool,
 
+	#[merge(skip)]
 	/// The paths (absolute, or relative to the originating config file) to the config files to extend.
 	pub extends: IndexSet<PathBuf>,
 
@@ -82,28 +85,20 @@ pub struct Config {
 
 impl Config {
 	fn merge_configs_recursive(
-		&self,
-		is_initial: bool,
-		base: &mut Self,
-
+		mut self,
 		processed_sources: &mut IndexSet<PathBuf>,
-	) -> Result<(), AppError> {
-		// Safe unwrapping due to the check below
-		let current_config_file = self.config_file.as_ref();
-		let current_dir = get_parent_dir(current_config_file.unwrap())?;
+	) -> Result<Self, AppError> {
+		// There is always a config file when this is called
+		let config_file = self.config_file.clone().unwrap();
 
-		for rel_path in &self.extends {
-			let abs_path = current_dir
-				.join(rel_path)
-				.canonicalize()
-				.map_err(|e| AppError::PathCanonicalization {
-					path: rel_path.clone(),
-					source: e,
-				})?;
+		let config_file_parent_dir = get_parent_dir(&config_file)?.to_path_buf();
 
-			let extended_config = extract_config_from_file(&abs_path)?;
+		let paths_to_extend = take(&mut self.extends);
 
-			let was_absent = processed_sources.insert(abs_path.clone());
+		for target_rel_path in &paths_to_extend {
+			let target_abs_path = get_abs_path(&config_file_parent_dir.join(target_rel_path))?;
+
+			let was_absent = processed_sources.insert(target_abs_path.clone());
 
 			if !was_absent {
 				let chain: Vec<_> = processed_sources
@@ -113,25 +108,27 @@ impl Config {
 
 				return Err(AppError::CircularDependency(format!(
 					"Found circular dependency to the config file {}. The full processed path is: {}",
-					abs_path.display(),
+					target_abs_path.display(),
 					chain.join(" -> ")
 				)));
 			}
 
-			extended_config.merge_configs_recursive(false, base, processed_sources)?;
+			let mut config_to_extend = extract_config_from_file(&target_abs_path)?
+				.merge_configs_recursive(processed_sources)?;
 
-			base.merge(extended_config);
+			config_to_extend.merge(self);
+
+			self = config_to_extend;
 		}
 
-		if !is_initial {
-			base.merge(self.clone());
-		}
+		self.extends = paths_to_extend;
+		self.config_file = Some(config_file);
 
-		Ok(())
+		Ok(self)
 	}
 
 	/// Recursively merges a [`Config`] with its extended configs.
-	pub fn merge_config_files(self) -> Result<Self, AppError> {
+	pub fn merge_config_files(mut self) -> Result<Self, AppError> {
 		let mut processed_sources: IndexSet<PathBuf> = Default::default();
 
 		let config_file = self
@@ -141,18 +138,14 @@ impl Config {
 
 		processed_sources.insert(config_file.clone());
 
-		let mut extended = Self::default();
+		self = self.merge_configs_recursive(&mut processed_sources)?;
 
-		self.merge_configs_recursive(true, &mut extended, &mut processed_sources)?;
-
-		extended.merge(self);
-
-		// Should not show up in the `extends` list
+		// Should not show up in the `extends` list we insert below
 		processed_sources.swap_remove(&config_file);
 
 		// Replace rel paths with abs paths for better debugging
-		extended.extends = processed_sources;
+		self.extends = processed_sources;
 
-		Ok(extended)
+		Ok(self)
 	}
 }

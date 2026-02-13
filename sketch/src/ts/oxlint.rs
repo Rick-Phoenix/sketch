@@ -7,6 +7,7 @@ pub(crate) use oxlint_config::*;
 #[serde(default)]
 pub struct OxlintPreset {
 	/// The list of extended presets.
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -18,8 +19,8 @@ impl ExtensiblePreset for OxlintPreset {
 		PresetKind::Oxlint
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 

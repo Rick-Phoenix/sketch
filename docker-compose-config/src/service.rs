@@ -42,6 +42,7 @@ mod presets {
 	pub struct DockerServicePreset {
 		/// The list of extended presets.
 		#[serde(skip_serializing)]
+		#[merge(skip)]
 		pub extends_presets: IndexSet<String>,
 
 		#[serde(flatten)]

@@ -12,6 +12,7 @@ use crate::{
 #[serde(default)]
 pub struct PnpmPreset {
 	/// The list of extended presets.
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -23,8 +24,8 @@ impl ExtensiblePreset for PnpmPreset {
 		PresetKind::PnpmWorkspace
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 

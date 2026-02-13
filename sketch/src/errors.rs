@@ -7,7 +7,6 @@ use crate::PresetKind;
 /// The kinds of errors that can occur during operations.
 #[derive(Debug, Error)]
 pub enum AppError {
-	// I/O errors
 	#[error("Could not create the dir `{path}`: {source}")]
 	DirCreation { path: PathBuf, source: io::Error },
 
@@ -40,7 +39,7 @@ pub enum AppError {
 	CircularDependency(String),
 
 	// Serde errors
-	#[error("Error while serializing the content for `{file:?}`: {error}")]
+	#[error("Error while serializing the contents of `{file:?}`: {error}")]
 	SerializationError { file: PathBuf, error: String },
 
 	#[error("Error while deserializing the contents of `{file:?}`: {error}")]

@@ -296,6 +296,7 @@ impl Default for CargoTomlPresetRef {
 #[serde(default)]
 pub struct CargoTomlPreset {
 	/// The list of extended presets.
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -307,7 +308,7 @@ impl ExtensiblePreset for CargoTomlPreset {
 		PresetKind::CargoToml
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }

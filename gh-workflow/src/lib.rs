@@ -117,6 +117,7 @@ mod presets {
 	pub struct JobPreset {
 		/// The list of extended presets.
 		#[serde(skip_serializing, default)]
+		#[merge(skip)]
 		pub extends_presets: IndexSet<String>,
 
 		#[serde(flatten)]

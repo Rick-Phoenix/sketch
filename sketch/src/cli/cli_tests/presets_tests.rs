@@ -40,7 +40,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 	let pre_commit_output: PreCommitConfig =
 		deserialize_yaml(&out_dir.join(".pre-commit-config.yaml"))?;
 
-	assert_eq!(
+	pretty_assert_eq!(
 		pre_commit_output,
 		PreCommitConfig {
 			repos: btreeset! {
@@ -72,11 +72,11 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
 	let hook_pre_output = read_to_string(out_dir.join("pre.txt"))?;
 
-	assert_eq!(hook_pre_output, "hi\n");
+	pretty_assert_eq!(hook_pre_output, "hi\n");
 
 	let hook_post_output = read_to_string(out_dir.join("post.txt"))?;
 
-	assert_eq!(hook_post_output, "hi\n");
+	pretty_assert_eq!(hook_post_output, "hi\n");
 
 	let root_dockerfile_output = read_to_string(out_dir.join("Dockerfile"))?;
 
@@ -88,7 +88,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
     CMD ["npm", "run", "dev"]
   "#};
 
-	assert_eq!(root_dockerfile_output, expected_dockerfile);
+	pretty_assert_eq!(root_dockerfile_output, expected_dockerfile);
 
 	let package_out_dir = out_dir.join("packages/presets_example");
 
@@ -110,23 +110,23 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 	get_tree_output(&package_out_dir, None)?;
 
 	let package_dockerfile_output = read_to_string(package_out_dir.join("Dockerfile"))?;
-	assert_eq!(package_dockerfile_output, expected_dockerfile);
+	pretty_assert_eq!(package_dockerfile_output, expected_dockerfile);
 
 	let oxlint_result: OxlintConfig = deserialize_json(&package_out_dir.join(".oxlintrc.json"))?;
 
-	assert_eq!(
+	pretty_assert_eq!(
 		oxlint_result.ignore_patterns,
 		btreeset! { "**/node_modules/**".to_string(), ".cache".to_string(), ".output".to_string() }
 	);
 
 	let package_json_result: PackageJson = deserialize_json(&package_out_dir.join("package.json"))?;
 
-	assert_eq!(
+	pretty_assert_eq!(
 		package_json_result.description.unwrap(),
 		"I am the frontend preset"
 	);
-	assert_eq!(package_json_result.license.unwrap(), "MIT");
-	assert_eq!(
+	pretty_assert_eq!(package_json_result.license.unwrap(), "MIT");
+	pretty_assert_eq!(
 		package_json_result.dev_dependencies,
 		btreemap! {
 		  "svelte".to_string() => "*".to_string(),
@@ -135,7 +135,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 		}
 	);
 
-	assert_eq!(
+	pretty_assert_eq!(
 		package_json_result.scripts,
 		btreemap! {
 		  "dev".to_string() => "vite dev".to_string(),
@@ -145,7 +145,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 
 	let tsconfig_result: TsConfig = deserialize_json(&package_out_dir.join("tsconfig.json"))?;
 
-	assert_eq!(
+	pretty_assert_eq!(
 		tsconfig_result.references,
 		btreeset! {
 		  TsConfigReference { path: "/some/path".to_string() },
@@ -153,7 +153,7 @@ async fn presets() -> Result<(), Box<dyn std::error::Error>> {
 		}
 	);
 
-	assert_eq!(
+	pretty_assert_eq!(
 		tsconfig_result.include,
 		btreeset! {
 		  "src".to_string(), "tests".to_string(), "scripts".to_string()

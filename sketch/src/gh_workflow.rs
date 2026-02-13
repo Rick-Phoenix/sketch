@@ -96,6 +96,7 @@ impl GithubConfig {
 pub struct GithubWorkflowPreset {
 	/// The list of extended presets.
 	#[serde(default)]
+	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
 
 	#[serde(flatten)]
@@ -107,8 +108,8 @@ impl ExtensiblePreset for GithubWorkflowPreset {
 		PresetKind::GithubWorkflow
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 
@@ -177,8 +178,8 @@ impl ExtensiblePreset for JobPreset {
 		PresetKind::GithubWorkflowJob
 	}
 
-	fn get_extended_ids(&self) -> &IndexSet<String> {
-		&self.extends_presets
+	fn extended_ids(&mut self) -> &mut IndexSet<String> {
+		&mut self.extends_presets
 	}
 }
 
