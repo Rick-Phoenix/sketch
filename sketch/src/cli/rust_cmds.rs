@@ -3,14 +3,18 @@ use super::*;
 #[derive(Subcommand, Debug, Clone)]
 pub enum RustCommands {
 	Crate {
+		/// The output directory for the new crate. Also the name of the generated crate by default.
 		dir: PathBuf,
 
+		/// The crate preset to use.
 		#[arg(short, long)]
 		preset: Option<String>,
 
+		/// The `Cargo.toml` manifest preset to use (overrides the one in the preset if one was selected).
 		#[arg(short, long)]
 		manifest: Option<String>,
 
+		/// The name of the generated crate (by default, it uses the name of the output dir).
 		#[arg(short, long)]
 		name: Option<String>,
 
@@ -18,9 +22,12 @@ pub enum RustCommands {
 		config: Option<CratePreset>,
 	},
 
+	/// Generates a new `Cargo.toml` file from a preset.
 	Manifest {
+		/// The id of the preset.
 		preset: String,
 
+		/// The output path [default: `Cargo.toml`]
 		output: Option<PathBuf>,
 	},
 }

@@ -543,6 +543,7 @@ pub enum Commands {
 		output: Option<PathBuf>,
 	},
 
+	/// The subcommands to generate files used in Rust workspaces.
 	Rust {
 		#[command(subcommand)]
 		command: RustCommands,
