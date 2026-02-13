@@ -91,16 +91,27 @@ impl PackageType {
 	}
 }
 
+pub struct TsPackageSetup<'a> {
+	pub data: TsPackagePresetRef,
+	pub pkg_root: &'a Path,
+	pub tsconfig_files_to_update: Vec<PathBuf>,
+	pub cli_vars: &'a IndexMap<String, Value>,
+	pub package_type: PackageType,
+	pub install: bool,
+}
+
 impl Config {
 	/// Generates a new typescript package.
-	pub async fn crate_ts_package(
-		mut self,
-		data: TsPackagePresetRef,
-		pkg_root: &Path,
-		tsconfig_files_to_update: Option<Vec<PathBuf>>,
-		cli_vars: &IndexMap<String, Value>,
-		mut package_type: PackageType,
-	) -> Result<(), AppError> {
+	pub async fn create_ts_package(mut self, setup: TsPackageSetup<'_>) -> Result<(), AppError> {
+		let TsPackageSetup {
+			data,
+			pkg_root,
+			tsconfig_files_to_update,
+			cli_vars,
+			mut package_type,
+			install,
+		} = setup;
+
 		let overwrite = self.can_overwrite();
 
 		let typescript = mem::take(&mut self.typescript).unwrap_or_default();
@@ -296,21 +307,18 @@ impl Config {
 			serialize_json(&tsconfig, &pkg_root.join(file), overwrite)?;
 		}
 
-		if let Some(tsconfig_paths) = tsconfig_files_to_update {
-			for path in tsconfig_paths {
-				let mut tsconfig: TsConfig = deserialize_json(&path)?;
+		for path in tsconfig_files_to_update {
+			let mut tsconfig: TsConfig = deserialize_json(&path)?;
 
-				let path_to_new_tsconfig =
-					get_relative_path(&path, &pkg_root.join("tsconfig.json"))?;
+			let path_to_new_tsconfig = get_relative_path(&path, &pkg_root.join("tsconfig.json"))?;
 
-				tsconfig
-					.references
-					.insert(ts_config::TsConfigReference {
-						path: path_to_new_tsconfig.to_string_lossy().to_string(),
-					});
+			tsconfig
+				.references
+				.insert(ts_config::TsConfigReference {
+					path: path_to_new_tsconfig.to_string_lossy().to_string(),
+				});
 
-				serialize_json(&tsconfig, &path, true)?;
-			}
+			serialize_json(&tsconfig, &path, true)?;
 		}
 
 		if !package_type.is_monorepo_root() {
@@ -403,6 +411,15 @@ impl Config {
 				package_config.hooks_post,
 				cli_vars,
 				false,
+			)?;
+		}
+
+		if install {
+			launch_command(
+				package_manager.to_string().as_str(),
+				&["install"],
+				&pkg_root,
+				Some("Could not install dependencies"),
 			)?;
 		}
 

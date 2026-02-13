@@ -7,11 +7,10 @@ mod ts_barrel;
 use ts_barrel::*;
 
 use crate::{
-	exec::launch_command,
 	ts::{
 		PackageManager,
 		oxlint::OxlintConfigSetting,
-		package::{PackageType, TsPackagePreset, TsPackagePresetRef},
+		package::{PackageType, TsPackagePreset, TsPackagePresetRef, TsPackageSetup},
 		pnpm::PnpmWorkspace,
 		vitest::VitestPresetRef,
 	},
@@ -52,7 +51,7 @@ pub enum TsCommands {
 
 		/// An optional list of tsconfig files where the new tsconfig file will be added as a reference.
 		#[arg(short, long)]
-		update_tsconfig: Option<Vec<PathBuf>>,
+		update_tsconfig: Vec<PathBuf>,
 
 		/// Installs the dependencies with the chosen package manager
 		#[arg(short, long)]
@@ -134,23 +133,15 @@ impl TsCommands {
 				};
 
 				config
-					.crate_ts_package(
-						TsPackagePresetRef::Config(root_package),
-						&out_dir,
-						None,
+					.create_ts_package(TsPackageSetup {
+						data: TsPackagePresetRef::Config(root_package),
+						pkg_root: &out_dir,
+						tsconfig_files_to_update: vec![],
 						cli_vars,
-						PackageType::MonorepoRoot { pnpm: pnpm_config },
-					)
+						package_type: PackageType::MonorepoRoot { pnpm: pnpm_config },
+						install,
+					})
 					.await?;
-
-				if install {
-					launch_command(
-						package_manager.to_string().as_str(),
-						&["install"],
-						&out_dir,
-						Some("Could not install dependencies"),
-					)?;
-				}
 			}
 			Self::Package {
 				preset,
@@ -182,25 +173,15 @@ impl TsCommands {
 						.into()
 				});
 
-				if install {
-					let package_manager = *typescript.package_manager.get_or_insert_default();
-
-					launch_command(
-						package_manager.to_string().as_str(),
-						&["install"],
-						&package_dir,
-						Some("Could not install dependencies"),
-					)?;
-				}
-
 				config
-					.crate_ts_package(
-						TsPackagePresetRef::Config(package),
-						&package_dir,
-						update_tsconfig,
+					.create_ts_package(TsPackageSetup {
+						data: TsPackagePresetRef::Config(package),
+						pkg_root: &package_dir,
+						tsconfig_files_to_update: update_tsconfig,
 						cli_vars,
-						PackageType::Normal,
-					)
+						package_type: PackageType::Normal,
+						install,
+					})
 					.await?;
 			}
 		}

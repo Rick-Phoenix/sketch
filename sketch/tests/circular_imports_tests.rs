@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use sketch_it::{
 	AppError,
 	config::Config,
-	ts::package::{PackageType, TsPackagePresetRef},
+	ts::package::{PackageType, TsPackagePresetRef, TsPackageSetup},
 };
 
 #[tokio::test]
@@ -27,13 +27,14 @@ async fn circular_package_json() -> Result<(), AppError> {
 	let config = Config::from_file(PathBuf::from("tests/circular_package_json/sketch.toml"))?;
 
 	let result = config
-		.crate_ts_package(
-			TsPackagePresetRef::Preset("circular_package_json".to_string()),
-			&PathBuf::from("tests/output/circular_configs"),
-			None,
-			&Default::default(),
-			PackageType::Normal,
-		)
+		.create_ts_package(TsPackageSetup {
+			data: TsPackagePresetRef::Preset("circular_package_json".to_string()),
+			pkg_root: &PathBuf::from("tests/output/circular_configs"),
+			tsconfig_files_to_update: vec![],
+			cli_vars: &Default::default(),
+			package_type: PackageType::Normal,
+			install: false,
+		})
 		.await;
 
 	match result {
@@ -53,13 +54,14 @@ async fn circular_tsconfig() -> Result<(), AppError> {
 	let config = Config::from_file(PathBuf::from("tests/circular_tsconfigs/sketch.toml"))?;
 
 	let result = config
-		.crate_ts_package(
-			TsPackagePresetRef::Preset("circular_tsconfigs".to_string()),
-			&PathBuf::from("tests/output/circular_configs"),
-			None,
-			&Default::default(),
-			PackageType::Normal,
-		)
+		.create_ts_package(TsPackageSetup {
+			data: TsPackagePresetRef::Preset("circular_tsconfigs".to_string()),
+			pkg_root: &PathBuf::from("tests/output/circular_configs"),
+			tsconfig_files_to_update: vec![],
+			cli_vars: &Default::default(),
+			package_type: PackageType::Normal,
+			install: false,
+		})
 		.await;
 
 	match result {
