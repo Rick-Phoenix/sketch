@@ -117,6 +117,7 @@ fn get_clean_example_cmd(
 	Ok(())
 }
 
+#[cfg(feature = "schemars")]
 #[test]
 fn generate_cli_docs() -> Result<(), Box<dyn std::error::Error>> {
 	let markdown: String = clap_markdown::help_markdown::<Cli>();

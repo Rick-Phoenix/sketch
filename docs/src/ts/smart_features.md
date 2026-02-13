@@ -4,7 +4,7 @@ Sketch provides some additional features that may come in handy when dealing wit
 
 ## Converting `latest` to a range
 
-By default, all versions marked as `latest` will be converted to a version range (`minor` by default, but can be customized) that starts from the actual latest version for that package.
+When the `npm-versions` feature is enabled, by default, all versions marked as `latest` will be converted to a version range (`minor` by default, but can be customized) that starts from the actual latest version for that package.
 
 This means that you can easily reuse your presets over time to start new projects, without needing to manually bump all versions, and while also avoiding `latest`, which is not suitable for stability.
 
