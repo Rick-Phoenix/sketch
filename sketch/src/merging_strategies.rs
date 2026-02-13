@@ -32,7 +32,7 @@ pub trait ExtensiblePreset: Merge + Sized + Clone {
 		for id in presets_to_extend {
 			let extend_target = store
 				.get(id)
-				.ok_or(AppError::PresetNotFound {
+				.ok_or_else(|| AppError::PresetNotFound {
 					kind: Self::kind(),
 					name: id.clone(),
 				})?

@@ -27,7 +27,7 @@ impl Config {
 	pub fn get_pre_commit_preset(&self, id: &str) -> AppResult<PreCommitPreset> {
 		self.pre_commit_presets
 			.get(id)
-			.ok_or(AppError::PresetNotFound {
+			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::PreCommit,
 				name: id.to_string(),
 			})?

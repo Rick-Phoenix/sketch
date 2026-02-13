@@ -160,7 +160,7 @@ impl Cli {
 					config
 						.git_presets
 						.get(&id)
-						.ok_or(AppError::PresetNotFound {
+						.ok_or_else(|| AppError::PresetNotFound {
 							kind: PresetKind::Repo,
 							name: id.clone(),
 						})?

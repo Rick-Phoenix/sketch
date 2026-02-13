@@ -81,7 +81,7 @@ impl GithubConfig {
 	pub fn get_workflow(&self, id: &str) -> AppResult<Workflow> {
 		self.workflow_presets
 			.get(id)
-			.ok_or(AppError::PresetNotFound {
+			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::GithubWorkflow,
 				name: id.to_string(),
 			})?
@@ -136,7 +136,7 @@ impl GithubWorkflowPreset {
 					let mut data = github_config
 						.workflow_job_presets
 						.get(id)
-						.ok_or(AppError::PresetNotFound {
+						.ok_or_else(|| AppError::PresetNotFound {
 							kind: PresetKind::GithubWorkflowJob,
 							name: id.clone(),
 						})?
@@ -195,7 +195,7 @@ pub fn process_gh_job_preset(
 			if let StepPresetRef::PresetId(id) = step {
 				let data = steps_store
 					.get(id)
-					.ok_or(AppError::PresetNotFound {
+					.ok_or_else(|| AppError::PresetNotFound {
 						kind: PresetKind::GithubWorkflowStep,
 						name: id.clone(),
 					})?

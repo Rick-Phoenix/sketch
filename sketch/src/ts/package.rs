@@ -113,7 +113,7 @@ impl Config {
 			TsPackagePresetRef::Preset(id) => typescript
 				.package_presets
 				.get(&id)
-				.ok_or(AppError::PresetNotFound {
+				.ok_or_else(|| AppError::PresetNotFound {
 					kind: PresetKind::TsPackage,
 					name: id.clone(),
 				})?

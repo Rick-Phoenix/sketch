@@ -4,7 +4,7 @@ impl Config {
 	pub fn get_gitignore_preset(&self, id: &str) -> AppResult<GitignorePreset> {
 		self.gitignore_presets
 			.get(id)
-			.ok_or(AppError::PresetNotFound {
+			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::Gitignore,
 				name: id.to_string(),
 			})?

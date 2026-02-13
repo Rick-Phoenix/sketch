@@ -19,7 +19,7 @@ impl DockerConfig {
 		Ok(self
 			.compose_presets
 			.get(id)
-			.ok_or(AppError::PresetNotFound {
+			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::ComposeFile,
 				name: id.to_string(),
 			})?
@@ -29,7 +29,7 @@ impl DockerConfig {
 	pub fn get_service_preset(&self, id: &str) -> AppResult<DockerServicePreset> {
 		self.service_presets
 			.get(id)
-			.ok_or(AppError::PresetNotFound {
+			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::DockerService,
 				name: id.to_string(),
 			})?

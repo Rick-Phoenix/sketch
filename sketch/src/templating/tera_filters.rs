@@ -7,10 +7,9 @@ use semver::{Version, VersionReq};
 use crate::fs::{get_abs_path, get_relative_path};
 
 fn extract_string<'a>(filter_name: &'a str, value: &'a TeraValue) -> Result<&'a str, Error> {
-	value.as_str().ok_or(Error::call_filter(
-		filter_name,
-		format!("Value `{value}` is not a string"),
-	))
+	value
+		.as_str()
+		.ok_or_else(|| Error::call_filter(filter_name, format!("Value `{value}` is not a string")))
 }
 
 fn extract_string_arg<'a>(
@@ -20,10 +19,12 @@ fn extract_string_arg<'a>(
 ) -> Result<&'a str, Error> {
 	extract_string(
 		filter_name,
-		args.get(arg_name).ok_or(Error::call_filter(
-			filter_name,
-			format!("Required argument `{arg_name}` is missing"),
-		))?,
+		args.get(arg_name).ok_or_else(|| {
+			Error::call_filter(
+				filter_name,
+				format!("Required argument `{arg_name}` is missing"),
+			)
+		})?,
 	)
 }
 
@@ -226,10 +227,9 @@ pub(crate) fn matches_semver(
 
 	let mut target_version_text = extract_string(
 		"matches_semver",
-		args.get("target").ok_or(Error::call_filter(
-			"matches_semver",
-			"Could not find the `target` argument",
-		))?,
+		args.get("target").ok_or_else(|| {
+			Error::call_filter("matches_semver", "Could not find the `target` argument")
+		})?,
 	)?;
 
 	target_version_text = target_version_text

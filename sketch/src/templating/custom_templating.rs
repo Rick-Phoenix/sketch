@@ -352,7 +352,7 @@ impl Config {
 	pub fn get_templating_preset(&self, id: &str) -> AppResult<TemplatingPreset> {
 		self.templating_presets
 			.get(id)
-			.ok_or(AppError::PresetNotFound {
+			.ok_or_else(|| AppError::PresetNotFound {
 				kind: PresetKind::Templates,
 				name: id.to_string(),
 			})?
