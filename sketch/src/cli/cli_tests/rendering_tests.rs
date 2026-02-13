@@ -1,6 +1,79 @@
 use super::*;
 
 #[tokio::test]
+async fn tera_filters() -> Result<(), Box<dyn std::error::Error>> {
+	let examples_dir = examples_dir();
+	let output_dir = PathBuf::from("tests/output/templating_examples");
+
+	reset_testing_dir(&output_dir);
+
+	let mut bin = get_bin!();
+
+	let args = [
+		"--ignore-config",
+		"--templates-dir",
+		path_to_str!(examples_dir.join("templating/templates")),
+		"render",
+		"--template",
+		"example.j2",
+	];
+
+	let var_name = "GREETING";
+	let var_value = "hello,world";
+
+	let cmd_str = format!(
+		"{}=\"{}\" sketch {}",
+		var_name,
+		var_value,
+		args.split_at(3).1.join(" ")
+	);
+
+	let output = bin.env(var_name, var_value).args(args).output()?;
+
+	let output_str = std::str::from_utf8(&output.stdout)?.trim();
+
+	if output_str.is_empty() {
+		panic!(
+			"Error in the template output: {}",
+			std::str::from_utf8(&output.stderr)?
+		);
+	}
+
+	assert!(output_str.contains("Current arch is: x86_64"));
+	assert!(output_str.contains("Current os is: linux"));
+	assert!(output_str.contains("Current os family is: unix"));
+	assert!(output_str.contains("Is unix: true"));
+	assert!(output_str.contains("It's a dir!"));
+	assert!(output_str.contains("It's a file!"));
+	assert!(output_str.contains("First segment is: hello"));
+	assert!(output_str.contains("Second segment is: world"));
+	assert!(output_str.contains("Basename is: myfile"));
+	assert!(output_str.contains("Parent dir is: mydir"));
+	assert!(output_str.contains("Path is: Cargo"));
+	assert!(output_str.contains("Extension is: toml"));
+	assert!(output_str.contains("Matches glob: true"));
+	assert!(output_str.contains("They're taking the hobbits to Isengard!"));
+	assert!(output_str.contains("Major is: 0"));
+	assert!(output_str.contains("Minor is: 1"));
+	assert!(output_str.contains("Patch is: 0"));
+	assert!(output_str.contains("Version matches >=0.1.0: true"));
+	assert!(output_str.contains("Version matches >=0.2.0: false"));
+	assert!(output_str.contains("To camelCase: myVar"));
+	assert!(output_str.contains("To snake_case: my_var"));
+	assert!(output_str.contains("To SCREAMING_CASE: MY_VAR"));
+	assert!(output_str.contains("To PascalCase: MyVar"));
+	assert!(output_str.contains("Luke, I am your father!"));
+	assert!(output_str.contains("Entry: example.j2"));
+	assert!(output_str.contains("In yaml form:\npath: Cargo\nextension: toml"));
+	assert!(output_str.contains("In toml form:\npath = \"Cargo\"\nextension = \"toml\""));
+
+	write_file(&output_dir.join("cmd"), &cmd_str, true)?;
+	write_file(&output_dir.join("output"), output_str, true)?;
+
+	Ok(())
+}
+
+#[tokio::test]
 async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 	let output_dir = PathBuf::from("tests/output/single_templates");
 	let commands_dir = output_dir.join("commands");
@@ -127,12 +200,12 @@ async fn remote_preset() -> Result<(), Box<dyn std::error::Error>> {
 		"render",
 		"--preset",
 		"remote",
-		&output_dir.to_string_lossy(),
+		"tests/output/templating_presets/remote",
 	];
 
 	Cli::execute_with(from_remote_preset_cmd).await?;
 
-	write_command!(from_remote_preset_cmd, [1, 2, 3, 8], "remote");
+	write_command!(from_remote_preset_cmd, [1, 2, 3], "remote");
 	get_tree_output("tests/output/templating_presets/remote", None)?;
 
 	let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
@@ -175,7 +248,7 @@ async fn simple_templating_preset() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/templating_presets/simple",
 	];
 
-	write_command!(collection_preset, [1, 2, 3, 6], "collection_preset");
+	write_command!(collection_preset, [1, 2, 3], "collection_preset");
 
 	Cli::execute_with(collection_preset).await?;
 
@@ -216,7 +289,7 @@ async fn structured_presets() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/templating_presets/structured",
 	];
 
-	write_command!(structured_preset, [1, 2, 3, 6], "structured_preset");
+	write_command!(structured_preset, [1, 2, 3], "structured_preset");
 
 	Cli::execute_with(structured_preset).await?;
 

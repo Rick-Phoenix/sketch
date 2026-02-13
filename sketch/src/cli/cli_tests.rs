@@ -3,15 +3,18 @@
 #[macro_use]
 mod tests_macros;
 
-mod barrel_tests;
-mod examples_tests;
+mod docker_tests;
 mod exec_tests;
-mod generated_configs_tests;
+mod gh_workflow_preset;
+mod gitignore_preset;
 mod overwriting_tests;
-mod presets_tests;
 mod rendering_tests;
+mod repo_preset_tests;
 mod rust_gen_tests;
+mod ts_tests;
 mod vars_files_tests;
+
+use gh_workflow_preset::verify_generated_workflow;
 
 use std::fmt::Write as FmtWrite;
 use std::fs::remove_file;
@@ -34,6 +37,10 @@ impl Cli {
 			.execute()
 			.await
 	}
+}
+
+fn examples_dir() -> PathBuf {
+	PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../examples")
 }
 
 fn get_tree_output<T: AsRef<Path>>(
@@ -107,7 +114,8 @@ fn get_clean_example_cmd(
 fn generate_cli_docs() -> Result<(), Box<dyn std::error::Error>> {
 	let markdown: String = clap_markdown::help_markdown::<Cli>();
 
-	let mut file = File::create("../docs/src/cli_docs.md")?;
+	let output_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../docs/src/cli_docs.md");
+	let mut file = File::create(PathBuf::from(output_path))?;
 
 	file.write_all(markdown.as_bytes())?;
 

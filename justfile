@@ -3,7 +3,14 @@ json-schema:
 
 [working-directory('sketch')]
 test:
-    cargo test -- -q --nocapture
+    cargo test -p sketch-it -- -q --nocapture
+
+generate-cli-docs:
+    cargo test -p sketch-it --features schemars generate_cli_docs
+
+[working-directory('sketch')]
+test-all:
+    cargo test -p sketch-it --features npm-version -- -q --nocapture
 
 [working-directory('sketch')]
 release-test version="patch":

@@ -96,6 +96,14 @@ impl Person {
 	pub const fn is_preset_id(&self) -> bool {
 		matches!(self, Self::PresetId(..))
 	}
+
+	pub const fn as_data(&self) -> Option<&PersonData> {
+		if let Self::Data(v) = self {
+			Some(v)
+		} else {
+			None
+		}
+	}
 }
 
 /// A struct that represents how an individual's information is represented in a `package.json` file in the author, maintainers and contributors fields.

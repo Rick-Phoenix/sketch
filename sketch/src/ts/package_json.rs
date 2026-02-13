@@ -45,6 +45,10 @@ impl PackageJsonPreset {
 
 			package_json
 				.contributors
+				.remove(&Person::PresetId(id));
+
+			package_json
+				.contributors
 				.insert(Person::Data(data));
 		}
 
@@ -58,6 +62,10 @@ impl PackageJsonPreset {
 
 		for id in maintainers_to_fetch {
 			let data = get_person_data(&id, people)?;
+
+			package_json
+				.maintainers
+				.remove(&Person::PresetId(id));
 
 			package_json
 				.maintainers

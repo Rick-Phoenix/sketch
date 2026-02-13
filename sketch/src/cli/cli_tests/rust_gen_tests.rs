@@ -2,12 +2,37 @@ use super::*;
 use crate::rust::*;
 
 #[tokio::test]
-async fn rust_workspace() -> Result<(), Box<dyn std::error::Error>> {
-	let output_dir = PathBuf::from("tests/output/rust_tests/workspace-single");
-	let commands_dir = output_dir.join("commands");
+async fn docs_example() -> Result<(), Box<dyn std::error::Error>> {
+	let output_dir = PathBuf::from("tests/output/rust_example");
 
 	reset_testing_dir(&output_dir);
-	reset_testing_dir(&commands_dir);
+
+	let config_file = examples_dir().join("presets.yaml");
+	let output_file = output_dir.join("cargo-example.toml");
+
+	let cmd = [
+		"sketch",
+		"--ignore-config",
+		"-c",
+		&config_file.to_string_lossy(),
+		"rust",
+		"manifest",
+		"cli-custom",
+		&output_file.to_string_lossy(),
+	];
+
+	Cli::execute_with(cmd).await?;
+
+	get_clean_example_cmd(&cmd, &[1, 2, 3], &output_dir.join("rust-example-cmd"))?;
+
+	Ok(())
+}
+
+#[tokio::test]
+async fn rust_workspace() -> Result<(), Box<dyn std::error::Error>> {
+	let output_dir = PathBuf::from("tests/output/rust_tests/workspace-single");
+
+	reset_testing_dir(&output_dir);
 
 	let config_file = PathBuf::from("tests/cargo_toml_tests/cargo_toml_tests.yaml");
 
@@ -24,8 +49,6 @@ async fn rust_workspace() -> Result<(), Box<dyn std::error::Error>> {
 	];
 
 	Cli::execute_with(cargo_cmd).await?;
-
-	get_clean_example_cmd(&cargo_cmd, &[1, 2, 3, 6], &commands_dir.join("cargo"))?;
 
 	let output: Manifest = deserialize_toml(&output_dir.join("Cargo.toml")).unwrap();
 
@@ -127,10 +150,8 @@ async fn rust_workspace() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn rust_package() -> Result<(), Box<dyn std::error::Error>> {
 	let output_dir = PathBuf::from("tests/output/rust_tests/workspace");
-	let commands_dir = output_dir.join("commands");
 
 	reset_testing_dir(&output_dir);
-	reset_testing_dir(&commands_dir);
 
 	let config_file = PathBuf::from("tests/cargo_toml_tests/cargo_toml_tests.yaml");
 
@@ -164,8 +185,6 @@ async fn rust_package() -> Result<(), Box<dyn std::error::Error>> {
 	];
 
 	Cli::execute_with(package_gen_cmd).await?;
-
-	get_clean_example_cmd(&package_gen_cmd, &[1, 2, 3, 6], &commands_dir.join("cargo"))?;
 
 	let output: Manifest = deserialize_toml(&package_dir.join("Cargo.toml")).unwrap();
 

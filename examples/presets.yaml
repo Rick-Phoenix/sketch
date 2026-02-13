@@ -248,6 +248,9 @@ repo_presets:
     # starting from the new repo's root
     with_templates:
       - preset_id: dockerfile
+        # Adding context
+        context:
+          docker_dev_port: 9530
     # ANCHOR_END: git_preset
 
     # ANCHOR: hooks
