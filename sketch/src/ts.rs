@@ -20,14 +20,6 @@ use crate::{
 	*,
 };
 
-impl TypescriptConfig {
-	pub fn get_contributor(&self, name: &str) -> Option<Person> {
-		self.people
-			.get(name)
-			.map(|person| Person::Data(person.clone()))
-	}
-}
-
 /// All settings related to typescript projects.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]

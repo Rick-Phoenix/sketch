@@ -1,6 +1,6 @@
 use crate::{
 	exec::{Hook, launch_command},
-	gh_workflow::WorkflowReference,
+	gh_workflow::WorkflowPresetReference,
 	*,
 };
 
@@ -43,10 +43,10 @@ pub struct RepoPreset {
 	#[arg(
     long = "workflow",
     value_name = "id=PRESET_ID,file=PATH",
-    value_parser = WorkflowReference::from_cli
+    value_parser = WorkflowPresetReference::from_cli
   )]
 	/// One or many workflows to generate in the new repo.
-	pub workflows: Vec<WorkflowReference>,
+	pub workflows: Vec<WorkflowPresetReference>,
 }
 
 impl std::str::FromStr for PreCommitSetting {
@@ -151,12 +151,12 @@ impl Config {
 
 			for workflow in preset.workflows {
 				match workflow {
-					WorkflowReference::Preset { file_name, id } => {
+					WorkflowPresetReference::Preset { file_name, id } => {
 						let data = self.github.get_workflow(&id)?;
 
 						serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;
 					}
-					WorkflowReference::Data {
+					WorkflowPresetReference::Data {
 						file_name,
 						workflow: config,
 					} => {

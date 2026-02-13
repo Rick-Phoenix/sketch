@@ -238,28 +238,26 @@ impl CratePreset {
 			return Ok(self);
 		}
 
-		self.manifest = match self.manifest {
-			CargoTomlPresetRef::PresetId(id) => {
-				CargoTomlPresetRef::Config(config.rust.get_cargo_toml_preset(&id)?)
-			}
-			CargoTomlPresetRef::Config(preset) => CargoTomlPresetRef::Config(
-				preset.merge_presets("__inlined", &config.rust.manifest_presets)?,
-			),
+		self.manifest = {
+			let preset = match self.manifest {
+				CargoTomlPresetRef::PresetId(id) => config.rust.get_cargo_toml_preset(&id)?,
+				CargoTomlPresetRef::Config(preset) => {
+					preset.merge_presets("__inlined", &config.rust.manifest_presets)?
+				}
+			};
+
+			CargoTomlPresetRef::Config(preset)
 		};
 
 		if let Some(preset_ref) = self.gitignore {
-			match preset_ref {
-				GitIgnorePresetRef::PresetId(id) => {
-					self.gitignore = Some(GitIgnorePresetRef::Config(
-						config.get_gitignore_preset(&id)?,
-					));
-				}
+			let preset = match preset_ref {
+				GitIgnorePresetRef::PresetId(id) => config.get_gitignore_preset(&id)?,
 				GitIgnorePresetRef::Config(preset) => {
-					self.gitignore = Some(GitIgnorePresetRef::Config(
-						preset.merge_presets("__inlined", &config.gitignore_presets)?,
-					))
+					preset.merge_presets("__inlined", &config.gitignore_presets)?
 				}
-			}
+			};
+
+			self.gitignore = Some(GitIgnorePresetRef::Config(preset));
 		}
 
 		Ok(self)
