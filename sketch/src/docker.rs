@@ -14,6 +14,30 @@ pub struct DockerConfig {
 	pub service_presets: IndexMap<String, DockerServicePreset>,
 }
 
+impl DockerConfig {
+	pub fn get_file_preset(&self, id: &str) -> AppResult<ComposePreset> {
+		Ok(self
+			.compose_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::ComposeFile,
+				name: id.to_string(),
+			})?
+			.clone())
+	}
+
+	pub fn get_service_preset(&self, id: &str) -> AppResult<DockerServicePreset> {
+		self.service_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::DockerService,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.service_presets)
+	}
+}
+
 /// A preset for Docker Compose files.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
@@ -28,7 +52,7 @@ pub struct ComposePreset {
 
 impl ExtensiblePreset for ComposePreset {
 	fn kind() -> PresetKind {
-		PresetKind::DockerCompose
+		PresetKind::ComposeFile
 	}
 
 	fn get_extended_ids(&self) -> &IndexSet<String> {
@@ -37,12 +61,7 @@ impl ExtensiblePreset for ComposePreset {
 }
 
 impl ComposePreset {
-	pub fn process_data(
-		self,
-		id: &str,
-		store: &IndexMap<String, Self>,
-		services_store: &IndexMap<String, DockerServicePreset>,
-	) -> Result<ComposeFile, AppError> {
+	pub fn process_data(self, id: &str, config: &DockerConfig) -> Result<ComposeFile, AppError> {
 		if self.extends_presets.is_empty()
 			&& !self
 				.config
@@ -56,32 +75,22 @@ impl ComposePreset {
 		let mut merged_preset = if self.extends_presets.is_empty() {
 			self
 		} else {
-			self.merge_presets(id, store)?
+			self.merge_presets(id, &config.compose_presets)?
 		};
 
 		for service_data in merged_preset.config.services.values_mut() {
 			match service_data {
 				ServicePresetRef::PresetId(id) => {
-					let mut service_preset = services_store
-						.get(id)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::DockerService,
-							name: id.clone(),
-						})?
-						.clone();
-
-					if !service_preset.extends_presets.is_empty() {
-						service_preset = service_preset.merge_presets(id, services_store)?;
-					}
+					let service_preset = config.get_service_preset(id)?;
 
 					*service_data = ServicePresetRef::Config(service_preset.into());
 				}
-				ServicePresetRef::Config(config) => {
-					if !config.extends_presets.is_empty() {
-						let data = std::mem::take(config);
+				ServicePresetRef::Config(preset) => {
+					if !preset.extends_presets.is_empty() {
+						let data = std::mem::take(preset);
 
-						*config = data
-							.merge_presets("__inlined", services_store)?
+						*preset = data
+							.merge_presets("__inlined", &config.service_presets)?
 							.into();
 					}
 				}

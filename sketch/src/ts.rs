@@ -10,11 +10,11 @@ use regex::Regex;
 use crate::{
 	ts::{
 		oxlint::*,
-		package::PackageConfig,
+		package::TsPackagePreset,
 		package_json::*,
 		pnpm::{PnpmPreset, PnpmWorkspace},
 		ts_config::*,
-		vitest::VitestConfig,
+		vitest::VitestPreset,
 	},
 	versions::*,
 	*,
@@ -72,7 +72,7 @@ pub struct TypescriptConfig {
 
 	/// A map of [`PackageConfig`] presets.
 	#[arg(skip)]
-	pub package_presets: IndexMap<String, PackageConfig>,
+	pub package_presets: IndexMap<String, TsPackagePreset>,
 
 	/// A map of presets for `pnpm-workspace.yaml` configurations.
 	#[arg(skip)]
@@ -80,7 +80,75 @@ pub struct TypescriptConfig {
 
 	/// A map of presets for vitest setups.
 	#[arg(skip)]
-	pub vitest_presets: IndexMap<String, VitestConfig>,
+	pub vitest_presets: IndexMap<String, VitestPreset>,
+}
+
+impl TypescriptConfig {
+	pub fn get_vitest_preset(&self, id: &str) -> AppResult<VitestPreset> {
+		Ok(self
+			.vitest_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::Vitest,
+				name: id.to_string(),
+			})?
+			.clone())
+	}
+
+	pub fn get_tsconfig_preset(&self, id: &str) -> AppResult<TsConfigPreset> {
+		self.ts_config_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::TsConfig,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.ts_config_presets)
+	}
+
+	pub fn get_package_preset(&self, id: &str) -> AppResult<TsPackagePreset> {
+		Ok(self
+			.package_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::TsPackage,
+				name: id.to_string(),
+			})?
+			.clone())
+	}
+
+	pub fn get_pnpm_preset(&self, id: &str) -> AppResult<PnpmPreset> {
+		self.pnpm_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::PnpmWorkspace,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.pnpm_presets)
+	}
+
+	pub fn get_oxlint_preset(&self, id: &str) -> AppResult<OxlintPreset> {
+		self.oxlint_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::Oxlint,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.oxlint_presets)
+	}
+
+	pub fn get_package_json(&self, id: &str) -> AppResult<PackageJson> {
+		self.package_json_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::PackageJson,
+				name: id.to_string(),
+			})?
+			.clone()
+			.process_data(id, &self.package_json_presets, &self.people)
+	}
 }
 
 impl PackageManager {

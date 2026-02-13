@@ -11,9 +11,9 @@ use crate::{
 	ts::{
 		PackageManager,
 		oxlint::OxlintConfigSetting,
-		package::{PackageConfig, PackageData, PackageType},
+		package::{PackageType, TsPackagePreset, TsPackagePresetRef},
 		pnpm::PnpmWorkspace,
-		vitest::VitestConfigKind,
+		vitest::VitestPresetRef,
 	},
 	*,
 };
@@ -34,7 +34,7 @@ pub enum TsCommands {
 		root_package: Option<String>,
 
 		#[command(flatten)]
-		root_package_overrides: Option<PackageConfig>,
+		root_package_overrides: Option<TsPackagePreset>,
 
 		/// Installs the dependencies with the chosen package manager
 		#[arg(short, long)]
@@ -63,7 +63,7 @@ pub enum TsCommands {
 		vitest: Option<String>,
 
 		#[command(flatten)]
-		package_config: Option<PackageConfig>,
+		package_config: Option<TsPackagePreset>,
 	},
 
 	/// Creates a barrel file
@@ -95,16 +95,7 @@ impl TsCommands {
 			Self::Config { output, preset } => {
 				let typescript = config.typescript.unwrap_or_default();
 
-				let content = typescript
-					.ts_config_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::TsConfig,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(preset.as_str(), &typescript.ts_config_presets)?
-					.config;
+				let content = typescript.get_tsconfig_preset(&preset)?.config;
 
 				let output = output.unwrap_or_else(|| "tsconfig.json".into());
 
@@ -123,16 +114,9 @@ impl TsCommands {
 				pnpm,
 			} => {
 				let mut root_package = if let Some(id) = root_package {
-					typescript
-						.package_presets
-						.get(&id)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::TsPackage,
-							name: id,
-						})?
-						.clone()
+					typescript.get_package_preset(&id)?
 				} else {
-					let mut package = PackageConfig::default();
+					let mut package = TsPackagePreset::default();
 					package.oxlint = Some(OxlintConfigSetting::Bool(true));
 					package.name = Some("root".to_string());
 					package
@@ -146,18 +130,7 @@ impl TsCommands {
 				let out_dir = dir.unwrap_or_else(|| "ts_root".into());
 
 				let pnpm_config = if let Some(id) = pnpm {
-					Some(
-						typescript
-							.pnpm_presets
-							.get(&id)
-							.ok_or(AppError::PresetNotFound {
-								kind: PresetKind::PnpmWorkspace,
-								name: id.clone(),
-							})?
-							.clone()
-							.merge_presets(id.as_str(), &typescript.pnpm_presets)?
-							.config,
-					)
+					Some(typescript.get_pnpm_preset(&id)?.config)
 				} else if matches!(package_manager, PackageManager::Pnpm) {
 					Some(PnpmWorkspace::default())
 				} else {
@@ -166,7 +139,7 @@ impl TsCommands {
 
 				config
 					.crate_ts_package(
-						PackageData::Config(root_package),
+						TsPackagePresetRef::Config(root_package),
 						&out_dir,
 						None,
 						cli_vars,
@@ -191,17 +164,10 @@ impl TsCommands {
 				vitest,
 				install,
 			} => {
-				let mut package = if let Some(preset) = preset {
-					typescript
-						.package_presets
-						.get(&preset)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::TsPackage,
-							name: preset.clone(),
-						})?
-						.clone()
+				let mut package = if let Some(id) = preset {
+					typescript.get_package_preset(&id)?
 				} else {
-					PackageConfig::default()
+					TsPackagePreset::default()
 				};
 
 				if let Some(overrides) = package_config {
@@ -209,7 +175,7 @@ impl TsCommands {
 				}
 
 				if let Some(vitest) = vitest {
-					package.vitest = Some(VitestConfigKind::Id(vitest))
+					package.vitest = Some(VitestPresetRef::Id(vitest))
 				}
 
 				let package_dir = dir.unwrap_or_else(|| {
@@ -233,7 +199,7 @@ impl TsCommands {
 
 				config
 					.crate_ts_package(
-						PackageData::Config(package),
+						TsPackagePresetRef::Config(package),
 						&package_dir,
 						update_tsconfig,
 						cli_vars,

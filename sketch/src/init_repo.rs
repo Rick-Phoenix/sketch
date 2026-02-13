@@ -60,7 +60,7 @@ impl std::str::FromStr for PreCommitSetting {
 impl Config {
 	pub fn init_repo(
 		self,
-		mut preset: RepoPreset,
+		preset: RepoPreset,
 		remote: Option<&str>,
 		out_dir: &Path,
 		cli_vars: &IndexMap<String, Value>,
@@ -79,48 +79,22 @@ impl Config {
 
 		create_all_dirs(out_dir)?;
 
-		let mut gitignore_id: Option<String> = None;
-
-		if let Some(GitIgnorePresetRef::PresetId(id)) = preset.gitignore {
-			gitignore_id = Some(id.clone());
-
-			let data = self
-				.gitignore_presets
-				.get(&id)
-				.ok_or_else(|| AppError::PresetNotFound {
-					kind: PresetKind::Gitignore,
-					name: id,
-				})?
-				.clone();
-
-			preset.gitignore = Some(GitIgnorePresetRef::Config(data));
-		}
-
-		if let Some(GitIgnorePresetRef::Config(data)) = preset.gitignore {
-			let resolved = data.merge_presets(
-				gitignore_id.as_deref().unwrap_or("__inlined"),
-				&self.gitignore_presets,
-			)?;
-
-			preset.gitignore = Some(GitIgnorePresetRef::Config(resolved));
-		}
-
-		let gitignore = match preset.gitignore {
-			None => GitignorePreset {
-				extends_presets: Default::default(),
-				content: GitIgnore::String(DEFAULT_GITIGNORE.trim().to_string()),
-			},
-			Some(preset_ref) => match preset_ref {
-				GitIgnorePresetRef::PresetId(id) => {
-					return Err(anyhow!("Unresolved gitignore preset with id `{id}`").into());
+		let gitignore = if let Some(preset_ref) = preset.gitignore {
+			match preset_ref {
+				GitIgnorePresetRef::PresetId(id) => self.get_gitignore_preset(&id)?.content,
+				GitIgnorePresetRef::Config(preset) => {
+					preset
+						.merge_presets("__inlined", &self.gitignore_presets)?
+						.content
 				}
-				GitIgnorePresetRef::Config(preset) => preset,
-			},
+			}
+		} else {
+			GitIgnore::String(DEFAULT_GITIGNORE.trim().to_string())
 		};
 
 		write_file(
 			&out_dir.join(".gitignore"),
-			&gitignore.content.to_string(),
+			&gitignore.to_string(),
 			overwrite,
 		)?;
 
@@ -134,26 +108,15 @@ impl Config {
 		if let Some(pre_commit) = preset.pre_commit
 			&& pre_commit.is_enabled()
 		{
-			let (pre_commit_id, pre_commit_preset) = match pre_commit {
-				PreCommitSetting::Id(id) => (
-					id.clone(),
-					self.pre_commit_presets
-						.get(id.as_str())
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::PreCommit,
-							name: id.clone(),
-						})?
-						.clone(),
-				),
-				PreCommitSetting::Bool(_) => ("__default".to_string(), PreCommitPreset::default()),
-				PreCommitSetting::Config(pre_commit_config) => {
-					("__inlined".to_string(), pre_commit_config)
+			let pre_commit_config = match pre_commit {
+				PreCommitSetting::Id(id) => self.get_pre_commit_preset(&id)?.config,
+				PreCommitSetting::Bool(_) => PreCommitConfig::default(),
+				PreCommitSetting::Config(preset) => {
+					preset
+						.merge_presets("__inlined", &self.pre_commit_presets)?
+						.config
 				}
 			};
-
-			let pre_commit_config = pre_commit_preset
-				.merge_presets(&pre_commit_id, &self.pre_commit_presets)?
-				.config;
 
 			serialize_yaml(
 				&pre_commit_config,
@@ -189,16 +152,7 @@ impl Config {
 			for workflow in preset.workflows {
 				match workflow {
 					WorkflowReference::Preset { file_name, id } => {
-						let data = self
-							.github
-							.workflow_presets
-							.get(&id)
-							.ok_or(AppError::PresetNotFound {
-								kind: PresetKind::GithubWorkflow,
-								name: id.clone(),
-							})?
-							.clone()
-							.process_data(&id, &self.github)?;
+						let data = self.github.get_workflow(&id)?;
 
 						serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;
 					}

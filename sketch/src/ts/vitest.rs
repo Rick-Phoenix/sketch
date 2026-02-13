@@ -8,19 +8,19 @@ use super::*;
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum VitestConfigKind {
+pub enum VitestPresetRef {
 	Bool(bool),
 	Id(String),
-	Config(VitestConfig),
+	Config(VitestPreset),
 }
 
-impl VitestConfigKind {
+impl VitestPresetRef {
 	pub const fn is_enabled(&self) -> bool {
 		!matches!(self, Self::Bool(false))
 	}
 }
 
-impl Default for VitestConfigKind {
+impl Default for VitestPresetRef {
 	fn default() -> Self {
 		Self::Bool(true)
 	}
@@ -31,7 +31,7 @@ impl Default for VitestConfigKind {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct VitestConfig {
+pub struct VitestPreset {
 	/// The path to the tests directory, from the root of the package. [default: 'tests']
 	pub tests_dir: String,
 
@@ -56,7 +56,7 @@ pub struct VitestConfig {
 	pub silent: Silent,
 }
 
-impl Default for VitestConfig {
+impl Default for VitestPreset {
 	fn default() -> Self {
 		Self {
 			out_dir: None,

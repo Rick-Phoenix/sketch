@@ -80,19 +80,11 @@ pub enum PresetKind {
 	Gitignore,
 	PnpmWorkspace,
 	Vitest,
-	DockerCompose,
+	ComposeFile,
 	DockerService,
 	CargoToml,
 	GithubWorkflow,
 	GithubWorkflowJob,
 	GithubWorkflowStep,
 	RustCrate,
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(untagged)]
-pub enum Or<A, B> {
-	A(A),
-	B(B),
 }

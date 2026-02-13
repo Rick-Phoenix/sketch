@@ -30,22 +30,11 @@ impl Config {
 					preset_id: id,
 					mut context,
 				} => {
-					let mut data = self
-						.templating_presets
-						.get(&id)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::Templates,
-							name: id.clone(),
-						})?
-						.clone();
+					let mut preset = self.get_templating_preset(&id)?;
 
-					if !data.extends_presets.is_empty() {
-						data = data.merge_presets(id.as_str(), &self.templating_presets)?;
-					}
+					preset.context.append(&mut context);
 
-					data.context.append(&mut context);
-
-					data
+					preset
 				}
 				TemplatingPresetReference::Definition(mut preset) => {
 					if !preset.extends_presets.is_empty() {
@@ -356,5 +345,18 @@ impl RenderCtx<'_> {
 		};
 
 		Ok(())
+	}
+}
+
+impl Config {
+	pub fn get_templating_preset(&self, id: &str) -> AppResult<TemplatingPreset> {
+		self.templating_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::Templates,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.templating_presets)
 	}
 }

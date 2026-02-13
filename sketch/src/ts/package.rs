@@ -16,7 +16,7 @@ pub enum PackageKind {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct PackageConfig {
+pub struct TsPackagePreset {
 	/// The name of the new package. It defaults to the name of its directory.
 	#[arg(short, long)]
 	pub name: Option<String>,
@@ -30,12 +30,12 @@ pub struct PackageConfig {
 	pub ts_config: Vec<TsConfigDirective>,
 
 	/// The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
-	#[arg(long, value_parser = PackageJsonData::from_cli)]
+	#[arg(long, value_parser = PackageJsonPresetRef::from_cli)]
 	#[arg(
 		help = "The package.json preset ID to use (uses defaults if not provided)",
 		value_name = "ID"
 	)]
-	pub package_json: Option<PackageJsonData>,
+	pub package_json: Option<PackageJsonPresetRef>,
 
 	/// A license file to generate for the new package.
 	#[arg(long)]
@@ -63,7 +63,7 @@ pub struct PackageConfig {
 
 	/// The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
 	#[arg(skip)]
-	pub vitest: Option<VitestConfigKind>,
+	pub vitest: Option<VitestPresetRef>,
 
 	/// The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
 	#[arg(long, value_name = "ID")]
@@ -71,9 +71,9 @@ pub struct PackageConfig {
 }
 
 /// The kinds of Ts package data. Either an id pointing to a stored preset, or a custom configuration.
-pub enum PackageData {
+pub enum TsPackagePresetRef {
 	Preset(String),
-	Config(PackageConfig),
+	Config(TsPackagePreset),
 }
 
 pub enum PackageType {
@@ -95,7 +95,7 @@ impl Config {
 	/// Generates a new typescript package.
 	pub async fn crate_ts_package(
 		mut self,
-		data: PackageData,
+		data: TsPackagePresetRef,
 		pkg_root: &Path,
 		tsconfig_files_to_update: Option<Vec<PathBuf>>,
 		cli_vars: &IndexMap<String, Value>,
@@ -105,14 +105,12 @@ impl Config {
 
 		let typescript = mem::take(&mut self.typescript).unwrap_or_default();
 
-		let package_json_presets = &typescript.package_json_presets;
-
 		let package_manager = typescript.package_manager.unwrap_or_default();
 		let version_ranges = typescript.version_range.unwrap_or_default();
 
 		let package_config = match data {
-			PackageData::Config(conf) => conf,
-			PackageData::Preset(id) => typescript
+			TsPackagePresetRef::Config(conf) => conf,
+			TsPackagePresetRef::Preset(id) => typescript
 				.package_presets
 				.get(&id)
 				.ok_or(AppError::PresetNotFound {
@@ -147,28 +145,14 @@ impl Config {
 			)?;
 		}
 
-		let (package_json_id, package_json_preset) =
-			match package_config.package_json.unwrap_or_default() {
-				PackageJsonData::Id(id) => (
-					id.clone(),
-					package_json_presets
-						.get(&id)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::PackageJson,
-							name: id,
-						})?
-						.clone(),
-				),
-				PackageJsonData::Config(package_json) => {
-					("__inlined_definition".to_string(), package_json)
-				}
-			};
-
-		let mut package_json_data = package_json_preset.process_data(
-			package_json_id.as_str(),
-			package_json_presets,
-			&typescript.people,
-		)?;
+		let mut package_json_data = match package_config.package_json.unwrap_or_default() {
+			PackageJsonPresetRef::Id(id) => typescript.get_package_json(&id)?,
+			PackageJsonPresetRef::Config(preset) => preset.process_data(
+				"__inlined",
+				&typescript.package_json_presets,
+				&typescript.people,
+			)?,
+		};
 
 		if package_json_data.package_manager.is_none() {
 			package_json_data.package_manager = Some(package_manager.to_string());
@@ -271,30 +255,16 @@ impl Config {
 
 		let mut tsconfig_files: Vec<(String, TsConfig)> = Default::default();
 
-		let tsconfig_presets = &typescript.ts_config_presets;
-
 		if !package_config.ts_config.is_empty() {
 			for directive in package_config.ts_config {
-				let (id, tsconfig) = match directive.config.unwrap_or_default() {
-					TsConfigKind::Id(id) => {
-						let tsconfig = tsconfig_presets
-							.get(&id)
-							.ok_or(AppError::PresetNotFound {
-								kind: PresetKind::TsConfig,
-								name: id.clone(),
-							})?
-							.clone();
-
-						(id.clone(), tsconfig)
-					}
+				let tsconfig_data = match directive.config.unwrap_or_default() {
+					TsConfigKind::Id(id) => typescript.get_tsconfig_preset(&id)?.config,
 					TsConfigKind::Config(ts_config) => {
-						(format!("__inlined_config_{package_name}"), ts_config)
+						ts_config
+							.merge_presets("__inlined", &typescript.ts_config_presets)?
+							.config
 					}
 				};
-
-				let tsconfig_data = tsconfig
-					.merge_presets(id.as_str(), tsconfig_presets)?
-					.config;
 
 				tsconfig_files.push((
 					directive
@@ -351,16 +321,9 @@ impl Config {
 			&& vitest_config.is_enabled()
 		{
 			let mut vitest = match vitest_config {
-				VitestConfigKind::Bool(_) => VitestConfig::default(),
-				VitestConfigKind::Id(id) => typescript
-					.vitest_presets
-					.get(&id)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::Vitest,
-						name: id.clone(),
-					})?
-					.clone(),
-				VitestConfigKind::Config(vitest_config_struct) => vitest_config_struct,
+				VitestPresetRef::Bool(_) => VitestPreset::default(),
+				VitestPresetRef::Id(id) => typescript.get_vitest_preset(&id)?,
+				VitestPresetRef::Config(preset) => preset,
 			};
 
 			let tests_dir = pkg_root.join(&vitest.tests_dir);
@@ -409,30 +372,20 @@ impl Config {
 		if let Some(oxlint_config) = package_config.oxlint
 			&& oxlint_config.is_enabled()
 		{
-			let (id, oxlint_config) = match oxlint_config {
-				OxlintConfigSetting::Bool(_) => ("__default".to_string(), OxlintPreset::default()),
-				OxlintConfigSetting::Id(id) => (
-					id.clone(),
-					typescript
-						.oxlint_presets
-						.get(id.as_str())
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::Oxlint,
-							name: id.clone(),
-						})?
-						.clone(),
-				),
-				OxlintConfigSetting::Config(oxlint_preset) => (
-					format!("__inlined_definition_{package_name}"),
-					oxlint_preset,
-				),
+			let oxlint_config = match oxlint_config {
+				OxlintConfigSetting::Bool(_) => OxlintConfig::default(),
+				OxlintConfigSetting::Id(id) => typescript.get_oxlint_preset(&id)?.config,
+				OxlintConfigSetting::Config(oxlint_preset) => {
+					oxlint_preset
+						.merge_presets(
+							&format!("__inlined_definition_{package_name}"),
+							&typescript.oxlint_presets,
+						)?
+						.config
+				}
 			};
 
-			let merged_config = oxlint_config
-				.merge_presets(id.as_str(), &typescript.oxlint_presets)?
-				.config;
-
-			serialize_json(&merged_config, &pkg_root.join(".oxlintrc.json"), overwrite)?;
+			serialize_json(&oxlint_config, &pkg_root.join(".oxlintrc.json"), overwrite)?;
 		}
 
 		if let Some(license) = package_config.license {

@@ -23,6 +23,19 @@ impl Default for PreCommitPreset {
 	}
 }
 
+impl Config {
+	pub fn get_pre_commit_preset(&self, id: &str) -> AppResult<PreCommitPreset> {
+		self.pre_commit_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::PreCommit,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.pre_commit_presets)
+	}
+}
+
 impl ExtensiblePreset for PreCommitPreset {
 	fn kind() -> PresetKind {
 		PresetKind::PreCommit

@@ -1,10 +1,7 @@
 pub(crate) use rust_manifest::*;
 
 use crate::{
-	TemplatingPresetReference,
-	init_repo::gitignore::{GitIgnorePresetRef, GitignorePreset},
-	licenses::License,
-	*,
+	TemplatingPresetReference, init_repo::gitignore::GitIgnorePresetRef, licenses::License, *,
 };
 use toml_edit::{Array, Decor, DocumentMut, Item, Table};
 
@@ -12,7 +9,7 @@ use toml_edit::{Array, Decor, DocumentMut, Item, Table};
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
 #[serde(deny_unknown_fields)]
-pub struct RustPresets {
+pub struct RustConfig {
 	/// A map that contains presets for `Cargo.toml` files.
 	pub manifest_presets: IndexMap<String, CargoTomlPreset>,
 
@@ -206,12 +203,32 @@ impl CratePreset {
 	}
 }
 
+impl RustConfig {
+	pub fn get_crate_preset(&self, id: &str) -> AppResult<CratePreset> {
+		Ok(self
+			.crate_presets
+			.get(id)
+			.ok_or_else(|| AppError::PresetNotFound {
+				kind: PresetKind::RustCrate,
+				name: id.to_string(),
+			})?
+			.clone())
+	}
+
+	pub fn get_cargo_toml_preset(&self, id: &str) -> AppResult<CargoTomlPreset> {
+		self.manifest_presets
+			.get(id)
+			.ok_or_else(|| AppError::PresetNotFound {
+				kind: PresetKind::CargoToml,
+				name: id.to_string(),
+			})?
+			.clone()
+			.merge_presets(id, &self.manifest_presets)
+	}
+}
+
 impl CratePreset {
-	pub fn process_data(
-		mut self,
-		manifests_store: &IndexMap<String, CargoTomlPreset>,
-		gitignore_store: &IndexMap<String, GitignorePreset>,
-	) -> Result<Self, AppError> {
+	pub fn process_data(mut self, config: &Config) -> Result<Self, AppError> {
 		if !self.manifest.is_preset_id()
 			&& self
 				.gitignore
@@ -221,52 +238,28 @@ impl CratePreset {
 			return Ok(self);
 		}
 
-		let mut manifest_id: Option<String> = None;
+		self.manifest = match self.manifest {
+			CargoTomlPresetRef::PresetId(id) => {
+				CargoTomlPresetRef::Config(config.rust_presets.get_cargo_toml_preset(&id)?)
+			}
+			CargoTomlPresetRef::Config(preset) => CargoTomlPresetRef::Config(
+				preset.merge_presets("__inlined", &config.rust_presets.manifest_presets)?,
+			),
+		};
 
-		if let CargoTomlPresetRef::PresetId(id) = self.manifest {
-			manifest_id = Some(id.clone());
-
-			let data = manifests_store
-				.get(&id)
-				.ok_or_else(|| AppError::PresetNotFound {
-					kind: PresetKind::CargoToml,
-					name: id,
-				})?
-				.clone();
-
-			self.manifest = CargoTomlPresetRef::Config(data);
-		}
-
-		if let CargoTomlPresetRef::Config(data) = self.manifest {
-			self.manifest = CargoTomlPresetRef::Config(data.merge_presets(
-				manifest_id.as_deref().unwrap_or("__inlined"),
-				manifests_store,
-			)?);
-		}
-
-		let mut gitignore_id: Option<String> = None;
-
-		if let Some(GitIgnorePresetRef::PresetId(id)) = self.gitignore {
-			gitignore_id = Some(id.clone());
-
-			let data = gitignore_store
-				.get(&id)
-				.ok_or_else(|| AppError::PresetNotFound {
-					kind: PresetKind::Gitignore,
-					name: id,
-				})?
-				.clone();
-
-			self.gitignore = Some(GitIgnorePresetRef::Config(data));
-		}
-
-		if let Some(GitIgnorePresetRef::Config(data)) = self.gitignore {
-			let resolved = data.merge_presets(
-				gitignore_id.as_deref().unwrap_or("__inlined"),
-				gitignore_store,
-			)?;
-
-			self.gitignore = Some(GitIgnorePresetRef::Config(resolved));
+		if let Some(preset_ref) = self.gitignore {
+			match preset_ref {
+				GitIgnorePresetRef::PresetId(id) => {
+					self.gitignore = Some(GitIgnorePresetRef::Config(
+						config.get_gitignore_preset(&id)?,
+					));
+				}
+				GitIgnorePresetRef::Config(preset) => {
+					self.gitignore = Some(GitIgnorePresetRef::Config(
+						preset.merge_presets("__inlined", &config.gitignore_presets)?,
+					))
+				}
+			}
 		}
 
 		Ok(self)

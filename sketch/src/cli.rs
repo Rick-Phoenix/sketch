@@ -56,15 +56,7 @@ impl Cli {
 				command.execute(&config)?;
 			}
 			Commands::Gitignore { preset, output } => {
-				let data = config
-					.gitignore_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::Gitignore,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(&preset, &config.gitignore_presets)?;
+				let data = config.get_gitignore_preset(&preset)?;
 
 				write_file(
 					&output.unwrap_or_else(|| PathBuf::from(".gitignore")),
@@ -73,16 +65,7 @@ impl Cli {
 				)?;
 			}
 			Commands::GhWorkflow { preset, output } => {
-				let data = config
-					.github
-					.workflow_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::GithubWorkflow,
-						name: preset.clone(),
-					})?
-					.clone()
-					.process_data(&preset, &config.github)?;
+				let data = config.github.get_workflow(&preset)?;
 
 				create_parent_dirs(&output)?;
 
@@ -96,16 +79,7 @@ impl Cli {
 			Commands::PnpmWorkspace { output, preset } => {
 				let typescript = config.typescript.unwrap_or_default();
 
-				let content = typescript
-					.pnpm_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::PnpmWorkspace,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(preset.as_str(), &typescript.pnpm_presets)?
-					.config;
+				let content = typescript.get_pnpm_preset(&preset)?.config;
 
 				let output = output.unwrap_or_else(|| "pnpm-workspace.yaml".into());
 
@@ -116,16 +90,7 @@ impl Cli {
 			Commands::Oxlint { output, preset } => {
 				let typescript = config.typescript.unwrap_or_default();
 
-				let content = typescript
-					.oxlint_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::Oxlint,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(preset.as_str(), &typescript.oxlint_presets)?
-					.config;
+				let content = typescript.get_oxlint_preset(&preset)?.config;
 
 				let output = output.unwrap_or_else(|| ".oxlintrc.json".into());
 				create_parent_dirs(&output)?;
@@ -135,19 +100,7 @@ impl Cli {
 			Commands::PackageJson { output, preset } => {
 				let typescript = config.typescript.unwrap_or_default();
 
-				let content = typescript
-					.package_json_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::PackageJson,
-						name: preset.clone(),
-					})?
-					.clone()
-					.process_data(
-						preset.as_str(),
-						&typescript.package_json_presets,
-						&typescript.people,
-					)?;
+				let content = typescript.get_package_json(&preset)?;
 
 				let output = output.unwrap_or_else(|| "package.json".into());
 				create_parent_dirs(&output)?;
@@ -161,16 +114,9 @@ impl Cli {
 				services,
 			} => {
 				let docker_config = config.docker.unwrap_or_default();
-				let compose_presets = docker_config.compose_presets;
 
 				let mut file_preset = if let Some(id) = preset.as_ref() {
-					compose_presets
-						.get(id)
-						.ok_or(AppError::PresetNotFound {
-							kind: PresetKind::DockerCompose,
-							name: id.clone(),
-						})?
-						.clone()
+					docker_config.get_file_preset(id)?
 				} else {
 					ComposePreset::default()
 				};
@@ -186,11 +132,8 @@ impl Cli {
 						.insert(service_name, ServicePresetRef::PresetId(service.preset_id));
 				}
 
-				let file_data = file_preset.process_data(
-					preset.as_deref().unwrap_or("__from_cli"),
-					&compose_presets,
-					&docker_config.service_presets,
-				)?;
+				let file_data = file_preset
+					.process_data(preset.as_deref().unwrap_or("__from_cli"), &docker_config)?;
 
 				let output = output.unwrap_or_else(|| "compose.yaml".into());
 
@@ -199,16 +142,7 @@ impl Cli {
 				serialize_yaml(&file_data, &output, overwrite)?;
 			}
 			Commands::PreCommit { output, preset } => {
-				let content = config
-					.pre_commit_presets
-					.get(&preset)
-					.ok_or(AppError::PresetNotFound {
-						kind: PresetKind::PreCommit,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(preset.as_str(), &config.pre_commit_presets)?
-					.config;
+				let content = config.get_pre_commit_preset(&preset)?.config;
 
 				let output = output.unwrap_or_else(|| ".pre-commit-config.yaml".into());
 

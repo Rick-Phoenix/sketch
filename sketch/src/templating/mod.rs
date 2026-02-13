@@ -47,38 +47,6 @@ impl FromStr for TemplatingPresetReference {
 	}
 }
 
-impl TemplatingPresetReference {
-	pub fn resolve(self, store: &IndexMap<String, TemplatingPreset>) -> Result<Self, AppError> {
-		let mut preset_id: Option<String> = None;
-
-		let mut content = match self {
-			Self::Preset {
-				preset_id: id,
-				context,
-			} => {
-				preset_id = Some(id.clone());
-
-				let mut data = store
-					.get(&id)
-					.ok_or_else(|| AppError::PresetNotFound {
-						kind: PresetKind::Templates,
-						name: id,
-					})?
-					.clone();
-
-				data.context.extend(context);
-
-				data
-			}
-			Self::Definition(data) => data,
-		};
-
-		content = content.merge_presets(preset_id.as_deref().unwrap_or("__inlined"), store)?;
-
-		Ok(Self::Definition(content))
-	}
-}
-
 /// A templating preset. It stores information about one or many templates, such as their source, output paths and contextual variables.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]

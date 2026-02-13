@@ -95,18 +95,18 @@ pub struct PackageJsonPreset {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum PackageJsonData {
+pub enum PackageJsonPresetRef {
 	Id(String),
 	Config(PackageJsonPreset),
 }
 
-impl Default for PackageJsonData {
+impl Default for PackageJsonPresetRef {
 	fn default() -> Self {
 		Self::Config(PackageJsonPreset::default())
 	}
 }
 
-impl PackageJsonData {
+impl PackageJsonPresetRef {
 	pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
 		Ok(Self::Id(s.trim().to_string()))
 	}

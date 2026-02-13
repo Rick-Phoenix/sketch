@@ -77,6 +77,19 @@ pub struct GithubConfig {
 	pub steps_presets: IndexMap<String, Step>,
 }
 
+impl GithubConfig {
+	pub fn get_workflow(&self, id: &str) -> AppResult<Workflow> {
+		self.workflow_presets
+			.get(id)
+			.ok_or(AppError::PresetNotFound {
+				kind: PresetKind::GithubWorkflow,
+				name: id.to_string(),
+			})?
+			.clone()
+			.process_data(id, self)
+	}
+}
+
 /// A preset for a gihub workflow.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]

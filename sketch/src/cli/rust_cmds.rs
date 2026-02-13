@@ -38,14 +38,7 @@ impl RustCommands {
 			Self::Manifest { output, preset } => {
 				let content = config
 					.rust_presets
-					.manifest_presets
-					.get(&preset)
-					.ok_or_else(|| AppError::PresetNotFound {
-						kind: PresetKind::RustCrate,
-						name: preset.clone(),
-					})?
-					.clone()
-					.merge_presets(&preset, &config.rust_presets.manifest_presets)?
+					.get_cargo_toml_preset(&preset)?
 					.config;
 
 				let output_path = output.unwrap_or_else(|| "Cargo.toml".into());
@@ -64,15 +57,7 @@ impl RustCommands {
 				manifest,
 			} => {
 				let mut preset = if let Some(preset_id) = preset_id {
-					config
-						.rust_presets
-						.crate_presets
-						.get(&preset_id)
-						.ok_or_else(|| AppError::PresetNotFound {
-							kind: PresetKind::RustCrate,
-							name: preset_id,
-						})?
-						.clone()
+					config.rust_presets.get_crate_preset(&preset_id)?
 				} else {
 					CratePreset::default()
 				};
@@ -85,10 +70,7 @@ impl RustCommands {
 					preset.manifest = CargoTomlPresetRef::PresetId(manifest_id);
 				}
 
-				let crate_data = preset.process_data(
-					&config.rust_presets.manifest_presets,
-					&config.gitignore_presets,
-				)?;
+				let crate_data = preset.process_data(config)?;
 
 				if dir.exists() && !config.can_overwrite() {
 					return Err(anyhow!("Directory `{}` already exists", dir.display()).into());

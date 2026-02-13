@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use sketch_it::{
 	AppError,
 	config::Config,
-	ts::package::{PackageData, PackageType},
+	ts::package::{PackageType, TsPackagePresetRef},
 };
 
 #[tokio::test]
@@ -28,7 +28,7 @@ async fn circular_package_json() -> Result<(), AppError> {
 
 	let result = config
 		.crate_ts_package(
-			PackageData::Preset("circular_package_json".to_string()),
+			TsPackagePresetRef::Preset("circular_package_json".to_string()),
 			&PathBuf::from("tests/output/circular_configs"),
 			None,
 			&Default::default(),
@@ -54,7 +54,7 @@ async fn circular_tsconfig() -> Result<(), AppError> {
 
 	let result = config
 		.crate_ts_package(
-			PackageData::Preset("circular_tsconfigs".to_string()),
+			TsPackagePresetRef::Preset("circular_tsconfigs".to_string()),
 			&PathBuf::from("tests/output/circular_configs"),
 			None,
 			&Default::default(),

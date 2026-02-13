@@ -2,7 +2,7 @@ use crate::{
 	docker::DockerConfig,
 	gh_workflow::GithubConfig,
 	init_repo::{RepoPreset, gitignore::GitignorePreset, pre_commit::PreCommitPreset},
-	rust::RustPresets,
+	rust::RustConfig,
 	ts::TypescriptConfig,
 	*,
 };
@@ -68,7 +68,7 @@ pub struct Config {
 	/// A map that contains presets for git repos.
 	pub git_presets: IndexMap<String, RepoPreset>,
 
-	pub rust_presets: RustPresets,
+	pub rust_presets: RustConfig,
 
 	/// Configurations and presets relating to Github
 	pub github: GithubConfig,
