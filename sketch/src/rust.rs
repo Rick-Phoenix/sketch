@@ -227,7 +227,7 @@ impl RustConfig {
 
 impl CratePreset {
 	pub fn process_data(mut self, config: &Config) -> Result<Self, AppError> {
-		if !self.manifest.is_preset_id()
+		if !self.manifest.requires_processing()
 			&& self
 				.gitignore
 				.as_ref()
@@ -271,6 +271,13 @@ pub enum CargoTomlPresetRef {
 }
 
 impl CargoTomlPresetRef {
+	pub fn requires_processing(&self) -> bool {
+		match self {
+			Self::PresetId(_) => true,
+			Self::Preset(preset) => !preset.extends_presets.is_empty(),
+		}
+	}
+
 	/// Returns `true` if the cargo toml preset ref is [`PresetId`].
 	///
 	/// [`PresetId`]: CargoTomlPresetRef::PresetId
