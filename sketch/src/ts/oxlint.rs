@@ -37,15 +37,15 @@ impl Default for OxlintPresetRef {
 #[serde(untagged)]
 pub enum OxlintPresetRef {
 	Bool(bool),
-	Id(String),
-	Config(OxlintPreset),
+	PresetId(String),
+	Preset(OxlintPreset),
 }
 
 impl std::str::FromStr for OxlintPresetRef {
 	type Err = std::convert::Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(Self::Id(s.to_string()))
+		Ok(Self::PresetId(s.to_string()))
 	}
 }
 

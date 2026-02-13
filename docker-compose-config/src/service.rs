@@ -16,21 +16,21 @@ mod presets {
 		PresetId(String),
 
 		/// The defitinion for a Docker service.
-		Config(Box<DockerServicePreset>),
+		Preset(Box<DockerServicePreset>),
 	}
 
 	impl ServicePresetRef {
 		pub fn as_config(self) -> Option<Service> {
 			match self {
 				Self::PresetId(_) => None,
-				Self::Config(docker_service_preset) => Some(docker_service_preset.config),
+				Self::Preset(docker_service_preset) => Some(docker_service_preset.config),
 			}
 		}
 
 		pub fn requires_processing(&self) -> bool {
 			match self {
 				Self::PresetId(_) => true,
-				Self::Config(data) => !data.extends_presets.is_empty(),
+				Self::Preset(data) => !data.extends_presets.is_empty(),
 			}
 		}
 	}

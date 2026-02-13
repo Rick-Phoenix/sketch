@@ -93,19 +93,19 @@ pub struct PackageJsonPreset {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum PackageJsonPresetRef {
-	Id(String),
-	Config(PackageJsonPreset),
+	PresetId(String),
+	Preset(PackageJsonPreset),
 }
 
 impl Default for PackageJsonPresetRef {
 	fn default() -> Self {
-		Self::Config(PackageJsonPreset::default())
+		Self::Preset(PackageJsonPreset::default())
 	}
 }
 
 impl PackageJsonPresetRef {
 	pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
-		Ok(Self::Id(s.trim().to_string()))
+		Ok(Self::PresetId(s.trim().to_string()))
 	}
 }
 

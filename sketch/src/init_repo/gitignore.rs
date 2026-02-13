@@ -75,7 +75,7 @@ impl ExtensiblePreset for GitignorePreset {
 /// Settings for a .gitignore file. It can be a preset id, a list of strings (to define each element) or a single string (to define the entire file)
 pub enum GitIgnorePresetRef {
 	PresetId(String),
-	Config(GitignorePreset),
+	Preset(GitignorePreset),
 }
 
 impl GitIgnorePresetRef {

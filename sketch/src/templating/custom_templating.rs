@@ -12,7 +12,7 @@ impl Config {
 	pub fn generate_templates(
 		&self,
 		output_root: impl AsRef<Path>,
-		preset_refs: Vec<TemplatingPresetReference>,
+		preset_refs: Vec<TemplatingPresetRef>,
 		cli_overrides: &IndexMap<String, Value>,
 	) -> Result<(), AppError> {
 		let output_root = output_root.as_ref();
@@ -26,7 +26,7 @@ impl Config {
 
 		for preset_ref in preset_refs {
 			let preset = match preset_ref {
-				TemplatingPresetReference::Preset {
+				TemplatingPresetRef::PresetId {
 					preset_id: id,
 					mut context,
 				} => {
@@ -36,7 +36,7 @@ impl Config {
 
 					preset
 				}
-				TemplatingPresetReference::Definition(mut preset) => {
+				TemplatingPresetRef::Preset(mut preset) => {
 					if !preset.extends_presets.is_empty() {
 						preset = preset.merge_presets("__inlined", &self.templating_presets)?;
 					}

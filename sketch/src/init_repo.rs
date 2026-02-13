@@ -1,6 +1,6 @@
 use crate::{
 	exec::{Hook, launch_command},
-	gh_workflow::WorkflowPresetReference,
+	gh_workflow::GhWorkflowPresetRef,
 	*,
 };
 
@@ -26,7 +26,7 @@ pub struct RepoPreset {
 
 	#[arg(short = 't', long = "template")]
 	/// A set of templates to generate when this preset is used.
-	pub with_templates: Vec<TemplatingPresetReference>,
+	pub with_templates: Vec<TemplatingPresetRef>,
 
 	#[arg(short, long)]
 	/// A license file to generate for the new repo.
@@ -43,10 +43,10 @@ pub struct RepoPreset {
 	#[arg(
     long = "workflow",
     value_name = "id=PRESET_ID,file=PATH",
-    value_parser = WorkflowPresetReference::from_cli
+    value_parser = GhWorkflowPresetRef::from_cli
   )]
 	/// One or many workflows to generate in the new repo.
-	pub workflows: Vec<WorkflowPresetReference>,
+	pub workflows: Vec<GhWorkflowPresetRef>,
 }
 
 impl std::str::FromStr for PreCommitSetting {
@@ -82,7 +82,7 @@ impl Config {
 		let gitignore = if let Some(preset_ref) = preset.gitignore {
 			match preset_ref {
 				GitIgnorePresetRef::PresetId(id) => self.get_gitignore_preset(&id)?.content,
-				GitIgnorePresetRef::Config(preset) => {
+				GitIgnorePresetRef::Preset(preset) => {
 					preset
 						.merge_presets("__inlined", &self.gitignore_presets)?
 						.content
@@ -151,12 +151,12 @@ impl Config {
 
 			for workflow in preset.workflows {
 				match workflow {
-					WorkflowPresetReference::Preset { file_name, id } => {
+					GhWorkflowPresetRef::PresetId { file_name, id } => {
 						let data = self.github.get_workflow(&id)?;
 
 						serialize_yaml(&data, &workflows_dir.join(file_name), overwrite)?;
 					}
-					WorkflowPresetReference::Data {
+					GhWorkflowPresetRef::Preset {
 						file_name,
 						workflow: config,
 					} => {

@@ -133,7 +133,7 @@ impl TsCommands {
 
 				config
 					.create_ts_package(TsPackageSetup {
-						data: TsPackagePresetRef::Config(root_package),
+						data: TsPackagePresetRef::Preset(root_package),
 						pkg_root: &out_dir,
 						tsconfig_files_to_update: vec![],
 						cli_vars,
@@ -161,7 +161,7 @@ impl TsCommands {
 				}
 
 				if let Some(vitest) = vitest {
-					package.vitest = Some(VitestPresetRef::Id(vitest))
+					package.vitest = Some(VitestPresetRef::PresetId(vitest))
 				}
 
 				let package_dir = dir.unwrap_or_else(|| {
@@ -174,7 +174,7 @@ impl TsCommands {
 
 				config
 					.create_ts_package(TsPackageSetup {
-						data: TsPackagePresetRef::Config(package),
+						data: TsPackagePresetRef::Preset(package),
 						pkg_root: &package_dir,
 						tsconfig_files_to_update: update_tsconfig,
 						cli_vars,

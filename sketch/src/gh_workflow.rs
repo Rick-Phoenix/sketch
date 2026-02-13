@@ -1,7 +1,7 @@
 use crate::{cli::parsers::parse_key_value_pairs, *};
-pub(crate) use ::gh_workflow::{Job, JobPreset, JobPresetRef, Step, StepPresetRef, Workflow};
+pub(crate) use ::gh_workflow::{GhJobPreset, GhJobPresetRef, Job, Step, StepPresetRef, Workflow};
 
-impl WorkflowPresetReference {
+impl GhWorkflowPresetRef {
 	pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
 		let mut file: Option<PathBuf> = None;
 		let mut id: Option<String> = None;
@@ -30,7 +30,7 @@ impl WorkflowPresetReference {
 
 		let error_message = "Invalid input for a github workflow reference";
 
-		let reference = Self::Preset {
+		let reference = Self::PresetId {
 			file_name: file.ok_or_else(|| error_message.to_string())?,
 			id: id.ok_or_else(|| error_message.to_string())?,
 		};
@@ -43,9 +43,9 @@ impl WorkflowPresetReference {
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum WorkflowPresetReference {
+pub enum GhWorkflowPresetRef {
 	/// A reference to a workflow preset
-	Preset {
+	PresetId {
 		/// The name of the output file (inside the .github/workflows directory)
 		file_name: PathBuf,
 		/// The ID of the preset to use
@@ -53,7 +53,7 @@ pub enum WorkflowPresetReference {
 	},
 
 	/// An inlined definition for a new workflow
-	Data {
+	Preset {
 		/// The name of the output file (inside the .github/workflows directory)
 		file_name: PathBuf,
 		/// The definition for the new workflow
@@ -71,7 +71,7 @@ pub struct GithubConfig {
 	pub workflow_presets: IndexMap<String, GhWorkflowPreset>,
 
 	/// A map of presets for Github workflow jobs
-	pub workflow_job_presets: IndexMap<String, JobPreset>,
+	pub workflow_job_presets: IndexMap<String, GhJobPreset>,
 
 	/// A map of presets for steps used in a Github workflow job.
 	pub steps_presets: IndexMap<String, Step>,
@@ -90,7 +90,7 @@ impl GithubConfig {
 	}
 }
 
-/// A preset for a gihub workflow.
+/// A preset for a github workflow.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct GhWorkflowPreset {
@@ -133,7 +133,7 @@ impl GhWorkflowPreset {
 
 		for job in merged_preset.config.jobs.values_mut() {
 			match job {
-				JobPresetRef::PresetId(id) => {
+				GhJobPresetRef::PresetId(id) => {
 					let mut data = github_config
 						.workflow_job_presets
 						.get(id)
@@ -147,9 +147,9 @@ impl GhWorkflowPreset {
 						data = github_config.process_gh_job_preset(id, data)?;
 					}
 
-					*job = JobPresetRef::Data(data.into());
+					*job = GhJobPresetRef::Preset(data.into());
 				}
-				JobPresetRef::Data(data) => {
+				GhJobPresetRef::Preset(data) => {
 					if data.requires_processing() {
 						let mut owned_data = mem::take(data);
 
@@ -166,7 +166,7 @@ impl GhWorkflowPreset {
 	}
 }
 
-impl ExtensiblePreset for JobPreset {
+impl ExtensiblePreset for GhJobPreset {
 	fn kind() -> PresetKind {
 		PresetKind::GithubWorkflowJob
 	}
@@ -180,8 +180,8 @@ impl GithubConfig {
 	pub fn process_gh_job_preset(
 		&self,
 		id: &str,
-		preset: JobPreset,
-	) -> Result<JobPreset, AppError> {
+		preset: GhJobPreset,
+	) -> Result<GhJobPreset, AppError> {
 		let mut merged_preset = preset.merge_presets(id, &self.workflow_job_presets)?;
 
 		if let Job::Normal(job) = &mut merged_preset.job {
@@ -196,7 +196,7 @@ impl GithubConfig {
 						})?
 						.clone();
 
-					*step = StepPresetRef::Config(Box::new(data));
+					*step = StepPresetRef::Preset(Box::new(data));
 				}
 			}
 		}

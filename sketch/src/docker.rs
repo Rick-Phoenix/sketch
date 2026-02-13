@@ -80,9 +80,9 @@ impl ComposePreset {
 				ServicePresetRef::PresetId(id) => {
 					let service_preset = config.get_service_preset(id)?;
 
-					*service_data = ServicePresetRef::Config(service_preset.into());
+					*service_data = ServicePresetRef::Preset(service_preset.into());
 				}
-				ServicePresetRef::Config(preset) => {
+				ServicePresetRef::Preset(preset) => {
 					if !preset.extends_presets.is_empty() {
 						let mut data = std::mem::take(preset);
 

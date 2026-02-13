@@ -30,13 +30,13 @@ impl ExtensiblePreset for TsConfigPreset {
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
 pub enum TsConfigPresetRef {
-	Id(String),
-	Config(TsConfigPreset),
+	PresetId(String),
+	Preset(TsConfigPreset),
 }
 
 impl Default for TsConfigPresetRef {
 	fn default() -> Self {
-		Self::Config(TsConfigPreset::default())
+		Self::Preset(TsConfigPreset::default())
 	}
 }
 
@@ -80,7 +80,7 @@ impl TsConfigData {
 					directive.config = if val.is_empty() {
 						None
 					} else {
-						Some(TsConfigPresetRef::Id(val.to_string()))
+						Some(TsConfigPresetRef::PresetId(val.to_string()))
 					}
 				}
 				_ => return Err(format!("Invalid key for TsConfigData: {key}")),

@@ -28,7 +28,7 @@ async fn circular_package_json() -> Result<(), AppError> {
 
 	let result = config
 		.create_ts_package(TsPackageSetup {
-			data: TsPackagePresetRef::Preset("circular_package_json".to_string()),
+			data: TsPackagePresetRef::PresetId("circular_package_json".to_string()),
 			pkg_root: &PathBuf::from("tests/output/circular_configs"),
 			tsconfig_files_to_update: vec![],
 			cli_vars: &Default::default(),
@@ -55,7 +55,7 @@ async fn circular_tsconfig() -> Result<(), AppError> {
 
 	let result = config
 		.create_ts_package(TsPackageSetup {
-			data: TsPackagePresetRef::Preset("circular_tsconfigs".to_string()),
+			data: TsPackagePresetRef::PresetId("circular_tsconfigs".to_string()),
 			pkg_root: &PathBuf::from("tests/output/circular_configs"),
 			tsconfig_files_to_update: vec![],
 			cli_vars: &Default::default(),

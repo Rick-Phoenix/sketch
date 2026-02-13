@@ -1,8 +1,6 @@
 pub(crate) use rust_manifest::*;
 
-use crate::{
-	TemplatingPresetReference, init_repo::gitignore::GitIgnorePresetRef, licenses::License, *,
-};
+use crate::{TemplatingPresetRef, init_repo::gitignore::GitIgnorePresetRef, licenses::License, *};
 use toml_edit::{Array, Decor, DocumentMut, Item, Table};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Merge, Default)]
@@ -35,7 +33,7 @@ pub struct CratePreset {
 	pub license: Option<License>,
 
 	#[arg(short = 't', long = "template", value_name = "PRESET_ID")]
-	pub with_templates: Vec<TemplatingPresetReference>,
+	pub with_templates: Vec<TemplatingPresetRef>,
 }
 
 impl CratePreset {
@@ -48,7 +46,7 @@ impl CratePreset {
 		create_all_dirs(dir)?;
 
 		let mut manifest = match self.manifest {
-			CargoTomlPresetRef::Config(CargoTomlPreset { config, .. }) => config,
+			CargoTomlPresetRef::Preset(CargoTomlPreset { config, .. }) => config,
 			CargoTomlPresetRef::PresetId(id) => {
 				return Err(anyhow!("Unresolved manifest preset with id `{id}`").into());
 			}
@@ -183,7 +181,7 @@ impl CratePreset {
 			true,
 		)?;
 
-		if let Some(GitIgnorePresetRef::Config(gitignore)) = self.gitignore {
+		if let Some(GitIgnorePresetRef::Preset(gitignore)) = self.gitignore {
 			write_file(
 				&dir.join(".gitignore"),
 				&gitignore.content.to_string(),
@@ -241,23 +239,23 @@ impl CratePreset {
 		self.manifest = {
 			let preset = match self.manifest {
 				CargoTomlPresetRef::PresetId(id) => config.rust.get_cargo_toml_preset(&id)?,
-				CargoTomlPresetRef::Config(preset) => {
+				CargoTomlPresetRef::Preset(preset) => {
 					preset.merge_presets("__inlined", &config.rust.manifest_presets)?
 				}
 			};
 
-			CargoTomlPresetRef::Config(preset)
+			CargoTomlPresetRef::Preset(preset)
 		};
 
 		if let Some(preset_ref) = self.gitignore {
 			let preset = match preset_ref {
 				GitIgnorePresetRef::PresetId(id) => config.get_gitignore_preset(&id)?,
-				GitIgnorePresetRef::Config(preset) => {
+				GitIgnorePresetRef::Preset(preset) => {
 					preset.merge_presets("__inlined", &config.gitignore_presets)?
 				}
 			};
 
-			self.gitignore = Some(GitIgnorePresetRef::Config(preset));
+			self.gitignore = Some(GitIgnorePresetRef::Preset(preset));
 		}
 
 		Ok(self)
@@ -269,7 +267,7 @@ impl CratePreset {
 #[serde(untagged)]
 pub enum CargoTomlPresetRef {
 	PresetId(String),
-	Config(CargoTomlPreset),
+	Preset(CargoTomlPreset),
 }
 
 impl CargoTomlPresetRef {
@@ -284,7 +282,7 @@ impl CargoTomlPresetRef {
 
 impl Default for CargoTomlPresetRef {
 	fn default() -> Self {
-		Self::Config(CargoTomlPreset::default())
+		Self::Preset(CargoTomlPreset::default())
 	}
 }
 

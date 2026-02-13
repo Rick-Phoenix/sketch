@@ -5,7 +5,7 @@ use crate::{
 	ts::package_json::PackageJson,
 };
 use ::gh_workflow::{
-	ActionRunner, Event, Job, JobPresetRef, RunsOn, Shell, StringNumOrBool, StringOrBool,
+	ActionRunner, Event, GhJobPresetRef, Job, RunsOn, Shell, StringNumOrBool, StringOrBool,
 	StringOrNum, Workflow,
 };
 
@@ -246,7 +246,7 @@ pub(crate) fn verify_generated_workflow(path: &Path) -> Result<(), Box<dyn std::
 	assert_eq!(jobs.len(), 2);
 
 	for (name, job) in jobs {
-		let mut job = if let JobPresetRef::Data(data) = job
+		let mut job = if let GhJobPresetRef::Preset(data) = job
 			&& let Job::Normal(content) = data.job
 		{
 			content

@@ -195,7 +195,7 @@ impl Cli {
 				};
 
 				let template_data = if let Some(preset_id) = preset_id {
-					TemplatingPresetReference::Preset {
+					TemplatingPresetRef::PresetId {
 						preset_id,
 						context: Default::default(),
 					}
@@ -228,7 +228,7 @@ impl Cli {
 						TemplateOutputKind::Stdout
 					};
 
-					TemplatingPresetReference::Definition(TemplatingPreset {
+					TemplatingPresetRef::Preset(TemplatingPreset {
 						templates: vec![TemplateKind::Single(TemplateData { template, output })],
 						..Default::default()
 					})

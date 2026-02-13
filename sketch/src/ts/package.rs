@@ -33,7 +33,7 @@ pub struct TsPackagePreset {
 
 	/// One or many templates to generate along with this package. Relative output paths will resolve from the root of the package.
 	#[arg(long = "template", short = 't', value_name = "PRESET_ID")]
-	pub with_templates: Vec<TemplatingPresetReference>,
+	pub with_templates: Vec<TemplatingPresetRef>,
 
 	/// One or many rendered commands to execute before the repo's creation
 	#[arg(
@@ -62,8 +62,8 @@ pub struct TsPackagePreset {
 
 /// The kinds of Ts package data. Either an id pointing to a stored preset, or a custom configuration.
 pub enum TsPackagePresetRef {
-	Preset(String),
-	Config(TsPackagePreset),
+	PresetId(String),
+	Preset(TsPackagePreset),
 }
 
 pub enum PackageType {
@@ -110,8 +110,8 @@ impl Config {
 		let version_ranges = typescript.version_range.unwrap_or_default();
 
 		let package_config = match data {
-			TsPackagePresetRef::Config(conf) => conf,
-			TsPackagePresetRef::Preset(id) => typescript
+			TsPackagePresetRef::Preset(conf) => conf,
+			TsPackagePresetRef::PresetId(id) => typescript
 				.package_presets
 				.get(&id)
 				.ok_or_else(|| AppError::PresetNotFound {
@@ -147,8 +147,8 @@ impl Config {
 		}
 
 		let mut package_json_data = match package_config.package_json.unwrap_or_default() {
-			PackageJsonPresetRef::Id(id) => typescript.get_package_json(&id)?,
-			PackageJsonPresetRef::Config(preset) => preset.process_data(
+			PackageJsonPresetRef::PresetId(id) => typescript.get_package_json(&id)?,
+			PackageJsonPresetRef::Preset(preset) => preset.process_data(
 				"__inlined",
 				&typescript.package_json_presets,
 				&typescript.people,
@@ -254,8 +254,8 @@ impl Config {
 		if !package_config.ts_config.is_empty() {
 			for directive in package_config.ts_config {
 				let tsconfig_data = match directive.config.unwrap_or_default() {
-					TsConfigPresetRef::Id(id) => typescript.get_tsconfig_preset(&id)?.config,
-					TsConfigPresetRef::Config(ts_config) => {
+					TsConfigPresetRef::PresetId(id) => typescript.get_tsconfig_preset(&id)?.config,
+					TsConfigPresetRef::Preset(ts_config) => {
 						ts_config
 							.merge_presets("__inlined", &typescript.ts_config_presets)?
 							.config
@@ -315,8 +315,8 @@ impl Config {
 		{
 			let mut vitest = match vitest_config {
 				VitestPresetRef::Bool(_) => VitestPreset::default(),
-				VitestPresetRef::Id(id) => typescript.get_vitest_preset(&id)?,
-				VitestPresetRef::Config(preset) => preset,
+				VitestPresetRef::PresetId(id) => typescript.get_vitest_preset(&id)?,
+				VitestPresetRef::Preset(preset) => preset,
 			};
 
 			let tests_dir = pkg_root.join(&vitest.tests_dir);
@@ -367,8 +367,8 @@ impl Config {
 		{
 			let oxlint_config = match oxlint_config {
 				OxlintPresetRef::Bool(_) => OxlintConfig::default(),
-				OxlintPresetRef::Id(id) => typescript.get_oxlint_preset(&id)?.config,
-				OxlintPresetRef::Config(oxlint_preset) => {
+				OxlintPresetRef::PresetId(id) => typescript.get_oxlint_preset(&id)?.config,
+				OxlintPresetRef::Preset(oxlint_preset) => {
 					oxlint_preset
 						.merge_presets(
 							&format!("__inlined_definition_{package_name}"),

@@ -10,8 +10,8 @@ use super::*;
 #[serde(untagged)]
 pub enum VitestPresetRef {
 	Bool(bool),
-	Id(String),
-	Config(VitestPreset),
+	PresetId(String),
+	Preset(VitestPreset),
 }
 
 impl VitestPresetRef {

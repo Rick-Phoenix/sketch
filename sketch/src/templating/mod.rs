@@ -23,9 +23,9 @@ pub(crate) fn templates_dir() -> PathBuf {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum TemplatingPresetReference {
+pub enum TemplatingPresetRef {
 	/// A reference to a templating preset, with some optional context
-	Preset {
+	PresetId {
 		/// The id of the preset to select.
 		preset_id: String,
 		/// Additional context for the templates in this preset. It overrides previously set values, but not values set via the cli.
@@ -33,14 +33,14 @@ pub enum TemplatingPresetReference {
 		context: IndexMap<String, Value>,
 	},
 	/// The definition for a new templating preset.
-	Definition(TemplatingPreset),
+	Preset(TemplatingPreset),
 }
 
-impl FromStr for TemplatingPresetReference {
+impl FromStr for TemplatingPresetRef {
 	type Err = std::convert::Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		Ok(Self::Preset {
+		Ok(Self::PresetId {
 			preset_id: s.to_string(),
 			context: Default::default(),
 		})

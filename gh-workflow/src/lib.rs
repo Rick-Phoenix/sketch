@@ -65,12 +65,12 @@ mod presets {
 		/// A preset ID
 		#[serde(skip_serializing)]
 		PresetId(String),
-		Config(Box<Step>),
+		Preset(Box<Step>),
 	}
 
 	impl StepPresetRef {
 		pub fn as_config(self) -> Option<Step> {
-			if let Self::Config(data) = self {
+			if let Self::Preset(data) = self {
 				Some(*data)
 			} else {
 				None
@@ -94,19 +94,19 @@ mod presets {
 	#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize)]
 	#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 	#[serde(untagged)]
-	pub enum JobPresetRef {
+	pub enum GhJobPresetRef {
 		/// The preset ID for this job
 		PresetId(String),
 
 		/// The definition for this job
-		Data(Box<JobPreset>),
+		Preset(Box<GhJobPreset>),
 	}
 
-	impl JobPresetRef {
+	impl GhJobPresetRef {
 		pub fn requires_processing(&self) -> bool {
 			match self {
 				Self::PresetId(_) => true,
-				Self::Data(data) => data.requires_processing(),
+				Self::Preset(data) => data.requires_processing(),
 			}
 		}
 	}
@@ -114,7 +114,7 @@ mod presets {
 	/// A preset for a gihub workflow job.
 	#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 	#[cfg_attr(feature = "schemars", derive(JsonSchema))]
-	pub struct JobPreset {
+	pub struct GhJobPreset {
 		/// The list of extended presets.
 		#[serde(skip_serializing, default)]
 		#[merge(skip)]
@@ -125,7 +125,7 @@ mod presets {
 	}
 }
 
-impl JobPreset {
+impl GhJobPreset {
 	pub fn requires_processing(&self) -> bool {
 		!self.extends_presets.is_empty()
 			|| self
@@ -195,7 +195,7 @@ pub struct Workflow {
 	/// See more: https://help.github.com/en/github/automating-your-workflow-with-github-actions/workflow-syntax-for-github-actions#jobs
 	#[serde(default)]
 	#[cfg(feature = "presets")]
-	pub jobs: IndexMap<String, JobPresetRef>,
+	pub jobs: IndexMap<String, GhJobPresetRef>,
 	#[cfg(not(feature = "presets"))]
 	pub jobs: IndexMap<String, Job>,
 }
