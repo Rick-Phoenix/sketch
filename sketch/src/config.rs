@@ -19,6 +19,15 @@ impl Config {
 		}
 	}
 
+	#[cfg(feature = "schemars")]
+	pub fn generate_json_schema(output: &Path) -> AppResult {
+		#[allow(clippy::use_self)]
+		let schema = schemars::schema_for!(Config);
+		serialize_json(&schema, output, true)?;
+
+		Ok(())
+	}
+
 	pub(crate) const fn can_overwrite(&self) -> bool {
 		!self.no_overwrite
 	}

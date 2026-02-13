@@ -52,6 +52,10 @@ impl Cli {
 		}
 
 		match command {
+			#[cfg(feature = "schemars")]
+			Commands::JsonSchema { output } => {
+				Config::generate_json_schema(&output)?;
+			}
 			Commands::Rust { command } => {
 				command.execute(&config)?;
 			}
@@ -453,5 +457,12 @@ pub enum Commands {
 		/// The path of the output file [default: `LICENSE`]
 		#[arg(short, long)]
 		output: Option<PathBuf>,
+	},
+
+	#[cfg(feature = "schemars")]
+	/// Generates the json schema for the configuration file
+	JsonSchema {
+		/// The output path for the json schema
+		output: PathBuf,
 	},
 }
