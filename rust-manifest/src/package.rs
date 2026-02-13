@@ -10,6 +10,10 @@ pub struct Package {
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub name: Option<String>,
 
+	/// Deprecated
+	#[serde(skip_serializing_if = "Vec::is_empty")]
+	pub authors: Vec<String>,
+
 	/// Must parse as semver, e.g. "1.9.0"
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub version: Option<Inheritable<String>>,

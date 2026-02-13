@@ -127,6 +127,10 @@ impl AsTomlValue for LintKind {
 #[serde(default, rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
 pub struct PackageTemplate {
+	/// Deprecated
+	#[serde(skip_serializing_if = "Vec::is_empty")]
+	pub authors: Vec<String>,
+
 	/// See <https://crates.io/category_slugs>
 	#[serde(skip_serializing_if = "BTreeSet::is_empty")]
 	pub categories: BTreeSet<String>,
