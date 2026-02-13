@@ -12,7 +12,7 @@ A template can be defined as simple text in a config file, inside the `templates
 
 Command:
 
->`{{#include ../../../sketch/tests/output/custom_templates/commands/from_id}}`
+>`{{#include ../../../sketch/tests/output/single_templates/commands/from_id}}`
 
 ## From `templates_dir`
 
@@ -23,12 +23,12 @@ The best method is to use a file inside `templates_dir`. With this method, the t
 Tree structure of `templates_dir`:
 
 ```
-{{#include ../../../sketch/tests/output/custom_templates/tree:2:}}
+{{#include ../../../sketch/tests/output/single_templates/tree:2:}}
 ```
 
 Command:
 
->`{{#include ../../../sketch/tests/output/custom_templates/commands/from_template_file}}`
+>`{{#include ../../../sketch/tests/output/single_templates/commands/from_template_file}}`
 
 >ℹ️ You can also use the `-f` flag to render a template from any file, even outside `templates_dir`.
 
@@ -36,6 +36,6 @@ Command:
 
 Alternatively, a template can also be defined directly within a command:
 
->`{{#include ../../../sketch/tests/output/custom_templates/commands/literal_template_cmd}}`
+>`{{#include ../../../sketch/tests/output/single_templates/commands/literal_template_cmd}}`
 
 

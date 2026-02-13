@@ -14,12 +14,16 @@ As of now, these presets are available:
 - Git
     - Git repo
     - `.gitignore` (extensible)
+
+- Pre-commit
     - `.pre-commit-config.yaml` (extensible)
+
+- Github Workflows
     - [Github workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) (extensible)
     - [Github workflow job](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs) (extensible)
     - [Github workflow step](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps)
-
 - Rust
+    - Rust crate (uses gitignore preset + detects workspace like `cargo new` does)
     - `Cargo.toml` (extensible, with merging of features for dependencies)
 
 - Typescript

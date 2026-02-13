@@ -1,6 +1,8 @@
 # Typescript Presets
 
-Many typical components of a typescript project have their own dedicated preset. 
+One of the goals of Sketch is to bring more structure and order when dealing with the somewhat chaotic typescript ecosystem.
+
+Many typical components of a typescript project have their own dedicated preset, and there are also dedicated commands for common operations such as generating barrel files. 
 
 ## Package.json Presets
 ```yaml
@@ -43,35 +45,3 @@ A package preset can be used to collect other presets, such as in this example:
 ```yaml
 {{#include ../../../examples/presets.yaml:package}}
 ```
-
-<details>
-<summary>Tsconfig output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tsconfig.json}}
-```
-</details>
-
-<details>
-<summary>Package.json output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/package.json}}
-```
-</details>
-
-<details>
-<summary>Oxlintrc.json output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/.oxlintrc.json}}
-```
-</details>
-
-<details>
-<summary>vitest.config.ts output</summary>
-
-```json
-{{#include ../../../sketch/tests/output/presets/packages/presets_example/tests/vitest.config.ts}}
-```
-</details>

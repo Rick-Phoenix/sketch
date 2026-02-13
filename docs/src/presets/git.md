@@ -38,14 +38,14 @@ We can define some commands (which can also be templates) to execute before and/
 
 ## Example
 
-Starting from this config, we can run this command:
+Starting from the config from above, we can run this command:
 
->`{{#include ../../../sketch/tests/output/presets/cmd}}`
+>`{{#include ../../../sketch/tests/output/presets/repo/cmd}}`
 
 To get this tree output:
 
 ```
-{{#include ../../../sketch/tests/output/presets/tree_output.txt:2:}}
+{{#include ../../../sketch/tests/output/presets/repo/tree_output.txt:2:}}
 ```
 
 >ℹ️ With cli flags, we can override the `gitignore` and `pre-commit` presets, as well as adding new templates or hooks to run or generate when the preset is being used.
@@ -54,7 +54,7 @@ To get this tree output:
 <summary>pre-commit-config.yaml output</summary>
 
 ```yaml
-{{#include ../../../sketch/tests/output/presets/.pre-commit-config.yaml}}
+{{#include ../../../sketch/tests/output/presets/repo/.pre-commit-config.yaml}}
 ```
 </details>
 
@@ -63,7 +63,7 @@ To get this tree output:
 <summary>gitignore output</summary>
 
 ```
-{{#include ../../../sketch/tests/output/presets/.gitignore}}
+{{#include ../../../sketch/tests/output/presets/repo/.gitignore}}
 ```
 </details>
 

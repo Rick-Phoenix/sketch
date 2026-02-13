@@ -32,12 +32,18 @@ We start from this configuration:
 
 And then run
 
->`{{#include ../../../sketch/tests/output/ts_examples/commands/package_gen_cmd}}`
+>`{{#include ../../../sketch/tests/output/ts_example/commands/package_gen_cmd}}`
 
 To obtain this output in the designated directory:
 
 ```
-{{#include ../../../sketch/tests/output/ts_examples/packages/frontend/tree_output.txt:2:}}
+{{#include ../../../sketch/tests/output/ts_example/packages/frontend/tree_output.txt:2:}}
 ```
 
 > ℹ️ You can also use the `-i` flag to automatically install the dependencies with your selected package manager whenever a new package is created.
+
+With the following `package.json` file
+
+```json
+{{#include ../../../sketch/tests/output/ts_example/packages/frontend/package.json}}
+```

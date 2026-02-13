@@ -25,7 +25,6 @@ This document contains the help content for the `sketch` command-line program.
 * [`sketch oxlint`↴](#sketch-oxlint)
 * [`sketch pnpm-workspace`↴](#sketch-pnpm-workspace)
 * [`sketch license`↴](#sketch-license)
-* [`sketch json-schema`↴](#sketch-json-schema)
 
 ## `sketch`
 
@@ -49,7 +48,6 @@ This document contains the help content for the `sketch` command-line program.
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
 * `pnpm-workspace` — Generates a `pnpm-workspace.yaml` file from a preset
 * `license` — Generates a license file
-* `json-schema` — Generates the json schema for the configuration file
 
 ###### **Options:**
 
@@ -472,18 +470,6 @@ Generates a license file
 ###### **Options:**
 
 * `-o`, `--output <OUTPUT>` — The path of the output file [default: `LICENSE`]
-
-
-
-## `sketch json-schema`
-
-Generates the json schema for the configuration file
-
-**Usage:** `sketch json-schema <OUTPUT>`
-
-###### **Arguments:**
-
-* `<OUTPUT>` — The output path for the json schema
 
 
 

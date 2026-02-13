@@ -12,13 +12,13 @@ Config:
 
 Command:
 
->`{{#include ../../../sketch/tests/output/generated_configs/commands/compose}}`
+>`{{#include ../../../sketch/tests/output/generated_configs/compose-file/commands/compose}}`
 
 >ℹ️ With the `--service` flag, extra service presets can be added to the output file.
 
 Output:
 
 ```yaml
-{{#include ../../../sketch/tests/output/generated_configs/compose.yaml}}
+{{#include ../../../sketch/tests/output/generated_configs/compose-file/compose.yaml}}
 ```
 

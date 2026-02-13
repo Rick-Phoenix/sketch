@@ -39,12 +39,12 @@ and we generate a package that has `catalog` dependencies, which are currently a
 
 After running 
 
->`{{#include ../../../sketch/tests/output/ts_examples/commands/catalog_cmd}}`
+>`{{#include ../../../sketch/tests/output/ts_monorepo/commands/catalog_cmd}}`
 
 We can see that the pnpm-workspace.yaml file has been updated with the new named catalog and dependencies:
 
 ```yaml
-{{#include ../../../sketch/tests/output/ts_examples/pnpm-workspace.yaml}}
+{{#include ../../../sketch/tests/output/ts_monorepo/pnpm-workspace.yaml}}
 ```
 
 ## Storing And Reusing Contributors' Data
@@ -61,10 +61,10 @@ To make this job a bit easier, you can use the `people` field in the typescript 
 
 After we run
 
->`{{#include ../../../sketch/tests/output/ts_examples/commands/people_cmd}}`
+>`{{#include ../../../sketch/tests/output/ts-people-example/commands/people_cmd}}`
 
 We get this `package.json` file in the root of the new package:
 
 ```json
-{{#include ../../../sketch/tests/output/ts_examples/packages/people-example/package.json}}
+{{#include ../../../sketch/tests/output/ts-people-example/package.json}}
 ```

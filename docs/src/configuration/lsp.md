@@ -6,6 +6,8 @@ This will provide type-safety, autocompletion and additional documentation when 
 
 Every time a new version is released, the json schema for the configuration file will be updated in the [github repo](https://github.com/Rick-Phoenix/sketch/tree/main/schemas). Each version will have its own distinct schema file, and the `latest.json` file will track the schema for the latest version.
 
+Alternatively, if you build the binary with the `schemars` feature, you can generate the schema by yourself with the command `sketch json-schema`.
+
 You can then use this schema with the `yaml`, `toml` or `json` language servers to get autocompletion, type information and documentation for each element of the config file.
 
 This can be done by configuring the specific LSP in your editor, or simply by using a special comment at the top of your file that links to the config's json schema.
@@ -42,4 +44,5 @@ As of now, these external configurations defined with sketch are all **fully typ
 - `package.json`
 - `tsconfig.json`
 - `compose.yaml` (Docker)
+- `Cargo.toml`
 - [github workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)

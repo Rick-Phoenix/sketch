@@ -32,16 +32,14 @@ We can define some commands (which can also be templates) to execute before and/
 
 ## Example
 
-So after setting everything up, we run the command
+So after setting everything up with the examples from above, we run the command
 
->`{{#include ../../../sketch/tests/output/ts_examples/commands/monorepo_cmd}}`
+>`{{#include ../../../sketch/tests/output/ts_monorepo/commands/monorepo_cmd}}`
 
 And get this tree output:
 
 ```
-{{#include ../../../sketch/tests/output/ts_examples/tree_output.txt:2:}}
+{{#include ../../../sketch/tests/output/ts_monorepo/tree_output.txt:2:}}
 ```
 
 >ℹ️ You can use the `-i` flag to install dependencies for the root package after creating the new monorepo.
-
-

@@ -76,22 +76,32 @@ With a preset, you can modify the preset itself and then update each instance pr
 
 The list of supported presets includes:
 
-- Git
-    - `.gitignore` (extensible)
-    - `.pre-commit-config.yaml` (extensible)
-    - [Github workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) (extensible)
-    - [Github workflow job](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs) (extensible)
+- Templating
+    - Templating presets (extensible)
 
 - Docker
     - Docker Compose file (extensible)
     - Docker Compose service (extensible)
 
+- Git
+    - Git repo
+    - `.gitignore` (extensible)
+
+- Pre-commit
+    - `.pre-commit-config.yaml` (extensible)
+
+- Github Workflows
+    - [Github workflow](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) (extensible)
+    - [Github workflow job](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs) (extensible)
+    - [Github workflow step](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idsteps)
 - Rust
-    - `Cargo.toml` (extensible)
+    - Rust crate (uses gitignore preset + detects workspace like `cargo new` does)
+    - `Cargo.toml` (extensible, with merging of features for dependencies)
 
 - Typescript
+    - Typescript package
     - `pnpm-workspace.yaml` (extensible)
-    - `package.json` (extensible, with extra features)
+    - `package.json` (extensible, with [extra features](../ts/smart_features.md))
     - `tsconfig.json` (extensible, with merging of values for the `references`, `include`, `exclude` and `files` fields)
     - `.oxlintrc.json` (extensible)
     - `vitest` (not a full configuration for `vitest.config.ts`, but a basic testing setup)

@@ -19,12 +19,12 @@ A templating preset contains an optional context (which overrides the global con
 
 Command:
 
->`{{#include ../../../sketch/tests/output/custom_templates/commands/collection_preset}}`
+>`{{#include ../../../sketch/tests/output/templating_presets/simple/commands/collection_preset}}`
 
 Tree output:
 
 ```
-{{#include ../../../sketch/tests/output/custom_templates/lotr/tree_output.txt:2:}}
+{{#include ../../../sketch/tests/output/templating_presets/simple/tree_output.txt:2:}}
 ```
 
 ### 2. Template Directory
@@ -38,7 +38,7 @@ Tree output:
 Let's say that this is our `templates_dir`:
 
 ```
-{{#include ../../../sketch/tests/output/custom_templates/tree:2:}}
+{{#include ../../../sketch/tests/output/single_templates/tree:2:}}
 ```
 
 And we define this preset, which is meant to reproduce the entire file structure of `subdir` in the target directory.
@@ -50,12 +50,12 @@ And we define this preset, which is meant to reproduce the entire file structure
 
 Command:
 
->`{{#include ../../../sketch/tests/output/custom_templates/commands/structured_preset}}`
+>`{{#include ../../../sketch/tests/output/templating_presets/structured/commands/structured_preset}}`
 
 Tree output:
 
 ```
-{{#include ../../../sketch/tests/output/custom_templates/structured/tree_output.txt:2:}}
+{{#include ../../../sketch/tests/output/templating_presets/structured/tree_output.txt:2:}}
 ```
 
 ### 3. Remote Template
@@ -73,18 +73,18 @@ We start from this basic [example](https://github.com/Rick-Phoenix/sketch-remote
 
 Command:
 
->`{{#include ../../../sketch/tests/output/custom_templates/commands/remote}}`
+>`{{#include ../../../sketch/tests/output/templating_presets/remote/commands/remote}}`
 
 Tree output:
 
 ```
-{{#include ../../../sketch/tests/output/custom_templates/remote/tree_output.txt:2:}}
+{{#include ../../../sketch/tests/output/templating_presets/remote/tree_output.txt:2:}}
 ```
 
 File output for `some_file`:
 
 ```
-{{#include ../../../sketch/tests/output/custom_templates/remote/some_file}}
+{{#include ../../../sketch/tests/output/templating_presets/remote/some_file}}
 ```
 
 ## Extending Templating Presets

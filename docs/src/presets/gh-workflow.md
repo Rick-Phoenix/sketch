@@ -12,10 +12,10 @@ We use this configuration:
 
 Run the command
 
->`{{#include ../../../sketch/tests/output/generated_configs/commands/workflow}}`
+>`{{#include ../../../sketch/tests/output/generated_configs/gh-workflow/commands/workflow}}`
 
 And get this output:
 
 ```yaml
-{{#include ../../../sketch/tests/output/generated_configs/workflow.yaml}}
+{{#include ../../../sketch/tests/output/generated_configs/gh-workflow/workflow.yaml}}
 ```
