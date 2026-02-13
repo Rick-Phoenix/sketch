@@ -414,7 +414,7 @@ pub struct Cli {
 	pub overrides: Option<ConfigOverrides>,
 
 	/// Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
-	#[arg(long = "set", short = 's', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
+	#[arg(long = "set", short = 'S', value_parser = parse_serializable_key_value_pair, value_name = "KEY=VALUE")]
 	pub vars_overrides: Vec<(String, Value)>,
 
 	/// One or more paths to json, yaml or toml files to extract template variables from, in the given order.
@@ -530,7 +530,7 @@ pub enum Commands {
 		output: Option<PathBuf>,
 
 		/// Adds one or many service presets to the generated file. Can specify the preset ID and the name of the service in the output file, or just the preset ID to also use it for the service name.
-		#[arg(short = 'S', long = "service", value_parser = ServiceFromCli::from_cli, help = "PRESET_ID|id=PRESET,name=NAME")]
+		#[arg(short = 's', long = "service", value_parser = ServiceFromCli::from_cli, help = "PRESET_ID|id=PRESET,name=NAME")]
 		services: Vec<ServiceFromCli>,
 	},
 

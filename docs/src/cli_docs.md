@@ -44,7 +44,7 @@ This document contains the help content for the `sketch` command-line program.
 * `gh-workflow` — Generates a Github workflow
 * `docker-compose` — Generates a Docker Compose file from a preset
 * `pre-commit` — Generates a `pre-commit` config file from a preset
-* `rust` — 
+* `rust` — The subcommands to generate files used in Rust workspaces
 * `ts` — Executes typescript-specific commands
 * `package-json` — Generates a `package.json` file from a preset
 * `oxlint` — Generates a `.oxlintrc.json` file from a preset
@@ -58,7 +58,7 @@ This document contains the help content for the `sketch` command-line program.
 * `--no-overwrite` — Do not overwrite existing files
 * `-c`, `--config <FILE>` — Sets a custom config file. Any file named `sketch.{yaml,json,toml}` in the cwd or in `XDG_CONFIG_HOME/sketch` will be detected automatically. If no file is found, the default settings are used
 * `--ignore-config` — Ignores any automatically detected config files, uses cli instructions and config file defined with --config
-* `-s`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
+* `-S`, `--set <KEY=VALUE>` — Sets a variable (as key=value) to use in templates. Overrides global and local variables. Values must be in valid JSON
 * `--vars-file <VARS_FILES>` — One or more paths to json, yaml or toml files to extract template variables from, in the given order
 
 
@@ -122,7 +122,7 @@ Renders a single template to a file or to stdout
 ###### **Options:**
 
 * `-f`, `--file <FILE>` — The path to the template file
-* `-t`, `--template <TEMPLATE>` — The path to a template file, starting from `templates_dir`
+* `-t`, `--template <TEMPLATE>` — The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
 * `-c`, `--content <CONTENT>` — The literal definition for the template
 
 
@@ -136,7 +136,7 @@ Renders a templating preset
 ###### **Arguments:**
 
 * `<ID>` — The id of the preset
-* `<OUT_DIR>` — The base path to join to relative output paths. [default: `.`]
+* `<OUT_DIR>` — The output root path for the preset. [default: `.`]
 
 
 
@@ -199,7 +199,7 @@ Generates a Docker Compose file from a preset
 
 ###### **Options:**
 
-* `-S`, `--service <SERVICES>` — id=PRESET,name=NAME|ID
+* `-s`, `--service <SERVICES>` — PRESET_ID|id=PRESET,name=NAME
 
 
 
@@ -218,12 +218,14 @@ Generates a `pre-commit` config file from a preset
 
 ## `sketch rust`
 
+The subcommands to generate files used in Rust workspaces
+
 **Usage:** `sketch rust <COMMAND>`
 
 ###### **Subcommands:**
 
 * `crate` — 
-* `manifest` — 
+* `manifest` — Generates a new `Cargo.toml` file from a preset
 
 
 
@@ -233,13 +235,13 @@ Generates a `pre-commit` config file from a preset
 
 ###### **Arguments:**
 
-* `<DIR>`
+* `<DIR>` — The output directory for the new crate. Also the name of the generated crate by default
 
 ###### **Options:**
 
-* `-p`, `--preset <PRESET>`
-* `-m`, `--manifest <MANIFEST>`
-* `-n`, `--name <NAME>`
+* `-p`, `--preset <PRESET>` — The crate preset to use
+* `-m`, `--manifest <MANIFEST>` — The `Cargo.toml` manifest preset to use (overrides the one in the preset if one was selected)
+* `-n`, `--name <NAME>` — The name of the generated crate (by default, it uses the name of the output dir)
 * `--gitignore <GITIGNORE>` — Settings for the gitignore file
 * `--license <LICENSE>` — A license file to generate for the new repo
 
@@ -260,12 +262,14 @@ Generates a `pre-commit` config file from a preset
 
 ## `sketch rust manifest`
 
+Generates a new `Cargo.toml` file from a preset
+
 **Usage:** `sketch rust manifest <PRESET> [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<PRESET>`
-* `<OUTPUT>`
+* `<PRESET>` — The id of the preset
+* `<OUTPUT>` — The output path [default: `Cargo.toml`]
 
 
 
