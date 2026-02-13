@@ -41,7 +41,7 @@ pub struct TypescriptConfig {
 	#[arg(long)]
 	pub no_default_deps: Option<bool>,
 
-	/// The kind of version range to use for dependencies that are fetched automatically. [default: minor]
+	/// The kind of version range to use for dependencies that are fetched automatically. [default: major]
 	#[arg(value_enum)]
 	#[arg(long, value_name = "KIND")]
 	pub version_range: Option<VersionRange>,

@@ -5,12 +5,12 @@ use crate::{ts::package_json::JsDepKind, *};
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "lowercase")]
 pub enum VersionRange {
-	// Only allow updates within the same semVer `minor` range (i.e. 1.x.x)
+	// Only allow updates within the same semVer `major` range (i.e. 1.x.x)
 	#[default]
-	Minor,
+	Major,
 
-	// Only allow updates within the same semVer `patch` range (i.e. 1.0.x)
-	Patch,
+	// Only allow updates within the same semVer `minor` range (i.e. 1.0.x)
+	Minor,
 
 	// Use the exact version given
 	Exact,
@@ -23,8 +23,8 @@ impl VersionRange {
 			return version;
 		}
 		match self {
-			Self::Patch => format!("~{version}"),
-			Self::Minor => format!("^{version}"),
+			Self::Minor => format!("~{version}"),
+			Self::Major => format!("^{version}"),
 			Self::Exact => version,
 		}
 	}

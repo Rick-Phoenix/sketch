@@ -282,9 +282,9 @@ Executes typescript-specific commands
 
   Possible values: `true`, `false`
 
-* `--version-range <KIND>` — The kind of version range to use for dependencies that are fetched automatically. [default: minor]
+* `--version-range <KIND>` — The kind of version range to use for dependencies that are fetched automatically. [default: major]
 
-  Possible values: `minor`, `patch`, `exact`
+  Possible values: `major`, `minor`, `exact`
 
 * `--catalog <CATALOG>` — Uses the default catalog (supported by pnpm and bun) for default dependencies, and automatically adds dependencies marked with `catalog:` to the catalog, if they are missing
 
