@@ -103,6 +103,7 @@ mod presets {
 	}
 
 	impl GhJobPresetRef {
+		#[doc(hidden)]
 		pub fn requires_processing(&self) -> bool {
 			match self {
 				Self::PresetId(_) => true,
@@ -111,7 +112,7 @@ mod presets {
 		}
 	}
 
-	/// A preset for a gihub workflow job.
+	/// A preset for a github workflow job.
 	#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 	#[cfg_attr(feature = "schemars", derive(JsonSchema))]
 	pub struct GhJobPreset {
@@ -126,6 +127,7 @@ mod presets {
 }
 
 impl GhJobPreset {
+	#[doc(hidden)]
 	pub fn requires_processing(&self) -> bool {
 		!self.extends_presets.is_empty()
 			|| self
@@ -140,7 +142,6 @@ impl GhJobPreset {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(deny_unknown_fields)]
 pub struct Workflow {
 	/// The name of your workflow. GitHub displays the names of your workflows on your repository's actions page. If you omit this field, GitHub sets the name to the workflow's filename.
 	///
@@ -267,7 +268,6 @@ impl Merge for Job {
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobs
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(deny_unknown_fields)]
 pub struct NormalJob {
 	/// The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.
 	///
@@ -389,7 +389,6 @@ pub struct NormalJob {
 /// A reusable job, imported from a file or repo.
 #[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(deny_unknown_fields)]
 pub struct ReusableWorkflowCallJob {
 	/// The location and version of a reusable workflow file to run as a job, of the form './{path/to}/{localfile}.yml' or '{owner}/{repo}/{path}/{filename}@{ref}'. {ref} can be a SHA, a release tag, or a branch name. Using the commit SHA is the safest for stability and security.
 	///

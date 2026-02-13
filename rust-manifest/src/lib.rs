@@ -27,7 +27,6 @@ use toml_edit::{Array, ArrayOfTables, DocumentMut, InlineTable, Item, Table, Val
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
-#[serde(deny_unknown_fields)]
 pub struct Manifest {
 	/// The workspace definition.
 	#[merge(with = merge_options)]

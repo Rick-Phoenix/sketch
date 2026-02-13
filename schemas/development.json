@@ -4201,22 +4201,6 @@
           },
           "default": []
         },
-        "hooks_pre": {
-          "description": "One or many rendered commands to execute before the repo's creation",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Hook"
-          },
-          "default": []
-        },
-        "hooks_post": {
-          "description": "One or many rendered commands to execute after the repo's creation",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Hook"
-          },
-          "default": []
-        },
         "vitest": {
           "description": "The configuration for this package's vitest setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.",
           "anyOf": [
@@ -4491,26 +4475,6 @@
       "additionalProperties": false,
       "required": [
         "repo"
-      ]
-    },
-    "Hook": {
-      "description": "A command (rendered as a template) to execute",
-      "type": "object",
-      "properties": {
-        "command": {
-          "description": "The template id or definition for the command to execute",
-          "$ref": "#/$defs/TemplateRef"
-        },
-        "context": {
-          "description": "Local context variables (they override previously set variables with the same name)",
-          "type": "object",
-          "additionalProperties": true,
-          "default": {}
-        }
-      },
-      "additionalProperties": false,
-      "required": [
-        "command"
       ]
     },
     "VitestPresetRef": {
@@ -5642,7 +5606,7 @@
           "description": "A map that contains presets for Docker Compose files.",
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/$defs/ComposePreset"
+            "$ref": "#/$defs/ComposeFilePreset"
           },
           "default": {}
         },
@@ -5657,7 +5621,7 @@
       },
       "additionalProperties": false
     },
-    "ComposePreset": {
+    "ComposeFilePreset": {
       "description": "A preset for Docker Compose files.",
       "type": "object",
       "properties": {
@@ -10101,22 +10065,6 @@
           ],
           "default": null
         },
-        "hooks_pre": {
-          "description": "One or many rendered commands to execute before the repo's creation",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Hook"
-          },
-          "default": []
-        },
-        "hooks_post": {
-          "description": "One or many rendered commands to execute after the repo's creation",
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/Hook"
-          },
-          "default": []
-        },
         "workflows": {
           "description": "One or many workflows to generate in the new repo.",
           "type": "array",
@@ -12148,8 +12096,7 @@
             "$ref": "#/$defs/StepPresetRef"
           }
         }
-      },
-      "additionalProperties": false
+      }
     },
     "RunsOn": {
       "description": "The type of machine to run the job on. The machine can be either a GitHub-hosted runner, or a self-hosted runner. Can be a single item, a list, or a group configuration.\n\nSee more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idruns-on",
@@ -12635,7 +12582,6 @@
           ]
         }
       },
-      "additionalProperties": false,
       "required": [
         "uses"
       ]

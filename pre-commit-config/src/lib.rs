@@ -13,7 +13,6 @@ type StringBTreeMap = BTreeMap<String, String>;
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
-#[serde(deny_unknown_fields)]
 pub struct PreCommitConfig {
 	/// A minimum version of pre-commit https://pre-commit.com/#pre-commit-configyaml---top-level
 	#[serde(skip_serializing_if = "Option::is_none")]

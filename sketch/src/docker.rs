@@ -8,14 +8,14 @@ pub(crate) use docker_compose_config::*;
 #[serde(deny_unknown_fields)]
 pub struct DockerConfig {
 	/// A map that contains presets for Docker Compose files.
-	pub compose_presets: IndexMap<String, ComposePreset>,
+	pub compose_presets: IndexMap<String, ComposeFilePreset>,
 
 	/// A map that contains presets for Docker services.
 	pub service_presets: IndexMap<String, DockerServicePreset>,
 }
 
 impl DockerConfig {
-	pub fn get_file_preset(&self, id: &str) -> AppResult<ComposePreset> {
+	pub fn get_file_preset(&self, id: &str) -> AppResult<ComposeFilePreset> {
 		Ok(self
 			.compose_presets
 			.get(id)
@@ -42,7 +42,7 @@ impl DockerConfig {
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
-pub struct ComposePreset {
+pub struct ComposeFilePreset {
 	/// The list of extended presets.
 	#[merge(skip)]
 	pub extends_presets: IndexSet<String>,
@@ -51,7 +51,7 @@ pub struct ComposePreset {
 	pub config: ComposeFile,
 }
 
-impl ExtensiblePreset for ComposePreset {
+impl ExtensiblePreset for ComposeFilePreset {
 	fn kind() -> PresetKind {
 		PresetKind::ComposeFile
 	}
@@ -61,7 +61,7 @@ impl ExtensiblePreset for ComposePreset {
 	}
 }
 
-impl ComposePreset {
+impl ComposeFilePreset {
 	pub fn process_data(self, id: &str, config: &DockerConfig) -> Result<ComposeFile, AppError> {
 		if self.extends_presets.is_empty()
 			&& !self

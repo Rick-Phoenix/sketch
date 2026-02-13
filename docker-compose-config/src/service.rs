@@ -27,6 +27,7 @@ mod presets {
 			}
 		}
 
+		#[doc(hidden)]
 		pub fn requires_processing(&self) -> bool {
 			match self {
 				Self::PresetId(_) => true,
@@ -56,7 +57,6 @@ mod presets {
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Default, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(default)]
-#[serde(deny_unknown_fields)]
 pub struct Service {
 	/// `extends` lets you share common configurations among different files, or even different projects entirely.
 	///

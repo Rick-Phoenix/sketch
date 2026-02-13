@@ -19,7 +19,7 @@ pub(crate) mod parsers;
 use clap::Subcommand;
 
 use crate::{
-	docker::{ComposePreset, ServiceFromCli, ServicePresetRef},
+	docker::{ComposeFilePreset, ServiceFromCli, ServicePresetRef},
 	exec::Hook,
 	init_repo::RepoPreset,
 	licenses::License,
@@ -122,7 +122,7 @@ impl Cli {
 				let mut file_preset = if let Some(id) = preset.as_ref() {
 					docker_config.get_file_preset(id)?
 				} else {
-					ComposePreset::default()
+					ComposeFilePreset::default()
 				};
 
 				for service in services {
