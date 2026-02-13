@@ -171,6 +171,22 @@ impl PackageManager {
 			Self::Yarn => "yarn.lock",
 		}
 	}
+
+	/// Returns `true` if the package manager is [`Bun`].
+	///
+	/// [`Bun`]: PackageManager::Bun
+	#[must_use]
+	pub const fn is_bun(&self) -> bool {
+		matches!(self, Self::Bun)
+	}
+
+	/// Returns `true` if the package manager is [`Pnpm`].
+	///
+	/// [`Pnpm`]: PackageManager::Pnpm
+	#[must_use]
+	pub const fn is_pnpm(&self) -> bool {
+		matches!(self, Self::Pnpm)
+	}
 }
 
 /// A js/ts package manager.

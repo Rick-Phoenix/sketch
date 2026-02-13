@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../schemas/development.json
 
-rust_presets:
+rust:
   crate_presets:
     simple_test:
       manifest:

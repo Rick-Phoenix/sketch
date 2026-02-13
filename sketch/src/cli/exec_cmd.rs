@@ -38,7 +38,7 @@ impl ExecCmd {
 			template,
 		} = self;
 
-		let command = if let Some(literal) = command {
+		let command_template = if let Some(literal) = command {
 			TemplateRef::Inline {
 				name: "__from_cli".to_string(),
 				content: literal,
@@ -71,7 +71,7 @@ impl ExecCmd {
 			shell.as_deref(),
 			&cwd,
 			vec![Hook {
-				command,
+				command: command_template,
 				context: Default::default(),
 			}],
 			cli_vars,

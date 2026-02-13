@@ -1,16 +1,6 @@
 use super::{vitest::*, *};
 use crate::exec::*;
 
-/// The kind of ts package. Only relevant when using defaults.
-#[derive(Debug, Deserialize, Serialize, Default, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "schemars", derive(JsonSchema))]
-#[serde(rename_all = "lowercase")]
-pub enum PackageKind {
-	#[default]
-	Library,
-	App,
-}
-
 /// The configuration struct that is used to generate new packages.
 #[derive(Clone, Debug, Deserialize, Serialize, Parser, Merge, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
@@ -21,15 +11,15 @@ pub struct TsPackagePreset {
 	#[arg(short, long)]
 	pub name: Option<String>,
 
-	/// A list of [`TsConfigDirective`]s for this package. They can be preset ids or literal configurations.
-	#[arg(long, value_parser = TsConfigDirective::from_cli)]
+	/// A list of [`TsConfigData`]s for this package. They can be preset ids or literal configurations.
+	#[arg(long, value_parser = TsConfigData::from_cli)]
 	#[arg(
 		help = "One or many tsconfig presets (with their output path) to use for this package (uses defaults if not provided)",
 		value_name = "id=ID,output=PATH"
 	)]
-	pub ts_config: Vec<TsConfigDirective>,
+	pub ts_config: Vec<TsConfigData>,
 
-	/// The [`PackageJsonData`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
+	/// The [`PackageJsonPresetRef`] to use for this package. It can be a preset id or a literal definition (or nothing, to use defaults).
 	#[arg(long, value_parser = PackageJsonPresetRef::from_cli)]
 	#[arg(
 		help = "The package.json preset ID to use (uses defaults if not provided)",
@@ -67,7 +57,7 @@ pub struct TsPackagePreset {
 
 	/// The configuration for this package's oxlint setup. It can be set to `true` (to use defaults), to a preset id, or to a literal configuration.
 	#[arg(long, value_name = "ID")]
-	pub oxlint: Option<OxlintConfigSetting>,
+	pub oxlint: Option<OxlintPresetRef>,
 }
 
 /// The kinds of Ts package data. Either an id pointing to a stored preset, or a custom configuration.
@@ -233,8 +223,7 @@ impl Config {
 			}
 
 			#[cfg(feature = "npm-version")]
-			pnpm::add_dependencies_to_catalog(pnpm_data, version_ranges, &package_json_data)
-				.await?;
+			pnpm::add_deps_to_catalog(pnpm_data, version_ranges, &package_json_data).await?;
 
 			serialize_yaml(&pnpm_data, &pkg_root.join("pnpm-workspace.yaml"), overwrite)?;
 		}
@@ -242,7 +231,7 @@ impl Config {
 		#[cfg(feature = "npm-version")]
 		if !package_type.is_monorepo_root()
 			&& typescript.catalog.unwrap_or_default()
-			&& matches!(package_manager, PackageManager::Pnpm)
+			&& package_manager.is_pnpm()
 		{
 			let pnpm_workspace_path =
 				find_file_up(&pkg_root, "pnpm-workspace.yaml").with_context(|| {
@@ -254,12 +243,8 @@ impl Config {
 
 			let mut pnpm_workspace: PnpmWorkspace = deserialize_yaml(&pnpm_workspace_path)?;
 
-			pnpm::add_dependencies_to_catalog(
-				&mut pnpm_workspace,
-				version_ranges,
-				&package_json_data,
-			)
-			.await?;
+			pnpm::add_deps_to_catalog(&mut pnpm_workspace, version_ranges, &package_json_data)
+				.await?;
 
 			serialize_yaml(&pnpm_workspace, &pnpm_workspace_path, overwrite)?;
 		}
@@ -269,8 +254,8 @@ impl Config {
 		if !package_config.ts_config.is_empty() {
 			for directive in package_config.ts_config {
 				let tsconfig_data = match directive.config.unwrap_or_default() {
-					TsConfigKind::Id(id) => typescript.get_tsconfig_preset(&id)?.config,
-					TsConfigKind::Config(ts_config) => {
+					TsConfigPresetRef::Id(id) => typescript.get_tsconfig_preset(&id)?.config,
+					TsConfigPresetRef::Config(ts_config) => {
 						ts_config
 							.merge_presets("__inlined", &typescript.ts_config_presets)?
 							.config
@@ -381,9 +366,9 @@ impl Config {
 			&& oxlint_config.is_enabled()
 		{
 			let oxlint_config = match oxlint_config {
-				OxlintConfigSetting::Bool(_) => OxlintConfig::default(),
-				OxlintConfigSetting::Id(id) => typescript.get_oxlint_preset(&id)?.config,
-				OxlintConfigSetting::Config(oxlint_preset) => {
+				OxlintPresetRef::Bool(_) => OxlintConfig::default(),
+				OxlintPresetRef::Id(id) => typescript.get_oxlint_preset(&id)?.config,
+				OxlintPresetRef::Config(oxlint_preset) => {
 					oxlint_preset
 						.merge_presets(
 							&format!("__inlined_definition_{package_name}"),

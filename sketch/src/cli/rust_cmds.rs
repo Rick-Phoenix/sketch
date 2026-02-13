@@ -36,10 +36,7 @@ impl RustCommands {
 	pub fn execute(self, config: &Config) -> AppResult {
 		match self {
 			Self::Manifest { output, preset } => {
-				let content = config
-					.rust_presets
-					.get_cargo_toml_preset(&preset)?
-					.config;
+				let content = config.rust.get_cargo_toml_preset(&preset)?.config;
 
 				let output_path = output.unwrap_or_else(|| "Cargo.toml".into());
 
@@ -57,7 +54,7 @@ impl RustCommands {
 				manifest,
 			} => {
 				let mut preset = if let Some(preset_id) = preset_id {
-					config.rust_presets.get_crate_preset(&preset_id)?
+					config.rust.get_crate_preset(&preset_id)?
 				} else {
 					CratePreset::default()
 				};

@@ -30,7 +30,7 @@ pub(crate) fn get_config_from_cli(
 	}
 
 	if no_overwrite {
-		config.no_overwrite = Some(true);
+		config.no_overwrite = true;
 	}
 
 	if let Commands::Ts {

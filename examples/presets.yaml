@@ -91,7 +91,7 @@ templating_presets:
 
 # `Cargo.toml` presets
 # ANCHOR: cargo
-rust_presets:
+rust:
   manifest_presets:
     base:
       package:

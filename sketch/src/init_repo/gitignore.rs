@@ -18,37 +18,28 @@ impl Merge for GitIgnore {
 		match self {
 			Self::List(left_items) => match right {
 				Self::List(right_items) => {
-					for entry in right_items.into_iter().rev() {
-						left_items.insert(0, entry);
-					}
+					left_items.extend(right_items);
 				}
-				Self::String(mut right_string) => {
-					for entry in left_items.iter() {
-						right_string.push('\n');
-						right_string.push_str(entry);
-					}
-
-					*self = Self::String(right_string);
+				Self::String(right_string) => {
+					left_items.extend(right_string.lines().map(|s| s.to_string()));
 				}
 			},
 			Self::String(left_string) => match right {
 				Self::List(right_items) => {
-					if !right_items.is_empty() {
-						left_string.insert(0, '\n');
-						let len = right_items.len();
+					let mut new_list: Vec<String> = Vec::new();
 
-						for (i, entry) in right_items.into_iter().rev().enumerate() {
-							left_string.insert_str(0, entry.as_str());
+					new_list.extend(left_string.lines().map(|s| s.to_string()));
+					new_list.extend(right_items);
 
-							if i != len - 1 {
-								left_string.insert(0, '\n');
-							}
-						}
-					}
+					*self = Self::List(new_list);
 				}
 				Self::String(right_string) => {
-					left_string.insert(0, '\n');
-					left_string.insert_str(0, &right_string);
+					let mut new_list: Vec<String> = Vec::new();
+
+					new_list.extend(left_string.lines().map(|s| s.to_string()));
+					new_list.extend(right_string.lines().map(|s| s.to_string()));
+
+					*self = Self::List(new_list);
 				}
 			},
 		};

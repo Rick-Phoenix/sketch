@@ -157,14 +157,7 @@ impl Cli {
 				overrides,
 			} => {
 				let mut preset = if let Some(id) = preset {
-					config
-						.git_presets
-						.get(&id)
-						.ok_or_else(|| AppError::PresetNotFound {
-							kind: PresetKind::Repo,
-							name: id.clone(),
-						})?
-						.clone()
+					config.get_repo_preset(&id)?
 				} else {
 					RepoPreset::default()
 				};
@@ -187,9 +180,9 @@ impl Cli {
 				file,
 				preset: preset_id,
 			} => {
-				let is_single = preset_id.is_none();
+				let is_single_template = preset_id.is_none();
 
-				let output_root = if is_single {
+				let output_root = if is_single_template {
 					get_cwd()
 				} else {
 					output

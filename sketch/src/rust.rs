@@ -240,10 +240,10 @@ impl CratePreset {
 
 		self.manifest = match self.manifest {
 			CargoTomlPresetRef::PresetId(id) => {
-				CargoTomlPresetRef::Config(config.rust_presets.get_cargo_toml_preset(&id)?)
+				CargoTomlPresetRef::Config(config.rust.get_cargo_toml_preset(&id)?)
 			}
 			CargoTomlPresetRef::Config(preset) => CargoTomlPresetRef::Config(
-				preset.merge_presets("__inlined", &config.rust_presets.manifest_presets)?,
+				preset.merge_presets("__inlined", &config.rust.manifest_presets)?,
 			),
 		};
 

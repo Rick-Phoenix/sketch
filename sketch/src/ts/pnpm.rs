@@ -30,12 +30,14 @@ impl ExtensiblePreset for PnpmPreset {
 
 #[cfg(feature = "npm-version")]
 /// A helper to add all [`PackageJson`] dependencies (dev, optional, peer, etc) marked with `catalog:` to the pnpm catalogs.
-pub async fn add_dependencies_to_catalog(
+pub async fn add_deps_to_catalog(
 	config: &mut PnpmWorkspace,
 	range_kind: VersionRange,
 	package_json: &PackageJson,
 ) -> Result<(), AppError> {
-	let names_to_add: Vec<(String, Option<String>)> = package_json
+	use futures::{StreamExt, stream};
+
+	let handles = package_json
 		.dependencies
 		.iter()
 		.chain(package_json.dev_dependencies.iter())
@@ -50,27 +52,12 @@ pub async fn add_dependencies_to_catalog(
 			}
 			None => None,
 		})
-		.collect();
-
-	add_names_to_catalog(config, range_kind, names_to_add).await
-}
-
-#[cfg(feature = "npm-version")]
-/// A helper to add several dependencies to one of this config's catalog.
-async fn add_names_to_catalog(
-	config: &mut PnpmWorkspace,
-	range_kind: VersionRange,
-	entries: Vec<(String, Option<String>)>,
-) -> Result<(), AppError> {
-	use futures::{StreamExt, stream};
-
-	let handles = entries
-		.into_iter()
 		.map(|(name, catalog_name)| async move {
 			let actual_latest = npm_version::get_latest_npm_version(&name).await?;
 
 			Ok((name, catalog_name, actual_latest))
-		});
+		})
+		.collect::<Vec<_>>();
 
 	let stream = stream::iter(handles).buffer_unordered(10);
 

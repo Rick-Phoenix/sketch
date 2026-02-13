@@ -8,7 +8,7 @@
 
 use anyhow::{Context as AnyhowContext, anyhow};
 use indexmap::{IndexMap, IndexSet};
-use merge_it::{Merge, merge_options, overwrite_always, overwrite_if_none};
+use merge_it::{Merge, merge_options, overwrite_always, overwrite_if_none, overwrite_if_true};
 #[cfg(feature = "schemars")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

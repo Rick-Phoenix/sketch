@@ -28,12 +28,12 @@ impl ExtensiblePreset for TsConfigPreset {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum TsConfigKind {
+pub enum TsConfigPresetRef {
 	Id(String),
 	Config(TsConfigPreset),
 }
 
-impl Default for TsConfigKind {
+impl Default for TsConfigPresetRef {
 	fn default() -> Self {
 		Self::Config(TsConfigPreset::default())
 	}
@@ -43,28 +43,28 @@ impl Default for TsConfigKind {
 /// If the output path is relative, it will be joined to the root path of its package.
 #[derive(Deserialize, Debug, Clone, Serialize, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
-pub struct TsConfigDirective {
+pub struct TsConfigData {
 	/// The output path of the config file [default: `tsconfig.json`]
 	pub output: Option<String>,
 
 	/// The configuration for the output file. It can be a preset id or a new definition.
-	pub config: Option<TsConfigKind>,
+	pub config: Option<TsConfigPresetRef>,
 }
 
-impl Default for TsConfigDirective {
+impl Default for TsConfigData {
 	fn default() -> Self {
 		Self {
 			output: Some("tsconfig.json".to_string()),
-			config: Some(TsConfigKind::default()),
+			config: Some(TsConfigPresetRef::default()),
 		}
 	}
 }
 
-impl TsConfigDirective {
+impl TsConfigData {
 	pub(crate) fn from_cli(s: &str) -> Result<Self, String> {
 		let mut directive: Self = Default::default();
 
-		let pairs = parse_key_value_pairs("TsConfigDirective", s)?;
+		let pairs = parse_key_value_pairs("TsConfigData", s)?;
 
 		for (key, val) in pairs {
 			match key {
@@ -79,10 +79,10 @@ impl TsConfigDirective {
 					directive.config = if val.is_empty() {
 						None
 					} else {
-						Some(TsConfigKind::Id(val.to_string()))
+						Some(TsConfigPresetRef::Id(val.to_string()))
 					}
 				}
-				_ => return Err(format!("Invalid key for TsConfigDirective: {key}")),
+				_ => return Err(format!("Invalid key for TsConfigData: {key}")),
 			};
 		}
 

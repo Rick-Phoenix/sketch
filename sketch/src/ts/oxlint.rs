@@ -23,7 +23,7 @@ impl ExtensiblePreset for OxlintPreset {
 	}
 }
 
-impl Default for OxlintConfigSetting {
+impl Default for OxlintPresetRef {
 	fn default() -> Self {
 		Self::Bool(true)
 	}
@@ -34,13 +34,13 @@ impl Default for OxlintConfigSetting {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 #[serde(untagged)]
-pub enum OxlintConfigSetting {
+pub enum OxlintPresetRef {
 	Bool(bool),
 	Id(String),
 	Config(OxlintPreset),
 }
 
-impl std::str::FromStr for OxlintConfigSetting {
+impl std::str::FromStr for OxlintPresetRef {
 	type Err = std::convert::Infallible;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -48,7 +48,7 @@ impl std::str::FromStr for OxlintConfigSetting {
 	}
 }
 
-impl OxlintConfigSetting {
+impl OxlintPresetRef {
 	pub const fn is_enabled(&self) -> bool {
 		!matches!(self, Self::Bool(false))
 	}

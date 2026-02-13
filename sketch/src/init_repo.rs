@@ -184,4 +184,15 @@ impl Config {
 
 		Ok(())
 	}
+
+	pub fn get_repo_preset(&self, id: &str) -> AppResult<RepoPreset> {
+		Ok(self
+			.git_presets
+			.get(id)
+			.ok_or_else(|| AppError::PresetNotFound {
+				kind: PresetKind::Repo,
+				name: id.to_string(),
+			})?
+			.clone())
+	}
 }

@@ -42,27 +42,6 @@ pub mod npm_version {
 
 	static CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
-	/// A helper to get the latest version of an npm package.
-	pub async fn get_latest_npm_version(package_name: &str) -> Result<String, AppError> {
-		let error = || format!("Could not get the latest version for `{package_name}`");
-
-		let url_str = format!("https://registry.npmjs.org/{package_name}/latest");
-		let url = url::Url::parse(&url_str).with_context(|| {
-			format!("Could not get the latest version for `{package_name}` due to an invalid URL")
-		})?;
-
-		let response = CLIENT
-			.get(url)
-			.send()
-			.await
-			.with_context(error)?
-			.json::<NpmApiResponse>()
-			.await
-			.with_context(error)?;
-
-		Ok(response.version)
-	}
-
 	pub async fn get_batch_latest_npm_versions(
 		deps: Vec<(JsDepKind, String)>,
 	) -> Vec<Result<(JsDepKind, String, String), AppError>> {
@@ -77,5 +56,24 @@ pub mod npm_version {
 		let results: Vec<Result<(JsDepKind, String, String), AppError>> = stream.collect().await;
 
 		results
+	}
+
+	/// A helper to get the latest version of an npm package.
+	pub async fn get_latest_npm_version(package_name: &str) -> Result<String, AppError> {
+		let error = || format!("Could not get the latest version for `{package_name}`");
+
+		let url = url::Url::parse(&format!("https://registry.npmjs.org/{package_name}/latest"))
+			.with_context(error)?;
+
+		let response = CLIENT
+			.get(url)
+			.send()
+			.await
+			.with_context(error)?
+			.json::<NpmApiResponse>()
+			.await
+			.with_context(error)?;
+
+		Ok(response.version)
 	}
 }

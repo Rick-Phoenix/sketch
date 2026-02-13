@@ -17,8 +17,8 @@ impl Config {
 		}
 	}
 
-	pub(crate) fn can_overwrite(&self) -> bool {
-		!self.no_overwrite.unwrap_or_default()
+	pub(crate) const fn can_overwrite(&self) -> bool {
+		!self.no_overwrite
 	}
 }
 
@@ -48,7 +48,8 @@ pub struct Config {
 	pub templates_dir: Option<PathBuf>,
 
 	/// Do not overwrite existing files.
-	pub no_overwrite: Option<bool>,
+	#[merge(with = overwrite_if_true)]
+	pub no_overwrite: bool,
 
 	/// The paths (absolute, or relative to the originating config file) to the config files to extend.
 	pub extends: IndexSet<PathBuf>,
@@ -68,7 +69,8 @@ pub struct Config {
 	/// A map that contains presets for git repos.
 	pub git_presets: IndexMap<String, RepoPreset>,
 
-	pub rust_presets: RustConfig,
+	/// Configurations and presets for Rust based projects
+	pub rust: RustConfig,
 
 	/// Configurations and presets relating to Github
 	pub github: GithubConfig,

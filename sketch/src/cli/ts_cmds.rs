@@ -8,8 +8,7 @@ use ts_barrel::*;
 
 use crate::{
 	ts::{
-		PackageManager,
-		oxlint::OxlintConfigSetting,
+		oxlint::OxlintPresetRef,
 		package::{PackageType, TsPackagePreset, TsPackagePresetRef, TsPackageSetup},
 		pnpm::PnpmWorkspace,
 		vitest::VitestPresetRef,
@@ -114,7 +113,7 @@ impl TsCommands {
 					typescript.get_package_preset(&id)?
 				} else {
 					let mut package = TsPackagePreset::default();
-					package.oxlint = Some(OxlintConfigSetting::Bool(true));
+					package.oxlint = Some(OxlintPresetRef::Bool(true));
 					package
 				};
 
@@ -126,7 +125,7 @@ impl TsCommands {
 
 				let pnpm_config = if let Some(id) = pnpm {
 					Some(typescript.get_pnpm_preset(&id)?.config)
-				} else if matches!(package_manager, PackageManager::Pnpm) {
+				} else if package_manager.is_pnpm() {
 					Some(PnpmWorkspace::default())
 				} else {
 					None

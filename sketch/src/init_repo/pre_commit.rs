@@ -84,7 +84,7 @@ impl PreCommitSetting {
 
 pub(crate) static GITLEAKS_REPO: LazyLock<Repo> = LazyLock::new(|| Repo::Uri {
 	repo: "https://github.com/gitleaks/gitleaks".to_string(),
-	rev: Some("v8.28.0".to_string()),
+	rev: Some("v8.30.0".to_string()),
 	hooks: BTreeSet::from_iter([PreCommitHook {
 		id: "gitleaks".to_string(),
 		..Default::default()

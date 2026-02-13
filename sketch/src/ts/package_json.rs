@@ -11,8 +11,10 @@ impl ExtensiblePreset for PackageJsonPreset {
 	}
 }
 
-fn get_person_data(id: &str, store: &IndexMap<String, PersonData>) -> Option<PersonData> {
-	store.get(id).cloned()
+fn get_person_data(id: &str, store: &IndexMap<String, PersonData>) -> AppResult<PersonData> {
+	Ok(store.get(id).cloned().with_context(|| {
+		format!("Failed to find the data for the contributor with the id `{id}`")
+	})?)
 }
 
 impl PackageJsonPreset {
@@ -39,9 +41,7 @@ impl PackageJsonPreset {
 		}
 
 		for id in contributors_to_fetch {
-			let data = get_person_data(&id, people).with_context(|| {
-				format!("Failed to find the data for the contributor with the id `{id}`")
-			})?;
+			let data = get_person_data(&id, people)?;
 
 			package_json
 				.contributors
@@ -57,9 +57,7 @@ impl PackageJsonPreset {
 		}
 
 		for id in maintainers_to_fetch {
-			let data = get_person_data(&id, people).with_context(|| {
-				format!("Failed to find the data for the contributor with the id `{id}`")
-			})?;
+			let data = get_person_data(&id, people)?;
 
 			package_json
 				.maintainers
@@ -69,9 +67,7 @@ impl PackageJsonPreset {
 		if let Some(author) = package_json.author.as_mut()
 			&& let Person::PresetId(id) = author
 		{
-			let data = get_person_data(id, people).with_context(|| {
-				format!("Failed to find the data for the contributor with the id `{id}`")
-			})?;
+			let data = get_person_data(id, people)?;
 
 			*author = Person::Data(data);
 		};
@@ -120,7 +116,7 @@ pub async fn process_package_json_dependencies(
 	convert_latest: bool,
 	range_kind: VersionRange,
 ) -> Result<(), AppError> {
-	let is_bun = matches!(package_manager, PackageManager::Bun);
+	let is_bun = package_manager.is_bun();
 
 	if !convert_latest && !is_bun {
 		return Ok(());
@@ -175,40 +171,21 @@ pub async fn process_package_json_dependencies(
 			Ok((kind, name, actual_latest)) => {
 				let new_version_range = range_kind.create(actual_latest);
 
-				match kind {
+				let target = match kind {
 					JsDepKind::CatalogDependency(catalog_name) => {
-						let target_catalog = if let Some(catalog_name) = catalog_name {
-							config
-								.catalogs
-								.entry(catalog_name.as_str().to_string())
-								.or_default()
+						if let Some(catalog_name) = catalog_name {
+							config.catalogs.entry(catalog_name).or_default()
 						} else {
 							&mut config.catalog
-						};
+						}
+					}
+					JsDepKind::Dependency => &mut config.dependencies,
+					JsDepKind::DevDependency => &mut config.dev_dependencies,
+					JsDepKind::OptionalDependency => &mut config.optional_dependencies,
+					JsDepKind::PeerDependency => &mut config.peer_dependencies,
+				};
 
-						target_catalog.insert(name, new_version_range);
-					}
-					JsDepKind::Dependency => {
-						config
-							.dependencies
-							.insert(name, new_version_range);
-					}
-					JsDepKind::DevDependency => {
-						config
-							.dev_dependencies
-							.insert(name, new_version_range);
-					}
-					JsDepKind::OptionalDependency => {
-						config
-							.optional_dependencies
-							.insert(name, new_version_range);
-					}
-					JsDepKind::PeerDependency => {
-						config
-							.peer_dependencies
-							.insert(name, new_version_range);
-					}
-				}
+				target.insert(name, new_version_range);
 			}
 			Err(task_error) => return Err(task_error),
 		};
