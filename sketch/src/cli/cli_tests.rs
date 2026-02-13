@@ -85,6 +85,10 @@ fn get_clean_example_cmd(
 
 	for (i, segment) in cmd.iter().enumerate() {
 		if !discarded_segments.contains(&i) {
+			if i != 0 {
+				example.push(' ');
+			}
+
 			if segment.contains(' ') {
 				if segment.contains('\'') {
 					let _ = write!(example, "\"{segment}\"");
@@ -94,11 +98,14 @@ fn get_clean_example_cmd(
 					example.push('\'');
 				}
 			} else {
-				example.push_str(segment);
-			}
-
-			if i != cmd.len() - 1 {
-				example.push(' ');
+				// If the last element is a path as is often the case,
+				// we just keep the last segment to avoid verbose paths in the examples
+				example.push_str(
+					segment
+						.rsplit_once('/')
+						.map(|s| s.1)
+						.unwrap_or(segment),
+				);
 			}
 		}
 	}

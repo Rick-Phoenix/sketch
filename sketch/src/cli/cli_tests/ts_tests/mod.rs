@@ -22,12 +22,6 @@ async fn monorepo_with_pnpm_catalog() -> Result<(), Box<dyn std::error::Error>> 
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	let monorepo_cmd = [
 		"sketch",
 		"--ignore-config",
@@ -42,7 +36,11 @@ async fn monorepo_with_pnpm_catalog() -> Result<(), Box<dyn std::error::Error>> 
 		&output_dir.to_string_lossy(),
 	];
 
-	write_command!(monorepo_cmd, [1, 2, 3], "monorepo_cmd");
+	get_clean_example_cmd(
+		&monorepo_cmd,
+		&[1, 2, 3],
+		&commands_dir.join("monorepo_cmd"),
+	)?;
 
 	Cli::execute_with(monorepo_cmd).await?;
 
@@ -60,7 +58,7 @@ async fn monorepo_with_pnpm_catalog() -> Result<(), Box<dyn std::error::Error>> 
 		path_to_str!(output_dir.join("packages/with-catalog")),
 	];
 
-	write_command!(catalog_cmd, [1, 2, 3], "catalog_cmd");
+	get_clean_example_cmd(&catalog_cmd, &[1, 2, 3], &commands_dir.join("catalog_cmd"))?;
 
 	Cli::execute_with(catalog_cmd).await?;
 
@@ -113,12 +111,6 @@ async fn people_registration() -> Result<(), Box<dyn std::error::Error>> {
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	let people_cmd = [
 		"sketch",
 		"--ignore-config",
@@ -131,7 +123,7 @@ async fn people_registration() -> Result<(), Box<dyn std::error::Error>> {
 		&output_dir.to_string_lossy(),
 	];
 
-	write_command!(people_cmd, [1, 2, 3], "people_cmd");
+	get_clean_example_cmd(&people_cmd, &[1, 2, 3], &commands_dir.join("people_cmd"))?;
 
 	Cli::execute_with(people_cmd).await?;
 
@@ -166,12 +158,6 @@ async fn example_from_docs() -> Result<(), Box<dyn std::error::Error>> {
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	let package_gen_cmd = [
 		"sketch",
 		"--ignore-config",
@@ -184,7 +170,11 @@ async fn example_from_docs() -> Result<(), Box<dyn std::error::Error>> {
 		path_to_str!(output_dir.join("packages/frontend")),
 	];
 
-	write_command!(package_gen_cmd, [1, 2, 3], "package_gen_cmd");
+	get_clean_example_cmd(
+		&package_gen_cmd,
+		&[1, 2, 3],
+		&commands_dir.join("package_gen_cmd"),
+	)?;
 
 	Cli::execute_with(package_gen_cmd).await?;
 

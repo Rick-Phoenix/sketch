@@ -8,12 +8,6 @@ async fn ts_barrel_test() -> Result<(), Box<dyn std::error::Error>> {
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
-	macro_rules! write_command {
-		($cmd:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$cmd, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	get_tree_output("tests/ts_barrel", Some(output_dir.join("tree")))?;
 
 	let output_file = output_dir.join("index.ts");
@@ -77,7 +71,7 @@ async fn ts_barrel_test() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/ts_barrel",
 	];
 
-	write_command!(basic_cmd, [1, 4, 5, 6], "barrel");
+	get_clean_example_cmd(&basic_cmd, &[1, 4, 5, 6], &commands_dir.join("barrel"))?;
 
 	Cli::execute_with(basic_cmd).await?;
 

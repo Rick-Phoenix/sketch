@@ -11,12 +11,6 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
-	macro_rules! write_command {
-		($cmd:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$cmd, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	let literal_template_cmd = [
 		"sketch",
 		"--ignore-config",
@@ -28,7 +22,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 		"echo \"engine feels good... much {{ condition }} than before... amazing\" > command_output.txt",
 	];
 
-	write_command!(literal_template_cmd, [1, 4, 5], "exec_literal_cmd");
+	get_clean_example_cmd(
+		&literal_template_cmd,
+		&[1, 4, 5],
+		&commands_dir.join("exec_literal_cmd"),
+	)?;
 
 	Cli::execute_with(literal_template_cmd).await?;
 
@@ -51,7 +49,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/commands_tests/cmd_from_file.j2",
 	];
 
-	write_command!(from_file_cmd, [1, 4, 5], "cmd_from_file");
+	get_clean_example_cmd(
+		&from_file_cmd,
+		&[1, 4, 5],
+		&commands_dir.join("cmd_from_file"),
+	)?;
 
 	Cli::execute_with(from_file_cmd).await?;
 
@@ -76,7 +78,11 @@ async fn rendered_commands() -> Result<(), Box<dyn std::error::Error>> {
 		"cmd_template.j2",
 	];
 
-	write_command!(from_template_cmd, [1, 2, 3, 6, 7], "exec_from_template_cmd");
+	get_clean_example_cmd(
+		&from_template_cmd,
+		&[1, 2, 3, 6, 7],
+		&commands_dir.join("exec_from_template_cmd"),
+	)?;
 
 	Cli::execute_with(from_template_cmd).await?;
 

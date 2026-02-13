@@ -81,12 +81,6 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 	let config_dir = PathBuf::from("../examples/templating");
 	let config_file = config_dir.join("templating.yaml");
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	macro_rules! exists {
 		($name:literal) => {
 			assert!(output_dir.join($name).is_file())
@@ -111,7 +105,11 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/single_templates/from_template_id.txt",
 	];
 
-	write_command!(from_template_id_cmd, [1, 2, 3], "from_id");
+	get_clean_example_cmd(
+		&from_template_id_cmd,
+		&[1, 2, 3],
+		&commands_dir.join("from_id"),
+	)?;
 
 	Cli::execute_with(from_template_id_cmd).await?;
 
@@ -130,7 +128,11 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/single_templates/from_template_file.txt",
 	];
 
-	write_command!(from_template_file_cmd, [1, 2, 3], "from_template_file");
+	get_clean_example_cmd(
+		&from_template_file_cmd,
+		&[1, 2, 3],
+		&commands_dir.join("from_template_file"),
+	)?;
 
 	Cli::execute_with(from_template_file_cmd).await?;
 
@@ -147,7 +149,11 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/single_templates/from_literal.txt",
 	];
 
-	write_command!(literal_template_cmd, [1, 2, 3], "literal_template_cmd");
+	get_clean_example_cmd(
+		&literal_template_cmd,
+		&[1, 2, 3],
+		&commands_dir.join("literal_template_cmd"),
+	)?;
 
 	Cli::execute_with(literal_template_cmd).await?;
 
@@ -181,12 +187,6 @@ async fn remote_preset() -> Result<(), Box<dyn std::error::Error>> {
 
 	let config_file = PathBuf::from("../examples/templating/templating.yaml");
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
@@ -205,7 +205,12 @@ async fn remote_preset() -> Result<(), Box<dyn std::error::Error>> {
 
 	Cli::execute_with(from_remote_preset_cmd).await?;
 
-	write_command!(from_remote_preset_cmd, [1, 2, 3], "remote");
+	get_clean_example_cmd(
+		&from_remote_preset_cmd,
+		&[1, 2, 3],
+		&commands_dir.join("remote"),
+	)?;
+
 	get_tree_output("tests/output/templating_presets/remote", None)?;
 
 	let expected_output = "Roses are red, violets are blue, gp2 engine... gp2!\n";
@@ -228,12 +233,6 @@ async fn simple_templating_preset() -> Result<(), Box<dyn std::error::Error>> {
 
 	let config_file = PathBuf::from("../examples/templating/templating.yaml");
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
@@ -248,7 +247,11 @@ async fn simple_templating_preset() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/templating_presets/simple",
 	];
 
-	write_command!(collection_preset, [1, 2, 3], "collection_preset");
+	get_clean_example_cmd(
+		&collection_preset,
+		&[1, 2, 3],
+		&commands_dir.join("collection_preset"),
+	)?;
 
 	Cli::execute_with(collection_preset).await?;
 
@@ -267,12 +270,6 @@ async fn structured_presets() -> Result<(), Box<dyn std::error::Error>> {
 
 	let config_file = PathBuf::from("../examples/templating/templating.yaml");
 
-	macro_rules! write_command {
-		($args:expr, $list:expr, $out_file:expr) => {
-			get_clean_example_cmd(&$args, &$list, &commands_dir.join($out_file))?
-		};
-	}
-
 	reset_testing_dir(&output_dir);
 	reset_testing_dir(&commands_dir);
 
@@ -289,7 +286,11 @@ async fn structured_presets() -> Result<(), Box<dyn std::error::Error>> {
 		"tests/output/templating_presets/structured",
 	];
 
-	write_command!(structured_preset, [1, 2, 3], "structured_preset");
+	get_clean_example_cmd(
+		&structured_preset,
+		&[1, 2, 3],
+		&commands_dir.join("structured_preset"),
+	)?;
 
 	Cli::execute_with(structured_preset).await?;
 
