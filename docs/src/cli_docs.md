@@ -122,7 +122,6 @@ Renders a single template to a file or to stdout
 ###### **Options:**
 
 * `-f`, `--file <FILE>` — The path to the template file
-* `-i`, `--id <ID>` — The id of the template to use
 * `-t`, `--template <TEMPLATE>` — The path to a template file, starting from `templates_dir`
 * `-c`, `--content <CONTENT>` — The literal definition for the template
 

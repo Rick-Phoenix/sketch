@@ -256,12 +256,9 @@ impl Cli {
 				template,
 				content,
 				output,
-				id,
 				file,
 			} => {
-				let template_data = if let Some(id) = id {
-					TemplateRef::Id(id)
-				} else if let Some(template) = template {
+				let template_data = if let Some(template) = template {
 					TemplateRef::Id(template)
 				} else if let Some(content) = content {
 					TemplateRef::Inline {
@@ -461,11 +458,7 @@ pub enum Commands {
 		#[arg(short, long, group = "input")]
 		file: Option<PathBuf>,
 
-		/// The id of the template to use
-		#[arg(short, long, group = "input")]
-		id: Option<String>,
-
-		/// The path to a template file, starting from `templates_dir`
+		/// The id of the template to use (a name for config-defined templates, or a relative path to a file from `templates_dir`)
 		#[arg(short, long, group = "input")]
 		template: Option<String>,
 
@@ -479,7 +472,7 @@ pub enum Commands {
 		/// The id of the preset.
 		id: String,
 
-		/// The base path to join to relative output paths. [default: `.`]
+		/// The output root path for the preset. [default: `.`]
 		out_dir: Option<PathBuf>,
 	},
 
@@ -537,7 +530,7 @@ pub enum Commands {
 		output: Option<PathBuf>,
 
 		/// Adds one or many service presets to the generated file. Can specify the preset ID and the name of the service in the output file, or just the preset ID to also use it for the service name.
-		#[arg(short = 'S', long = "service", value_parser = ServiceFromCli::from_cli, help = "id=PRESET,name=NAME|ID")]
+		#[arg(short = 'S', long = "service", value_parser = ServiceFromCli::from_cli, help = "PRESET_ID|id=PRESET,name=NAME")]
 		services: Vec<ServiceFromCli>,
 	},
 

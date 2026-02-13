@@ -32,8 +32,6 @@ Command:
 
 >ℹ️ You can also use the `-f` flag to render a template from any file, even outside `templates_dir`.
 
->ℹ️ `--id` and `--template` are aliases for one another, and they can be used to refer to a file inside `templates_dir`, or to a literal template in the config file.
-
 ## From Literal Definition
 
 Alternatively, a template can also be defined directly within a command:

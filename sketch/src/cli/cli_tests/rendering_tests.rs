@@ -33,7 +33,7 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 		"-c",
 		&config_file.to_string_lossy(),
 		"render",
-		"--id",
+		"--template",
 		"hobbits",
 		"tests/output/single_templates/from_template_id.txt",
 	];
