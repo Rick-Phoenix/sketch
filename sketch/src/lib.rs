@@ -58,7 +58,6 @@ pub mod gh_workflow;
 pub mod licenses;
 pub mod rust;
 pub mod ts;
-pub mod versions;
 
 #[doc(inline)]
 pub use config::*;

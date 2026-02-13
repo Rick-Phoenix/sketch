@@ -3,6 +3,7 @@ pub mod package;
 pub mod package_json;
 pub mod pnpm;
 pub mod ts_config;
+pub mod versions;
 pub mod vitest;
 
 use regex::Regex;
@@ -16,9 +17,9 @@ use crate::{
 		ts_config::*,
 		vitest::VitestPreset,
 	},
-	versions::*,
 	*,
 };
+use versions::*;
 
 /// All settings related to typescript projects.
 #[derive(Clone, Debug, Deserialize, Serialize, Merge, Parser, PartialEq, Eq, Default)]

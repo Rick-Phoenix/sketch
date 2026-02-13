@@ -1,10 +1,6 @@
 pub(crate) use pnpm_config::*;
 
-use crate::{
-	ts::{package_json::*, *},
-	versions::*,
-	*,
-};
+use super::*;
 
 /// A preset for a `pnpm-workspace.yaml` file configuration.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default, Eq, Merge)]
