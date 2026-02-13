@@ -282,14 +282,10 @@ impl Cli {
 					return Err(anyhow!("Missing id or content for template generation").into());
 				};
 
-				let output = if output.stdout {
-					TemplateOutputKind::Stdout
+				let output = if let Some(path) = output {
+					TemplateOutputKind::Path(path)
 				} else {
-					TemplateOutputKind::Path(
-						output
-							.output_path
-							.context("At least one must be set between output_path and --stdout")?,
-					)
+					TemplateOutputKind::Stdout
 				};
 
 				let template = TemplateData {
@@ -429,18 +425,6 @@ pub struct Cli {
 	pub vars_files: Vec<PathBuf>,
 }
 
-#[derive(Args, Debug, Clone)]
-#[group(required = true, multiple = false)]
-pub struct RenderingOutput {
-	/// The output path for the generated file
-	#[arg(requires = "input")]
-	output_path: Option<PathBuf>,
-
-	/// Prints the result to stdout
-	#[arg(long, requires = "input")]
-	stdout: bool,
-}
-
 /// The cli commands.
 #[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
@@ -469,8 +453,9 @@ pub enum Commands {
 
 	/// Renders a single template to a file or to stdout
 	Render {
-		#[command(flatten)]
-		output: RenderingOutput,
+		/// The output path (or stdout, if omitted)
+		#[arg(requires = "input")]
+		output: Option<PathBuf>,
 
 		/// The path to the template file
 		#[arg(short, long, group = "input")]

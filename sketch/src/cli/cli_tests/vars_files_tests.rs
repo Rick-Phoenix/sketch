@@ -13,7 +13,6 @@ async fn vars_files() -> Result<(), Box<dyn std::error::Error>> {
 				"render",
 				"--content",
 				"{{ myvar }}",
-				"--stdout",
 			])
 			.output()?;
 

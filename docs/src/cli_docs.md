@@ -113,15 +113,14 @@ Creates a new git repo from a preset
 
 Renders a single template to a file or to stdout
 
-**Usage:** `sketch render [OPTIONS] <OUTPUT_PATH|--stdout>`
+**Usage:** `sketch render [OPTIONS] [OUTPUT]`
 
 ###### **Arguments:**
 
-* `<OUTPUT_PATH>` — The output path for the generated file
+* `<OUTPUT>` — The output path (or stdout, if omitted)
 
 ###### **Options:**
 
-* `--stdout` — Prints the result to stdout
 * `-f`, `--file <FILE>` — The path to the template file
 * `-i`, `--id <ID>` — The id of the template to use
 * `-t`, `--template <TEMPLATE>` — The path to a template file, starting from `templates_dir`

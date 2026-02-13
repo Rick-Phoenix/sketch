@@ -94,7 +94,6 @@ async fn single_templates() -> Result<(), Box<dyn std::error::Error>> {
 		"render",
 		"--content",
 		"they're taking the hobbits to {{ location }}!",
-		"--stdout",
 	])
 	.assert()
 	.stdout("they're taking the hobbits to Isengard!\n");

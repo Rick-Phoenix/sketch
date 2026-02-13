@@ -142,7 +142,6 @@ async fn tera_example() -> Result<(), Box<dyn std::error::Error>> {
 		"render",
 		"--template",
 		"example.j2",
-		"--stdout",
 	];
 
 	let var_name = "GREETING";
