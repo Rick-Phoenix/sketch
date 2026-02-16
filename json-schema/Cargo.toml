@@ -3,6 +3,9 @@ name = "json-schema"
 publish = false
 edition.workspace = true
 
+[package.metadata.release]
+release = false
+
 [dependencies]
 sketch-it = { path = "../sketch/", features = ["schemars"] }
 schemars = { workspace = true }
