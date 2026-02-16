@@ -1,5 +1,7 @@
 use crate::{cli::parsers::parse_key_value_pairs, *};
-pub(crate) use ::gh_workflow::{GhJobPreset, GhJobPresetRef, Job, Step, StepPresetRef, Workflow};
+pub(crate) use gh_workflow_config::{
+	GhJobPreset, GhJobPresetRef, Job, Step, StepPresetRef, Workflow,
+};
 
 impl GhWorkflowPresetRef {
 	pub(crate) fn from_cli(s: &str) -> Result<Self, String> {

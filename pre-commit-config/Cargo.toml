@@ -4,6 +4,9 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+keywords = ["pre-commit", "merge", "serde", "schemars"]
+description = "Rust representations for types belonging to a `pre-commit` configuration file. Supports (de)serialization, JSON schema and merging"
+repository.workspace = true
 
 [dev-dependencies]
 maplit = { workspace = true }

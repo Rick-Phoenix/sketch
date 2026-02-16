@@ -1,6 +1,6 @@
 use super::*;
 
-use ::gh_workflow::{
+use ::gh_workflow_config::{
 	ActionRunner, Event, GhJobPresetRef, Job, RunsOn, Shell, StringNumOrBool, StringOrBool,
 	StringOrNum, Workflow,
 };

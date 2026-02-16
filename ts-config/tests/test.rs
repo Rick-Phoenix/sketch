@@ -5,7 +5,7 @@ use maplit::{btreemap, btreeset};
 use pretty_assertions::assert_eq;
 use serde_json::Value;
 
-use ts_config::*;
+use typescript_config::*;
 
 #[test]
 fn tsconfig_generation() -> Result<(), Box<dyn std::error::Error>> {

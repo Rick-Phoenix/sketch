@@ -1,5 +1,5 @@
 use super::*;
-pub(crate) use ::package_json::*;
+pub(crate) use package_json_config::*;
 
 impl ExtensiblePreset for PackageJsonPreset {
 	fn kind() -> PresetKind {

@@ -13,6 +13,13 @@ members = [
 ]
 resolver = "3"
 
+[workspace.metadata.release]
+tag = false
+allow-branch = ["main"]
+enable-all-features = true
+shared-version = true
+tag-name = "v{{version}}"
+
 [profile.dev]
 debug = 1
 
@@ -24,6 +31,7 @@ debug = false
 edition = "2024"
 license = "MPL-2.0"
 authors = ["Rick-Phoenix <https://github.com/Rick-Phoenix>"]
+repository = "https://github.com/Rick-Phoenix/sketch"
 
 [workspace.dependencies]
 anyhow = "1"

@@ -1,9 +1,12 @@
 [package]
-name = "package-json"
+name = "package-json-config"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+keywords = ["package", "json", "merge", "serde", "schemars"]
+description = "Rust representations for types belonging to a `package.json` file. Supports (de)serialization, JSON schema and merging"
+repository.workspace = true
 
 [dev-dependencies]
 maplit = { workspace = true }

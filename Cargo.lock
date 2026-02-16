@@ -587,7 +587,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gh-workflow"
+name = "gh-workflow-config"
 version = "0.1.0"
 dependencies = [
  "indexmap",
@@ -1076,6 +1076,8 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 [[package]]
 name = "merge-it"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5051a03ada5037f17429cabf285e194db0af904a58b606bb04145398e7added"
 dependencies = [
  "indexmap",
  "merge-it-derive",
@@ -1085,6 +1087,8 @@ dependencies = [
 [[package]]
 name = "merge-it-derive"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2d8ac88877a0aaa135f5c6a882a9a4e8b9ef6e2b9e5b82e4b3ccf9c830f3f9b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1214,7 +1218,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "package-json"
+name = "package-json-config"
 version = "0.1.0"
 dependencies = [
  "maplit",
@@ -1906,14 +1910,14 @@ dependencies = [
  "convert_case",
  "docker-compose-config",
  "futures",
- "gh-workflow",
+ "gh-workflow-config",
  "globset",
  "indexmap",
  "indoc",
  "maplit",
  "merge-it",
  "oxlint-config",
- "package-json",
+ "package-json-config",
  "paste",
  "pnpm-config",
  "pre-commit-config",
@@ -1931,7 +1935,7 @@ dependencies = [
  "tokio",
  "toml",
  "toml_edit",
- "ts-config",
+ "typescript-config",
  "url",
  "uuid",
  "walkdir",
@@ -2307,7 +2311,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
-name = "ts-config"
+name = "typenum"
+version = "1.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb"
+
+[[package]]
+name = "typescript-config"
 version = "0.1.0"
 dependencies = [
  "maplit",
@@ -2317,12 +2327,6 @@ dependencies = [
  "serde",
  "serde_json",
 ]
-
-[[package]]
-name = "typenum"
-version = "1.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "562d481066bde0658276a35467c4af00bdc6ee726305698a55b86e61d7ad82bb"
 
 [[package]]
 name = "ucd-trie"

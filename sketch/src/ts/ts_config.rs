@@ -1,6 +1,6 @@
 use super::*;
 use crate::cli::parsers::parse_key_value_pairs;
-pub(crate) use ::ts_config::*;
+pub(crate) use typescript_config::*;
 
 /// A preset for a `tsconfig` file.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default, Merge)]
