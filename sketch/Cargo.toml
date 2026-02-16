@@ -40,12 +40,14 @@ docker-compose-config = { version = "0.1.0", path = "../docker-compose-config/",
 gh-workflow-config = { version = "0.1.0", path = "../gh-workflow/", features = [
   "presets",
 ] }
-rust-manifest = { path = "../rust-manifest/" }
-pre-commit-config = { path = "../pre-commit-config" }
-oxlint-config = { path = "../oxlint-config/" }
-package-json-config = { path = "../package-json/", features = ["pnpm"] }
-pnpm-config = { path = "../pnpm-config/" }
-typescript-config = { path = "../ts-config/" }
+rust-manifest = { version = "0.1.0", path = "../rust-manifest/" }
+pre-commit-config = { version = "0.1.0", path = "../pre-commit-config" }
+oxlint-config = { version = "0.1.0", path = "../oxlint-config/" }
+package-json-config = { version = "0.1.0", path = "../package-json/", features = [
+  "pnpm",
+] }
+pnpm-config = { version = "0.1.0", path = "../pnpm-config/" }
+typescript-config = { version = "0.1.0", path = "../ts-config/" }
 toml_edit = { workspace = true }
 globset = "0.4"
 walkdir = "2.5"
