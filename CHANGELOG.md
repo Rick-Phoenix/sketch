@@ -1,3 +1,53 @@
+## [0.6.0] - 2026-02-16
+
+### ⛰️  Features
+
+- Added mpl-2.0 license to templates
+- Mirroring `cargo new` when creating a new crate in a workspace
+- Command to generate json schema
+
+### 🐛 Bug Fixes
+
+- Wrong dir creation for structured presets
+- Launch install command after, not before creating ts monorepo
+- [**breaking**] Rename confusing version range nomenclature
+
+### 🚜 Refactor
+
+- [**breaking**] Dedicated command for rust-related operations
+- [**breaking**] Simplified template input via cli to only accept ids
+- [**breaking**] Make pre-commit optional for new repos, removed --no-pre-commit flag
+- Place json schema functionalities behind feature
+- [**breaking**] Remove redundant template context on single templates
+- [**breaking**] Change `id` to `preset_id` for templating preset references to differentiate from single template ids
+- Denying unknown fields with serde when possible
+- Improved error handling
+- [**breaking**] Move tsconfig generation to `sketch ts config`
+- Rename error type
+- [**breaking**] Automatically rendering single template to stdout if no output is specified, removed `--stdout` flag
+- [**breaking**] Removed `--id` alias for `--template` in render command
+- [**breaking**] Use -S to set variables, -s for docker services
+- Make preset id optional for docker compose file generation to allow manual selection of services
+- [**breaking**] Move `render-preset` command to `render --preset`
+- [**breaking**] Do not offer default for ts monorepo output
+- [**breaking**] Rename git_presets to repo_presets
+- Modify merging logic for presets and configuration so that the last values have the highest priority
+- [**breaking**] Removed people information storage functionality for typescript presets
+- [**breaking**] Remove pre/post hooks for packages and repos
+
+### 📚 Documentation
+
+- Refined documentation for rust manifest elements
+- Mention npm-versions feature
+
+### 🚀 Performance
+
+- Fixed eagerly evaluated errors
+
+### 🧪 Testing
+
+- Tests for rust project generation
+- Testing rust manifest/crate generation
 ## [0.5.0] - 2025-10-27
 
 ### ⛰️  Features
