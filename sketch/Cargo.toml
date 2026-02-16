@@ -21,10 +21,7 @@ name = "sketch"
 path = "src/main.rs"
 
 [package.metadata.release]
-tag-message = "chore: Release version {{version}}"
-tag-name = "v{{version}}"
-allow-branch = ["main"]
-pre-release-hook = ["bash", "-c", "cd .. && ./pre_release.sh {{version}}"]
+tag = true
 
 [dev-dependencies]
 pretty_assertions = { workspace = true }

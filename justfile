@@ -10,16 +10,7 @@ generate-cli-docs:
 
 [working-directory('sketch')]
 test-all:
-    cargo test -p sketch-it --features npm-version -- -q --nocapture
-
-[working-directory('sketch')]
-release-test version="patch":
-    cargo release {{ version }}
-
-[confirm]
-[working-directory('sketch')]
-release-exec version="patch":
-    EXEC_RELEASE=true cargo release {{ version }} --execute
+    cargo test -p sketch-it --all-features -- -q --nocapture
 
 [working-directory('docs')]
 docs: generate-cli-docs
@@ -30,3 +21,7 @@ install:
 
 install-dev:
     cargo install --path ./sketch --profile dev
+
+release version exec="": test-all
+    ./pre_release.sh {{ version }} {{ exec }}
+    cargo release {{ version }} -p sketch-it {{ exec }}

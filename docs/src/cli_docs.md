@@ -29,7 +29,7 @@ This document contains the help content for the `sketch` command-line program.
 
 ## `sketch`
 
-🖌️ Templating made simple. A tool to define and generate files and reusable project structures
+A tool to define and generate files and reusable project structures
 
 **Usage:** `sketch [OPTIONS] <COMMAND>`
 

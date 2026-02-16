@@ -17,7 +17,7 @@ resolver = "3"
 tag = false
 allow-branch = ["main"]
 enable-all-features = true
-shared-version = true
+shared-version = false
 tag-name = "v{{version}}"
 
 [profile.dev]
