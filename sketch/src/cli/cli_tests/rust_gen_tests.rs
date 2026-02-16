@@ -32,7 +32,9 @@ async fn docs_example() -> Result<(), Box<dyn std::error::Error>> {
 async fn rust_workspace() -> Result<(), Box<dyn std::error::Error>> {
 	let output_dir = PathBuf::from("tests/output/rust_tests/workspace-single");
 
-	reset_testing_dir(&output_dir);
+	if output_dir.exists() {
+		remove_dir_all(&output_dir).unwrap();
+	}
 
 	let config_file = PathBuf::from("tests/cargo_toml_tests/cargo_toml_tests.yaml");
 
@@ -171,6 +173,10 @@ async fn rust_package() -> Result<(), Box<dyn std::error::Error>> {
 	.await?;
 
 	let package_dir = output_dir.join("test-package");
+
+	if package_dir.exists() {
+		remove_dir_all(&package_dir).unwrap();
+	}
 
 	let package_gen_cmd = [
 		"sketch",

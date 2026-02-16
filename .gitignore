@@ -1,4 +1,9 @@
-schemas/*.json
+development.json
+v0.1.json
+v0.2.json
+v0.3.json
+v0.4.json
+v0.5.json
 book
 index.html
 CHANGELOG.html
