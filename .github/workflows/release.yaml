@@ -68,6 +68,12 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: sketch
