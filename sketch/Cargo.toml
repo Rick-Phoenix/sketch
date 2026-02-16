@@ -34,10 +34,12 @@ indoc = "2.0.6"
 
 [dependencies]
 anyhow = { workspace = true }
-docker-compose-config = { path = "../docker-compose-config/", features = [
+docker-compose-config = { version = "0.1.0", path = "../docker-compose-config/", features = [
   "presets",
 ] }
-gh-workflow-config = { path = "../gh-workflow/", features = ["presets"] }
+gh-workflow-config = { version = "0.1.0", path = "../gh-workflow/", features = [
+  "presets",
+] }
 rust-manifest = { path = "../rust-manifest/" }
 pre-commit-config = { path = "../pre-commit-config" }
 oxlint-config = { path = "../oxlint-config/" }
