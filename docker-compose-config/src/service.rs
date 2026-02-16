@@ -3,6 +3,7 @@ use super::*;
 #[cfg(feature = "presets")]
 pub use presets::*;
 
+#[doc(hidden)]
 #[cfg(feature = "presets")]
 mod presets {
 	use super::*;
