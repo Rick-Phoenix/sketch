@@ -22,6 +22,7 @@ async fn gh_workflow() -> Result<(), Box<dyn std::error::Error>> {
 		"-c",
 		&config_file.to_string_lossy(),
 		"gh-workflow",
+		"-p",
 		"extended",
 		&output_file.to_string_lossy(),
 	];

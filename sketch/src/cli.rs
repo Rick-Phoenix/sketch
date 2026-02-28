@@ -68,8 +68,19 @@ impl Cli {
 					overwrite,
 				)?;
 			}
-			Commands::GhWorkflow { preset, output } => {
-				let data = config.github.get_workflow(&preset)?;
+			Commands::GhWorkflow {
+				preset: preset_id,
+				output,
+				jobs,
+				name,
+			} => {
+				let mut data = config
+					.github
+					.get_workflow_with_jobs(preset_id.as_deref(), jobs)?;
+
+				if name.is_some() {
+					data.name = name;
+				}
 
 				create_parent_dirs(&output)?;
 
@@ -378,11 +389,20 @@ pub enum Commands {
 
 	/// Generates a Github workflow.
 	GhWorkflow {
-		/// The preset id
-		preset: String,
-
 		/// The output path of the new file
 		output: PathBuf,
+
+		/// The workflow preset ID. If extra job presets are specified, they are added in the given order.
+		#[arg(short, long)]
+		preset: Option<String>,
+
+		/// The name for the output workflow. Overrides the name in the preset.
+		#[arg(short, long)]
+		name: Option<String>,
+
+		/// One or more IDs for job presets to add to the generated file.
+		#[arg(short, long)]
+		jobs: Vec<String>,
 	},
 
 	/// Generates a Docker Compose file from a preset.

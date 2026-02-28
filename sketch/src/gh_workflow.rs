@@ -80,6 +80,33 @@ pub struct GithubConfig {
 }
 
 impl GithubConfig {
+	pub fn get_workflow_with_jobs(
+		&self,
+		id: Option<&str>,
+		jobs_presets: Vec<String>,
+	) -> AppResult<Workflow> {
+		let mut preset = if let Some(id) = id {
+			self.workflow_presets
+				.get(id)
+				.ok_or_else(|| AppError::PresetNotFound {
+					kind: PresetKind::GithubWorkflow,
+					name: id.to_string(),
+				})?
+				.clone()
+		} else {
+			GhWorkflowPreset::default()
+		};
+
+		for job_id in jobs_presets {
+			preset
+				.config
+				.jobs
+				.insert(job_id.clone(), GhJobPresetRef::PresetId(job_id));
+		}
+
+		preset.process_data(id.unwrap_or("__anonymous"), self)
+	}
+
 	pub fn get_workflow(&self, id: &str) -> AppResult<Workflow> {
 		self.workflow_presets
 			.get(id)
@@ -93,7 +120,7 @@ impl GithubConfig {
 }
 
 /// A preset for a github workflow.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PartialEq, Eq, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct GhWorkflowPreset {
 	/// The list of extended presets.
