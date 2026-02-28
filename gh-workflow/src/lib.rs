@@ -141,7 +141,7 @@ impl GhJobPreset {
 /// A github workflow.
 ///
 /// See more: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
-#[derive(Clone, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
+#[derive(Clone, Default, Deserialize, Debug, PartialEq, Eq, Serialize, Merge)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
 pub struct Workflow {
 	/// The name of your workflow. GitHub displays the names of your workflows on your repository's actions page. If you omit this field, GitHub sets the name to the workflow's filename.
