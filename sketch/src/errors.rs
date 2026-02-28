@@ -45,6 +45,6 @@ pub enum AppError {
 	#[error("Error while deserializing the contents of `{file:?}`: {error}")]
 	DeserializationError { file: PathBuf, error: String },
 
-	#[error(transparent)]
+	#[error("{0:?}")]
 	Other(#[from] anyhow::Error),
 }

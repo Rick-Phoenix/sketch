@@ -9,6 +9,7 @@ async fn main() {
 		Ok(()) => {}
 		Err(e) => {
 			let mut cmd = Cli::command();
+
 			cmd.error(ErrorKind::InvalidValue, e).exit();
 		}
 	}
